@@ -32,19 +32,23 @@ export function mkAnonymousId(): string {
   return "Anm-" + randomStr(8);
 }
 
-export function mkDocId(): string {
+function mkDocId(): string {
   return "Doc-" + randomStr(12);
+}
+
+function isDocId(id: string): boolean {
+  return id.startsWith("Doc-");
 }
 
 export function mkCardId(): string {
   return "Crd-" + randomStr(12);
 }
 
-export function mkBlockId(): string {
+function mkBlockId(): string {
   return "Blk-" + randomStr(12);
 }
 
-export function isBlockId(id: string): boolean {
+function isBlockId(id: string): boolean {
   return id.startsWith("Blk-");
 }
 
@@ -56,10 +60,30 @@ export function mkUserId(): string {
   return "Usr-" + randomStr(12);
 }
 
-export function mkSpanId(): string {
+function mkSpanId(): string {
   return "Spn-" + randomStr(12);
 }
 
-export function isSpanId(id: string): boolean {
+function isSpanId(id: string): boolean {
   return id.startsWith("Spn-");
+}
+
+export interface IdGenerator {
+  mkDocId: () => string;
+  isDocId: (id: string) => boolean;
+  mkBlockId: () => string;
+  isBlockId: (id: string) => boolean;
+  mkSpanId: () => string;
+  isSpanId: (id: string) => boolean;
+}
+
+export function makeDefaultIdGenerator(): IdGenerator {
+  return {
+    mkDocId,
+    isDocId,
+    mkBlockId,
+    isBlockId,
+    mkSpanId,
+    isSpanId,
+  }
 }

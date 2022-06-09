@@ -1,5 +1,5 @@
 import * as DocNode from "./nodes";
-import { mkBlockId, mkSpanId, mkDocId } from "helper/idHelper";
+import type { IdGenerator } from "helper/idHelper";
 
 /*
  * Large document tree
@@ -26,30 +26,37 @@ export interface MSpan {
 
 export type MNode = MDoc | MBlock | MSpan;
 
-export function doc(content: MBlock[]): MDoc {
-  return {
-    t: "doc",
-    id: mkDocId(),
-    content,
-  };
+export class MarkupGenerator {
+
+  constructor(private idGen: IdGenerator) {}
+
+  doc(content: MBlock[]): MDoc {
+    return {
+      t: "doc",
+      id: this.idGen.mkDocId(),
+      content,
+    };
+  }
+
+  line(content: MSpan[] = []): MBlock {
+    return {
+      t: "block",
+      id: this.idGen.mkBlockId(),
+      content,
+    };
+  }
+
+  span(content: string, flags: number = 0): MSpan {
+    return {
+      t: "span",
+      id: this.idGen.mkSpanId(),
+      content,
+      flags,
+    };
+  }
+
 }
 
-export function line(content: MSpan[] = []): MBlock {
-  return {
-    t: "block",
-    id: mkBlockId(),
-    content,
-  };
-}
-
-export function span(content: string, flags: number = 0): MSpan {
-  return {
-    t: "span",
-    id: mkSpanId(),
-    content,
-    flags,
-  };
-}
 
 export type Traversor<R> = (node: MNode, parent?: MNode, parentResult?: R) => R;
 
