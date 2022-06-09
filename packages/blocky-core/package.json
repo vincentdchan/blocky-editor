@@ -8,5 +8,11 @@
   },
   "keywords": [],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "vitest": "^0.14.1"
+  },
+  "dependencies": {
+    "fast-diff": "^1.2.0"
+  }
 }
