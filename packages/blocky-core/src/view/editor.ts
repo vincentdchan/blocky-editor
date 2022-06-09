@@ -1,8 +1,8 @@
-import { $on } from "common/dom";
-import { observe, runInAction } from "common/observable";
-import { Slot } from "common/events";
-import { type IDisposable, flattenDisposable } from "common/disposable";
-import { lazy } from "common/lazy";
+import { $on } from "blocky-common/es/dom";
+import { observe, runInAction } from "blocky-common/es/observable";
+import { Slot } from "blocky-common/es/events";
+import { type IDisposable, flattenDisposable } from "blocky-common/es/disposable";
+import { lazy } from "blocky-common/es/lazy";
 import { docRenderer } from "view/renderer";
 import {
   State as DocumentState,
@@ -15,8 +15,8 @@ import { Action } from "model/actions";
 import { PluginRegistry, type AfterFn } from "registry/pluginRegistry";
 import { SpanRegistry } from "registry/spanRegistry";
 import { BlockRegistry } from "registry/blockRegistry";
-import { mkSpanId, mkBlockId } from "helper/idHelper";
-import * as fastdiff from "fast-diff";
+import { type IdGenerator, makeDefaultIdGenerator } from "helper/idHelper";
+import fastdiff from "fast-diff";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
@@ -55,22 +55,32 @@ export interface EditorRegistry {
   block: BlockRegistry;
 }
 
+export interface IEditorOptions {
+  state: DocumentState,
+  registry: EditorRegistry,
+  container: HTMLDivElement,
+  idGenerator?: IdGenerator,
+}
+
 export class Editor {
   #container: HTMLDivElement;
   #renderedDom: HTMLDivElement | undefined;
+  #idGen: IdGenerator;
 
+  public readonly state: DocumentState;
+  public readonly registry: EditorRegistry;
   public readonly keyUp = new Slot<KeyboardEvent>();
   public readonly keyDown = new Slot<KeyboardEvent>();
 
   public composing: boolean = false;
   private disposables: IDisposable[] = [];
 
-  constructor(
-    public readonly state: DocumentState,
-    public readonly registry: EditorRegistry,
-    container: HTMLDivElement
-  ) {
+  constructor(options: IEditorOptions) {
+    const { container, state, registry, idGenerator } = options;
+    this.state = state;
+    this.registry = registry;
     this.#container = container;
+    this.#idGen = idGenerator ?? makeDefaultIdGenerator();
 
     container.contentEditable = "true";
 
@@ -96,6 +106,7 @@ export class Editor {
 
   render(done?: AfterFn) {
     const newDom = docRenderer({
+      clsPrefix: "blocky",
       editor: this,
       oldDom: this.#renderedDom,
       registry: this.registry,
@@ -222,7 +233,7 @@ export class Editor {
           prevId = node.data.id;
         } else {
           // add a new node
-          const newId = mkSpanId();
+          const newId = this.#idGen.mkSpanId();
           actions.push({
             type: "new-span",
             targetId: lineNode.data.id,
@@ -243,7 +254,7 @@ export class Editor {
           prevId = node.data.id;
         } else {
           // add a new node
-          const newId = mkSpanId();
+          const newId = this.#idGen.mkSpanId();
           const dataType = parseInt(ptr.getAttribute("data-type") || "0", 0);
           actions.push({
             type: "new-span",
@@ -395,7 +406,7 @@ export class Editor {
       if (ptr.data.t === "span") {
         result.push({
           ...ptr.data,
-          id: mkSpanId(),
+          id: this.#idGen.mkSpanId(),
         });
       }
       ptr = ptr.next;
@@ -441,7 +452,7 @@ export class Editor {
         {
           type: "new-block",
           targetId: parnetNode.data.id,
-          newId: mkBlockId(),
+          newId: this.#idGen.mkBlockId(),
           afterId: lineNode.data.id,
           spans: remain,
         },
@@ -545,7 +556,7 @@ export class Editor {
     while (ptr) {
       const currentSpan = ptr.data as Span;
       if (currentSpan.content.length > 0) {
-        const newId = mkSpanId();
+        const newId = this.#idGen.mkSpanId();
         if (!firstId) {
           firstId = newId;
         }

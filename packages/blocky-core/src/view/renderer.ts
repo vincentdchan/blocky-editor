@@ -1,4 +1,4 @@
-import { elem } from "common/dom";
+import { elem } from "blocky-common/es/dom";
 import {
   type Block,
   type TreeNode,
@@ -10,6 +10,7 @@ import type { Editor, EditorRegistry } from "view/editor";
 import type { ISpanType } from "registry/spanRegistry";
 
 interface DocRenderOptions {
+  clsPrefix: string;
   editor: Editor;
   registry: EditorRegistry;
   oldDom?: Node;
@@ -26,10 +27,10 @@ export interface ILineRenderer {
 }
 
 export function docRenderer(options: DocRenderOptions): HTMLDivElement {
-  const { editor, oldDom } = options;
+  const { editor, oldDom, clsPrefix } = options;
   const { state } = editor;
   function createNewDocument() {
-    const newDom = elem("div", "mg-documents");
+    const newDom = elem("div", `${clsPrefix}-documents`);
     renderDocument(options, state.root, newDom);
     state.domMap.set(state.root.data.id, newDom);
     return newDom;
@@ -79,12 +80,14 @@ function renderDocument(
 ) {
   dom._mgNode = model;
 
-  const blocksContainer = ensureChild(dom, 0, "div", "mg-editor-blocks-container");
+  const { clsPrefix } = options;
+  const blocksContainer = ensureChild(dom, 0, "div", `${clsPrefix}-editor-blocks-container`);
   renderBlocks(options, blocksContainer, model);
 }
 
-function createBlockContainer() {
-  return elem("div", "mg-editor-block");
+function createBlockContainer(options: DocRenderOptions) {
+  const { clsPrefix } = options;
+  return elem("div", `${clsPrefix}-editor-block`);
 }
 
 function renderBlocks(
@@ -96,7 +99,7 @@ function renderBlocks(
   let actualLen = blocksContainer.children.length;
   if (actualLen < childrenLength) {
     for (let i = actualLen; i < childrenLength; i++) {
-      const newBlockContainer = createBlockContainer();
+      const newBlockContainer = createBlockContainer(options);
       blocksContainer.appendChild(newBlockContainer);
     }
   } else if (actualLen > childrenLength) {
@@ -145,7 +148,7 @@ function renderBlock(
   blockContainer: HTMLElement,
   blockNode: TreeNode<DocNode>,
 ) {
-  const { editor } = options;
+  const { editor, clsPrefix } = options;
   const data = blockNode.data as Block;
   const blockDef = editor.registry.block.getBlockDefById(data.flags);
 
@@ -162,7 +165,11 @@ function renderBlock(
     blockContainer.addEventListener("mouseleave", () => {
       editor.hideBanner();
     });
-    blockDef.onContainerCreated?.({ element: blockContainer, node: blockNode });
+    blockDef.onContainerCreated?.({
+      element: blockContainer,
+      node: blockNode,
+      clsPrefix,
+    });
   }
 
   editor.state.domMap.set(data.id, blockContainer);

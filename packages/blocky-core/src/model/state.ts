@@ -1,4 +1,4 @@
-import { makeObservable } from "common/observable";
+import { makeObservable } from "blocky-common/es/observable";
 import type { DocNode, Block, Span } from "./nodes";
 import {
   type TreeNode,

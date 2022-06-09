@@ -1,4 +1,4 @@
-import { elem } from "common/dom";
+import { elem } from "blocky-common/es/dom";
 import type { TreeNode } from "model/tree";
 import type { DocNode } from "model/nodes";
 
@@ -9,6 +9,7 @@ export enum BlockContentType {
 
 export interface SpanCreatedEvent {
   element: HTMLElement;
+  clsPrefix: string;
   node: TreeNode<DocNode>;
 }
 
@@ -37,8 +38,8 @@ function makeTextBlockDefinition(): IBlockDefinition {
     findContentContainer(parent: HTMLElement) {
       return parent.firstChild! as HTMLElement;
     },
-    onContainerCreated({ element }) {
-      const content = elem("div", "mg-line-content");
+    onContainerCreated({ element, clsPrefix }) {
+      const content = elem("div", `${clsPrefix}-line-content`);
       element.appendChild(content);
     },
   };
