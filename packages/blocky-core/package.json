@@ -19,6 +19,7 @@
     "vitest": "^0.14.1"
   },
   "dependencies": {
+    "blocky-common": "workspace:*",
     "fast-diff": "^1.2.0"
   }
 }

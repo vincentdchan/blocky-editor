@@ -1,8 +1,8 @@
-import { $on } from "common/dom";
-import { observe, runInAction } from "common/observable";
-import { Slot } from "common/events";
-import { type IDisposable, flattenDisposable } from "common/disposable";
-import { lazy } from "common/lazy";
+import { $on } from "blocky-common/es/dom";
+import { observe, runInAction } from "blocky-common/es/observable";
+import { Slot } from "blocky-common/es/events";
+import { type IDisposable, flattenDisposable } from "blocky-common/es/disposable";
+import { lazy } from "blocky-common/es/lazy";
 import { docRenderer } from "view/renderer";
 import {
   State as DocumentState,

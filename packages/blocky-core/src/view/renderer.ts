@@ -1,4 +1,4 @@
-import { elem } from "common/dom";
+import { elem } from "blocky-common/es/dom";
 import {
   type Block,
   type TreeNode,

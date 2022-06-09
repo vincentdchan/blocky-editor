@@ -1,4 +1,4 @@
-import { type IDisposable } from "common/disposable";
+import { type IDisposable } from "../disposable";
 
 export function elem<K extends keyof HTMLElementTagNameMap>(tagName: K, className?: string): HTMLElementTagNameMap[K] {
   const result = document.createElement(tagName);
