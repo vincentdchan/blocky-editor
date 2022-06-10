@@ -12,6 +12,6 @@ export default {
   external: ["fastdiff"],
   plugins: [typescript({
     declaration: true,
-    declarationDir: "dist",
+    declarationDir: "./dist",
   })]
 };
