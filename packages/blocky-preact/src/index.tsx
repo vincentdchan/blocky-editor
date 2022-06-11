@@ -1,8 +1,10 @@
 import { Component, createRef, type RefObject } from "preact";
 import { Editor, type IEditorOptions } from "blocky-core";
 
-interface Props {
-  options: IEditorOptions;
+export type CleanOptions = Omit<IEditorOptions, "container">;
+
+export interface Props {
+  options: CleanOptions;
 }
 
 export class BlockyEditor extends Component<Props> {
@@ -16,6 +18,7 @@ export class BlockyEditor extends Component<Props> {
       ...options,
       container: this.#containerRef.current!,
     });
+    this.#editor.render();
   }
 
   override componentWillUnmount() {
@@ -25,7 +28,7 @@ export class BlockyEditor extends Component<Props> {
 
   render() {
     return (
-      <div ref={this.#containerRef}></div>
+      <div className="blocky-editor-container" ref={this.#containerRef}></div>
     );
   }
 

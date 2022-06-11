@@ -12,7 +12,7 @@ import {
 } from "@pkg/model/index";
 import { type CursorState } from "@pkg/model/cursor";
 import { Action } from "@pkg/model/actions";
-import { PluginRegistry, type AfterFn } from "@pkg/registry/pluginRegistry";
+import { IPlugin, PluginRegistry, type AfterFn } from "@pkg/registry/pluginRegistry";
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
@@ -53,6 +53,13 @@ export interface EditorRegistry {
   span: SpanRegistry;
   plugin: PluginRegistry;
   block: BlockRegistry;
+}
+
+export function makeDefaultEditorEntry(plugins?: IPlugin[]) {
+  const plugin = new PluginRegistry(plugins);
+  const span = new SpanRegistry();
+  const block = new BlockRegistry();
+  return { plugin, span, block };
 }
 
 export interface IEditorOptions {
