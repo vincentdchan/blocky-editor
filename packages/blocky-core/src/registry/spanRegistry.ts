@@ -1,5 +1,5 @@
-import type { TreeNode } from "model/tree";
-import type { Span } from "model/nodes";
+import type { TreeNode } from "@pkg/model/tree";
+import type { Span } from "@pkg/model/nodes";
 
 export interface SpanCreatedEvent {
   element: HTMLSpanElement;

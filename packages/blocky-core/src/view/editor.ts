@@ -3,19 +3,19 @@ import { observe, runInAction } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
 import { type IDisposable, flattenDisposable } from "blocky-common/es/disposable";
 import { lazy } from "blocky-common/es/lazy";
-import { docRenderer } from "view/renderer";
+import { docRenderer } from "@pkg/view/renderer";
 import {
   State as DocumentState,
   type TreeNode,
   type DocNode,
   type Span,
-} from "model/index";
-import { type CursorState } from "model/cursor";
-import { Action } from "model/actions";
-import { PluginRegistry, type AfterFn } from "registry/pluginRegistry";
-import { SpanRegistry } from "registry/spanRegistry";
-import { BlockRegistry } from "registry/blockRegistry";
-import { type IdGenerator, makeDefaultIdGenerator } from "helper/idHelper";
+} from "@pkg/model/index";
+import { type CursorState } from "@pkg/model/cursor";
+import { Action } from "@pkg/model/actions";
+import { PluginRegistry, type AfterFn } from "@pkg/registry/pluginRegistry";
+import { SpanRegistry } from "@pkg/registry/spanRegistry";
+import { BlockRegistry } from "@pkg/registry/blockRegistry";
+import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import fastdiff from "fast-diff";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);

@@ -1,4 +1,4 @@
-import type { Span } from "model/nodes";
+import type { Span } from "@pkg/model/nodes";
 import type * as fastdiff from "fast-diff";
 
 export interface NewBlockAction {

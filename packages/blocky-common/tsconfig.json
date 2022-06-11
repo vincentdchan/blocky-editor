@@ -19,13 +19,13 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
-    "jsxFactory": "h",
-    "jsxFragmentFactory": "Fragment",
-    "baseUrl": ".",
+    "baseUrl": "src",
+    "rootDir": "src",
+    "inlineSourceMap": true,
+    "composite": true
   },
-  "include": [
-    "src",
-  ],
+  // "include": [
+  //   "src",
+  // ],
   // "references": [{ "path": "./tsconfig.node.json" }]
 }

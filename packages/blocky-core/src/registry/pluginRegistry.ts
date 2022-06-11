@@ -1,5 +1,5 @@
-import type { Editor } from "view/editor";
-import { Action } from "model/actions";
+import type { Editor } from "@pkg/view/editor";
+import { Action } from "@pkg/model/actions";
 
 export type AfterFn = () => void;
 
