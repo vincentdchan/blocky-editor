@@ -2,3 +2,7 @@
 .blocky-editor-container:focus {
   outline: none;
 }
+
+.blocky-editor-blocks-container {
+  padding: 0px 56px;
+}

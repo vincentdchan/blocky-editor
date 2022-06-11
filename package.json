@@ -6,6 +6,7 @@
   "scripts": {
     "postinstall": "ts-patch install",
     "build": "tsc --build packages/blocky-preact",
+    "watch": "tsc --build -w packages/blocky-preact",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

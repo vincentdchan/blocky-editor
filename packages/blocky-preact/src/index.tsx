@@ -1,10 +1,8 @@
 import { Component, createRef, type RefObject } from "preact";
-import { Editor, type IEditorOptions } from "blocky-core";
-
-export type CleanOptions = Omit<IEditorOptions, "container">;
+import { Editor, type EditorController } from "blocky-core";
 
 export interface Props {
-  options: CleanOptions;
+  controller: EditorController;
 }
 
 export class BlockyEditor extends Component<Props> {
@@ -13,10 +11,15 @@ export class BlockyEditor extends Component<Props> {
   #containerRef: RefObject<HTMLDivElement> = createRef();
 
   override componentDidMount() {
-    const { options } = this.props;
+    const { controller } = this.props;
     this.#editor = new Editor({
-      ...options,
       container: this.#containerRef.current!,
+      registry: {
+        plugin: controller.pluginRegistry,
+        span: controller.spanRegistry,
+        block: controller.blockRegistry,
+      },
+      state: controller.state,
     });
     this.#editor.render();
   }
