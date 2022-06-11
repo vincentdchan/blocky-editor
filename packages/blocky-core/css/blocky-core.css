@@ -1,0 +1,4 @@
+
+.blocky-editor-container:focus {
+  outline: none;
+}
