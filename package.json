@@ -4,9 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "postinstall": "ts-patch install",
+    "build": "tsc --build packages/blocky-preact",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "ts-patch": "^2.0.1",
+    "typescript": "^4.7.3",
+    "typescript-transform-paths": "^3.3.1"
+  }
 }

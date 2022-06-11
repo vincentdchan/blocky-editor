@@ -19,7 +19,7 @@ import {
   toNodeSpan,
   MNode,
 } from "./markup";
-import { type CursorState } from "model/cursor";
+import { type CursorState } from "@pkg/model/cursor";
 
 const DummyTextContentId = "block-text-content";
 

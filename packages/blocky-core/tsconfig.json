@@ -21,28 +21,26 @@
     "jsx": "preserve",
     "jsxFactory": "h",
     "jsxFragmentFactory": "Fragment",
-    "baseUrl": ".",
+    "rootDir": "src",
     "outDir": "dist",
     "declaration": true,
     "declarationDir": "dist",
+    "composite": true,
+    "plugins": [
+      { "transform": "typescript-transform-paths" },
+      { "transform": "typescript-transform-paths", "afterDeclarations": true }
+    ],
     "paths": {
-      "model/*": [
-        "src/model/*"
-      ],
-      "view/*": [
-        "src/view/*"
-      ],
-      "registry/*": [
-        "src/registry/*"
-      ],
-      "helper/*": [
-        "src/helper/*"
-      ],
+      "@pkg/*": [
+        "./src/*"
+      ]
     }
   },
   "include": [
-    "src",
-    "plugins"
+    "plugins",
+    "src"
   ],
-  // "references": [{ "path": "./tsconfig.node.json" }]
+  "references": [
+    { "path": "../blocky-common" }
+  ]
 }

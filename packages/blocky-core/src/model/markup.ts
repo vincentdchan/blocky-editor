@@ -1,5 +1,5 @@
 import * as DocNode from "./nodes";
-import type { IdGenerator } from "helper/idHelper";
+import type { IdGenerator } from "@pkg/helper/idHelper";
 
 /*
  * Large document tree

@@ -1,6 +1,6 @@
 import { elem } from "blocky-common/es/dom";
-import type { TreeNode } from "model/tree";
-import type { DocNode } from "model/nodes";
+import type { TreeNode } from "@pkg/model/tree";
+import type { DocNode } from "@pkg/model/nodes";
 
 export enum BlockContentType {
   Text,

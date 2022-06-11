@@ -5,9 +5,9 @@ import {
   type Span,
   type DocNode,
   treeChildrenToArray,
-} from "model/index";
-import type { Editor, EditorRegistry } from "view/editor";
-import type { ISpanType } from "registry/spanRegistry";
+} from "@pkg/model/index";
+import type { Editor, EditorRegistry } from "@pkg/view/editor";
+import type { ISpanType } from "@pkg/registry/spanRegistry";
 
 interface DocRenderOptions {
   clsPrefix: string;
