@@ -1,25 +1,32 @@
 import { Component, JSX } from "preact";
 import { EditorController } from "blocky-core";
-import { BlockyEditor } from "blocky-preact";
+import { BlockyEditor, makePreactBannerOptions } from "blocky-preact";
 import makeBoldedTextPlugin from "blocky-core/dist/plugins/boldedTextPlugin";
+import Banner from "./banner";
 import "blocky-core/css/bolded-text-plugin.css";
 import "blocky-core/css/blocky-core.css";
-import "./app.css"
+import "./app.scss"
 
 interface AppState {
   headingContent: string;
 }
+
+function makeController(): EditorController {
+  return new EditorController({
+    plugins: [
+      makeBoldedTextPlugin(),
+    ],
+    banner: makePreactBannerOptions(<Banner />),
+  });
+}
+
 
 class App extends Component<{}, AppState> {
   private editorController: EditorController;
 
   constructor(props: {}) {
     super(props);
-    this.editorController = new EditorController({
-      plugins: [
-        makeBoldedTextPlugin(),
-      ],
-    });
+    this.editorController = makeController();
     this.state = {
       headingContent: 'Blocky Editor',
     }

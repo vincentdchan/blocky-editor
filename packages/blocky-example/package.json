@@ -14,14 +14,15 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "blocky-preact": "workspace:*",
+    "blocky-common": "workspace:*",
     "blocky-core": "workspace:*",
-    "blocky-common": "workspace:*"
+    "blocky-preact": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "^7.18.2",
     "@preact/preset-vite": "^2.2.0",
     "preact": "^10.7.3",
+    "sass": "^1.52.3",
     "vite": "^2.9.12"
   }
 }
