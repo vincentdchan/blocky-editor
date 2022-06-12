@@ -1,4 +1,4 @@
-import { State } from "@pkg/model";
+import { DocNode, State, TreeNode } from "@pkg/model";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
@@ -27,12 +27,12 @@ export interface IEditorControllerOptions {
 
 export class EditorController {
   public editor: Editor | undefined;
-  public pluginRegistry: PluginRegistry;
-  public spanRegistry: SpanRegistry;
-  public blockRegistry: BlockRegistry;
-  public idGenerator: IdGenerator;
-  public m: MarkupGenerator;
-  public state: State;
+  public readonly pluginRegistry: PluginRegistry;
+  public readonly spanRegistry: SpanRegistry;
+  public readonly blockRegistry: BlockRegistry;
+  public readonly idGenerator: IdGenerator;
+  public readonly m: MarkupGenerator;
+  public readonly state: State;
 
   /**
    * A class to control the behavior in the editor
@@ -56,4 +56,30 @@ export class EditorController {
   mount(editor: Editor) {
     this.editor = editor;
   }
+
+  insertBlockAfterId(afterId: string) {
+    const { editor } = this;
+    if (!editor) {
+      return;
+    }
+
+    const prevNode = this.state.idMap.get(afterId)!;
+    const parentNode = prevNode.parent!;
+
+    const newId = editor.idGenerator.mkBlockId();
+    editor.applyActions([
+      {
+        type: "new-block",
+        targetId: parentNode.data.id,
+        newId,
+        afterId,
+      }
+    ]);
+    editor.render();
+  }
+
+  get bannerFocusedNode(): TreeNode<DocNode> | undefined {
+    return this.editor?.bannerDelegate.focusedNode;
+  }
+
 }

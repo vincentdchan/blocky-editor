@@ -84,7 +84,7 @@ export interface IEditorOptions {
 export class Editor {
   #container: HTMLDivElement;
   #renderedDom: HTMLDivElement | undefined;
-  #bannerDelegate: BannerDelegate;
+  public readonly bannerDelegate: BannerDelegate;
   public idGenerator: IdGenerator;
 
   public readonly state: DocumentState;
@@ -96,7 +96,7 @@ export class Editor {
   private disposables: IDisposable[] = [];
 
   static fromController(container: HTMLDivElement, controller: EditorController): Editor {
-    const editor = new Editor({
+    const editor = new Editor(controller, {
       container,
       registry: {
         plugin: controller.pluginRegistry,
@@ -106,19 +106,20 @@ export class Editor {
       state: controller.state,
       banner: controller.options?.banner,
     });
+    controller.mount(editor);
     return editor;
   }
 
-  constructor(options: IEditorOptions) {
+  constructor(controller: EditorController, options: IEditorOptions) {
     const { container, state, registry, idGenerator, banner } = options;
     this.state = state;
     this.registry = registry;
     this.#container = container;
     this.idGenerator = idGenerator ?? makeDefaultIdGenerator();
 
-    this.#bannerDelegate = new BannerDelegate(this, banner);
-    this.#bannerDelegate.mount(this.#container);
-    this.disposables.push(this.#bannerDelegate);
+    this.bannerDelegate = new BannerDelegate(controller, banner);
+    this.bannerDelegate.mount(this.#container);
+    this.disposables.push(this.bannerDelegate);
 
     document.addEventListener("selectionchange", this.selectionChanged);
 
@@ -381,11 +382,12 @@ export class Editor {
     }
   }
 
-  public placeBannerAt(blockContainer: HTMLElement) {
+  public placeBannerAt(blockContainer: HTMLElement, node: TreeNode<DocNode>) {
     const { y } = this.getRelativeOffsetByDom(blockContainer);
 
-    this.#bannerDelegate.show();
-    this.#bannerDelegate.setPosition(24, y + 2);
+    this.bannerDelegate.focusedNode = node;
+    this.bannerDelegate.show();
+    this.bannerDelegate.setPosition(24, y + 2);
   }
 
   /**
@@ -401,7 +403,7 @@ export class Editor {
   }
 
   private hideBanner = () => {
-    this.#bannerDelegate.hide();
+    this.bannerDelegate.hide();
   }
 
   private handleCompositionStart = (e: CompositionEvent) => {

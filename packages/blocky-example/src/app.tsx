@@ -14,8 +14,8 @@ interface AppState {
 function makeController(): EditorController {
   return new EditorController({
     plugins: [makeBoldedTextPlugin()],
-    banner: makePreactBannerOptions((editor: Editor) => (
-      <Banner editor={editor} />
+    banner: makePreactBannerOptions((editorController: EditorController) => (
+      <Banner editorController={editorController} />
     )),
   });
 }
