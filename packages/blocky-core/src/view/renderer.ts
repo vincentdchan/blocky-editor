@@ -152,7 +152,7 @@ function renderBlock(
 
   if (blockContainer._mgNode !== blockNode) {
     blockContainer._mgNode = blockNode;
-    blockContainer.setAttribute("data-type", data.flags.toString());
+    blockContainer.setAttribute("data-type", blockDef.name);
     blockContainer.addEventListener("mouseenter", () => {
       editor.placeBannerAt(blockContainer, blockNode);
     });
@@ -216,11 +216,12 @@ function typeOfDomNode(
   options: DocRenderOptions,
   node: Node,
 ): number | undefined {
+  const { editor } = options;
   if (node instanceof Text) {
     return 0;
   } else if (node instanceof HTMLSpanElement) {
-    const ty = parseInt(node.getAttribute("data-type") || "0", 10);
-    return ty;
+    const tyName = node.getAttribute("data-type") || "";
+    return editor.registry.block.getBlockIdByName(tyName);
   }
   return undefined;
 }

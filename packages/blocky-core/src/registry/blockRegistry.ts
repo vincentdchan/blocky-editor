@@ -1,49 +1,5 @@
-import { elem } from "blocky-common/es/dom";
-import type { TreeNode } from "@pkg/model/tree";
-import type { DocNode } from "@pkg/model/nodes";
-
-export enum BlockContentType {
-  Text,
-  Custom,
-}
-
-export interface SpanCreatedEvent {
-  element: HTMLElement;
-  clsPrefix: string;
-  node: TreeNode<DocNode>;
-}
-
-export interface IBlockDefinition {
-  name: string;
-  type: BlockContentType;
-
-  /**
-   * if a block's type is [[Text]],
-   * this method must be provided.
-   * 
-   * A text block must have a child element to contain
-   * the text content.
-   */
-  findContentContainer?: (parent: HTMLElement) => HTMLElement;
-
-  onContainerCreated?: (e: SpanCreatedEvent) => void;
-}
-
-const TextBlockName = "text-block";
-
-function makeTextBlockDefinition(): IBlockDefinition {
-  return {
-    name: TextBlockName,
-    type: BlockContentType.Text,
-    findContentContainer(parent: HTMLElement) {
-      return parent.firstChild! as HTMLElement;
-    },
-    onContainerCreated({ element, clsPrefix }) {
-      const content = elem("div", `${clsPrefix}-line-content`);
-      element.appendChild(content);
-    },
-  };
-}
+import { type IBlockDefinition, BlockContentType } from "@pkg/block/basic";
+import { makeTextBlockDefinition, TextBlockName } from "@pkg/block/textBlock";
 
 export class BlockRegistry {
   #types: IBlockDefinition[];
@@ -72,6 +28,18 @@ export class BlockRegistry {
 
   getBlockDefById(id: number): IBlockDefinition | undefined {
     return this.#types[id];
+  }
+
+  getBlockDefByName(name: string): IBlockDefinition | undefined {
+    const id = this.#nameMap.get(name);
+    if (!id) {
+      return;
+    }
+    return this.#types[id];
+  }
+
+  getBlockIdByName(name: string): number | undefined {
+    return this.#nameMap.get(name);
   }
 
 }

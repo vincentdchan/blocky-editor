@@ -8,6 +8,7 @@ export interface Block {
   t: "block";
   id: string;
   flags: number;
+  data?: any;
 }
 
 export interface BlockTextContent {
