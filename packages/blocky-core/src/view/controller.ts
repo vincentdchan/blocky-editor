@@ -8,12 +8,21 @@ import { MarkupGenerator } from "@pkg/model/markup";
 
 export interface IEditorControllerOptions {
   pluginRegistry?: PluginRegistry;
+
+  /**
+   * 
+   * Specify the plugins.
+   * The plugins will be loaded by the editor
+   * 
+   */
   plugins?: IPlugin[];
+
   spanRegistry?: SpanRegistry;
   blockRegistry?: BlockRegistry;
   state?: State,
   idGenerator?: IdGenerator
 }
+
 
 export class EditorController {
   public editor: Editor | undefined;
@@ -24,6 +33,9 @@ export class EditorController {
   public m: MarkupGenerator;
   public state: State;
 
+  /**
+   * A class to control the behavior in the editor
+   */
   constructor(options?: IEditorControllerOptions) {
     this.pluginRegistry = options?.pluginRegistry ?? new PluginRegistry(options?.plugins);
     this.spanRegistry = options?.spanRegistry ?? new SpanRegistry();

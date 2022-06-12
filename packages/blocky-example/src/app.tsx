@@ -1,6 +1,8 @@
 import { Component, JSX } from "preact";
 import { EditorController } from "blocky-core";
 import { BlockyEditor } from "blocky-preact";
+import makeBoldedTextPlugin from "blocky-core/dist/plugins/boldedTextPlugin";
+import "blocky-core/css/bolded-text-plugin.css";
 import "blocky-core/css/blocky-core.css";
 import "./app.css"
 
@@ -13,9 +15,13 @@ class App extends Component<{}, AppState> {
 
   constructor(props: {}) {
     super(props);
-    this.editorController = new EditorController();
+    this.editorController = new EditorController({
+      plugins: [
+        makeBoldedTextPlugin(),
+      ],
+    });
     this.state = {
-      headingContent: '',
+      headingContent: 'Blocky Editor',
     }
   }
 

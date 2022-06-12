@@ -21,9 +21,11 @@ importers:
   packages/blocky-core:
     specifiers:
       '@rollup/plugin-typescript': ^8.3.2
+      '@types/is-hotkey': ^0.1.7
       '@types/node': ^17.0.41
       blocky-common: workspace:*
       fast-diff: ^1.2.0
+      is-hotkey: ^0.2.0
       rollup: ^2.75.6
       tsc-alias: ^1.6.9
       tslib: ^2.4.0
@@ -32,8 +34,10 @@ importers:
     dependencies:
       blocky-common: link:../blocky-common
       fast-diff: 1.2.0
+      is-hotkey: 0.2.0
     devDependencies:
       '@rollup/plugin-typescript': 8.3.3_a4s7325ov6m337p2dvgeh54tg4
+      '@types/is-hotkey': 0.1.7
       '@types/node': 17.0.41
       rollup: 2.75.6
       tsc-alias: 1.6.9
@@ -479,6 +483,10 @@ packages:
 
   /@types/estree/0.0.39:
     resolution: {integrity: sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==}
+    dev: true
+
+  /@types/is-hotkey/0.1.7:
+    resolution: {integrity: sha512-yB5C7zcOM7idwYZZ1wKQ3pTfjA9BbvFqRWvKB46GFddxnJtHwi/b9y84ykQtxQPg5qhdpg4Q/kWU3EGoCTmLzQ==}
     dev: true
 
   /@types/node/17.0.41:
@@ -1072,6 +1080,10 @@ packages:
     dependencies:
       is-extglob: 2.1.1
     dev: true
+
+  /is-hotkey/0.2.0:
+    resolution: {integrity: sha512-UknnZK4RakDmTgz4PI1wIph5yxSs/mvChWs9ifnlXsKuXgWmOkY/hAE0H/k2MIqH0RlRye0i1oC07MCRSD28Mw==}
+    dev: false
 
   /is-number/7.0.0:
     resolution: {integrity: sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==}
