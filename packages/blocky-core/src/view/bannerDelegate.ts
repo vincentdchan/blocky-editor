@@ -2,6 +2,7 @@ import { DivContainer } from "blocky-common/es/dom";
 
 export interface BannerDelegateOptions {
   bannerDidMount?: (dom: HTMLDivElement) => void;
+  bannerWillUnmount?: (dom: HTMLDivElement) => void;
 }
 
 export class BannerDelegate extends DivContainer {
@@ -9,7 +10,7 @@ export class BannerDelegate extends DivContainer {
   #shown: boolean = false;
 
   constructor(private options?: BannerDelegateOptions) {
-    super("blocky-editor-banner-delegate");
+    super("blocky-editor-banner-delegate blocky-cm-noselect");
     this.container.style.display = "none";
   }
 
@@ -48,6 +49,11 @@ export class BannerDelegate extends DivContainer {
   setPosition(x: number, y: number) {
     this.container.style.top = y + "px";
     this.container.style.left = x + "px";
+  }
+
+  override dispose(): void {
+    this.options?.bannerWillUnmount?.(this.container);
+    super.dispose();
   }
 
 }
