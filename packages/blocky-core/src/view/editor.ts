@@ -72,7 +72,7 @@ export interface IEditorOptions {
 export class Editor {
   #container: HTMLDivElement;
   #renderedDom: HTMLDivElement | undefined;
-  #idGen: IdGenerator;
+  public idGenerator: IdGenerator;
 
   public readonly state: DocumentState;
   public readonly registry: EditorRegistry;
@@ -87,7 +87,7 @@ export class Editor {
     this.state = state;
     this.registry = registry;
     this.#container = container;
-    this.#idGen = idGenerator ?? makeDefaultIdGenerator();
+    this.idGenerator = idGenerator ?? makeDefaultIdGenerator();
 
     container.contentEditable = "true";
 
@@ -240,7 +240,7 @@ export class Editor {
           prevId = node.data.id;
         } else {
           // add a new node
-          const newId = this.#idGen.mkSpanId();
+          const newId = this.idGenerator.mkSpanId();
           actions.push({
             type: "new-span",
             targetId: lineNode.data.id,
@@ -261,7 +261,7 @@ export class Editor {
           prevId = node.data.id;
         } else {
           // add a new node
-          const newId = this.#idGen.mkSpanId();
+          const newId = this.idGenerator.mkSpanId();
           const dataType = parseInt(ptr.getAttribute("data-type") || "0", 0);
           actions.push({
             type: "new-span",
@@ -413,7 +413,7 @@ export class Editor {
       if (ptr.data.t === "span") {
         result.push({
           ...ptr.data,
-          id: this.#idGen.mkSpanId(),
+          id: this.idGenerator.mkSpanId(),
         });
       }
       ptr = ptr.next;
@@ -459,7 +459,7 @@ export class Editor {
         {
           type: "new-block",
           targetId: parnetNode.data.id,
-          newId: this.#idGen.mkBlockId(),
+          newId: this.idGenerator.mkBlockId(),
           afterId: lineNode.data.id,
           spans: remain,
         },
@@ -563,7 +563,7 @@ export class Editor {
     while (ptr) {
       const currentSpan = ptr.data as Span;
       if (currentSpan.content.length > 0) {
-        const newId = this.#idGen.mkSpanId();
+        const newId = this.idGenerator.mkSpanId();
         if (!firstId) {
           firstId = newId;
         }

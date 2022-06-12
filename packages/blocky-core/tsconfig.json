@@ -26,6 +26,7 @@
     "declaration": true,
     "declarationDir": "dist",
     "composite": true,
+    "removeComments": false,
     "plugins": [
       { "transform": "typescript-transform-paths" },
       { "transform": "typescript-transform-paths", "afterDeclarations": true }
