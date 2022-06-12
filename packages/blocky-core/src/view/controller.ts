@@ -25,6 +25,10 @@ export interface IEditorControllerOptions {
   banner?: BannerDelegateOptions;
 }
 
+export interface IInsertOptions {
+  autoFocus: boolean;
+}
+
 export class EditorController {
   public editor: Editor | undefined;
   public readonly pluginRegistry: PluginRegistry;
@@ -57,7 +61,7 @@ export class EditorController {
     this.editor = editor;
   }
 
-  insertBlockAfterId(afterId: string) {
+  insertBlockAfterId(afterId: string, options?: IInsertOptions) {
     const { editor } = this;
     if (!editor) {
       return;
@@ -75,7 +79,15 @@ export class EditorController {
         afterId,
       }
     ]);
-    editor.render();
+    editor.render(() => {
+      if (options?.autoFocus) {
+        this.state.cursorState = {
+          type: "collapsed",
+          targetId: newId,
+          offset: 0,
+        };
+      }
+    });
   }
 
   get bannerFocusedNode(): TreeNode<DocNode> | undefined {
