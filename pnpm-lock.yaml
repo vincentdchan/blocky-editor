@@ -49,6 +49,7 @@ importers:
     specifiers:
       '@babel/core': ^7.18.2
       '@preact/preset-vite': ^2.2.0
+      '@types/node': ^17.0.41
       blocky-common: workspace:*
       blocky-core: workspace:*
       blocky-preact: workspace:*
@@ -62,6 +63,7 @@ importers:
     devDependencies:
       '@babel/core': 7.18.2
       '@preact/preset-vite': 2.2.0_5idm7wj6oolsiprugvjdnnfke4
+      '@types/node': 17.0.41
       preact: 10.7.3
       sass: 1.52.3
       vite: 2.9.12_sass@1.52.3

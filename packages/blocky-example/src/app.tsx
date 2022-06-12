@@ -1,11 +1,11 @@
 import { Component, JSX } from "preact";
-import { EditorController } from "blocky-core";
+import { type Editor, EditorController } from "blocky-core";
 import { BlockyEditor, makePreactBannerOptions } from "blocky-preact";
 import makeBoldedTextPlugin from "blocky-core/dist/plugins/boldedTextPlugin";
 import Banner from "./banner";
 import "blocky-core/css/bolded-text-plugin.css";
 import "blocky-core/css/blocky-core.css";
-import "./app.scss"
+import "./app.scss";
 
 interface AppState {
   headingContent: string;
@@ -13,13 +13,12 @@ interface AppState {
 
 function makeController(): EditorController {
   return new EditorController({
-    plugins: [
-      makeBoldedTextPlugin(),
-    ],
-    banner: makePreactBannerOptions(<Banner />),
+    plugins: [makeBoldedTextPlugin()],
+    banner: makePreactBannerOptions((editor: Editor) => (
+      <Banner editor={editor} />
+    )),
   });
 }
-
 
 class App extends Component<{}, AppState> {
   private editorController: EditorController;
@@ -28,15 +27,15 @@ class App extends Component<{}, AppState> {
     super(props);
     this.editorController = makeController();
     this.state = {
-      headingContent: 'Blocky Editor',
-    }
+      headingContent: "Blocky Editor",
+    };
   }
 
   private handleHeadingChanged = (e: JSX.TargetedEvent<HTMLInputElement>) => {
     this.setState({
       headingContent: (e.target! as HTMLInputElement).value,
     });
-  }
+  };
 
   render() {
     return (
@@ -53,7 +52,6 @@ class App extends Component<{}, AppState> {
       </div>
     );
   }
-
 }
 
 export default App;

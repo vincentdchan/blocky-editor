@@ -3,6 +3,7 @@ import { observe, runInAction } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
 import { type IDisposable, flattenDisposable } from "blocky-common/es/disposable";
 import { lazy } from "blocky-common/es/lazy";
+import { type Position } from "blocky-common/es/position";
 import { docRenderer } from "@pkg/view/renderer";
 import {
   State as DocumentState,
@@ -72,6 +73,14 @@ export interface IEditorOptions {
   banner?: BannerDelegateOptions;
 }
 
+/**
+ * The internal view layer object of the editor.
+ * It's not recommended to manipulate this class by the user.
+ * The user should use `EditorController` to manipulate the editor.
+ * 
+ * This class is designed to used internally. This class can be
+ * used by the plugins to do something internally.
+ */
 export class Editor {
   #container: HTMLDivElement;
   #renderedDom: HTMLDivElement | undefined;
@@ -107,7 +116,7 @@ export class Editor {
     this.#container = container;
     this.idGenerator = idGenerator ?? makeDefaultIdGenerator();
 
-    this.#bannerDelegate = new BannerDelegate(banner);
+    this.#bannerDelegate = new BannerDelegate(this, banner);
     this.#bannerDelegate.mount(this.#container);
     this.disposables.push(this.#bannerDelegate);
 
@@ -373,13 +382,22 @@ export class Editor {
   }
 
   public placeBannerAt(blockContainer: HTMLElement) {
-    const containerRect = this.#container.getBoundingClientRect();
-    const blockRect = blockContainer.getBoundingClientRect();
-
-    const y = blockRect.y - containerRect.y;
+    const { y } = this.getRelativeOffsetByDom(blockContainer);
 
     this.#bannerDelegate.show();
     this.#bannerDelegate.setPosition(24, y + 2);
+  }
+
+  /**
+   * Get the element's relative position to the container of the editor.
+   */
+  private getRelativeOffsetByDom(element: HTMLElement): Position {
+    const containerRect = this.#container.getBoundingClientRect();
+    const blockRect = element.getBoundingClientRect();
+    return {
+      x: blockRect.x - containerRect.x,
+      y: blockRect.y - containerRect.y,
+    }
   }
 
   private hideBanner = () => {

@@ -1,7 +1,8 @@
 import { DivContainer } from "blocky-common/es/dom";
+import type { Editor } from "@pkg/view/editor";
 
 export interface BannerDelegateOptions {
-  bannerDidMount?: (dom: HTMLDivElement) => void;
+  bannerDidMount?: (dom: HTMLDivElement, editor: Editor) => void;
   bannerWillUnmount?: (dom: HTMLDivElement) => void;
 }
 
@@ -9,7 +10,7 @@ export class BannerDelegate extends DivContainer {
 
   #shown: boolean = false;
 
-  constructor(private options?: BannerDelegateOptions) {
+  constructor(private editor: Editor, private options?: BannerDelegateOptions) {
     super("blocky-editor-banner-delegate blocky-cm-noselect");
     this.container.style.display = "none";
   }
@@ -18,7 +19,7 @@ export class BannerDelegate extends DivContainer {
     super.mount(parent);
 
     if (this.options?.bannerDidMount) {
-      this.options.bannerDidMount(this.container);
+      this.options.bannerDidMount(this.container, this.editor);
     } else {
       this.renderFallback();
     }

@@ -1,5 +1,12 @@
 import { defineConfig } from 'vite';
+import * as path from 'path';
 import preact from "@preact/preset-vite";
+
+export const projectRootDir = process.cwd();
+
+export const resolveByProjectRootDir = (...pathSegments: string[]) => {
+  return path.resolve(projectRootDir, ...pathSegments);
+};
 
 export default defineConfig((env) => {
   
@@ -13,6 +20,9 @@ export default defineConfig((env) => {
         preact(),
       ],
       resolve: {
+        alias: {
+          '@pkg': resolveByProjectRootDir("src"),
+        }
       },
       server: {
         port: 9000,
