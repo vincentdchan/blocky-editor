@@ -154,7 +154,7 @@ function renderBlock(
     blockContainer._mgNode = blockNode;
     blockContainer.setAttribute("data-type", data.flags.toString());
     blockContainer.addEventListener("mouseenter", () => {
-      editor.placeBannerAt(blockContainer);
+      editor.placeBannerAt(blockContainer, blockNode);
     });
     blockDef.onContainerCreated?.({
       element: blockContainer,

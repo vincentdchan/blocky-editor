@@ -1,16 +1,18 @@
 import { DivContainer } from "blocky-common/es/dom";
-import type { Editor } from "@pkg/view/editor";
+import type { EditorController } from "@pkg/view/controller";
+import { type DocNode, type TreeNode } from "@pkg/model";
 
 export interface BannerDelegateOptions {
-  bannerDidMount?: (dom: HTMLDivElement, editor: Editor) => void;
+  bannerDidMount?: (dom: HTMLDivElement, editorController: EditorController) => void;
   bannerWillUnmount?: (dom: HTMLDivElement) => void;
 }
 
 export class BannerDelegate extends DivContainer {
 
   #shown: boolean = false;
+  public focusedNode: TreeNode<DocNode> | undefined;
 
-  constructor(private editor: Editor, private options?: BannerDelegateOptions) {
+  constructor(private editorController: EditorController, private options?: BannerDelegateOptions) {
     super("blocky-editor-banner-delegate blocky-cm-noselect");
     this.container.style.display = "none";
   }
@@ -19,7 +21,7 @@ export class BannerDelegate extends DivContainer {
     super.mount(parent);
 
     if (this.options?.bannerDidMount) {
-      this.options.bannerDidMount(this.container, this.editor);
+      this.options.bannerDidMount(this.container, this.editorController);
     } else {
       this.renderFallback();
     }
