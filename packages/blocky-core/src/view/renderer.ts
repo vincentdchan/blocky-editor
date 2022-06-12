@@ -156,9 +156,6 @@ function renderBlock(
     blockContainer.addEventListener("mouseenter", () => {
       editor.placeBannerAt(blockContainer);
     });
-    blockContainer.addEventListener("mouseleave", () => {
-      editor.hideBanner();
-    });
     blockDef.onContainerCreated?.({
       element: blockContainer,
       node: blockNode,

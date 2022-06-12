@@ -117,6 +117,8 @@ export class Editor {
       observe(state, "cursorState", this.handleCursorStateChanged),
     );
 
+    this.disposables.push($on(container, "mouseleave", this.hideBanner));
+
     this.registry.plugin.emitInitPlugins(this);
   }
 
@@ -380,8 +382,8 @@ export class Editor {
     this.#bannerDelegate.setPosition(24, y + 2);
   }
 
-  public hideBanner() {
-    // this.#bannerDelegate.hide();
+  private hideBanner = () => {
+    this.#bannerDelegate.hide();
   }
 
   private handleCompositionStart = (e: CompositionEvent) => {
