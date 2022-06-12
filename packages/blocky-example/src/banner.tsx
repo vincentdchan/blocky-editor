@@ -48,7 +48,7 @@ class Banner extends Component<BannerProps, BannerState> {
     if (!focusedNode) {
       return;
     }
-    editorController.insertBlockAfterId(focusedNode.data.id);
+    editorController.insertBlockAfterId(focusedNode.data.id, { autoFocus: true });
   }
 
   private renderMenu() {
