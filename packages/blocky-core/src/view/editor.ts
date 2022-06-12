@@ -16,6 +16,8 @@ import { IPlugin, PluginRegistry, type AfterFn } from "@pkg/registry/pluginRegis
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
+import { BannerDelegate, type BannerDelegateOptions } from "./bannerDelegate";
+import type { EditorController } from "./controller";
 import fastdiff from "fast-diff";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
@@ -67,11 +69,13 @@ export interface IEditorOptions {
   registry: EditorRegistry,
   container: HTMLDivElement,
   idGenerator?: IdGenerator,
+  banner?: BannerDelegateOptions;
 }
 
 export class Editor {
   #container: HTMLDivElement;
   #renderedDom: HTMLDivElement | undefined;
+  #bannerDelegate: BannerDelegate;
   public idGenerator: IdGenerator;
 
   public readonly state: DocumentState;
@@ -82,25 +86,30 @@ export class Editor {
   public composing: boolean = false;
   private disposables: IDisposable[] = [];
 
+  static fromController(container: HTMLDivElement, controller: EditorController): Editor {
+    const editor = new Editor({
+      container,
+      registry: {
+        plugin: controller.pluginRegistry,
+        span: controller.spanRegistry,
+        block: controller.blockRegistry,
+      },
+      state: controller.state,
+      banner: controller.options?.banner,
+    });
+    return editor;
+  }
+
   constructor(options: IEditorOptions) {
-    const { container, state, registry, idGenerator } = options;
+    const { container, state, registry, idGenerator, banner } = options;
     this.state = state;
     this.registry = registry;
     this.#container = container;
     this.idGenerator = idGenerator ?? makeDefaultIdGenerator();
 
-    container.contentEditable = "true";
-
-    $on(container, "input", (e: Event) => {
-      if (this.composing) {
-        return;
-      }
-      this.handleContentChanged(e);
-    });
-    $on(container, "compositionstart", this.handleCompositionStart);
-    $on(container, "compositionend", this.handleCompositionEnd);
-    $on(container, "keydown", this.handleKeyDown);
-    $on(container, "paste", this.handlePaste);
+    this.#bannerDelegate = new BannerDelegate(banner);
+    this.#bannerDelegate.mount(this.#container);
+    this.disposables.push(this.#bannerDelegate);
 
     document.addEventListener("selectionchange", this.selectionChanged);
 
@@ -120,8 +129,21 @@ export class Editor {
     });
     if (!this.#renderedDom) {
       this.#container.appendChild(newDom);
+      newDom.contentEditable = "true";
+
+      $on(newDom, "input", (e: Event) => {
+        if (this.composing) {
+          return;
+        }
+        this.handleContentChanged(e);
+      });
+      $on(newDom, "compositionstart", this.handleCompositionStart);
+      $on(newDom, "compositionend", this.handleCompositionEnd);
+      $on(newDom, "keydown", this.handleKeyDown);
+      $on(newDom, "paste", this.handlePaste);
+
+      this.#renderedDom = newDom;
     }
-    this.#renderedDom = newDom;
 
     if (done) {
       done();
@@ -348,12 +370,18 @@ export class Editor {
     }
   }
 
-  public placeBannerAt() {
+  public placeBannerAt(blockContainer: HTMLElement) {
+    const containerRect = this.#container.getBoundingClientRect();
+    const blockRect = blockContainer.getBoundingClientRect();
 
+    const y = blockRect.y - containerRect.y;
+
+    this.#bannerDelegate.show();
+    this.#bannerDelegate.setPosition(24, y + 2);
   }
 
   public hideBanner() {
-
+    // this.#bannerDelegate.hide();
   }
 
   private handleCompositionStart = (e: CompositionEvent) => {

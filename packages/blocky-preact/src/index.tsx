@@ -12,15 +12,7 @@ export class BlockyEditor extends Component<Props> {
 
   override componentDidMount() {
     const { controller } = this.props;
-    this.#editor = new Editor({
-      container: this.#containerRef.current!,
-      registry: {
-        plugin: controller.pluginRegistry,
-        span: controller.spanRegistry,
-        block: controller.blockRegistry,
-      },
-      state: controller.state,
-    });
+    this.#editor = Editor.fromController(this.#containerRef.current!, controller);
     this.#editor.render();
   }
 

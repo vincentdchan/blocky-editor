@@ -37,12 +37,6 @@ export function docRenderer(options: DocRenderOptions): HTMLDivElement {
   }
 
   if (oldDom && oldDom instanceof HTMLDivElement) {
-    const oldState = oldDom._mgNode;
-    if (typeof oldState === "undefined") {
-      const newDom = createNewDocument();
-      oldDom.parentElement?.replaceChild(newDom, oldDom);
-      return newDom;
-    }
     renderDocument(options, state.root, oldDom);
     return oldDom;
   } else {
@@ -160,7 +154,7 @@ function renderBlock(
     blockContainer._mgNode = blockNode;
     blockContainer.setAttribute("data-type", data.flags.toString());
     blockContainer.addEventListener("mouseenter", () => {
-      editor.placeBannerAt();
+      editor.placeBannerAt(blockContainer);
     });
     blockContainer.addEventListener("mouseleave", () => {
       editor.hideBanner();
