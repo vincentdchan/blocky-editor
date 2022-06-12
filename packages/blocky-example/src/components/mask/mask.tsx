@@ -1,10 +1,18 @@
 import { Component } from "preact";
+import "./mask.scss";
 
-class Mask extends Component {
+export interface MaskProps {
+  children?: any;
+  onClick?: () => void;
+}
 
-  override render() {
+class Mask extends Component<MaskProps> {
+
+  override render({ children, onClick }: MaskProps) {
     return (
-      <div></div>
+      <div className="blocky-example-mask" onClick={onClick}>
+        {children}
+      </div>
     );
   }
 
