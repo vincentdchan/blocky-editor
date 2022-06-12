@@ -4,23 +4,26 @@ import Mask from "@pkg/components/mask";
 
 export interface DropdownProps {
   show?: boolean;
-  children: any;
+  onMaskClicked?: () => void;
+  overlay?: any;
+  children?: any;
 }
 
 class Dropdown extends Component<DropdownProps> {
 
   override render(props: DropdownProps) {
-    const { children, show } = props;
+    const { children, show, onMaskClicked, overlay } = props;
     return (
       <>
         {children}
-        {show && (
-          createPortal(<Mask />, document.body)
-        )}
+        {show &&
+          createPortal(
+            <Mask onClick={onMaskClicked}>{overlay}</Mask>,
+            document.body
+          )}
       </>
     );
   }
-
 }
 
 export default Dropdown;
