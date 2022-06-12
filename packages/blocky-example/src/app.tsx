@@ -1,8 +1,9 @@
 import { Component, JSX } from "preact";
-import { type Editor, EditorController } from "blocky-core";
+import { EditorController } from "blocky-core";
 import { BlockyEditor, makePreactBannerOptions } from "blocky-preact";
 import makeBoldedTextPlugin from "blocky-core/dist/plugins/boldedTextPlugin";
 import Banner from "./banner";
+import TianShuiWeiImage from "./tianshuiwei.jpg";
 import "blocky-core/css/bolded-text-plugin.css";
 import "blocky-core/css/blocky-core.css";
 import "./app.scss";
@@ -41,6 +42,9 @@ class App extends Component<{}, AppState> {
     return (
       <div className="blocky-example-app-window">
         <div className="blocky-example-container">
+          <div className="blocky-example-image">
+            <img src={TianShuiWeiImage} />
+          </div>
           <div className="blocky-example-title-container">
             <input
               value={this.state.headingContent}
