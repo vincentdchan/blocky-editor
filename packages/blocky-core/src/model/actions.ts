@@ -7,6 +7,7 @@ export interface NewBlockAction {
   afterId: string;
   newId: string;
   spans?: Span[];
+  data?: any;
 }
 
 export interface NewSpanAction {
