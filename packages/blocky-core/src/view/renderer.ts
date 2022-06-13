@@ -34,16 +34,6 @@ function createSpanNode(
   return result;
 }
 
-/**
- * Line
- * - line content
- * - line children
- */
-export interface ILineRenderer {
-  createLineElement(): HTMLDivElement;
-  getLineContentElement(lineContainer: HTMLDivElement): HTMLDivElement;
-}
-
 function ensureChild<K extends keyof HTMLElementTagNameMap>(
   dom: HTMLElement,
   index: number,
@@ -161,6 +151,7 @@ export class DocRenderer {
         element: blockContainer,
         node: blockNode,
         clsPrefix,
+        block: blockNode.data as Block,
       });
     }
 

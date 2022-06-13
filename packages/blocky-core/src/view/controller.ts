@@ -27,6 +27,7 @@ export interface IEditorControllerOptions {
 
 export interface IInsertOptions {
   autoFocus: boolean;
+  data?: any;
 }
 
 export class EditorController {
@@ -77,6 +78,7 @@ export class EditorController {
         targetId: parentNode.data.id,
         newId,
         afterId,
+        data: options?.data,
       }
     ]);
     editor.render(() => {

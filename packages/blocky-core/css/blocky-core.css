@@ -30,3 +30,19 @@
   content: "Empty line";
   color: gray;
 }
+
+
+.blocky-heading1 {
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.blocky-heading2 {
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.blocky-heading3 {
+  font-size: 24px;
+  font-weight: 600;
+}

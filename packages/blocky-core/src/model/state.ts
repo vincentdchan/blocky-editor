@@ -23,7 +23,7 @@ import { type CursorState } from "@pkg/model/cursor";
 
 const DummyTextContentId = "block-text-content";
 
-function createLineWithContent(line: Block): TreeNode<DocNode> {
+function createBlockWithContent(line: Block): TreeNode<DocNode> {
   const lineNode: TreeNode<Block> = createNode(line);
 
   const lineContentNode: TreeNode<DocNode> = createNode({
@@ -58,7 +58,7 @@ class State {
 
           case "block": {
             const modelLine = toNodeBlock(node);
-            const treeNode: TreeNode<DocNode> = createLineWithContent(modelLine);
+            const treeNode: TreeNode<DocNode> = createBlockWithContent(modelLine);
             appendChild(parentNode!, treeNode);
             nextNode = treeNode;
             break;
@@ -141,9 +141,10 @@ class State {
           t: "block",
           id: action.newId,
           flags: 0,
+          data: action.data,
         };
 
-        const lineNode = createLineWithContent(newLine);
+        const lineNode = createBlockWithContent(newLine);
         this.insertNode(lineNode);
 
         const lineContentNode = lineNode.firstChild!;

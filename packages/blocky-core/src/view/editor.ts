@@ -545,8 +545,8 @@ export class Editor {
         return;
       }
 
-      const parnetNode = lineNode.parent;
-      if (!parnetNode) {
+      const parentNode = lineNode.parent;
+      if (!parentNode) {
         return;
       }
 
@@ -556,7 +556,7 @@ export class Editor {
       const actions: Action[] = [
         {
           type: "new-block",
-          targetId: parnetNode.data.id,
+          targetId: parentNode.data.id,
           newId: this.idGenerator.mkBlockId(),
           afterId: lineNode.data.id,
           spans: remain,
