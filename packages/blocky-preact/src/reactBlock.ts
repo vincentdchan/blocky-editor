@@ -6,6 +6,10 @@ export interface ReactBlockOptions {
   component: () => ComponentChild;
 }
 
+/**
+ * This method is used connect between blocky-core and preact.
+ * Help to write a block in React's style.
+ */
 export function makeReactBlock(options: ReactBlockOptions): IBlockDefinition {
   const { name, component } = options;
   let renderedComponent: ComponentChild | undefined;
