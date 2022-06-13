@@ -32,7 +32,7 @@ export class BlockRegistry {
 
   getBlockDefByName(name: string): IBlockDefinition | undefined {
     const id = this.#nameMap.get(name);
-    if (!id) {
+    if (typeof id === "undefined") {
       return;
     }
     return this.#types[id];

@@ -26,7 +26,7 @@
                                   supported by Chrome, Edge, Opera and Firefox */
 }
 
-.blocky-line-content:empty::before {
+.blocky-block-text-content:empty::before {
   content: "Empty line";
   color: gray;
 }
