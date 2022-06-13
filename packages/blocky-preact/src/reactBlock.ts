@@ -3,16 +3,20 @@ import { render as reactRender, type ComponentChild } from "preact";
 
 export interface ReactBlockOptions {
   name: string;
-  component: ComponentChild;
+  component: () => ComponentChild;
 }
 
 export function makeReactBlock(options: ReactBlockOptions): IBlockDefinition {
   const { name, component } = options;
+  let renderedComponent: ComponentChild | undefined;
   return {
     name,
     type: BlockContentType.Custom,
     render(container: HTMLElement) {
-      reactRender(component, container);
+      if (!renderedComponent) {
+        renderedComponent = component();
+      }
+      reactRender(renderedComponent, container);
     },
   };
 }

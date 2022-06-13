@@ -56,7 +56,10 @@ export class EditorController {
       this.state = options.state;
     } else {
       const { m } = this;
-      this.state = State.fromMarkup(m.doc([m.line([m.span("Hello World")])]));
+      this.state = State.fromMarkup(
+        m.doc([m.line([m.span("Hello World")])]),
+        this.blockRegistry
+      );
     }
   }
 
@@ -84,7 +87,7 @@ export class EditorController {
         newId,
         afterId,
         data: options?.data,
-      }
+      },
     ]);
     editor.render(() => {
       if (options?.autoFocus) {
@@ -100,5 +103,4 @@ export class EditorController {
   get bannerFocusedNode(): TreeNode<DocNode> | undefined {
     return this.editor?.bannerDelegate.focusedNode;
   }
-
 }

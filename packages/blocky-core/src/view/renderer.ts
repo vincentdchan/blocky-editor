@@ -8,7 +8,7 @@ import {
 } from "@pkg/model/index";
 import type { Editor, EditorRegistry } from "@pkg/view/editor";
 import type { ISpanType } from "@pkg/registry/spanRegistry";
-import { BlockContentType } from "..";
+import { BlockContentType, IBlockDefinition } from "..";
 
 function createSpanNode(
   spanNode: TreeNode<Span>,
@@ -122,6 +122,13 @@ export class DocRenderer {
 
     while (nodePtr) {
       const id = nodePtr.data.id;
+      const data = nodePtr.data as Block;
+      const blockDef = this.editor.registry.block.getBlockDefById(data.flags);
+
+      if (!blockDef) {
+        throw new Error(`id not found: ${data.flags}`);
+      }
+
       if (!domPtr || typeof domPtr._mgNode === "undefined" || domPtr._mgNode !== nodePtr) {
         const existDom = this.editor.state.domMap.get(id);
         if (existDom) {  // move dom from another place
@@ -132,11 +139,11 @@ export class DocRenderer {
           const newBlockContainer = this.createBlockContainer();
           blocksContainer.insertBefore(newBlockContainer, prevPtr?.nextSibling ?? null);
           domPtr = newBlockContainer;
-          this.initBlockContainer(newBlockContainer, nodePtr);
+          this.initBlockContainer(newBlockContainer, nodePtr, blockDef);
         }
       }
 
-      this.renderBlock(domPtr as HTMLElement, nodePtr);
+      this.renderBlock(domPtr as HTMLElement, nodePtr, blockDef);
 
       nodePtr = nodePtr.next;
       prevPtr = domPtr;
@@ -144,28 +151,22 @@ export class DocRenderer {
     }
   }
 
-  protected renderBlock(blockContainer: HTMLElement, blockNode: TreeNode<DocNode>) {
-    const { editor } = this;
-    const data = blockNode.data as Block;
-    const blockDef = editor.registry.block.getBlockDefById(data.flags);
-
-    if (!blockDef) {
-      throw new Error(`id not found: ${data.flags}`);
-    }
-
-    const contentContainer = blockDef.findContentContainer!(blockContainer);
-
+  protected renderBlock(blockContainer: HTMLElement, blockNode: TreeNode<DocNode>, blockDef: IBlockDefinition) {
     if (blockDef.type === BlockContentType.Text) {
+      const contentContainer = blockDef.findContentContainer!(blockContainer);
       this.renderBlockTextContent(contentContainer, blockNode.firstChild!);
     } else {
       blockDef?.render?.(blockContainer);
     }
   }
 
-  private initBlockContainer(blockContainer: HTMLElement, blockNode: TreeNode<DocNode>) {
+  private initBlockContainer(blockContainer: HTMLElement, blockNode: TreeNode<DocNode>, blockDef: IBlockDefinition) {
     const { editor, clsPrefix } = this;
     const data = blockNode.data as Block;
-    const blockDef = editor.registry.block.getBlockDefById(data.flags)!;
+
+    if (blockDef.type === BlockContentType.Custom) {
+      blockContainer.contentEditable = "false";
+    }
 
     blockContainer._mgNode = blockNode;
     editor.state.domMap.set(data.id, blockContainer);

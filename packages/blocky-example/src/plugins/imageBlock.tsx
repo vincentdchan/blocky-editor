@@ -1,13 +1,20 @@
 import { type Editor, type IPlugin } from "blocky-core";
-import { makeReactBlock } from "blocky-preact";
+import { makeReactBlock, DefaultBlockOutline } from "blocky-preact";
 import { Component } from "preact";
+import "./imageBlock.scss";
 
 export const ImageBlockName = "image";
 
 class ImageBlock extends Component {
 
   render() {
-    return (<div className="blocky-image-block"></div>);
+    return (
+      <DefaultBlockOutline>
+        <div className="blocky-image-block">
+          <button>Upload</button>
+        </div>
+      </DefaultBlockOutline>
+    );
   }
 
 }

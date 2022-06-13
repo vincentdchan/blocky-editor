@@ -20,6 +20,7 @@ import {
   MNode,
 } from "./markup";
 import { type CursorState } from "@pkg/model/cursor";
+import { BlockRegistry } from "@pkg/registry/blockRegistry";
 
 const DummyTextContentId = "block-text-content";
 
@@ -37,9 +38,9 @@ function createBlockWithContent(line: Block): TreeNode<DocNode> {
 }
 
 class State {
-  static fromMarkup(doc: MDoc): State {
+  static fromMarkup(doc: MDoc, blockRegistry: BlockRegistry): State {
     const rootNode = createRoot<DocNode>(toNodeDoc(doc));
-    const state = new State(rootNode);
+    const state = new State(rootNode, blockRegistry);
 
     traverse<TreeNode<DocNode>>(
       doc,
@@ -92,7 +93,7 @@ class State {
   public readonly domMap: Map<string, Node> = new Map();
   public cursorState: CursorState | undefined;
 
-  constructor(public readonly root: TreeRoot<DocNode>) {
+  constructor(public readonly root: TreeRoot<DocNode>, public readonly blockRegistry: BlockRegistry) {
     makeObservable(this, "cursorState");
   }
 
@@ -137,10 +138,16 @@ class State {
 
         const afterNode = this.idMap.get(action.afterId);
 
+        const { blockName } = action;
+        const blockId = this.blockRegistry.getBlockIdByName(blockName);
+        if (typeof blockId !== "number") {
+          throw new Error(`block name '${blockName} not found'`);
+        }
+
         const newLine: Block = {
           t: "block",
           id: action.newId,
-          flags: 0,
+          flags: blockId,
           data: action.data,
         };
 
