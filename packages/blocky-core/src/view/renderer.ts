@@ -1,4 +1,4 @@
-import { elem } from "blocky-common/es/dom";
+import { clearAllChildren, elem, removeNode } from "blocky-common/es/dom";
 import {
   type Block,
   type TreeNode,
@@ -109,31 +109,42 @@ export class DocRenderer {
   }
 
   protected renderBlocks(blocksContainer: HTMLElement, parentNode: TreeNode<DocNode>) {
-    const { childrenLength } = parentNode;
-    let actualLen = blocksContainer.children.length;
-    if (actualLen < childrenLength) {
-      for (let i = actualLen; i < childrenLength; i++) {
-        const newBlockContainer = this.createBlockContainer();
-        blocksContainer.appendChild(newBlockContainer);
-      }
-    } else if (actualLen > childrenLength) {
-      while (actualLen > childrenLength && blocksContainer.lastChild) {
-        blocksContainer.removeChild(blocksContainer.lastChild);
-        actualLen--;
-      }
+    let nodePtr = parentNode.firstChild;
+    
+    if (!nodePtr) {
+      clearAllChildren(blocksContainer);
+      return;
     }
 
-    let ptr = parentNode.firstChild;
-    let childElement = blocksContainer.firstElementChild;
-    while (ptr && childElement) {
-      this.renderBlock(childElement as HTMLElement, ptr);
-      ptr = ptr.next;
-      childElement = childElement.nextElementSibling;
+    let domPtr: Node | null = blocksContainer.firstChild;
+    let prevPtr: Node | undefined;
+
+    while (nodePtr) {
+      const id = nodePtr.data.id;
+      if (!domPtr || typeof domPtr._mgNode === "undefined" || domPtr._mgNode !== nodePtr) {
+        const existDom = this.editor.state.domMap.get(id);
+        if (existDom) {  // move dom from another place
+          removeNode(existDom);
+          blocksContainer.insertBefore(existDom, prevPtr?.nextSibling ?? null);
+          domPtr = existDom;
+        } else {
+          const newBlockContainer = this.createBlockContainer();
+          blocksContainer.insertBefore(newBlockContainer, prevPtr?.nextSibling ?? null);
+          domPtr = newBlockContainer;
+          this.initBlockContainer(newBlockContainer, nodePtr);
+        }
+      }
+
+      this.renderBlock(domPtr as HTMLElement, nodePtr);
+
+      nodePtr = nodePtr.next;
+      prevPtr = domPtr;
+      domPtr = domPtr.nextSibling;
     }
   }
 
   protected renderBlock(blockContainer: HTMLElement, blockNode: TreeNode<DocNode>) {
-    const { editor, clsPrefix } = this;
+    const { editor } = this;
     const data = blockNode.data as Block;
     const blockDef = editor.registry.block.getBlockDefById(data.flags);
 
@@ -141,25 +152,28 @@ export class DocRenderer {
       throw new Error(`id not found: ${data.flags}`);
     }
 
-    if (blockContainer._mgNode !== blockNode) {
-      blockContainer._mgNode = blockNode;
-      blockContainer.setAttribute("data-type", blockDef.name);
-      blockContainer.addEventListener("mouseenter", () => {
-        editor.placeBannerAt(blockContainer, blockNode);
-      });
-      blockDef.onContainerCreated?.({
-        element: blockContainer,
-        node: blockNode,
-        clsPrefix,
-        block: blockNode.data as Block,
-      });
-    }
-
-    editor.state.domMap.set(data.id, blockContainer);
-
     const contentContainer = blockDef.findContentContainer!(blockContainer);
 
     this.renderBlockTextContent(contentContainer, blockNode.firstChild!);
+  }
+
+  private initBlockContainer(blockContainer: HTMLElement, blockNode: TreeNode<DocNode>) {
+    const { editor, clsPrefix } = this;
+    const data = blockNode.data as Block;
+    const blockDef = editor.registry.block.getBlockDefById(data.flags)!;
+
+    blockContainer._mgNode = blockNode;
+    editor.state.domMap.set(data.id, blockContainer);
+    blockContainer.setAttribute("data-type", blockDef.name);
+    blockContainer.addEventListener("mouseenter", () => {
+      editor.placeBannerAt(blockContainer, blockNode);
+    });
+    blockDef.onContainerCreated?.({
+      element: blockContainer,
+      node: blockNode,
+      clsPrefix,
+      block: blockNode.data as Block,
+    });
   }
 
   protected renderBlockTextContent(contentContainer: HTMLElement, lineNode: TreeNode<DocNode>) {
