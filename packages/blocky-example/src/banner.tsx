@@ -2,6 +2,7 @@ import { Component, type RefObject, createRef } from "preact";
 import { type EditorController } from "blocky-core";
 import Dropdown from "@pkg/components/dropdown";
 import { Menu, MenuItem } from "@pkg/components/menu";
+import { ImageBlockName } from "@pkg/plugins/imageBlock";
 import "./banner.scss";
 
 export interface BannerProps {
@@ -53,6 +54,18 @@ class Banner extends Component<BannerProps, BannerState> {
     });
   };
 
+  private insertImage = () => {
+    const { editorController } = this.props;
+    const focusedNode = editorController.bannerFocusedNode;
+    if (!focusedNode) {
+      return;
+    }
+    editorController.insertBlockAfterId(focusedNode.data.id, {
+      autoFocus: true,
+      blockName: ImageBlockName,
+    });
+  }
+
   private renderMenu() {
     const { menuX } = this.state;
     let { menuY } = this.state;
@@ -64,6 +77,7 @@ class Banner extends Component<BannerProps, BannerState> {
         <MenuItem onClick={this.insertHeading(1)}>Heading1</MenuItem>
         <MenuItem onClick={this.insertHeading(2)}>Heading2</MenuItem>
         <MenuItem onClick={this.insertHeading(3)}>Heading3</MenuItem>
+        <MenuItem onClick={this.insertImage}>Image</MenuItem>
       </Menu>
     );
   }

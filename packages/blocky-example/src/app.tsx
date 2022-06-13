@@ -2,6 +2,7 @@ import { Component, JSX } from "preact";
 import { EditorController } from "blocky-core";
 import { BlockyEditor, makePreactBannerOptions } from "blocky-preact";
 import makeBoldedTextPlugin from "blocky-core/dist/plugins/boldedTextPlugin";
+import { makeImageBlockPlugin } from "./plugins/imageBlock";
 import Banner from "./banner";
 import TianShuiWeiImage from "./tianshuiwei.jpg";
 import "blocky-core/css/bolded-text-plugin.css";
@@ -14,7 +15,10 @@ interface AppState {
 
 function makeController(): EditorController {
   return new EditorController({
-    plugins: [makeBoldedTextPlugin()],
+    plugins: [
+      makeBoldedTextPlugin(),
+      makeImageBlockPlugin(),
+    ],
     banner: makePreactBannerOptions((editorController: EditorController) => (
       <Banner editorController={editorController} />
     )),

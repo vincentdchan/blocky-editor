@@ -3,6 +3,7 @@ import type * as fastdiff from "fast-diff";
 
 export interface NewBlockAction {
   type: "new-block";
+  blockName: string;
   targetId: string;
   afterId: string;
   newId: string;
@@ -16,13 +17,6 @@ export interface NewSpanAction {
   afterId?: string;
   append?: boolean;
   content: Span;
-}
-
-export interface NewSubpageAction {
-  type: "new-subpage";
-  targetId?: string; // preserved
-  title?: string;
-  newId: string;
 }
 
 export interface DeleteLineAction {
@@ -47,7 +41,6 @@ export type Action =
   | DeleteLineAction
   | UpdateSpanAction
   | NewSpanAction
-  | NewSubpageAction
   | SetLineTypeAction;
 
 export interface Transaction {
