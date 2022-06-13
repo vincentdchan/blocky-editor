@@ -1,4 +1,4 @@
-import type { TreeNode, DocNode } from "@pkg/model";
+import type { TreeNode, DocNode, Block } from "@pkg/model";
 import { CursorState } from "@pkg/model/cursor";
 
 export enum BlockContentType {
@@ -6,10 +6,11 @@ export enum BlockContentType {
   Custom,
 }
 
-export interface SpanCreatedEvent {
+export interface BlockCreatedEvent {
   element: HTMLElement;
   clsPrefix: string;
   node: TreeNode<DocNode>;
+  block: Block,
 }
 
 export interface BlockFocusedEvent {
@@ -32,7 +33,7 @@ export interface IBlockDefinition {
    */
   findContentContainer?: (parent: HTMLElement) => HTMLElement;
 
-  onContainerCreated?: (e: SpanCreatedEvent) => void;
+  onContainerCreated?: (e: BlockCreatedEvent) => void;
 
   /**
    * Handle the block is focused.

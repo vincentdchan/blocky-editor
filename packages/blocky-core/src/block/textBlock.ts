@@ -1,11 +1,7 @@
 import { elem } from "blocky-common/es/dom";
-import { type IBlockDefinition, BlockContentType, type SpanCreatedEvent, BlockFocusedEvent } from "./basic";
+import { type IBlockDefinition, BlockContentType, type BlockCreatedEvent, BlockFocusedEvent } from "./basic";
 
 export const TextBlockName = "text";
-
-export interface ITextBlockOptions {
-  level?: number;
-}
 
 const TextContentClass = 'blocky-block-text-content';
 
@@ -14,22 +10,20 @@ class TextBlockImpl implements IBlockDefinition {
   public name: string = TextBlockName;
   public type: BlockContentType = BlockContentType.Text;
 
-  constructor(private options?: ITextBlockOptions) {}
-
   findContentContainer(parent: HTMLElement) {
     return parent.firstChild! as HTMLElement;
   }
 
-  onContainerCreated({ element }: SpanCreatedEvent) {
+  onContainerCreated({ element, block }: BlockCreatedEvent) {
     const content = elem("div", TextContentClass);
 
-    const level = this.options?.level ?? 0;
+    const level = block.data?.level ?? 0;
     if (level === 1) {
-      content.classList.add("blocky-heading1");
+      element.classList.add("blocky-heading1");
     } else if (level === 2) {
-      content.classList.add("blocky-heading2");
+      element.classList.add("blocky-heading2");
     } else if (level === 3) {
-      content.classList.add("blocky-heading3");
+      element.classList.add("blocky-heading3");
     }
 
     element.appendChild(content);
@@ -61,6 +55,6 @@ class TextBlockImpl implements IBlockDefinition {
 
 }
 
-export function makeTextBlockDefinition(options?: ITextBlockOptions): IBlockDefinition {
-  return new TextBlockImpl(options);
+export function makeTextBlockDefinition(): IBlockDefinition {
+  return new TextBlockImpl();
 }

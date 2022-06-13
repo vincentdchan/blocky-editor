@@ -15,7 +15,6 @@ interface BannerState {
 }
 
 class Banner extends Component<BannerProps, BannerState> {
-
   #bannerRef: RefObject<HTMLDivElement> = createRef();
 
   constructor(props: BannerProps) {
@@ -40,26 +39,31 @@ class Banner extends Component<BannerProps, BannerState> {
     this.setState({
       showDropdown: false,
     });
-  }
+  };
 
-  private insertHeading = () => {
+  private insertHeading = (level: number) => () => {
     const { editorController } = this.props;
     const focusedNode = editorController.bannerFocusedNode;
     if (!focusedNode) {
       return;
     }
-    editorController.insertBlockAfterId(focusedNode.data.id, { autoFocus: true });
-  }
+    editorController.insertBlockAfterId(focusedNode.data.id, {
+      autoFocus: true,
+      data: { level },
+    });
+  };
 
   private renderMenu() {
     const { menuX } = this.state;
     let { menuY } = this.state;
     menuY += 36;
     return (
-      <Menu style={{ position: 'fixed', left: `${menuX}px`, top: `${menuY}px` }}>
-        <MenuItem onClick={this.insertHeading}>Heading1</MenuItem>
-        <MenuItem onClick={this.insertHeading}>Heading2</MenuItem>
-        <MenuItem onClick={this.insertHeading}>Heading3</MenuItem>
+      <Menu
+        style={{ position: "fixed", left: `${menuX}px`, top: `${menuY}px` }}
+      >
+        <MenuItem onClick={this.insertHeading(1)}>Heading1</MenuItem>
+        <MenuItem onClick={this.insertHeading(2)}>Heading2</MenuItem>
+        <MenuItem onClick={this.insertHeading(3)}>Heading3</MenuItem>
       </Menu>
     );
   }
