@@ -5,7 +5,7 @@ export const TextBlockName = "text";
 
 const TextContentClass = 'blocky-block-text-content';
 
-class TextBlockImpl implements IBlockDefinition {
+class TextBlockDefinition implements IBlockDefinition {
 
   public name: string = TextBlockName;
   public type: BlockContentType = BlockContentType.Text;
@@ -56,5 +56,5 @@ class TextBlockImpl implements IBlockDefinition {
 }
 
 export function makeTextBlockDefinition(): IBlockDefinition {
-  return new TextBlockImpl();
+  return new TextBlockDefinition();
 }

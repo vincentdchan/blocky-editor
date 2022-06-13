@@ -21,9 +21,9 @@ export interface IPlugin {
   /**
    * Will be triggered when the editor is initialized.
    */
-  onInitialized?: (editor: Editor) => void;
+  onInitialized?(editor: Editor): void;
 
-  beforeApply?: (editor: Editor, actions: Action[]) => (AfterFn | void),
+  beforeApply?(editor: Editor, actions: Action[]): (AfterFn | void);
 }
 
 export class PluginRegistry {

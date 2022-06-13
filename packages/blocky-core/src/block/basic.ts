@@ -31,9 +31,9 @@ export interface IBlockDefinition {
    * A text block must have a child element to contain
    * the text content.
    */
-  findContentContainer?: (parent: HTMLElement) => HTMLElement;
+  findContentContainer?(parent: HTMLElement): HTMLElement;
 
-  onContainerCreated?: (e: BlockCreatedEvent) => void;
+  onContainerCreated?(e: BlockCreatedEvent): void;
 
   /**
    * Handle the block is focused.
@@ -42,6 +42,6 @@ export interface IBlockDefinition {
    * equal to the block'id. The children is out of situation.
    * 
    */
-  onBlockFocused?: (e: BlockFocusedEvent) => void;
+  onBlockFocused?(e: BlockFocusedEvent): void;
 
 }

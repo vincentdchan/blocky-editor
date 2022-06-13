@@ -25,6 +25,7 @@ import { SpanRegistry } from "@pkg/registry/spanRegistry";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { BannerDelegate, type BannerDelegateOptions } from "./bannerDelegate";
+import { TextBlockName } from "@pkg/block/textBlock";
 import type { EditorController } from "./controller";
 import fastdiff from "fast-diff";
 
@@ -557,6 +558,7 @@ export class Editor {
       const actions: Action[] = [
         {
           type: "new-block",
+          blockName: TextBlockName,
           targetId: parentNode.data.id,
           newId: this.idGenerator.mkBlockId(),
           afterId: lineNode.data.id,

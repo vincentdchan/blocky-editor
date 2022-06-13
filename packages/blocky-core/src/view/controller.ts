@@ -3,6 +3,7 @@ import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
 import { MarkupGenerator } from "@pkg/model/markup";
+import { TextBlockName } from "@pkg/block/textBlock";
 import { type BannerDelegateOptions } from "@pkg/view/bannerDelegate";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { type Editor } from "./editor";
@@ -27,6 +28,7 @@ export interface IEditorControllerOptions {
 
 export interface IInsertOptions {
   autoFocus: boolean;
+  blockName?: string;
   data?: any;
 }
 
@@ -71,10 +73,13 @@ export class EditorController {
     const prevNode = this.state.idMap.get(afterId)!;
     const parentNode = prevNode.parent!;
 
+    const blockName = options?.blockName ?? TextBlockName;
+
     const newId = editor.idGenerator.mkBlockId();
     editor.applyActions([
       {
         type: "new-block",
+        blockName,
         targetId: parentNode.data.id,
         newId,
         afterId,
