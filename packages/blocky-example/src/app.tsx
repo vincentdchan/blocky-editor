@@ -3,7 +3,7 @@ import { EditorController } from "blocky-core";
 import { BlockyEditor, makePreactBannerOptions } from "blocky-preact";
 import makeBoldedTextPlugin from "blocky-core/dist/plugins/boldedTextPlugin";
 import { makeImageBlockPlugin } from "./plugins/imageBlock";
-import Banner from "./banner";
+import BannerMenu from "./bannerMenu";
 import TianShuiWeiImage from "./tianshuiwei.jpg";
 import "blocky-core/css/bolded-text-plugin.css";
 import "blocky-core/css/blocky-core.css";
@@ -20,7 +20,7 @@ function makeController(): EditorController {
       makeImageBlockPlugin(),
     ],
     banner: makePreactBannerOptions((editorController: EditorController) => (
-      <Banner editorController={editorController} />
+      <BannerMenu editorController={editorController} />
     )),
   });
 }

@@ -3,7 +3,7 @@ import { type EditorController } from "blocky-core";
 import Dropdown from "@pkg/components/dropdown";
 import { Menu, MenuItem } from "@pkg/components/menu";
 import { ImageBlockName } from "@pkg/plugins/imageBlock";
-import "./banner.scss";
+import "./bannerMenu.scss";
 
 export interface BannerProps {
   editorController: EditorController;
@@ -15,7 +15,7 @@ interface BannerState {
   menuY: number;
 }
 
-class Banner extends Component<BannerProps, BannerState> {
+class BannerMenu extends Component<BannerProps, BannerState> {
   #bannerRef: RefObject<HTMLDivElement> = createRef();
 
   constructor(props: BannerProps) {
@@ -100,4 +100,4 @@ class Banner extends Component<BannerProps, BannerState> {
   }
 }
 
-export default Banner;
+export default BannerMenu;
