@@ -132,6 +132,8 @@ export class DocRenderer {
       if (!domPtr || typeof domPtr._mgNode === "undefined" || domPtr._mgNode !== nodePtr) {
         const existDom = this.editor.state.domMap.get(id);
         if (existDom) {  // move dom from another place
+          // don't need to destruct
+          // maybe used later
           removeNode(existDom);
           blocksContainer.insertBefore(existDom, prevPtr?.nextSibling ?? null);
           domPtr = existDom;
@@ -149,6 +151,20 @@ export class DocRenderer {
       prevPtr = domPtr;
       domPtr = domPtr.nextSibling;
     }
+
+    // domPtr is not null
+    while (domPtr) {
+      let next = domPtr.nextSibling;
+
+      this.destructBlockNode(domPtr);
+
+      domPtr = next;
+    }
+  }
+
+  private destructBlockNode(node: Node) {
+    // TODO: call destructor
+    removeNode(node);
   }
 
   protected renderBlock(blockContainer: HTMLElement, blockNode: TreeNode<DocNode>, blockDef: IBlockDefinition) {

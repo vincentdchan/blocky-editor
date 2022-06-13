@@ -37,9 +37,11 @@ class DefaultBlockOutlineInternal extends Component<
     );
   }
 
-  private handleNewCursorState = (state: CursorState) => {
+  private handleNewCursorState = (state: CursorState | undefined) => {
     const shouldShowOutline =
-      state.type === "collapsed" && state.targetId === this.props.blockId;
+      typeof state !== "undefined" &&
+      state.type === "collapsed" &&
+      state.targetId === this.props.blockId;
     if (shouldShowOutline === this.state.showOutline) {
       return;
     }
@@ -58,7 +60,7 @@ class DefaultBlockOutlineInternal extends Component<
     editorController.state.cursorState = {
       type: "collapsed",
       targetId: blockId,
-      offset: 0
+      offset: 0,
     };
   };
 
@@ -71,10 +73,7 @@ class DefaultBlockOutlineInternal extends Component<
       cls += " outline";
     }
     return (
-      <div
-        className={cls}
-        onClick={this.handleContainerClicked}
-      >
+      <div className={cls} onClick={this.handleContainerClicked}>
         {children}
       </div>
     );

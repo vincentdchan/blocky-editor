@@ -100,6 +100,22 @@ export class EditorController {
     });
   }
 
+  deleteBlock(id: string) {
+    const { editor } = this;
+    if (!editor) {
+      return;
+    }
+
+    this.state.cursorState = undefined;
+    editor.applyActions([
+      {
+        type: "delete",
+        targetId: id,
+      },
+    ]);
+    editor.render();
+  }
+
   get bannerFocusedNode(): TreeNode<DocNode> | undefined {
     return this.editor?.bannerDelegate.focusedNode;
   }
