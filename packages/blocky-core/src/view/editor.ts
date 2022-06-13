@@ -1,19 +1,26 @@
 import { $on } from "blocky-common/es/dom";
 import { observe, runInAction } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
-import { type IDisposable, flattenDisposable } from "blocky-common/es/disposable";
+import {
+  type IDisposable,
+  flattenDisposable,
+} from "blocky-common/es/disposable";
 import { lazy } from "blocky-common/es/lazy";
 import { type Position } from "blocky-common/es/position";
-import { docRenderer } from "@pkg/view/renderer";
+import { DocRenderer } from "@pkg/view/renderer";
 import {
   State as DocumentState,
   type TreeNode,
   type DocNode,
   type Span,
 } from "@pkg/model/index";
-import { type CursorState } from "@pkg/model/cursor";
+import { CollapsedCursor, type CursorState } from "@pkg/model/cursor";
 import { Action } from "@pkg/model/actions";
-import { IPlugin, PluginRegistry, type AfterFn } from "@pkg/registry/pluginRegistry";
+import {
+  IPlugin,
+  PluginRegistry,
+  type AfterFn,
+} from "@pkg/registry/pluginRegistry";
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
@@ -66,24 +73,33 @@ export function makeDefaultEditorEntry(plugins?: IPlugin[]) {
 }
 
 export interface IEditorOptions {
-  state: DocumentState,
-  registry: EditorRegistry,
-  container: HTMLDivElement,
-  idGenerator?: IdGenerator,
+  state: DocumentState;
+  registry: EditorRegistry;
+  container: HTMLDivElement;
+  idGenerator?: IdGenerator;
   banner?: BannerDelegateOptions;
+}
+
+/**
+ * The spans created by the browser
+ */
+interface NewSpanTuple {
+  node: Node;
+  id: string;
 }
 
 /**
  * The internal view layer object of the editor.
  * It's not recommended to manipulate this class by the user.
  * The user should use `EditorController` to manipulate the editor.
- * 
+ *
  * This class is designed to used internally. This class can be
  * used by the plugins to do something internally.
  */
 export class Editor {
   #container: HTMLDivElement;
   #renderedDom: HTMLDivElement | undefined;
+  #renderer: DocRenderer;
   public readonly bannerDelegate: BannerDelegate;
   public idGenerator: IdGenerator;
 
@@ -95,7 +111,10 @@ export class Editor {
   public composing: boolean = false;
   private disposables: IDisposable[] = [];
 
-  static fromController(container: HTMLDivElement, controller: EditorController): Editor {
+  static fromController(
+    container: HTMLDivElement,
+    controller: EditorController
+  ): Editor {
     const editor = new Editor(controller, {
       container,
       registry: {
@@ -124,21 +143,22 @@ export class Editor {
     document.addEventListener("selectionchange", this.selectionChanged);
 
     this.disposables.push(
-      observe(state, "cursorState", this.handleCursorStateChanged),
+      observe(state, "cursorState", this.handleCursorStateChanged)
     );
 
     this.disposables.push($on(container, "mouseleave", this.hideBanner));
 
     this.registry.plugin.emitInitPlugins(this);
+
+    this.#renderer = new DocRenderer({
+      clsPrefix: "blocky",
+      editor: this,
+      registry: this.registry,
+    });
   }
 
   render(done?: AfterFn) {
-    const newDom = docRenderer({
-      clsPrefix: "blocky",
-      editor: this,
-      oldDom: this.#renderedDom,
-      registry: this.registry,
-    });
+    const newDom = this.#renderer.render(this.#renderedDom);
     if (!this.#renderedDom) {
       this.#container.appendChild(newDom);
       newDom.contentEditable = "true";
@@ -221,6 +241,7 @@ export class Editor {
     node: Node,
     actions: Action[],
     currentOffset?: number,
+    newSpanTuples?: NewSpanTuple[]
   ) {
     const treeNode = node._mgNode as TreeNode<DocNode>;
     if (!node.parentNode) {
@@ -249,15 +270,18 @@ export class Editor {
         });
       }
     } else if (data.t === "block") {
-      // check if there is new span created by the browser
-      this.checkLineContent(node, treeNode, actions);
+      this.checkBlockContent(node, treeNode, actions, newSpanTuples);
     }
   }
 
-  private checkLineContent(
+  /**
+   * Check if there is new span created by the browser
+   */
+  private checkBlockContent(
     node: Node,
     lineNode: TreeNode<DocNode>,
     actions: Action[],
+    newSpans?: NewSpanTuple[]
   ) {
     const contentContainer = node.firstChild! as HTMLElement;
 
@@ -287,7 +311,10 @@ export class Editor {
             },
           });
           prevId = newId;
-          nodesToRemoved.push(ptr);
+          newSpans?.push({
+            node: ptr,
+            id: newId,
+          });
         }
       } else if (ptr instanceof HTMLSpanElement) {
         if (ptr._mgNode) {
@@ -309,7 +336,10 @@ export class Editor {
             },
           });
           prevId = newId;
-          nodesToRemoved.push(ptr);
+          newSpans?.push({
+            node: ptr,
+            id: newId,
+          });
         }
       } else {
         nodesToRemoved.push(ptr);
@@ -321,17 +351,20 @@ export class Editor {
     nodesToRemoved.forEach((node) => node.parentNode?.removeChild(node));
   }
 
-  private checkNodesChanged(actions: Action[]) {
+  private checkNodesChanged(actions: Action[], newSpanTuples: NewSpanTuple[]) {
+    console.log("check nodes changed");
     const doms = this.state.domMap.values();
     for (const dom of doms) {
-      this.checkMarkedDom(dom, actions);
+      this.checkMarkedDom(dom, actions, undefined, newSpanTuples);
     }
   }
 
   private handleOpenCursorContentChanged() {
     const actions: Action[] = [];
-    this.checkNodesChanged(actions);
+    const newSpanTuples: NewSpanTuple[] = [];
+    this.checkNodesChanged(actions, newSpanTuples);
     this.applyActions(actions);
+    this.bindNewSpansTuples(newSpanTuples);
   }
 
   private handleContentChanged = (e?: any) => {
@@ -349,10 +382,25 @@ export class Editor {
     }
 
     const actions: Action[] = [];
+    const newSpanTuples: NewSpanTuple[] = [];
 
-    this.checkMarkedDom(domNode, actions, currentOffset);
+    this.checkMarkedDom(domNode, actions, currentOffset, newSpanTuples);
     this.applyActions(actions);
+    this.bindNewSpansTuples(newSpanTuples);
   };
+
+  private bindNewSpansTuples(tuples: NewSpanTuple[]) {
+    tuples.forEach((tuple) => this.bindNewSpanTuple(tuple));
+  }
+
+  private bindNewSpanTuple({ node, id }: NewSpanTuple) {
+    const treeNode = this.state.idMap.get(id);
+    if (!treeNode) {
+      throw new Error(`${id} is not created successfully`);
+    }
+    console.log("bound:", id);
+    node._mgNode = treeNode;
+  }
 
   public applyActions(actions: Action[], noUpdate: boolean = false) {
     if (actions.length === 0) {
@@ -399,12 +447,12 @@ export class Editor {
     return {
       x: blockRect.x - containerRect.x,
       y: blockRect.y - containerRect.y,
-    }
+    };
   }
 
   private hideBanner = () => {
     this.bannerDelegate.hide();
-  }
+  };
 
   private handleCompositionStart = (e: CompositionEvent) => {
     this.composing = true;
@@ -583,7 +631,7 @@ export class Editor {
   private pushingSpansToPreviousLine(
     spanNode: TreeNode<DocNode>,
     prevLineNode: TreeNode<DocNode>,
-    actions: Action[],
+    actions: Action[]
   ): string | undefined {
     const lineId = prevLineNode.data.id;
     const lastNodeOfPrevLine = prevLineNode.firstChild!.lastChild as
@@ -659,7 +707,7 @@ export class Editor {
     const firstId = this.pushingSpansToPreviousLine(
       spanNode,
       prevLineNode,
-      actions,
+      actions
     );
 
     this.applyActions(actions);
@@ -702,7 +750,7 @@ export class Editor {
 
   private handleCursorStateChanged = (
     newState: CursorState | undefined,
-    oldState: CursorState | undefined,
+    oldState: CursorState | undefined
   ) => {
     if (areEqualShallow(newState, oldState)) {
       return;
@@ -731,14 +779,15 @@ export class Editor {
       throw new Error(`dom not found: ${targetId}`);
     }
 
-    sel.removeAllRanges();
-
-    const range = document.createRange();
     if (targetNode instanceof Text) {
+      sel.removeAllRanges();
+      const range = document.createRange();
       range.setStart(targetNode, offset);
       range.setEnd(targetNode, offset);
       sel.addRange(range);
     } else if (targetNode instanceof HTMLSpanElement) {
+      sel.removeAllRanges();
+      const range = document.createRange();
       let child = targetNode.firstChild;
       if (!child) {
         child = document.createTextNode("");
@@ -747,10 +796,35 @@ export class Editor {
       range.setStart(child, offset);
       range.setEnd(child, offset);
       sel.addRange(range);
+    } else if (
+      targetNode instanceof HTMLDivElement &&
+      targetNode.classList.contains(this.#renderer.blockClassName)
+    ) {
+      this.focusBlock(sel, targetNode, newState);
     } else {
       console.error("unknown element:", targetNode);
     }
   };
+
+  /**
+   * It's hard to define the behavior of focusing on a block.
+   *
+   * If it's a text block try to focus on the text.
+   * Otherwise, focus on the outline?
+   */
+  private focusBlock(
+    sel: Selection,
+    blockDom: HTMLDivElement,
+    cursor: CollapsedCursor
+  ) {
+    const dataType = blockDom.getAttribute("data-type") || "";
+    const blockDef = this.registry.block.getBlockDefByName(dataType);
+    if (!blockDef) {
+      return;
+    }
+
+    blockDef.onBlockFocused?.({ node: blockDom, cursor, selection: sel });
+  }
 
   private handlePaste = (e: ClipboardEvent) => {
     e.preventDefault();

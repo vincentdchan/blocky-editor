@@ -1,11 +1,13 @@
 import { elem } from "blocky-common/es/dom";
-import { type IBlockDefinition, BlockContentType, type SpanCreatedEvent } from "./basic";
+import { type IBlockDefinition, BlockContentType, type SpanCreatedEvent, BlockFocusedEvent } from "./basic";
 
 export const TextBlockName = "text";
 
 export interface ITextBlockOptions {
   level?: number;
 }
+
+const TextContentClass = 'blocky-block-text-content';
 
 class TextBlockImpl implements IBlockDefinition {
 
@@ -18,8 +20,8 @@ class TextBlockImpl implements IBlockDefinition {
     return parent.firstChild! as HTMLElement;
   }
 
-  onContainerCreated({ element, clsPrefix }: SpanCreatedEvent) {
-    const content = elem("div", `${clsPrefix}-line-content`);
+  onContainerCreated({ element }: SpanCreatedEvent) {
+    const content = elem("div", TextContentClass);
 
     const level = this.options?.level ?? 0;
     if (level === 1) {
@@ -31,6 +33,30 @@ class TextBlockImpl implements IBlockDefinition {
     }
 
     element.appendChild(content);
+  }
+
+  onBlockFocused({ node: blockDom, selection }: BlockFocusedEvent) {
+    const contentContainer = blockDom.querySelector(`.${TextContentClass}`);
+    if (!contentContainer) {
+      return;
+    }
+
+    selection.removeAllRanges();
+
+    const { firstChild } = contentContainer;
+
+    if (firstChild == null) {
+      const range = document.createRange();
+      range.setStart(contentContainer, 0);
+      range.setEnd(contentContainer, 0);
+      selection.addRange(range);
+      return;
+    }
+
+    const range = document.createRange();
+    range.setStart(firstChild, 0);
+    range.setEnd(firstChild, 0);
+    selection.addRange(range);
   }
 
 }
