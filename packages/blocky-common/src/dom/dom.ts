@@ -18,6 +18,10 @@ export function removeElement(elem: HTMLElement) {
   elem.parentElement?.removeChild(elem);
 }
 
+export function removeNode(node: Node) {
+  node.parentNode?.removeChild(node);
+}
+
 export function insertAtFirst(parent: HTMLElement, elem: HTMLElement) {
   parent.insertBefore(elem, parent.firstChild);
 }
