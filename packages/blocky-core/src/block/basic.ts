@@ -44,4 +44,6 @@ export interface IBlockDefinition {
    */
   onBlockFocused?(e: BlockFocusedEvent): void;
 
+  render?(container: HTMLElement): void;
+
 }

@@ -8,6 +8,7 @@ import {
 } from "@pkg/model/index";
 import type { Editor, EditorRegistry } from "@pkg/view/editor";
 import type { ISpanType } from "@pkg/registry/spanRegistry";
+import { BlockContentType } from "..";
 
 function createSpanNode(
   spanNode: TreeNode<Span>,
@@ -154,7 +155,11 @@ export class DocRenderer {
 
     const contentContainer = blockDef.findContentContainer!(blockContainer);
 
-    this.renderBlockTextContent(contentContainer, blockNode.firstChild!);
+    if (blockDef.type === BlockContentType.Text) {
+      this.renderBlockTextContent(contentContainer, blockNode.firstChild!);
+    } else {
+      blockDef?.render?.(blockContainer);
+    }
   }
 
   private initBlockContainer(blockContainer: HTMLElement, blockNode: TreeNode<DocNode>) {
