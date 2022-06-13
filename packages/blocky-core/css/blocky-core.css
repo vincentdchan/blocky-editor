@@ -50,6 +50,16 @@
   width: 100%;
   border-radius: 12px;
   overflow: hidden;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+}
+
+.blocky-default-block-outline.outline {
+  outline-style: solid;
+  outline-width: 1px;
+  outline-color: rgb(52, 184, 220);
+  outline-offset: -1px;
 }
 
 .blocky-editor-block {

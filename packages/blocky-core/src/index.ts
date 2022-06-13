@@ -7,3 +7,4 @@ export { default as DocumentState } from "./model/state";
 export { type BannerDelegateOptions } from "./view/bannerDelegate";
 export { type IPlugin } from "./registry/pluginRegistry";
 export { type IBlockDefinition, BlockContentType } from "./block/basic";
+export { type CursorState } from "./model/cursor";

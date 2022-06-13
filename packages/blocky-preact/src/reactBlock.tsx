@@ -30,7 +30,6 @@ export const ReactBlockContext = createContext<IReactBlockContext | undefined>(
  */
 export function makeReactBlock(options: ReactBlockOptions): IBlockDefinition {
   const { name, component } = options;
-  let renderedComponent: ComponentChild | undefined;
   return {
     name,
     type: BlockContentType.Custom,
@@ -39,14 +38,12 @@ export function makeReactBlock(options: ReactBlockOptions): IBlockDefinition {
       editorController: EditorController,
       id: string
     ) {
-      if (!renderedComponent) {
-        renderedComponent = (
-          <ReactBlockContext.Provider value={{ editorController, blockId: id }}>
-            {component()}
-          </ReactBlockContext.Provider>
-        );
-      }
-      reactRender(renderedComponent, container);
+      reactRender(
+        <ReactBlockContext.Provider value={{ editorController, blockId: id }}>
+          {component()}
+        </ReactBlockContext.Provider>,
+        container
+      );
     },
     blockWillUnmount(container: HTMLElement) {
       console.log("unmount react block");

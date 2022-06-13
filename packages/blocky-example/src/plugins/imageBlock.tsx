@@ -1,6 +1,7 @@
 import { type Editor, type IPlugin } from "blocky-core";
 import { makeReactBlock, DefaultBlockOutline } from "blocky-preact";
-import { Component, type RefObject, createRef } from "preact";
+import { type RefObject, createRef } from "preact";
+import { PureComponent } from "preact/compat";
 import Button from "@pkg/components/button";
 import "./imageBlock.scss";
 
@@ -10,7 +11,7 @@ interface ImageBlockState {
   data?: string;
 }
 
-class ImageBlock extends Component<{}, ImageBlockState> {
+class ImageBlock extends PureComponent<{}, ImageBlockState> {
   #selectorRef: RefObject<HTMLInputElement> = createRef();
 
   constructor(props: {}) {

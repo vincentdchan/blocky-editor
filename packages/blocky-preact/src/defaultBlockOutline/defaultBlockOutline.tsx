@@ -1,6 +1,11 @@
 import { Component } from "preact";
 import { ReactBlockContext } from "../reactBlock";
-import { type EditorController } from "blocky-core";
+import {
+  type IDisposable,
+  flattenDisposable,
+} from "blocky-common/es/disposable";
+import { observe } from "blocky-common/es/observable";
+import { type CursorState, type EditorController } from "blocky-core";
 
 interface DefaultBlockOutlineInternalProps {
   editorController: EditorController;
@@ -8,10 +13,71 @@ interface DefaultBlockOutlineInternalProps {
   children?: any;
 }
 
-class DefaultBlockOutlineInternal extends Component<DefaultBlockOutlineInternalProps> {
-  override render(props: DefaultBlockOutlineInternalProps) {
-    const { children } = props;
-    return <div className="blocky-default-block-outline">{children}</div>;
+interface InternalState {
+  showOutline: boolean;
+}
+
+class DefaultBlockOutlineInternal extends Component<
+  DefaultBlockOutlineInternalProps,
+  InternalState
+> {
+  private disposables: IDisposable[] = [];
+
+  constructor(props: DefaultBlockOutlineInternalProps) {
+    super(props);
+    this.state = {
+      showOutline: false,
+    };
+  }
+
+  override componentDidMount() {
+    const { editorController } = this.props;
+    this.disposables.push(
+      observe(editorController.state, "cursorState", this.handleNewCursorState)
+    );
+  }
+
+  private handleNewCursorState = (state: CursorState) => {
+    const shouldShowOutline =
+      state.type === "collapsed" && state.targetId === this.props.blockId;
+    if (shouldShowOutline === this.state.showOutline) {
+      return;
+    }
+
+    this.setState({
+      showOutline: shouldShowOutline,
+    });
+  };
+
+  override componentWillUnmount() {
+    flattenDisposable(this.disposables).dispose();
+  }
+
+  private handleContainerClicked = () => {
+    const { editorController, blockId } = this.props;
+    editorController.state.cursorState = {
+      type: "collapsed",
+      targetId: blockId,
+      offset: 0
+    };
+  };
+
+  override render(
+    { children }: DefaultBlockOutlineInternalProps,
+    { showOutline }: InternalState
+  ) {
+    let cls = "blocky-default-block-outline";
+    if (showOutline) {
+      cls += " outline";
+    }
+    return (
+      <div
+        className={cls}
+        onClick={this.handleContainerClicked}
+      >
+        {children}
+      </div>
+    );
   }
 }
 
