@@ -1,5 +1,6 @@
 import type { TreeNode, DocNode, Block } from "@pkg/model";
-import { CursorState } from "@pkg/model/cursor";
+import { type CollapsedCursor } from "@pkg/model/cursor";
+import { type EditorController } from "@pkg/view/controller";
 
 export enum BlockContentType {
   Text,
@@ -16,7 +17,7 @@ export interface BlockCreatedEvent {
 export interface BlockFocusedEvent {
   selection: Selection;
   node: HTMLDivElement;
-  cursor: CursorState;
+  cursor: CollapsedCursor;
 }
 
 
@@ -44,6 +45,8 @@ export interface IBlockDefinition {
    */
   onBlockFocused?(e: BlockFocusedEvent): void;
 
-  render?(container: HTMLElement): void;
+  render?(container: HTMLElement, editorController: EditorController, id: string): void;
+
+  blockWillUnmount?(container: HTMLElement): void;
 
 }

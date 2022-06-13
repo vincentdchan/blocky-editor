@@ -7,12 +7,12 @@ import {
   treeChildrenToArray,
 } from "@pkg/model/index";
 import type { Editor, EditorRegistry } from "@pkg/view/editor";
-import type { ISpanType } from "@pkg/registry/spanRegistry";
+import type { SpanDefinition } from "@pkg/registry/spanRegistry";
 import { BlockContentType, IBlockDefinition } from "..";
 
 function createSpanNode(
   spanNode: TreeNode<Span>,
-  spanDef: ISpanType
+  spanDef: SpanDefinition
 ): Node {
   const { data } = spanNode;
   const spanType = data.flags;
@@ -132,6 +132,8 @@ export class DocRenderer {
       if (!domPtr || typeof domPtr._mgNode === "undefined" || domPtr._mgNode !== nodePtr) {
         const existDom = this.editor.state.domMap.get(id);
         if (existDom) {  // move dom from another place
+          // don't need to destruct
+          // maybe used later
           removeNode(existDom);
           blocksContainer.insertBefore(existDom, prevPtr?.nextSibling ?? null);
           domPtr = existDom;
@@ -149,6 +151,15 @@ export class DocRenderer {
       prevPtr = domPtr;
       domPtr = domPtr.nextSibling;
     }
+
+    // domPtr is not null
+    while (domPtr) {
+      let next = domPtr.nextSibling;
+
+      this.editor.destructBlockNode(domPtr);
+
+      domPtr = next;
+    }
   }
 
   protected renderBlock(blockContainer: HTMLElement, blockNode: TreeNode<DocNode>, blockDef: IBlockDefinition) {
@@ -156,7 +167,7 @@ export class DocRenderer {
       const contentContainer = blockDef.findContentContainer!(blockContainer);
       this.renderBlockTextContent(contentContainer, blockNode.firstChild!);
     } else {
-      blockDef?.render?.(blockContainer);
+      blockDef?.render?.(blockContainer, this.editor.controller, blockNode.data.id);
     }
   }
 

@@ -1,4 +1,5 @@
 import { makeObservable } from "blocky-common/es/observable";
+import { Slot } from "blocky-common/es/events";
 import type { DocNode, Block, Span } from "./nodes";
 import {
   type TreeNode,
@@ -21,6 +22,7 @@ import {
 } from "./markup";
 import { type CursorState } from "@pkg/model/cursor";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
+import { validate as validateNode } from "./validator";
 
 const DummyTextContentId = "block-text-content";
 
@@ -91,9 +93,12 @@ class State {
 
   public readonly idMap: Map<string, TreeNode<DocNode>> = new Map();
   public readonly domMap: Map<string, Node> = new Map();
+  public readonly newBlockInserted: Slot<Block> = new Slot;
+  public readonly blockDeleted: Slot<Block> = new Slot;
   public cursorState: CursorState | undefined;
 
   constructor(public readonly root: TreeRoot<DocNode>, public readonly blockRegistry: BlockRegistry) {
+    validateNode(root);
     makeObservable(this, "cursorState");
   }
 
@@ -144,28 +149,32 @@ class State {
           throw new Error(`block name '${blockName} not found'`);
         }
 
-        const newLine: Block = {
+        const newBlock: Block = {
           t: "block",
           id: action.newId,
           flags: blockId,
           data: action.data,
         };
 
-        const lineNode = createBlockWithContent(newLine);
-        this.insertNode(lineNode);
+        const blockNode = createBlockWithContent(newBlock);
+        this.insertNode(blockNode);
 
-        const lineContentNode = lineNode.firstChild!;
+        if (blockId === 0) {
+          const lineContentNode = blockNode.firstChild!;
 
-        const { spans } = action;
-        if (spans) {
-          for (const span of spans) {
-            const spanNode: TreeNode<DocNode> = createNode(span);
-            this.insertNode(spanNode);
-            appendChild(lineContentNode, spanNode);
+          const { spans } = action;
+          if (spans) {
+            for (const span of spans) {
+              const spanNode: TreeNode<DocNode> = createNode(span);
+              this.insertNode(spanNode);
+              appendChild(lineContentNode, spanNode);
+            }
           }
         }
 
-        insertAfter(node, lineNode, afterNode);
+        insertAfter(node, blockNode, afterNode);
+
+        this.newBlockInserted.emit(newBlock);
         break;
       }
 
@@ -195,6 +204,10 @@ class State {
 
         this.idMap.delete(targetId);
         this.domMap.delete(targetId);
+
+        if (node.data.t === "block") {
+          this.blockDeleted.emit(node.data);
+        }
         break;
       }
     }
@@ -249,6 +262,34 @@ export function normalizeLine(line: TreeNode<DocNode>, actions: Action[]) {
     });
     prevContent = newContent;
   });
+}
+
+export function serializeJSON(state: State): any {
+  const { root } = state;
+  return serializeTreeNode(root);
+}
+
+function serializeTreeNode(node: TreeNode<DocNode>): any {
+  const { data } = node;
+
+  let children: any[] | undefined;
+
+  if (data.t !== "span") {
+    children = [];
+    let ptr = node.firstChild;
+    while (ptr) {
+      children.push(serializeTreeNode(ptr));
+
+      ptr = ptr.next;
+    }
+  }
+
+  const result: any = { ...data };
+  if (children) {
+    result.children = children;
+  }
+
+  return result;
 }
 
 export default State;

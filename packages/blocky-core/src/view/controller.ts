@@ -1,12 +1,16 @@
+import { Slot } from "blocky-common/es/events";
+import { observe } from "blocky-common/es/observable";
 import { DocNode, State, TreeNode } from "@pkg/model";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
 import { MarkupGenerator } from "@pkg/model/markup";
 import { TextBlockName } from "@pkg/block/textBlock";
-import { type BannerDelegateOptions } from "@pkg/view/bannerDelegate";
+import { type BannerFactory } from "@pkg/view/bannerDelegate";
+import { type ToolbarFactory } from "@pkg/view/toolbarDelegate";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { type Editor } from "./editor";
+import { type CursorState } from "@pkg/model/cursor";
 
 export interface IEditorControllerOptions {
   pluginRegistry?: PluginRegistry;
@@ -23,7 +27,8 @@ export interface IEditorControllerOptions {
   blockRegistry?: BlockRegistry;
   state?: State;
   idGenerator?: IdGenerator;
-  banner?: BannerDelegateOptions;
+  bannerFactory?: BannerFactory;
+  toolbarFactory?: ToolbarFactory;
 }
 
 export interface IInsertOptions {
@@ -40,6 +45,7 @@ export class EditorController {
   public readonly idGenerator: IdGenerator;
   public readonly m: MarkupGenerator;
   public readonly state: State;
+  public readonly cursorChanged: Slot<CursorState | undefined> = new Slot;
 
   /**
    * A class to control the behavior in the editor
@@ -65,6 +71,8 @@ export class EditorController {
 
   mount(editor: Editor) {
     this.editor = editor;
+
+    observe(this.state, "cursorState", (s: CursorState | undefined) => this.cursorChanged.emit(s));
   }
 
   insertBlockAfterId(afterId: string, options?: IInsertOptions) {
@@ -98,6 +106,22 @@ export class EditorController {
         };
       }
     });
+  }
+
+  deleteBlock(id: string) {
+    const { editor } = this;
+    if (!editor) {
+      return;
+    }
+
+    this.state.cursorState = undefined;
+    editor.applyActions([
+      {
+        type: "delete",
+        targetId: id,
+      },
+    ]);
+    editor.render();
   }
 
   get bannerFocusedNode(): TreeNode<DocNode> | undefined {

@@ -1,27 +1,26 @@
-import { DivContainer } from "blocky-common/es/dom";
+import { type IDisposable } from "blocky-common/es/disposable";
 import type { EditorController } from "@pkg/view/controller";
 import { type DocNode, type TreeNode } from "@pkg/model";
+import { UIDelegate } from "./uiDelegate";
 
-export interface BannerDelegateOptions {
-  bannerDidMount?: (dom: HTMLDivElement, editorController: EditorController) => void;
-  bannerWillUnmount?: (dom: HTMLDivElement) => void;
-}
+export type BannerFactory = (dom: HTMLDivElement, editorController: EditorController) => IDisposable | undefined;
 
-export class BannerDelegate extends DivContainer {
+export class BannerDelegate extends UIDelegate {
 
-  #shown: boolean = false;
   public focusedNode: TreeNode<DocNode> | undefined;
 
-  constructor(private editorController: EditorController, private options?: BannerDelegateOptions) {
+  constructor(private editorController: EditorController, private factory?: BannerFactory) {
     super("blocky-editor-banner-delegate blocky-cm-noselect");
-    this.container.style.display = "none";
   }
 
   override mount(parent: HTMLElement): void {
     super.mount(parent);
 
-    if (this.options?.bannerDidMount) {
-      this.options.bannerDidMount(this.container, this.editorController);
+    if (this.factory) {
+      const disposable = this.factory(this.container, this.editorController);
+      if (disposable) {
+        this.disposables.push(disposable);
+      }
     } else {
       this.renderFallback();
     }
@@ -33,30 +32,10 @@ export class BannerDelegate extends DivContainer {
     this.container.style.backgroundColor = "grey";
   }
 
-  hide() {
-    if (!this.#shown) {
-      return;
-    }
-    this.container.style.display = "none";
-    this.#shown = false;
-  }
-
-  show() {
-    if (this.#shown) {
-      return;
-    }
-    this.container.style.display = "";
-    this.#shown = true;
-  }
-
   setPosition(x: number, y: number) {
     this.container.style.top = y + "px";
     this.container.style.left = x + "px";
   }
 
-  override dispose(): void {
-    this.options?.bannerWillUnmount?.(this.container);
-    super.dispose();
-  }
 
 }

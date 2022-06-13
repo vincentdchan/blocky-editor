@@ -15,6 +15,10 @@
   position: absolute;
 }
 
+.blocky-editor-toolbar-delegate {
+  position: absolute;
+}
+
 /* https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlighting */
 .blocky-cm-noselect {
   -webkit-touch-callout: none; /* iOS Safari */
@@ -50,6 +54,16 @@
   width: 100%;
   border-radius: 12px;
   overflow: hidden;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+}
+
+.blocky-default-block-outline.outline {
+  outline-style: solid;
+  outline-width: 1px;
+  outline-color: rgb(52, 184, 220);
+  outline-offset: -1px;
 }
 
 .blocky-editor-block {

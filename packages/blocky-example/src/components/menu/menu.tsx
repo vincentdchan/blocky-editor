@@ -31,3 +31,9 @@ export class MenuItem extends Component<MenuItemProps> {
     );
   }
 }
+
+export function Divider() {
+  return (
+    <div className="blocky-menu-divider"></div>
+  )
+}

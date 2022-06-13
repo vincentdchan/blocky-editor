@@ -13,6 +13,7 @@
   width: 960px;
   height: 100%;
   box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.2);
+  overflow-y: scroll;
 }
 
 body {
@@ -33,4 +34,5 @@ body {
 
 :root {
   --main-bg-color: white;
+  --danger-color: rgb(201, 56, 56);
 }

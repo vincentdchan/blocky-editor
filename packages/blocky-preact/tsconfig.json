@@ -25,18 +25,9 @@
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
-      "model/*": [
-        "src/model/*"
-      ],
-      "view/*": [
-        "src/view/*"
-      ],
-      "registry/*": [
-        "src/registry/*"
-      ],
-      "helper/*": [
-        "src/helper/*"
-      ],
+      "@pkg/*": [
+        "./src/*"
+      ]
     }
   },
   "include": [

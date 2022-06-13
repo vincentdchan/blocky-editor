@@ -1,4 +1,4 @@
-import { $on } from "blocky-common/es/dom";
+import { $on, removeNode } from "blocky-common/es/dom";
 import { observe, runInAction } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
 import {
@@ -13,6 +13,7 @@ import {
   type TreeNode,
   type DocNode,
   type Span,
+  type Block,
 } from "@pkg/model/index";
 import { CollapsedCursor, type CursorState } from "@pkg/model/cursor";
 import { Action } from "@pkg/model/actions";
@@ -24,10 +25,12 @@ import {
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
-import { BannerDelegate, type BannerDelegateOptions } from "./bannerDelegate";
+import { BannerDelegate, type BannerFactory } from "./bannerDelegate";
+import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import type { EditorController } from "./controller";
 import fastdiff from "fast-diff";
+import { BlockContentType } from "..";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
@@ -78,7 +81,8 @@ export interface IEditorOptions {
   registry: EditorRegistry;
   container: HTMLDivElement;
   idGenerator?: IdGenerator;
-  banner?: BannerDelegateOptions;
+  bannerFactory?: BannerFactory;
+  toolbarFactory?: ToolbarFactory;
 }
 
 /**
@@ -102,6 +106,7 @@ export class Editor {
   #renderedDom: HTMLDivElement | undefined;
   #renderer: DocRenderer;
   public readonly bannerDelegate: BannerDelegate;
+  public readonly toolbarDelegate: ToolbarDelegate;
   public idGenerator: IdGenerator;
 
   public readonly state: DocumentState;
@@ -124,22 +129,37 @@ export class Editor {
         block: controller.blockRegistry,
       },
       state: controller.state,
-      banner: controller.options?.banner,
+      bannerFactory: controller.options?.bannerFactory,
+      toolbarFactory: controller.options?.toolbarFactory,
     });
     controller.mount(editor);
     return editor;
   }
 
-  constructor(controller: EditorController, options: IEditorOptions) {
-    const { container, state, registry, idGenerator, banner } = options;
+  constructor(
+    public readonly controller: EditorController,
+    options: IEditorOptions
+  ) {
+    const {
+      container,
+      state,
+      registry,
+      idGenerator,
+      bannerFactory,
+      toolbarFactory,
+    } = options;
     this.state = state;
     this.registry = registry;
     this.#container = container;
     this.idGenerator = idGenerator ?? makeDefaultIdGenerator();
 
-    this.bannerDelegate = new BannerDelegate(controller, banner);
+    this.bannerDelegate = new BannerDelegate(controller, bannerFactory);
     this.bannerDelegate.mount(this.#container);
     this.disposables.push(this.bannerDelegate);
+
+    this.toolbarDelegate = new ToolbarDelegate(controller, toolbarFactory);
+    this.toolbarDelegate.mount(this.#container);
+    this.disposables.push(this.toolbarDelegate);
 
     document.addEventListener("selectionchange", this.selectionChanged);
 
@@ -158,7 +178,20 @@ export class Editor {
     });
   }
 
-  render(done?: AfterFn) {
+  public applyStyleOnTextRange(styleName: string, startId: string, startOffset: number, endId: string, endOffset: number) {
+    if (startId !== endId) {
+      console.error("unimplemented: apply style crossing blocks");
+      return;
+    }
+
+    const spanId = this.registry.span.getSpanIdByName(styleName)!;
+
+    const actions: Action[] = [];
+
+    this.state.applyActions(actions);
+  }
+
+  public render(done?: AfterFn) {
     console.log("render");
     const newDom = this.#renderer.render(this.#renderedDom);
     if (!this.#renderedDom) {
@@ -199,6 +232,74 @@ export class Editor {
     }
   }
 
+  private trySelectOnParent(startContainer: Node): boolean {
+    const parent = startContainer.parentNode;
+    if (!parent) {
+      return false;
+    }
+
+    // parent is block
+    if (parent instanceof HTMLElement && parent.classList.contains(this.#renderer.blockClassName)) {
+      const node = parent._mgNode as TreeNode<DocNode> | undefined;
+      if (!node) {
+        return false;
+      }
+
+      this.state.cursorState = {
+        type: "collapsed",
+        targetId: node.data.id,
+        offset: 0
+      };
+
+      return true;
+    }
+
+    return false;
+  }
+
+  private handleTreeNodeNotFound(startContainer: Node) {
+    if (!this.trySelectOnParent(startContainer)) {
+      this.state.cursorState = undefined;
+    }
+  }
+
+  private findBlockNodeContainer(node: Node): TreeNode<Block> | undefined {
+    let ptr: Node | null = node;
+
+    while (ptr) {
+      const node = ptr._mgNode as TreeNode<DocNode> | undefined;
+      if (node && node.data.t === "block") {
+        return node as TreeNode<Block>;
+      }
+
+      ptr = ptr.parentNode;
+    }
+
+    return;
+  }
+  
+  private findTextOffsetInBlock(blockNode: TreeNode<Block>, focusedNode: Node, offsetInNode: number): number {
+    const { data } = blockNode;
+    const blockDef = this.registry.block.getBlockDefById(data.flags)!;
+    if (blockDef.type !== BlockContentType.Text) {
+      return 0;
+    }
+    const blockContainer = this.state.domMap.get(data.id)!;
+    const contentContainer = blockDef.findContentContainer!(blockContainer as HTMLElement);
+    let counter = 0;
+    let ptr = contentContainer.firstChild;
+
+    while (ptr) {
+      if (ptr === focusedNode) {
+        break;
+      }
+      counter += ptr.textContent?.length ?? 0;
+      ptr = ptr.nextSibling;
+    }
+
+    return counter + offsetInNode;
+  }
+
   private selectionChanged = () => {
     const sel = window.getSelection();
     if (!sel) {
@@ -212,32 +313,73 @@ export class Editor {
     const range = sel.getRangeAt(0);
     const { startContainer, endContainer, startOffset, endOffset } = range;
 
-    const startNode = this.getTreeNodeFromDom(startContainer);
+    const startNode = this.findBlockNodeContainer(startContainer);
     if (!startNode) {
+      this.handleTreeNodeNotFound(startContainer);
       return;
     }
+
+    const absoluteStartOffset = this.findTextOffsetInBlock(startNode, startContainer, startOffset);
 
     if (range.collapsed) {
       this.state.cursorState = {
         type: "collapsed",
         targetId: startNode.data.id,
-        offset: startOffset,
+        offset: absoluteStartOffset,
       };
     } else {
-      const endNode = this.getTreeNodeFromDom(endContainer);
+      const endNode = this.findBlockNodeContainer(endContainer);
       if (!endNode) {
+        this.state.cursorState = undefined;
         return;
       }
+      const absoluteEndOffset = this.findTextOffsetInBlock(endNode, endContainer, endOffset);
       this.state.cursorState = {
         type: "open",
         startId: startNode.data.id,
-        startOffset: startOffset,
+        startOffset: absoluteStartOffset,
         endId: endNode.data.id,
-        endOffset,
+        endOffset: absoluteEndOffset,
       };
     }
     console.log("selection:", this.state.cursorState);
+
+    const { toolbarDelegate } = this;
+
+    if (toolbarDelegate.enabled) {
+      if (this.tryPlaceToolbar(range)) {
+        toolbarDelegate.show();
+      } else {
+        toolbarDelegate.hide();
+      }
+    }
   };
+
+  private tryPlaceToolbar(range: Range): boolean {
+    const { cursorState } = this.state;
+    if (!cursorState) {
+      return false;
+    }
+
+    if (cursorState.type === "collapsed") {
+      return false;
+    }
+
+    const { startId, endId } = cursorState;
+    if (startId !== endId) {
+      return false;
+    }
+
+    const containerRect = this.#container.getBoundingClientRect();
+    const rect = range.getBoundingClientRect();
+
+    const x = rect.x - containerRect.x;
+    const y = rect.y - containerRect.y - rect.height - 12;
+
+    this.toolbarDelegate.setPosition(x, y);
+
+    return true;
+  }
 
   private checkMarkedDom(
     node: Node,
@@ -248,6 +390,8 @@ export class Editor {
     const treeNode = node._mgNode as TreeNode<DocNode>;
     if (!node.parentNode) {
       // dom has been removed
+
+      this.destructBlockNode(node);
       actions.push({
         type: "delete",
         targetId: treeNode.data.id,
@@ -438,6 +582,28 @@ export class Editor {
     this.bannerDelegate.focusedNode = node;
     this.bannerDelegate.show();
     this.bannerDelegate.setPosition(24, y + 2);
+  }
+
+  /**
+   * Remove node and call the destructor
+   */
+  public destructBlockNode(node: Node) {
+    if (node._mgNode) {
+      const treeNode = node._mgNode as TreeNode<DocNode>;
+      const data = treeNode.data;
+
+      if (data.t === "block") {
+        const block = data as Block;
+        const blockType = block.flags;
+        const blockDef = this.registry.block.getBlockDefById(blockType);
+        blockDef?.blockWillUnmount?.(node as HTMLElement);
+      }
+
+      this.state.domMap.delete(data.id);
+    }
+
+    // TODO: call destructor
+    removeNode(node);
   }
 
   /**
@@ -775,31 +941,14 @@ export class Editor {
       return;
     }
 
-    const { targetId, offset } = newState;
+    const { targetId } = newState;
 
     const targetNode = this.state.domMap.get(targetId);
     if (!targetNode) {
       throw new Error(`dom not found: ${targetId}`);
     }
 
-    if (targetNode instanceof Text) {
-      sel.removeAllRanges();
-      const range = document.createRange();
-      range.setStart(targetNode, offset);
-      range.setEnd(targetNode, offset);
-      sel.addRange(range);
-    } else if (targetNode instanceof HTMLSpanElement) {
-      sel.removeAllRanges();
-      const range = document.createRange();
-      let child = targetNode.firstChild;
-      if (!child) {
-        child = document.createTextNode("");
-        targetNode.appendChild(child);
-      }
-      range.setStart(child, offset);
-      range.setEnd(child, offset);
-      sel.addRange(range);
-    } else if (
+    if (
       targetNode instanceof HTMLDivElement &&
       targetNode.classList.contains(this.#renderer.blockClassName)
     ) {
