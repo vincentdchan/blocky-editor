@@ -130,7 +130,7 @@ export class Editor {
     return editor;
   }
 
-  constructor(controller: EditorController, options: IEditorOptions) {
+  constructor(public readonly controller: EditorController, options: IEditorOptions) {
     const { container, state, registry, idGenerator, banner } = options;
     this.state = state;
     this.registry = registry;

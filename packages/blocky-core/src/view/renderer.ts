@@ -156,7 +156,7 @@ export class DocRenderer {
       const contentContainer = blockDef.findContentContainer!(blockContainer);
       this.renderBlockTextContent(contentContainer, blockNode.firstChild!);
     } else {
-      blockDef?.render?.(blockContainer);
+      blockDef?.render?.(blockContainer, this.editor.controller, blockNode.data.id);
     }
   }
 
