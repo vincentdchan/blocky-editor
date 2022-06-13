@@ -158,6 +158,7 @@ export class Editor {
   }
 
   render(done?: AfterFn) {
+    console.log("render");
     const newDom = this.#renderer.render(this.#renderedDom);
     if (!this.#renderedDom) {
       this.#container.appendChild(newDom);
@@ -385,7 +386,7 @@ export class Editor {
     const newSpanTuples: NewSpanTuple[] = [];
 
     this.checkMarkedDom(domNode, actions, currentOffset, newSpanTuples);
-    this.applyActions(actions);
+    this.applyActions(actions, true);
     this.bindNewSpansTuples(newSpanTuples);
   };
 
@@ -398,8 +399,8 @@ export class Editor {
     if (!treeNode) {
       throw new Error(`${id} is not created successfully`);
     }
-    console.log("bound:", id);
     node._mgNode = treeNode;
+    this.state.domMap.set(id, node);
   }
 
   public applyActions(actions: Action[], noUpdate: boolean = false) {
