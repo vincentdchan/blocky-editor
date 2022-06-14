@@ -1,16 +1,19 @@
 import { render, type ComponentChild } from "preact";
 import { unmountComponentAtNode } from "preact/compat";
-import { type BannerDelegateOptions, type EditorController } from "blocky-core";
+import { type BannerProvider, type EditorController } from "blocky-core";
+import { type IDisposable } from "blocky-common/src/disposable";
 
 export type Renderer = (editorController: EditorController) => ComponentChild;
 
-export function makePreactBannerProvider(renderer: Renderer): BannerDelegateOptions {
+export function makePreactBannerProvider(renderer: Renderer): BannerProvider {
   return {
-    bannerDidMount(container: HTMLDivElement, editorController: EditorController) {
+    bannerDidMount(container: HTMLDivElement, editorController: EditorController): IDisposable {
       render(renderer(editorController), container);
-    },
-    bannerWillUnmount(container: HTMLDivElement) {
-      unmountComponentAtNode(container);
+      return {
+        dispose() {
+          unmountComponentAtNode(container);
+        }
+      };
     },
   };
 }

@@ -26,6 +26,7 @@ import { SpanRegistry } from "@pkg/registry/spanRegistry";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { BannerDelegate, type BannerProvider } from "./bannerDelegate";
+import { ToolbarDelegate } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import type { EditorController } from "./controller";
 import fastdiff from "fast-diff";
@@ -103,6 +104,7 @@ export class Editor {
   #renderedDom: HTMLDivElement | undefined;
   #renderer: DocRenderer;
   public readonly bannerDelegate: BannerDelegate;
+  public readonly toolbarDelegate: ToolbarDelegate;
   public idGenerator: IdGenerator;
 
   public readonly state: DocumentState;
@@ -141,6 +143,10 @@ export class Editor {
     this.bannerDelegate = new BannerDelegate(controller, banner);
     this.bannerDelegate.mount(this.#container);
     this.disposables.push(this.bannerDelegate);
+
+    this.toolbarDelegate = new ToolbarDelegate(controller);
+    this.toolbarDelegate.mount(this.#container);
+    this.disposables.push(this.toolbarDelegate);
 
     document.addEventListener("selectionchange", this.selectionChanged);
 
