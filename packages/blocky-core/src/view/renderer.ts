@@ -156,15 +156,10 @@ export class DocRenderer {
     while (domPtr) {
       let next = domPtr.nextSibling;
 
-      this.destructBlockNode(domPtr);
+      this.editor.destructBlockNode(domPtr);
 
       domPtr = next;
     }
-  }
-
-  private destructBlockNode(node: Node) {
-    // TODO: call destructor
-    removeNode(node);
   }
 
   protected renderBlock(blockContainer: HTMLElement, blockNode: TreeNode<DocNode>, blockDef: IBlockDefinition) {

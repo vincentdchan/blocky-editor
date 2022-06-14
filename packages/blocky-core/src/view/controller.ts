@@ -1,3 +1,5 @@
+import { Slot } from "blocky-common/es/events";
+import { observe } from "blocky-common/es/observable";
 import { DocNode, State, TreeNode } from "@pkg/model";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
@@ -7,6 +9,7 @@ import { TextBlockName } from "@pkg/block/textBlock";
 import { type BannerDelegateOptions } from "@pkg/view/bannerDelegate";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { type Editor } from "./editor";
+import { type CursorState } from "@pkg/model/cursor";
 
 export interface IEditorControllerOptions {
   pluginRegistry?: PluginRegistry;
@@ -40,6 +43,7 @@ export class EditorController {
   public readonly idGenerator: IdGenerator;
   public readonly m: MarkupGenerator;
   public readonly state: State;
+  public readonly cursorChanged: Slot<CursorState | undefined> = new Slot;
 
   /**
    * A class to control the behavior in the editor
@@ -65,6 +69,8 @@ export class EditorController {
 
   mount(editor: Editor) {
     this.editor = editor;
+
+    observe(this.state, "cursorState", (s: CursorState | undefined) => this.cursorChanged.emit(s));
   }
 
   insertBlockAfterId(afterId: string, options?: IInsertOptions) {

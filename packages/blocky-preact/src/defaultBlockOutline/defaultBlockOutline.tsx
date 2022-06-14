@@ -4,7 +4,6 @@ import {
   type IDisposable,
   flattenDisposable,
 } from "blocky-common/es/disposable";
-import { observe } from "blocky-common/es/observable";
 import { type CursorState, type EditorController } from "blocky-core";
 
 interface DefaultBlockOutlineInternalProps {
@@ -33,7 +32,7 @@ class DefaultBlockOutlineInternal extends Component<
   override componentDidMount() {
     const { editorController } = this.props;
     this.disposables.push(
-      observe(editorController.state, "cursorState", this.handleNewCursorState)
+      editorController.cursorChanged.on(this.handleNewCursorState)
     );
   }
 

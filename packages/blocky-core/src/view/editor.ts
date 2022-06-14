@@ -1,4 +1,4 @@
-import { $on } from "blocky-common/es/dom";
+import { $on, removeNode } from "blocky-common/es/dom";
 import { observe, runInAction } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
 import {
@@ -13,6 +13,7 @@ import {
   type TreeNode,
   type DocNode,
   type Span,
+  type Block,
 } from "@pkg/model/index";
 import { CollapsedCursor, type CursorState } from "@pkg/model/cursor";
 import { Action } from "@pkg/model/actions";
@@ -248,6 +249,8 @@ export class Editor {
     const treeNode = node._mgNode as TreeNode<DocNode>;
     if (!node.parentNode) {
       // dom has been removed
+
+      this.destructBlockNode(node);
       actions.push({
         type: "delete",
         targetId: treeNode.data.id,
@@ -438,6 +441,28 @@ export class Editor {
     this.bannerDelegate.focusedNode = node;
     this.bannerDelegate.show();
     this.bannerDelegate.setPosition(24, y + 2);
+  }
+
+  /**
+   * Remove node and call the destructor
+   */
+  public destructBlockNode(node: Node) {
+    if (node._mgNode) {
+      const treeNode = node._mgNode as TreeNode<DocNode>;
+      const data = treeNode.data;
+
+      if (data.t === "block") {
+        const block = data as Block;
+        const blockType = block.flags;
+        const blockDef = this.registry.block.getBlockDefById(blockType);
+        blockDef?.blockWillUnmount?.(node as HTMLElement);
+      }
+
+      this.state.domMap.delete(data.id);
+    }
+
+    // TODO: call destructor
+    removeNode(node);
   }
 
   /**
