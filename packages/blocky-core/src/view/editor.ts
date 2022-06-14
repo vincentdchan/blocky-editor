@@ -30,6 +30,7 @@ import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import type { EditorController } from "./controller";
 import fastdiff from "fast-diff";
+import { BlockContentType } from "..";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
@@ -249,6 +250,43 @@ export class Editor {
     }
   }
 
+  private findBlockNodeContainer(node: Node): TreeNode<Block> | undefined {
+    let ptr: Node | null = node;
+
+    while (ptr) {
+      const node = ptr._mgNode as TreeNode<DocNode> | undefined;
+      if (node && node.data.t === "block") {
+        return node as TreeNode<Block>;
+      }
+
+      ptr = ptr.parentNode;
+    }
+
+    return;
+  }
+  
+  private findTextOffsetInBlock(blockNode: TreeNode<Block>, focusedNode: Node, offsetInNode: number): number {
+    const { data } = blockNode;
+    const blockDef = this.registry.block.getBlockDefById(data.flags)!;
+    if (blockDef.type !== BlockContentType.Text) {
+      return 0;
+    }
+    const blockContainer = this.state.domMap.get(data.id)!;
+    const contentContainer = blockDef.findContentContainer!(blockContainer as HTMLElement);
+    let counter = 0;
+    let ptr = contentContainer.firstChild;
+
+    while (ptr) {
+      if (ptr === focusedNode) {
+        break;
+      }
+      counter += ptr.textContent?.length ?? 0;
+      ptr = ptr.nextSibling;
+    }
+
+    return counter + offsetInNode;
+  }
+
   private selectionChanged = () => {
     const sel = window.getSelection();
     if (!sel) {
@@ -262,29 +300,33 @@ export class Editor {
     const range = sel.getRangeAt(0);
     const { startContainer, endContainer, startOffset, endOffset } = range;
 
-    const startNode = this.getTreeNodeFromDom(startContainer);
+    const startNode = this.findBlockNodeContainer(startContainer);
     if (!startNode) {
       this.handleTreeNodeNotFound(startContainer);
       return;
     }
 
+    const absoluteStartOffset = this.findTextOffsetInBlock(startNode, startContainer, startOffset);
+
     if (range.collapsed) {
       this.state.cursorState = {
         type: "collapsed",
         targetId: startNode.data.id,
-        offset: startOffset,
+        offset: absoluteStartOffset,
       };
     } else {
-      const endNode = this.getTreeNodeFromDom(endContainer);
+      const endNode = this.findBlockNodeContainer(endContainer);
       if (!endNode) {
+        this.state.cursorState = undefined;
         return;
       }
+      const absoluteEndOffset = this.findTextOffsetInBlock(endNode, endContainer, endOffset);
       this.state.cursorState = {
         type: "open",
         startId: startNode.data.id,
-        startOffset: startOffset,
+        startOffset: absoluteStartOffset,
         endId: endNode.data.id,
-        endOffset,
+        endOffset: absoluteEndOffset,
       };
     }
     console.log("selection:", this.state.cursorState);

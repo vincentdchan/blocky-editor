@@ -5,8 +5,12 @@ export const TextBlockName = "text";
 
 const TextContentClass = 'blocky-block-text-content';
 
-class TextBlockDefinition implements IBlockDefinition {
+interface TextPosition {
+  node: Node;
+  offset: number;
+}
 
+class TextBlockDefinition implements IBlockDefinition {
   public name: string = TextBlockName;
   public type: BlockContentType = BlockContentType.Text;
 
@@ -29,30 +33,56 @@ class TextBlockDefinition implements IBlockDefinition {
     element.appendChild(content);
   }
 
-  onBlockFocused({ node: blockDom, selection }: BlockFocusedEvent) {
-    const contentContainer = blockDom.querySelector(`.${TextContentClass}`);
-    if (!contentContainer) {
-      return;
+  private findFocusPosition(blockDom: HTMLElement, absoluteOffset: number): TextPosition | undefined {
+    const contentContainer = this.findContentContainer(blockDom);
+    let ptr = contentContainer.firstChild;
+
+    while (ptr) {
+      const contentLength = ptr.textContent?.length ?? 0;
+      if (absoluteOffset < contentLength) {
+        return { node: ptr, offset: absoluteOffset };
+      } else {
+        absoluteOffset -= contentLength;
+      }
+
+      ptr = ptr.nextSibling;
     }
 
-    selection.removeAllRanges();
-
-    const { firstChild } = contentContainer;
-
-    if (firstChild == null) {
-      const range = document.createRange();
-      range.setStart(contentContainer, 0);
-      range.setEnd(contentContainer, 0);
-      selection.addRange(range);
-      return;
-    }
-
-    const range = document.createRange();
-    range.setStart(firstChild, 0);
-    range.setEnd(firstChild, 0);
-    selection.addRange(range);
+    return;
   }
 
+  onBlockFocused({ node: blockDom, selection, cursor }: BlockFocusedEvent) {
+    const contentContainer = this.findContentContainer(blockDom);
+
+    if (cursor.type === "collapsed") {
+      const { offset } = cursor;
+      const pos = this.findFocusPosition(blockDom, offset);
+      selection.removeAllRanges();
+      if (!pos) {
+
+        const { firstChild } = contentContainer;
+
+        if (firstChild == null) {
+          const range = document.createRange();
+          range.setStart(contentContainer, 0);
+          range.setEnd(contentContainer, 0);
+          selection.addRange(range);
+          return;
+        }
+
+        const range = document.createRange();
+        range.setStart(firstChild, 0);
+        range.setEnd(firstChild, 0);
+        selection.addRange(range);
+      } else {
+        const { node, offset } = pos;
+        const range = document.createRange();
+        range.setStart(node, offset);
+        range.setEnd(node, offset);
+        selection.addRange(range);
+      }
+    }
+  }
 }
 
 export function makeTextBlockDefinition(): IBlockDefinition {
