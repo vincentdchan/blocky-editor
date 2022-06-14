@@ -22,6 +22,7 @@ import {
 } from "./markup";
 import { type CursorState } from "@pkg/model/cursor";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
+import { validate as validateNode } from "./validator";
 
 const DummyTextContentId = "block-text-content";
 
@@ -97,6 +98,7 @@ class State {
   public cursorState: CursorState | undefined;
 
   constructor(public readonly root: TreeRoot<DocNode>, public readonly blockRegistry: BlockRegistry) {
+    validateNode(root);
     makeObservable(this, "cursorState");
   }
 
