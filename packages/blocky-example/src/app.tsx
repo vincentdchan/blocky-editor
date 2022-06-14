@@ -1,9 +1,10 @@
 import { Component, JSX } from "preact";
 import { EditorController } from "blocky-core";
-import { BlockyEditor, makePreactBanner } from "blocky-preact";
+import { BlockyEditor, makePreactBanner, makePreactToolbar } from "blocky-preact";
 import makeBoldedTextPlugin from "blocky-core/dist/plugins/boldedTextPlugin";
 import { makeImageBlockPlugin } from "./plugins/imageBlock";
 import BannerMenu from "./bannerMenu";
+import ToolbarMenu from "./toolbarMenu";
 import TianShuiWeiImage from "./tianshuiwei.jpg";
 import "blocky-core/css/bolded-text-plugin.css";
 import "blocky-core/css/blocky-core.css";
@@ -22,6 +23,9 @@ function makeController(): EditorController {
     bannerFactory: makePreactBanner((editorController: EditorController) => (
       <BannerMenu editorController={editorController} />
     )),
+    toolbarFactory: makePreactToolbar(() => {
+      return <ToolbarMenu />;
+    }),
   });
 }
 
