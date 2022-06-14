@@ -6,7 +6,7 @@ import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
 import { MarkupGenerator } from "@pkg/model/markup";
 import { TextBlockName } from "@pkg/block/textBlock";
-import { type BannerDelegateOptions } from "@pkg/view/bannerDelegate";
+import { type BannerProvider } from "@pkg/view/bannerDelegate";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { type Editor } from "./editor";
 import { type CursorState } from "@pkg/model/cursor";
@@ -26,7 +26,7 @@ export interface IEditorControllerOptions {
   blockRegistry?: BlockRegistry;
   state?: State;
   idGenerator?: IdGenerator;
-  banner?: BannerDelegateOptions;
+  banner?: BannerProvider;
 }
 
 export interface IInsertOptions {

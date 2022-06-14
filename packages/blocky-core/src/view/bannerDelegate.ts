@@ -2,7 +2,7 @@ import { DivContainer } from "blocky-common/es/dom";
 import type { EditorController } from "@pkg/view/controller";
 import { type DocNode, type TreeNode } from "@pkg/model";
 
-export interface BannerDelegateOptions {
+export interface BannerProvider {
   bannerDidMount?: (dom: HTMLDivElement, editorController: EditorController) => void;
   bannerWillUnmount?: (dom: HTMLDivElement) => void;
 }
@@ -12,7 +12,7 @@ export class BannerDelegate extends DivContainer {
   #shown: boolean = false;
   public focusedNode: TreeNode<DocNode> | undefined;
 
-  constructor(private editorController: EditorController, private options?: BannerDelegateOptions) {
+  constructor(private editorController: EditorController, private provider?: BannerProvider) {
     super("blocky-editor-banner-delegate blocky-cm-noselect");
     this.container.style.display = "none";
   }
@@ -20,8 +20,8 @@ export class BannerDelegate extends DivContainer {
   override mount(parent: HTMLElement): void {
     super.mount(parent);
 
-    if (this.options?.bannerDidMount) {
-      this.options.bannerDidMount(this.container, this.editorController);
+    if (this.provider?.bannerDidMount) {
+      this.provider.bannerDidMount(this.container, this.editorController);
     } else {
       this.renderFallback();
     }
@@ -55,7 +55,7 @@ export class BannerDelegate extends DivContainer {
   }
 
   override dispose(): void {
-    this.options?.bannerWillUnmount?.(this.container);
+    this.provider?.bannerWillUnmount?.(this.container);
     super.dispose();
   }
 

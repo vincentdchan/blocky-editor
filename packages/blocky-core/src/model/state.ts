@@ -264,4 +264,32 @@ export function normalizeLine(line: TreeNode<DocNode>, actions: Action[]) {
   });
 }
 
+export function serializeJSON(state: State): any {
+  const { root } = state;
+  return serializeTreeNode(root);
+}
+
+function serializeTreeNode(node: TreeNode<DocNode>): any {
+  const { data } = node;
+
+  let children: any[] | undefined;
+
+  if (data.t !== "span") {
+    children = [];
+    let ptr = node.firstChild;
+    while (ptr) {
+      children.push(serializeTreeNode(ptr));
+
+      ptr = ptr.next;
+    }
+  }
+
+  const result: any = { ...data };
+  if (children) {
+    result.children = children;
+  }
+
+  return result;
+}
+
 export default State;

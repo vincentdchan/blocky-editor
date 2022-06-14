@@ -25,7 +25,7 @@ import {
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
-import { BannerDelegate, type BannerDelegateOptions } from "./bannerDelegate";
+import { BannerDelegate, type BannerProvider } from "./bannerDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import type { EditorController } from "./controller";
 import fastdiff from "fast-diff";
@@ -79,7 +79,7 @@ export interface IEditorOptions {
   registry: EditorRegistry;
   container: HTMLDivElement;
   idGenerator?: IdGenerator;
-  banner?: BannerDelegateOptions;
+  banner?: BannerProvider;
 }
 
 /**
