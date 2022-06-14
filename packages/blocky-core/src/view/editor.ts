@@ -25,7 +25,7 @@ import {
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
-import { BannerDelegate, type BannerProvider } from "./bannerDelegate";
+import { BannerDelegate, type BannerFactory } from "./bannerDelegate";
 import { ToolbarDelegate } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import type { EditorController } from "./controller";
@@ -80,7 +80,7 @@ export interface IEditorOptions {
   registry: EditorRegistry;
   container: HTMLDivElement;
   idGenerator?: IdGenerator;
-  banner?: BannerProvider;
+  bannerFactory?: BannerFactory;
 }
 
 /**
@@ -127,20 +127,20 @@ export class Editor {
         block: controller.blockRegistry,
       },
       state: controller.state,
-      banner: controller.options?.banner,
+      bannerFactory: controller.options?.bannerFactory,
     });
     controller.mount(editor);
     return editor;
   }
 
   constructor(public readonly controller: EditorController, options: IEditorOptions) {
-    const { container, state, registry, idGenerator, banner } = options;
+    const { container, state, registry, idGenerator, bannerFactory } = options;
     this.state = state;
     this.registry = registry;
     this.#container = container;
     this.idGenerator = idGenerator ?? makeDefaultIdGenerator();
 
-    this.bannerDelegate = new BannerDelegate(controller, banner);
+    this.bannerDelegate = new BannerDelegate(controller, bannerFactory);
     this.bannerDelegate.mount(this.#container);
     this.disposables.push(this.bannerDelegate);
 

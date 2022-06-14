@@ -3,23 +3,21 @@ import type { EditorController } from "@pkg/view/controller";
 import { type DocNode, type TreeNode } from "@pkg/model";
 import { UIDelegate } from "./uiDelegate";
 
-export interface BannerProvider {
-  bannerDidMount?(dom: HTMLDivElement, editorController: EditorController): IDisposable | undefined;
-}
+export type BannerFactory = (dom: HTMLDivElement, editorController: EditorController) => IDisposable | undefined;
 
 export class BannerDelegate extends UIDelegate {
 
   public focusedNode: TreeNode<DocNode> | undefined;
 
-  constructor(private editorController: EditorController, private provider?: BannerProvider) {
+  constructor(private editorController: EditorController, private factory?: BannerFactory) {
     super("blocky-editor-banner-delegate blocky-cm-noselect");
   }
 
   override mount(parent: HTMLElement): void {
     super.mount(parent);
 
-    if (this.provider?.bannerDidMount) {
-      const disposable = this.provider.bannerDidMount(this.container, this.editorController);
+    if (this.factory) {
+      const disposable = this.factory(this.container, this.editorController);
       if (disposable) {
         this.disposables.push(disposable);
       }

@@ -2,5 +2,5 @@ import { DefaultBlockOutline, type DefaultBlockOutlineProps } from "./defaultBlo
 
 export * from "./editor";
 export * from "./reactBlock";
-export { makePreactBannerProvider } from "./banner";
+export { makePreactBanner } from "./banner";
 export { DefaultBlockOutline, type DefaultBlockOutlineProps };
