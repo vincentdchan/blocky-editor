@@ -218,6 +218,37 @@ export class Editor {
     }
   }
 
+  private trySelectOnParent(startContainer: Node): boolean {
+    const parent = startContainer.parentNode;
+    if (!parent) {
+      return false;
+    }
+
+    // parent is block
+    if (parent instanceof HTMLElement && parent.classList.contains(this.#renderer.blockClassName)) {
+      const node = parent._mgNode as TreeNode<DocNode> | undefined;
+      if (!node) {
+        return false;
+      }
+
+      this.state.cursorState = {
+        type: "collapsed",
+        targetId: node.data.id,
+        offset: 0
+      };
+
+      return true;
+    }
+
+    return false;
+  }
+
+  private handleTreeNodeNotFound(startContainer: Node) {
+    if (!this.trySelectOnParent(startContainer)) {
+      this.state.cursorState = undefined;
+    }
+  }
+
   private selectionChanged = () => {
     const sel = window.getSelection();
     if (!sel) {
@@ -233,6 +264,7 @@ export class Editor {
 
     const startNode = this.getTreeNodeFromDom(startContainer);
     if (!startNode) {
+      this.handleTreeNodeNotFound(startContainer);
       return;
     }
 

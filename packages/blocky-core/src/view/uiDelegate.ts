@@ -31,9 +31,4 @@ export class UIDelegate extends DivContainer {
     this.shown = true;
   }
 
-  setPosition(x: number, y: number) {
-    this.container.style.top = y + "px";
-    this.container.style.left = x + "px";
-  }
-
 }

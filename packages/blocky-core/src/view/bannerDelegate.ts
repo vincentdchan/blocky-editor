@@ -32,4 +32,10 @@ export class BannerDelegate extends UIDelegate {
     this.container.style.backgroundColor = "grey";
   }
 
+  setPosition(x: number, y: number) {
+    this.container.style.top = y + "px";
+    this.container.style.left = x + "px";
+  }
+
+
 }
