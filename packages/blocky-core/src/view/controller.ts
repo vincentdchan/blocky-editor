@@ -7,6 +7,7 @@ import { SpanRegistry } from "@pkg/registry/spanRegistry";
 import { MarkupGenerator } from "@pkg/model/markup";
 import { TextBlockName } from "@pkg/block/textBlock";
 import { type BannerFactory } from "@pkg/view/bannerDelegate";
+import { type ToolbarFactory } from "@pkg/view/toolbarDelegate";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { type Editor } from "./editor";
 import { type CursorState } from "@pkg/model/cursor";
@@ -27,6 +28,7 @@ export interface IEditorControllerOptions {
   state?: State;
   idGenerator?: IdGenerator;
   bannerFactory?: BannerFactory;
+  toolbarFactory?: ToolbarFactory;
 }
 
 export interface IInsertOptions {

@@ -26,7 +26,7 @@ import { SpanRegistry } from "@pkg/registry/spanRegistry";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { BannerDelegate, type BannerFactory } from "./bannerDelegate";
-import { ToolbarDelegate } from "./toolbarDelegate";
+import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import type { EditorController } from "./controller";
 import fastdiff from "fast-diff";
@@ -81,6 +81,7 @@ export interface IEditorOptions {
   container: HTMLDivElement;
   idGenerator?: IdGenerator;
   bannerFactory?: BannerFactory;
+  toolbarFactory?: ToolbarFactory;
 }
 
 /**
@@ -128,13 +129,24 @@ export class Editor {
       },
       state: controller.state,
       bannerFactory: controller.options?.bannerFactory,
+      toolbarFactory: controller.options?.toolbarFactory,
     });
     controller.mount(editor);
     return editor;
   }
 
-  constructor(public readonly controller: EditorController, options: IEditorOptions) {
-    const { container, state, registry, idGenerator, bannerFactory } = options;
+  constructor(
+    public readonly controller: EditorController,
+    options: IEditorOptions
+  ) {
+    const {
+      container,
+      state,
+      registry,
+      idGenerator,
+      bannerFactory,
+      toolbarFactory,
+    } = options;
     this.state = state;
     this.registry = registry;
     this.#container = container;
@@ -144,7 +156,7 @@ export class Editor {
     this.bannerDelegate.mount(this.#container);
     this.disposables.push(this.bannerDelegate);
 
-    this.toolbarDelegate = new ToolbarDelegate(controller);
+    this.toolbarDelegate = new ToolbarDelegate(controller, toolbarFactory);
     this.toolbarDelegate.mount(this.#container);
     this.disposables.push(this.toolbarDelegate);
 
@@ -244,7 +256,43 @@ export class Editor {
       };
     }
     console.log("selection:", this.state.cursorState);
+
+    const { toolbarDelegate } = this;
+
+    if (toolbarDelegate.enabled) {
+      if (this.tryPlaceToolbar(range)) {
+        toolbarDelegate.show();
+      } else {
+        toolbarDelegate.hide();
+      }
+    }
   };
+
+  private tryPlaceToolbar(range: Range): boolean {
+    const { cursorState } = this.state;
+    if (!cursorState) {
+      return false;
+    }
+
+    if (cursorState.type === "collapsed") {
+      return false;
+    }
+
+    const { startId, endId } = cursorState;
+    if (startId !== endId) {
+      return false;
+    }
+
+    const containerRect = this.#container.getBoundingClientRect();
+    const rect = range.getBoundingClientRect();
+
+    const x = rect.x - containerRect.x;
+    const y = rect.y - containerRect.y - rect.height - 12;
+
+    this.toolbarDelegate.setPosition(x, y);
+
+    return true;
+  }
 
   private checkMarkedDom(
     node: Node,
