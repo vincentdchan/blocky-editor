@@ -178,7 +178,20 @@ export class Editor {
     });
   }
 
-  render(done?: AfterFn) {
+  public applyStyleOnTextRange(styleName: string, startId: string, startOffset: number, endId: string, endOffset: number) {
+    if (startId !== endId) {
+      console.error("unimplemented: apply style crossing blocks");
+      return;
+    }
+
+    const spanId = this.registry.span.getSpanIdByName(styleName)!;
+
+    const actions: Action[] = [];
+
+    this.state.applyActions(actions);
+  }
+
+  public render(done?: AfterFn) {
     console.log("render");
     const newDom = this.#renderer.render(this.#renderedDom);
     if (!this.#renderedDom) {

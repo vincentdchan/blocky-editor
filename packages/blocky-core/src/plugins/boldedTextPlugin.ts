@@ -99,7 +99,6 @@ function makeBoldedTextPlugin(): IPlugin {
       return;
     }
 
-    const { idGenerator } = editor;
     const { startId, endId, startOffset, endOffset } = cursorState;
 
     if (startId === endId) {
