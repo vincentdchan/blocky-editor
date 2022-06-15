@@ -4,7 +4,7 @@ export interface AttributesObject {
   [key: string]: any;
 }
 
-interface TextNode {
+export interface TextNode {
   prev?: TextNode;
   next?: TextNode;
   content: string;
@@ -64,20 +64,64 @@ export class TextModel {
     this.#nodeEnd = node;
   }
 
-  private insertNodeBefore(node: TextNode, prev: TextNode) {
-    if (prev.next) {
-      prev.next.prev = node;
-    } else {
-      this.#nodeEnd = node;
+  private insertNodeBefore(node: TextNode, next?: TextNode) {
+    if (!next) {
+      this.insertAtLast(node);
+      return;
     }
 
-    node.prev = prev;
-    node.next = prev.next;
+    if (next.prev) {
+      next.prev.next = node;
+    } else {
+      this.#nodeBegin = node;
+    }
 
-    prev.next = node;
+    node.prev = next.prev;
+    node.next = next;
   }
 
   public format(index: number, length: number, attributes: AttributesObject) {
+    if (index > this.#length || index < 0) {
+      throw new Error(`The begin offset ${index} is out of range.`);
+    }
+
+    let ptr: TextNode | undefined = this.#nodeBegin;
+
+    while (ptr) {
+      if (index  < ptr.content.length) {
+        const before = ptr.content.slice(0, index);
+        const lenFormatted = ptr.content.length - index;
+        const next = ptr.next;
+
+        if (length >= lenFormatted) {
+          const after = ptr.content.slice(index);
+          ptr.content = before;
+          
+          length -= lenFormatted;
+
+          this.insertNodeBefore({ content: after, attributes }, next);
+
+          index -= ptr.content.length;
+          ptr = next;
+          continue;
+        } else {
+          const mid = ptr.content.slice(index, index + length);
+          const after = ptr.content.slice(index + length);
+          ptr.content = before;
+
+          this.insertNodeBefore({ content: mid, attributes }, next);
+          this.insertNodeBefore({ content: after, attributes: ptr.attributes }, next);
+          return;
+        }
+      }
+
+      if (length <= 0) {
+        break;
+      }
+
+      index -= ptr.content.length;
+      ptr = ptr.next;
+    }
   }
 
   public delete(index: number, length: number) {
@@ -89,6 +133,7 @@ export class TextModel {
     }
     this.#length -= length;
 
+    let prev: TextNode | undefined;
     let ptr: TextNode | undefined = this.#nodeBegin;
     while (ptr) {
       if (index < ptr.content.length) {
@@ -105,17 +150,38 @@ export class TextModel {
         if (ptr.content.length === 0) {
           this.eraseNode(ptr);
         }
-        return;
+        break;
       }
 
       const tmp = ptr;
       index -= ptr.content.length;
+      prev = ptr;
       ptr = ptr.next;
 
       if (tmp.content.length === 0) {
+        prev = tmp.prev;
         this.eraseNode(tmp);
       }
     }
+
+    if (prev) {
+      this.tryMergeNode(prev);
+    }
+  }
+
+  private tryMergeNode(node: TextNode) {
+    const { next } = node;
+    if (!next) {
+      return;
+    }
+
+    if (!areEqualShallow(node.attributes, next.attributes)) {
+      return;
+    }
+
+    node.content += next.content;
+
+    this.eraseNode(next);
   }
   
   private eraseNode(node: TextNode) {
@@ -149,6 +215,14 @@ export class TextModel {
     }
 
     return result;
+  }
+
+  get nodeBegin() {
+    return this.#nodeBegin;
+  }
+
+  get nodeEnd() {
+    return this.#nodeEnd;
   }
 
   get length() {
