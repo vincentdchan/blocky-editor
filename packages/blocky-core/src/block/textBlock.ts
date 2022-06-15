@@ -5,6 +5,9 @@ import {
   type BlockCreatedEvent,
   BlockFocusedEvent,
 } from "./basic";
+import { type EditorController } from "@pkg/view/controller";
+import { Block } from "@pkg/model";
+import { TextModel } from "@pkg/model/textModel";
 
 export const TextBlockName = "text";
 
@@ -78,6 +81,44 @@ class TextBlockDefinition implements IBlockDefinition {
       setRangeIfDifferent(selection, node, offset, node, offset);
     }
   }
+
+  render(container: HTMLElement, editorController: EditorController, id: string): void {
+    const blockNode = editorController.state.idMap.get(id)!;
+    const block = blockNode.data as Block<TextModel>;
+    const textModel = block.data;
+    if (!textModel) {
+      return;
+    }
+
+    const contentContainer = this.findContentContainer(container);
+    this.renderBlockTextContent(contentContainer, textModel);
+  }
+
+  private renderBlockTextContent(contentContainer: HTMLElement, textModel: TextModel) {
+    let nodePtr = textModel.nodeBegin;
+    let domPtr = contentContainer.firstChild;
+    let prevDom: Node | null = null;
+
+    while (nodePtr) {
+      if (!domPtr) {
+        domPtr = document.createTextNode(nodePtr.content);
+        contentContainer.insertBefore(domPtr, prevDom);
+      }
+
+      nodePtr = nodePtr.next;
+      prevDom = domPtr;
+      domPtr = domPtr.nextSibling;
+    }
+
+    // remove remaining text
+    while (domPtr) {
+      const next = domPtr.nextSibling;
+      domPtr.parentNode?.removeChild(domPtr);
+
+      domPtr = next;
+    }
+  }
+
 }
 
 function setRangeIfDifferent (

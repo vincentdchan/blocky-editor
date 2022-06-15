@@ -4,11 +4,11 @@ export interface Document {
   id: string;
 }
 
-export interface Block {
+export interface Block<T = any> {
   t: "block";
   id: string;
   flags: number;
-  data?: any;
+  data?: T;
 }
 
 export interface BlockTextContent {

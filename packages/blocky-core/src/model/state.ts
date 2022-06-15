@@ -16,7 +16,6 @@ import {
   MDoc,
   traverse,
   toNodeDoc,
-  toNodeBlock,
   toNodeSpan,
   MNode,
 } from "./markup";
@@ -60,10 +59,15 @@ class State {
           }
 
           case "block": {
-            const modelLine = toNodeBlock(node);
-            const treeNode: TreeNode<DocNode> = createBlockWithContent(modelLine);
-            appendChild(parentNode!, treeNode);
-            nextNode = treeNode;
+            const block: Block = {
+              t: "block",
+              id: node.id,
+              flags: 0,
+              data: node.data,
+            }
+            const blockNode: TreeNode<Block> = createNode(block);
+            appendChild(parentNode!, blockNode);
+            nextNode = blockNode;
             break;
           }
 

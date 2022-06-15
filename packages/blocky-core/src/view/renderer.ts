@@ -8,7 +8,7 @@ import {
 } from "@pkg/model/index";
 import type { Editor, EditorRegistry } from "@pkg/view/editor";
 import type { SpanDefinition } from "@pkg/registry/spanRegistry";
-import { BlockContentType, IBlockDefinition } from "..";
+import { BlockContentType, IBlockDefinition } from "@pkg/block/basic";
 
 function createSpanNode(
   spanNode: TreeNode<Span>,
@@ -163,12 +163,12 @@ export class DocRenderer {
   }
 
   protected renderBlock(blockContainer: HTMLElement, blockNode: TreeNode<DocNode>, blockDef: IBlockDefinition) {
-    if (blockDef.type === BlockContentType.Text) {
-      const contentContainer = blockDef.findContentContainer!(blockContainer);
-      this.renderBlockTextContent(contentContainer, blockNode.firstChild!);
-    } else {
-      blockDef?.render?.(blockContainer, this.editor.controller, blockNode.data.id);
-    }
+    // if (blockDef.type === BlockContentType.Text) {
+    //   const contentContainer = blockDef.findContentContainer!(blockContainer);
+    //   this.renderBlockTextContent(contentContainer, blockNode.firstChild!);
+    // } else {
+    blockDef?.render?.(blockContainer, this.editor.controller, blockNode.data.id);
+    // }
   }
 
   private initBlockContainer(blockContainer: HTMLElement, blockNode: TreeNode<DocNode>, blockDef: IBlockDefinition) {

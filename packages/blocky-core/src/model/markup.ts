@@ -1,5 +1,6 @@
 import * as DocNode from "./nodes";
 import type { IdGenerator } from "@pkg/helper/idHelper";
+import { TextModel } from "@pkg/model/textModel";
 
 /*
  * Large document tree
@@ -13,7 +14,7 @@ export interface MDoc {
 export interface MBlock {
   t: "block";
   id: string;
-  content: MSpan[];
+  data?: any;
   children?: MBlock[];
 }
 
@@ -38,11 +39,26 @@ export class MarkupGenerator {
     };
   }
 
-  line(content: MSpan[] = []): MBlock {
+  block(): MBlock {
     return {
       t: "block",
       id: this.idGen.mkBlockId(),
-      content,
+    };
+  }
+
+  textBlock(content: MSpan[] = []): MBlock {
+    const textModel = new TextModel();
+
+    let ptr = 0;
+    for (const span of content) {
+      textModel.insert(ptr, span.content);
+      ptr += span.content.length;
+    }
+
+    return {
+      t: "block",
+      id: this.idGen.mkBlockId(),
+      data: textModel,
     };
   }
 
@@ -76,9 +92,6 @@ export function traverse<R>(
     }
 
     case "block": {
-      for (const childNode of node.content) {
-        traverse(childNode, traversor, node, result);
-      }
       if (node.children) {
         for (const childNode of node.children) {
           traverse(childNode, traversor, node, result);
@@ -97,14 +110,6 @@ export function toNodeDoc(doc: MDoc): DocNode.Document {
   return {
     t: "doc",
     id: doc.id,
-  };
-}
-
-export function toNodeBlock(line: MBlock): DocNode.Block {
-  return {
-    t: "block",
-    id: line.id,
-    flags: 0,
   };
 }
 

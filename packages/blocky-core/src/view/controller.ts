@@ -63,7 +63,7 @@ export class EditorController {
     } else {
       const { m } = this;
       this.state = State.fromMarkup(
-        m.doc([m.line([m.span("Hello World")])]),
+        m.doc([m.textBlock([m.span("Hello World")])]),
         this.blockRegistry
       );
     }

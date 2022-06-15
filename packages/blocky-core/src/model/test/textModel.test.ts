@@ -116,4 +116,3 @@ test("textModel delete node #3", () => {
   ]);
   expect(styles[0]).toBeUndefined();
 });
-
