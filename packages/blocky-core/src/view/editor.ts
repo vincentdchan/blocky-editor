@@ -5,7 +5,6 @@ import {
   type IDisposable,
   flattenDisposable,
 } from "blocky-common/es/disposable";
-import { lazy } from "blocky-common/es/lazy";
 import { type Position } from "blocky-common/es/position";
 import { DocRenderer } from "@pkg/view/renderer";
 import {
@@ -13,7 +12,7 @@ import {
   type TreeNode,
   type DocNode,
   type Span,
-  type Block,
+  type BlockData,
 } from "@pkg/model/index";
 import { CollapsedCursor, type CursorState } from "@pkg/model/cursor";
 import { Action } from "@pkg/model/actions";
@@ -29,8 +28,6 @@ import { BannerDelegate, type BannerFactory } from "./bannerDelegate";
 import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import type { EditorController } from "./controller";
-import fastdiff from "fast-diff";
-import { BlockContentType } from "..";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
@@ -263,13 +260,13 @@ export class Editor {
     }
   }
 
-  private findBlockNodeContainer(node: Node): TreeNode<Block> | undefined {
+  private findBlockNodeContainer(node: Node): TreeNode<BlockData> | undefined {
     let ptr: Node | null = node;
 
     while (ptr) {
       const node = ptr._mgNode as TreeNode<DocNode> | undefined;
       if (node && node.data.t === "block") {
-        return node as TreeNode<Block>;
+        return node as TreeNode<BlockData>;
       }
 
       ptr = ptr.parentNode;
@@ -278,26 +275,11 @@ export class Editor {
     return;
   }
   
-  private findTextOffsetInBlock(blockNode: TreeNode<Block>, focusedNode: Node, offsetInNode: number): number {
+  private findTextOffsetInBlock(blockNode: TreeNode<BlockData>, focusedNode: Node, offsetInNode: number): number {
     const { data } = blockNode;
-    const blockDef = this.registry.block.getBlockDefById(data.flags)!;
-    if (blockDef.type !== BlockContentType.Text) {
-      return 0;
-    }
-    const blockContainer = this.state.domMap.get(data.id)!;
-    const contentContainer = blockDef.findContentContainer!(blockContainer as HTMLElement);
-    let counter = 0;
-    let ptr = contentContainer.firstChild;
+    const block = this.state.blocks.get(data.id)!;
 
-    while (ptr) {
-      if (ptr === focusedNode) {
-        break;
-      }
-      counter += ptr.textContent?.length ?? 0;
-      ptr = ptr.nextSibling;
-    }
-
-    return counter + offsetInNode;
+    return block.findTextOffsetInBlock(blockNode, focusedNode, offsetInNode);
   }
 
   private selectionChanged = () => {
@@ -400,23 +382,8 @@ export class Editor {
     }
 
     const { data } = treeNode;
-    if (data.t === "span") {
-      const { content, id } = data;
-      const currentContent = node.textContent || "";
-      if (content !== currentContent) {
-        actions.push({
-          type: "update-span",
-          targetId: id,
-          value: { content: currentContent },
-          get diffs() {
-            return lazy(() => {
-              return fastdiff(content, currentContent, currentOffset);
-            })();
-          },
-        });
-      }
-    } else if (data.t === "block") {
-      this.checkBlockContent(node, treeNode, actions, newSpanTuples);
+    if (data.t === "block") {
+      this.checkBlockContent(node, treeNode, currentOffset);
     }
   }
 
@@ -425,76 +392,83 @@ export class Editor {
    */
   private checkBlockContent(
     node: Node,
-    lineNode: TreeNode<DocNode>,
-    actions: Action[],
-    newSpans?: NewSpanTuple[]
+    blockNode: TreeNode<DocNode>,
+    currentOffset?: number,
   ) {
-    const contentContainer = node.firstChild! as HTMLElement;
+    const blockData = blockNode.data as BlockData;
+    const block = this.state.blocks.get(blockData.id)!;
 
-    let prevId: string | undefined;
+    block.blockContentChanged({
+      node: node as HTMLDivElement,
+      offset: currentOffset,
+    });
 
-    let ptr = contentContainer.firstChild;
+    // const contentContainer = node.firstChild! as HTMLElement;
 
-    const nodesToRemoved: Node[] = [];
+    // let prevId: string | undefined;
 
-    while (ptr) {
-      if (ptr instanceof Text) {
-        if (ptr._mgNode) {
-          const node = ptr._mgNode as TreeNode<DocNode>;
-          prevId = node.data.id;
-        } else {
-          // add a new node
-          const newId = this.idGenerator.mkSpanId();
-          actions.push({
-            type: "new-span",
-            targetId: lineNode.data.id,
-            afterId: prevId,
-            content: {
-              id: newId,
-              t: "span",
-              flags: 0,
-              content: ptr.textContent || "",
-            },
-          });
-          prevId = newId;
-          newSpans?.push({
-            node: ptr,
-            id: newId,
-          });
-        }
-      } else if (ptr instanceof HTMLSpanElement) {
-        if (ptr._mgNode) {
-          const node = ptr._mgNode as TreeNode<DocNode>;
-          prevId = node.data.id;
-        } else {
-          // add a new node
-          const newId = this.idGenerator.mkSpanId();
-          const dataType = parseInt(ptr.getAttribute("data-type") || "0", 0);
-          actions.push({
-            type: "new-span",
-            targetId: lineNode.data.id,
-            afterId: prevId,
-            content: {
-              id: newId,
-              t: "span",
-              flags: dataType,
-              content: ptr.textContent || "",
-            },
-          });
-          prevId = newId;
-          newSpans?.push({
-            node: ptr,
-            id: newId,
-          });
-        }
-      } else {
-        nodesToRemoved.push(ptr);
-      }
+    // let ptr = contentContainer.firstChild;
 
-      ptr = ptr.nextSibling;
-    }
+    // const nodesToRemoved: Node[] = [];
 
-    nodesToRemoved.forEach((node) => node.parentNode?.removeChild(node));
+    // while (ptr) {
+    //   if (ptr instanceof Text) {
+    //     if (ptr._mgNode) {
+    //       const node = ptr._mgNode as TreeNode<DocNode>;
+    //       prevId = node.data.id;
+    //     } else {
+    //       // add a new node
+    //       const newId = this.idGenerator.mkSpanId();
+    //       actions.push({
+    //         type: "new-span",
+    //         targetId: lineNode.data.id,
+    //         afterId: prevId,
+    //         content: {
+    //           id: newId,
+    //           t: "span",
+    //           flags: 0,
+    //           content: ptr.textContent || "",
+    //         },
+    //       });
+    //       prevId = newId;
+    //       newSpans?.push({
+    //         node: ptr,
+    //         id: newId,
+    //       });
+    //     }
+    //   } else if (ptr instanceof HTMLSpanElement) {
+    //     if (ptr._mgNode) {
+    //       const node = ptr._mgNode as TreeNode<DocNode>;
+    //       prevId = node.data.id;
+    //     } else {
+    //       // add a new node
+    //       const newId = this.idGenerator.mkSpanId();
+    //       const dataType = parseInt(ptr.getAttribute("data-type") || "0", 0);
+    //       actions.push({
+    //         type: "new-span",
+    //         targetId: lineNode.data.id,
+    //         afterId: prevId,
+    //         content: {
+    //           id: newId,
+    //           t: "span",
+    //           flags: dataType,
+    //           content: ptr.textContent || "",
+    //         },
+    //       });
+    //       prevId = newId;
+    //       newSpans?.push({
+    //         node: ptr,
+    //         id: newId,
+    //       });
+    //     }
+    //   } else {
+    //     nodesToRemoved.push(ptr);
+    //   }
+
+    //   ptr = ptr.nextSibling;
+    // }
+
+    // nodesToRemoved.forEach((node) => node.parentNode?.removeChild(node));
   }
 
   private checkNodesChanged(actions: Action[], newSpanTuples: NewSpanTuple[]) {
@@ -593,10 +567,10 @@ export class Editor {
       const data = treeNode.data;
 
       if (data.t === "block") {
-        const block = data as Block;
-        const blockType = block.flags;
-        const blockDef = this.registry.block.getBlockDefById(blockType);
-        blockDef?.blockWillUnmount?.(node as HTMLElement);
+        const blockData = data as BlockData;
+        const block = this.state.blocks.get(blockData.id);
+        block?.dispose();
+        this.state.blocks.delete(blockData.id);
       }
 
       this.state.domMap.delete(data.id);
@@ -734,13 +708,13 @@ export class Editor {
 
       if (cursorOffset < data.content.length) {
         const before = data.content.slice(0, cursorOffset);
-        actions.push({
-          type: "update-span",
-          targetId: node.data.id,
-          value: {
-            content: before,
-          },
-        });
+        // actions.push({
+        //   type: "update-span",
+        //   targetId: node.data.id,
+        //   value: {
+        //     content: before,
+        //   },
+        // });
       }
 
       removeNodesAfter(node, actions);
@@ -818,11 +792,11 @@ export class Editor {
       ptr.data.flags === lastNodeOfPrevLine.data.flags
     ) {
       const content = lastNodeOfPrevLine.data.content + ptr.data.content;
-      actions.push({
-        type: "update-span",
-        targetId: lastNodeOfPrevLine.data.id,
-        value: { content },
-      });
+      // actions.push({
+      //   type: "update-span",
+      //   targetId: lastNodeOfPrevLine.data.id,
+      //   value: { content },
+      // });
       ptr = ptr.next;
     }
 
@@ -834,17 +808,17 @@ export class Editor {
         if (!firstId) {
           firstId = newId;
         }
-        actions.push({
-          type: "new-span",
-          targetId: lineId,
-          afterId,
-          content: {
-            t: "span",
-            id: newId,
-            content: currentSpan.content,
-            flags: currentSpan.flags,
-          },
-        });
+        // actions.push({
+        //   type: "new-span",
+        //   targetId: lineId,
+        //   afterId,
+        //   content: {
+        //     t: "span",
+        //     id: newId,
+        //     content: currentSpan.content,
+        //     flags: currentSpan.flags,
+        //   },
+        // });
         afterId = newId;
       }
 
@@ -970,12 +944,13 @@ export class Editor {
     cursor: CollapsedCursor
   ) {
     const dataType = blockDom.getAttribute("data-type") || "";
-    const blockDef = this.registry.block.getBlockDefByName(dataType);
-    if (!blockDef) {
+    const node = blockDom._mgNode as TreeNode<DocNode> | undefined
+    if (!node) {
       return;
     }
 
-    blockDef.onBlockFocused?.({ node: blockDom, cursor, selection: sel });
+    const block = this.state.blocks.get(node.data.id)!;
+    block.blockFocused({ node: blockDom, cursor, selection: sel });
   }
 
   private handlePaste = (e: ClipboardEvent) => {

@@ -1,6 +1,6 @@
 import { clearAllChildren, elem, removeNode } from "blocky-common/es/dom";
 import {
-  type Block,
+  type BlockData,
   type TreeNode,
   type Span,
   type DocNode,
@@ -8,7 +8,7 @@ import {
 } from "@pkg/model/index";
 import type { Editor, EditorRegistry } from "@pkg/view/editor";
 import type { SpanDefinition } from "@pkg/registry/spanRegistry";
-import { BlockContentType, IBlockDefinition } from "..";
+import { type IBlockDefinition } from "@pkg/block/basic";
 
 function createSpanNode(
   spanNode: TreeNode<Span>,
@@ -122,7 +122,7 @@ export class DocRenderer {
 
     while (nodePtr) {
       const id = nodePtr.data.id;
-      const data = nodePtr.data as Block;
+      const data = nodePtr.data as BlockData;
       const blockDef = this.editor.registry.block.getBlockDefById(data.flags);
 
       if (!blockDef) {
@@ -145,7 +145,8 @@ export class DocRenderer {
         }
       }
 
-      this.renderBlock(domPtr as HTMLElement, nodePtr, blockDef);
+      const block = this.editor.state.blocks.get(id)!;
+      block.render(domPtr as HTMLElement, this.editor.controller);
 
       nodePtr = nodePtr.next;
       prevPtr = domPtr;
@@ -162,20 +163,11 @@ export class DocRenderer {
     }
   }
 
-  protected renderBlock(blockContainer: HTMLElement, blockNode: TreeNode<DocNode>, blockDef: IBlockDefinition) {
-    if (blockDef.type === BlockContentType.Text) {
-      const contentContainer = blockDef.findContentContainer!(blockContainer);
-      this.renderBlockTextContent(contentContainer, blockNode.firstChild!);
-    } else {
-      blockDef?.render?.(blockContainer, this.editor.controller, blockNode.data.id);
-    }
-  }
-
   private initBlockContainer(blockContainer: HTMLElement, blockNode: TreeNode<DocNode>, blockDef: IBlockDefinition) {
     const { editor, clsPrefix } = this;
-    const data = blockNode.data as Block;
+    const data = blockNode.data as BlockData;
 
-    if (blockDef.type === BlockContentType.Custom) {
+    if (!blockDef.editable) {
       blockContainer.contentEditable = "false";
     }
 
@@ -185,11 +177,12 @@ export class DocRenderer {
     blockContainer.addEventListener("mouseenter", () => {
       editor.placeBannerAt(blockContainer, blockNode);
     });
-    blockDef.onContainerCreated?.({
+
+    const block = editor.state.blocks.get(data.id)!;
+    block.blockDidMount({
       element: blockContainer,
       node: blockNode,
       clsPrefix,
-      block: blockNode.data as Block,
     });
   }
 

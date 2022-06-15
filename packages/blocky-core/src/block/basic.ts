@@ -1,17 +1,12 @@
-import type { TreeNode, DocNode, Block } from "@pkg/model";
+import { type IDisposable } from "blocky-common/es/disposable";
+import type { TreeNode, DocNode, BlockData } from "@pkg/model";
 import { type CollapsedCursor } from "@pkg/model/cursor";
 import { type EditorController } from "@pkg/view/controller";
-
-export enum BlockContentType {
-  Text,
-  Custom,
-}
 
 export interface BlockCreatedEvent {
   element: HTMLElement;
   clsPrefix: string;
   node: TreeNode<DocNode>;
-  block: Block,
 }
 
 export interface BlockFocusedEvent {
@@ -20,21 +15,24 @@ export interface BlockFocusedEvent {
   cursor: CollapsedCursor;
 }
 
+export interface BlockContentChangedEvent {
+  node: HTMLDivElement;
+  offset?: number;
+}
+
 
 export interface IBlockDefinition {
   name: string;
-  type: BlockContentType;
 
-  /**
-   * if a block's type is [[Text]],
-   * this method must be provided.
-   * 
-   * A text block must have a child element to contain
-   * the text content.
-   */
-  findContentContainer?(parent: HTMLElement): HTMLElement;
+  editable?: boolean;
 
-  onContainerCreated?(e: BlockCreatedEvent): void;
+  onBlockCreated(model: BlockData): Block;
+
+}
+
+export class Block implements IDisposable {
+
+  blockDidMount(e: BlockCreatedEvent) {}
 
   /**
    * Handle the block is focused.
@@ -43,10 +41,16 @@ export interface IBlockDefinition {
    * equal to the block'id. The children is out of situation.
    * 
    */
-  onBlockFocused?(e: BlockFocusedEvent): void;
+  blockFocused(e: BlockFocusedEvent): void {}
 
-  render?(container: HTMLElement, editorController: EditorController, id: string): void;
+  blockContentChanged(e: BlockContentChangedEvent): void {}
 
-  blockWillUnmount?(container: HTMLElement): void;
+  render(container: HTMLElement, editorController: EditorController) {}
+
+  findTextOffsetInBlock(blockNode: TreeNode<BlockData>, focusedNode: Node, offsetInNode: number): number {
+    return 0;
+  }
+
+  dispose(): void {}
 
 }

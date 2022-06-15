@@ -1,5 +1,5 @@
 import type { Span } from "@pkg/model/nodes";
-import type * as fastdiff from "fast-diff";
+import { type AttributesObject } from "@pkg/model/textModel";
 
 export interface NewBlockAction {
   type: "new-block";
@@ -11,37 +11,47 @@ export interface NewBlockAction {
   data?: any;
 }
 
-export interface NewSpanAction {
-  type: "new-span";
-  targetId: string;
-  afterId?: string;
-  append?: boolean;
-  content: Span;
-}
-
 export interface DeleteLineAction {
   type: "delete";
   targetId: string;
 }
 
-export interface UpdateSpanAction {
-  type: "update-span";
-  targetId: string;
-  value: Partial<Span>;
-  diffs?: fastdiff.Diff[];
-}
 
 export interface SetLineTypeAction {
   type: "set-line-type";
   targetId: string;
 }
 
+export interface TextFormatAction {
+  type: "text-format";
+  targetId: string;
+  index: number;
+  length: number;
+  attributes?: AttributesObject;
+}
+
+export interface TextInsertAction {
+  type: "text-insert";
+  targetId: string;
+  index: number;
+  content: string;
+  attributes?: AttributesObject;
+}
+
+export interface TextDeleteAction {
+  type: "text-delete";
+  targetId: string;
+  index: number;
+  length: number;
+}
+
 export type Action =
   | NewBlockAction
   | DeleteLineAction
-  | UpdateSpanAction
-  | NewSpanAction
-  | SetLineTypeAction;
+  | SetLineTypeAction
+  | TextFormatAction
+  | TextInsertAction
+  | TextDeleteAction;
 
 export interface Transaction {
   actions: Action[];

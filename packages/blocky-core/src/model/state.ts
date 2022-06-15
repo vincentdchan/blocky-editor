@@ -1,6 +1,6 @@
 import { makeObservable } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
-import type { DocNode, Block, Span } from "./nodes";
+import type { DocNode, Span, BlockData } from "./nodes";
 import {
   type TreeNode,
   type TreeRoot,
@@ -16,28 +16,14 @@ import {
   MDoc,
   traverse,
   toNodeDoc,
-  toNodeBlock,
   toNodeSpan,
   MNode,
 } from "./markup";
 import { type CursorState } from "@pkg/model/cursor";
+import { type Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { validate as validateNode } from "./validator";
-
-const DummyTextContentId = "block-text-content";
-
-function createBlockWithContent(line: Block): TreeNode<DocNode> {
-  const lineNode: TreeNode<Block> = createNode(line);
-
-  const lineContentNode: TreeNode<DocNode> = createNode({
-    t: "block-text-content",
-    id: DummyTextContentId,
-  });
-
-  appendChild(lineNode, lineContentNode);
-
-  return lineNode;
-}
+import { TextModel } from "./textModel";
 
 class State {
   static fromMarkup(doc: MDoc, blockRegistry: BlockRegistry): State {
@@ -60,10 +46,22 @@ class State {
           }
 
           case "block": {
-            const modelLine = toNodeBlock(node);
-            const treeNode: TreeNode<DocNode> = createBlockWithContent(modelLine);
-            appendChild(parentNode!, treeNode);
-            nextNode = treeNode;
+            const blockData: BlockData = {
+              t: "block",
+              id: node.id,
+              flags: node.flags,
+              data: node.data,
+            }
+            const blockNode: TreeNode<BlockData> = createNode(blockData);
+            appendChild(parentNode!, blockNode);
+
+            const blockDef = blockRegistry.getBlockDefById(node.flags)!;
+            const block = blockDef.onBlockCreated(blockData);
+
+            state.idMap.set(node.id, blockNode);
+            state.blocks.set(node.id, block);
+
+            nextNode = blockNode;
             break;
           }
 
@@ -93,8 +91,9 @@ class State {
 
   public readonly idMap: Map<string, TreeNode<DocNode>> = new Map();
   public readonly domMap: Map<string, Node> = new Map();
-  public readonly newBlockInserted: Slot<Block> = new Slot;
-  public readonly blockDeleted: Slot<Block> = new Slot;
+  public readonly blocks: Map<string, Block> = new Map();
+  public readonly newBlockInserted: Slot<BlockData> = new Slot;
+  public readonly blockDeleted: Slot<BlockData> = new Slot;
   public cursorState: CursorState | undefined;
 
   constructor(public readonly root: TreeRoot<DocNode>, public readonly blockRegistry: BlockRegistry) {
@@ -121,18 +120,6 @@ class State {
 
   private apply(action: Action) {
     switch (action.type) {
-      case "update-span": {
-        const node = this.idMap.get(action.targetId);
-        if (!node) {
-          throw new Error(
-            "can not apply action, id not found: " + action.targetId,
-          );
-        }
-
-        Object.assign(node.data, action.value);
-        break;
-      }
-
       case "new-block": {
         const node = this.idMap.get(action.targetId);
         if (!node) {
@@ -149,48 +136,24 @@ class State {
           throw new Error(`block name '${blockName} not found'`);
         }
 
-        const newBlock: Block = {
+        const blockDef = this.blockRegistry.getBlockDefById(blockId)!;
+
+        const newBlock: BlockData = {
           t: "block",
           id: action.newId,
           flags: blockId,
           data: action.data,
         };
+        const block = blockDef.onBlockCreated(newBlock);
 
-        const blockNode = createBlockWithContent(newBlock);
+        const blockNode = createNode(newBlock);
         this.insertNode(blockNode);
 
-        if (blockId === 0) {
-          const lineContentNode = blockNode.firstChild!;
-
-          const { spans } = action;
-          if (spans) {
-            for (const span of spans) {
-              const spanNode: TreeNode<DocNode> = createNode(span);
-              this.insertNode(spanNode);
-              appendChild(lineContentNode, spanNode);
-            }
-          }
-        }
+        this.blocks.set(action.newId, block);
 
         insertAfter(node, blockNode, afterNode);
 
         this.newBlockInserted.emit(newBlock);
-        break;
-      }
-
-      case "new-span": {
-        const lineNode = this.idMap.get(action.targetId);
-        if (!lineNode) {
-          throw new Error(
-            "can not apply action, id not found: " + action.targetId,
-          );
-        }
-        const { content, afterId } = action;
-        const spanNode: TreeNode<DocNode> = createNode(content);
-        this.insertNode(spanNode);
-
-        const afterNode = afterId ? this.idMap.get(afterId) : undefined;
-        insertAfter(lineNode.firstChild!, spanNode, afterNode);
         break;
       }
 
@@ -207,6 +170,16 @@ class State {
 
         if (node.data.t === "block") {
           this.blockDeleted.emit(node.data);
+        }
+        break;
+      }
+
+      case "text-format": {
+        const { targetId, index, length, attributes } = action;
+        const blockNode = this.idMap.get(targetId) as TreeNode<BlockData>;
+        const data = blockNode.data.data;
+        if (data && data instanceof TextModel) {
+          data.format(index, length, attributes);
         }
         break;
       }
@@ -250,16 +223,16 @@ export function normalizeLine(line: TreeNode<DocNode>, actions: Action[]) {
     }
 
     const newContent = prevContent + currentData.content;
-    actions.push({
-      type: "update-span",
-      targetId: prevData.id,
-      value: {
-        content: newContent,
-      },
-    }, {
-      type: "delete",
-      targetId: currentData.id,
-    });
+    // actions.push({
+    //   type: "update-span",
+    //   targetId: prevData.id,
+    //   value: {
+    //     content: newContent,
+    //   },
+    // }, {
+    //   type: "delete",
+    //   targetId: currentData.id,
+    // });
     prevContent = newContent;
   });
 }

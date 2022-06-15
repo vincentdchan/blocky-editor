@@ -17,7 +17,7 @@ function makeDefaultUtils() {
 test("tree validator", () => {
   const { blockRegistry, m } = makeDefaultUtils();
   State.fromMarkup(
-    m.doc([m.line([m.span("Hello World")])]),
+    m.doc([m.textBlock([m.span("Hello World")])]),
     blockRegistry
   );
 });
@@ -38,7 +38,7 @@ test("tree validate root", () => {
 test("serialize", () => {
   const { blockRegistry, m } = makeDefaultUtils();
   const state = State.fromMarkup(
-    m.doc([m.line([m.span("Hello World")])]),
+    m.doc([m.textBlock([m.span("Hello World")])]),
     blockRegistry
   );
   console.log(serializeJSON(state));
