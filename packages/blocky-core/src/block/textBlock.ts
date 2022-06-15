@@ -1,9 +1,14 @@
 import { elem } from "blocky-common/es/dom";
-import { type IBlockDefinition, BlockContentType, type BlockCreatedEvent, BlockFocusedEvent } from "./basic";
+import {
+  type IBlockDefinition,
+  BlockContentType,
+  type BlockCreatedEvent,
+  BlockFocusedEvent,
+} from "./basic";
 
 export const TextBlockName = "text";
 
-const TextContentClass = 'blocky-block-text-content';
+const TextContentClass = "blocky-block-text-content";
 
 interface TextPosition {
   node: Node;
@@ -33,13 +38,16 @@ class TextBlockDefinition implements IBlockDefinition {
     element.appendChild(content);
   }
 
-  private findFocusPosition(blockDom: HTMLElement, absoluteOffset: number): TextPosition | undefined {
+  private findFocusPosition(
+    blockDom: HTMLElement,
+    absoluteOffset: number
+  ): TextPosition | undefined {
     const contentContainer = this.findContentContainer(blockDom);
     let ptr = contentContainer.firstChild;
 
     while (ptr) {
       const contentLength = ptr.textContent?.length ?? 0;
-      if (absoluteOffset < contentLength) {
+      if (absoluteOffset <= contentLength) {
         return { node: ptr, offset: absoluteOffset };
       } else {
         absoluteOffset -= contentLength;
@@ -54,35 +62,59 @@ class TextBlockDefinition implements IBlockDefinition {
   onBlockFocused({ node: blockDom, selection, cursor }: BlockFocusedEvent) {
     const contentContainer = this.findContentContainer(blockDom);
 
-    if (cursor.type === "collapsed") {
-      const { offset } = cursor;
-      const pos = this.findFocusPosition(blockDom, offset);
-      selection.removeAllRanges();
-      if (!pos) {
+    const { offset } = cursor;
+    const pos = this.findFocusPosition(blockDom, offset);
+    if (!pos) {
+      const { firstChild } = contentContainer;
 
-        const { firstChild } = contentContainer;
-
-        if (firstChild == null) {
-          const range = document.createRange();
-          range.setStart(contentContainer, 0);
-          range.setEnd(contentContainer, 0);
-          selection.addRange(range);
-          return;
-        }
-
-        const range = document.createRange();
-        range.setStart(firstChild, 0);
-        range.setEnd(firstChild, 0);
-        selection.addRange(range);
-      } else {
-        const { node, offset } = pos;
-        const range = document.createRange();
-        range.setStart(node, offset);
-        range.setEnd(node, offset);
-        selection.addRange(range);
+      if (firstChild == null) {
+        setRangeIfDifferent(selection, contentContainer, 0, contentContainer, 0);
+        return;
       }
+
+      setRangeIfDifferent(selection, firstChild, 0, firstChild, 0);
+    } else {
+      const { node, offset } = pos;
+      setRangeIfDifferent(selection, node, offset, node, offset);
     }
   }
+}
+
+function setRangeIfDifferent (
+  sel: Selection,
+  startContainer: Node,
+  startOffset: number,
+  endContainer: Node,
+  endOffset: number
+) {
+  if (isRangeEqual(sel, startContainer, startOffset, endContainer, endOffset)) {
+    return;
+  }
+  sel.removeAllRanges();
+  const range = document.createRange();
+  range.setStart(startContainer, startOffset);
+  range.setEnd(endContainer, endOffset);
+  sel.addRange(range);
+}
+
+function isRangeEqual(
+  sel: Selection,
+  startContainer: Node,
+  startOffset: number,
+  endContainer: Node,
+  endOffset: number
+): boolean {
+  if (sel.rangeCount === 0) {
+    return false;
+  }
+  const range = sel.getRangeAt(0);
+
+  return (
+    range.startContainer === startContainer &&
+    range.startOffset === startOffset &&
+    range.endContainer === endContainer &&
+    range.endOffset === endOffset
+  );
 }
 
 export function makeTextBlockDefinition(): IBlockDefinition {

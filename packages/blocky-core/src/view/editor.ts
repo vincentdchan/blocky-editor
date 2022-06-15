@@ -928,31 +928,14 @@ export class Editor {
       return;
     }
 
-    const { targetId, offset } = newState;
+    const { targetId } = newState;
 
     const targetNode = this.state.domMap.get(targetId);
     if (!targetNode) {
       throw new Error(`dom not found: ${targetId}`);
     }
 
-    if (targetNode instanceof Text) {
-      sel.removeAllRanges();
-      const range = document.createRange();
-      range.setStart(targetNode, offset);
-      range.setEnd(targetNode, offset);
-      sel.addRange(range);
-    } else if (targetNode instanceof HTMLSpanElement) {
-      sel.removeAllRanges();
-      const range = document.createRange();
-      let child = targetNode.firstChild;
-      if (!child) {
-        child = document.createTextNode("");
-        targetNode.appendChild(child);
-      }
-      range.setStart(child, offset);
-      range.setEnd(child, offset);
-      sel.addRange(range);
-    } else if (
+    if (
       targetNode instanceof HTMLDivElement &&
       targetNode.classList.contains(this.#renderer.blockClassName)
     ) {

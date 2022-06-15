@@ -101,7 +101,7 @@ function makeBoldedTextPlugin(): IPlugin {
     const { idGenerator } = editor;
     const { startId, endId, startOffset, endOffset } = cursorState;
 
-    if (startId === endId && idGenerator.isSpanId(startId)) {
+    if (startId === endId) {
       // make a single fragment bolded
       const spanNode = editor.state.idMap.get(startId);
       if (!spanNode) {
