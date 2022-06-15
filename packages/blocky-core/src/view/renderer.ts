@@ -7,12 +7,12 @@ import {
   treeChildrenToArray,
 } from "@pkg/model/index";
 import type { Editor, EditorRegistry } from "@pkg/view/editor";
-import type { ISpanType } from "@pkg/registry/spanRegistry";
+import type { SpanDefinition } from "@pkg/registry/spanRegistry";
 import { BlockContentType, IBlockDefinition } from "..";
 
 function createSpanNode(
   spanNode: TreeNode<Span>,
-  spanDef: ISpanType
+  spanDef: SpanDefinition
 ): Node {
   const { data } = spanNode;
   const spanType = data.flags;

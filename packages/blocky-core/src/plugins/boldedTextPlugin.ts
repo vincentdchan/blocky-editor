@@ -1,4 +1,5 @@
 import type { IPlugin } from "@pkg/registry/pluginRegistry";
+import { SpanType } from "@pkg/registry/spanRegistry";
 import { type TreeNode, type DocNode, type Span } from "@pkg/model";
 import { Action } from "@pkg/model/actions";
 import type { Editor } from "@pkg/view/editor";
@@ -118,6 +119,7 @@ function makeBoldedTextPlugin(): IPlugin {
     onInitialized(editor: Editor) {
       editor.registry.span.register({
         name: SpanName,
+        type: SpanType.StyledText,
         classNames: ["mg-editor-bold"],
       });
       editor.keyDown.on((e: KeyboardEvent) => {
