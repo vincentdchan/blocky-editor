@@ -2,12 +2,13 @@ import { elem } from "blocky-common/es/dom";
 import {
   type IBlockDefinition,
   type BlockCreatedEvent,
+  type BlockDidMountEvent,
   type BlockFocusedEvent,
   type BlockContentChangedEvent,
   Block,
 } from "./basic";
 import { type EditorController } from "@pkg/view/controller";
-import { type BlockData, type TreeNode } from "@pkg/model";
+import { type BlockData } from "@pkg/model";
 import { TextModel, TextNode } from "@pkg/model/textModel";
 import * as fastDiff from "fast-diff";
 
@@ -27,7 +28,7 @@ class TextBlock extends Block {
     super();
   }
 
-  override findTextOffsetInBlock(blockNode: TreeNode<BlockData>, focusedNode: Node, offsetInNode: number): number {
+  override findTextOffsetInBlock(focusedNode: Node, offsetInNode: number): number {
     const blockContainer = this.#container!;
     const contentContainer = this.findContentContainer!(blockContainer as HTMLElement);
     let counter = 0;
@@ -53,7 +54,7 @@ class TextBlock extends Block {
     return parent.firstChild! as HTMLElement;
   }
 
-  override blockDidMount({ element }: BlockCreatedEvent): void {
+  override blockDidMount({ element }: BlockDidMountEvent): void {
     const content = elem("div", TextContentClass);
 
     const block = this.data.data as TextModel;
@@ -156,22 +157,22 @@ class TextBlock extends Block {
     }
 
     const contentContainer = this.findContentContainer(container);
-    this.renderBlockTextContent(contentContainer, textModel);
+    this.renderBlockTextContent(contentContainer, textModel, editorController);
   }
 
-  private renderBlockTextContent(contentContainer: HTMLElement, textModel: TextModel) {
+  private renderBlockTextContent(contentContainer: HTMLElement, textModel: TextModel, editorController: EditorController) {
     let nodePtr = textModel.nodeBegin;
     let domPtr: Node | null = contentContainer.firstChild;
     let prevDom: Node | null = null;
 
     while (nodePtr) {
       if (!domPtr) {
-        domPtr = createDomByNode(nodePtr);
+        domPtr = createDomByNode(nodePtr, editorController);
         contentContainer.insertBefore(domPtr, prevDom?.nextSibling ?? null);
       } else {  // is old
         if (!isNodeMatch(nodePtr, domPtr)) {
           const oldDom = domPtr;
-          const newNode = createDomByNode(nodePtr);
+          const newNode = createDomByNode(nodePtr, editorController);
 
           nodePtr = nodePtr.next;
           prevDom = domPtr;
@@ -200,10 +201,15 @@ class TextBlock extends Block {
 
 }
 
-function createDomByNode(node: TextNode): Node {
+function createDomByNode(node: TextNode, editorController: EditorController): Node {
   if (node.attributes) {
     const d = elem("span");
     d.textContent = node.content;
+
+    if (node.attributes) {
+      editorController.spanRegistry.emit(d, node.attributes);
+    }
+
     return d;
   } else {
     return document.createTextNode(node.content);
@@ -226,7 +232,7 @@ class TextBlockDefinition implements IBlockDefinition {
   public name: string = TextBlockName;
   public editable: boolean = true;
 
-  onBlockCreated(data: BlockData): Block {
+  onBlockCreated({ model: data }: BlockCreatedEvent): Block {
     return new TextBlock(this, data);
   }
 

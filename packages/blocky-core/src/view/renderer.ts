@@ -2,38 +2,10 @@ import { clearAllChildren, elem, removeNode } from "blocky-common/es/dom";
 import {
   type BlockData,
   type TreeNode,
-  type Span,
   type DocNode,
-  treeChildrenToArray,
 } from "@pkg/model/index";
-import type { Editor, EditorRegistry } from "@pkg/view/editor";
-import type { SpanDefinition } from "@pkg/registry/spanRegistry";
+import type { Editor } from "@pkg/view/editor";
 import { type IBlockDefinition } from "@pkg/block/basic";
-
-function createSpanNode(
-  spanNode: TreeNode<Span>,
-  spanDef: SpanDefinition
-): Node {
-  const { data } = spanNode;
-  const spanType = data.flags;
-  if (spanType === 0) {
-    const result = document.createTextNode(data.content);
-    return result;
-  }
-
-  const result = elem("span");
-
-  if (spanDef.classNames) {
-    for (const cls of spanDef.classNames) {
-      result.classList.add(cls);
-    }
-  }
-
-  result.setAttribute("data-type", spanType.toString());
-  result.textContent = data.content;
-
-  return result;
-}
 
 function ensureChild<K extends keyof HTMLElementTagNameMap>(
   dom: HTMLElement,
@@ -61,20 +33,17 @@ function ensureChild<K extends keyof HTMLElementTagNameMap>(
 interface IRendererOptions {
   clsPrefix: string;
   editor: Editor;
-  registry: EditorRegistry;
 }
 
 export class DocRenderer {
   private clsPrefix: string;
   private editor: Editor;
-  private registry: EditorRegistry;
 
   public readonly blockClassName: string;
 
-  constructor({ clsPrefix, editor, registry }: IRendererOptions) {
+  constructor({ clsPrefix, editor }: IRendererOptions) {
     this.clsPrefix = clsPrefix;
     this.editor = editor;
-    this.registry = registry;
 
     this.blockClassName = `${clsPrefix}-editor-block`;
   }
@@ -181,85 +150,8 @@ export class DocRenderer {
     const block = editor.state.blocks.get(data.id)!;
     block.blockDidMount({
       element: blockContainer,
-      node: blockNode,
       clsPrefix,
     });
-  }
-
-  protected renderBlockTextContent(contentContainer: HTMLElement, lineNode: TreeNode<DocNode>) {
-    const spanLen = lineNode.childrenLength;
-    let childrenLen = contentContainer.childNodes.length;
-    const treeChildren = (
-      lineNode.firstChild ? treeChildrenToArray(lineNode.firstChild) : []
-    ) as TreeNode<Span>[];
-    if (childrenLen < spanLen) {
-      for (let i = childrenLen; i < spanLen; i++) {
-        const span = treeChildren[i];
-        const spanType = span.data.flags;
-        const spanDef = this.registry.span.getSpanTypeById(spanType);
-        if (!spanDef) {
-          throw new Error("unknown span type: " + spanType);
-        }
-        const newSpanDom = createSpanNode(span, spanDef);
-        contentContainer.appendChild(newSpanDom);
-
-        if (spanDef.onSpanCreated) {
-          spanDef.onSpanCreated({
-            element: newSpanDom as HTMLSpanElement,
-            node: span,
-          });
-        }
-      }
-    } else if (childrenLen > spanLen) {
-      while (childrenLen > spanLen && contentContainer.lastChild) {
-        contentContainer.removeChild(contentContainer.lastChild);
-        childrenLen--;
-      }
-    }
-
-    for (let i = 0; i < spanLen; i++) {
-      let span = treeChildren[i];
-      let node = contentContainer.childNodes.item(i);
-      this.renderSpan(node, span);
-    }
-  }
-
-  protected renderSpan(domNode: Node, spanNode: TreeNode<Span>) {
-    const { editor } = this;
-    const { state } = editor;
-    const { data } = spanNode;
-    const spanType = data.flags;
-    if (
-      this.typeOfDomNode(domNode) !== spanType ||
-      typeof domNode._mgNode === "undefined"
-    ) {
-      delete domNode._mgNode; // avoid mutation observer trigger a remove action
-
-      const spanType = data.flags;
-      const spanDef = this.registry.span.getSpanTypeById(spanType);
-      if (!spanDef) {
-        throw new Error("unknown span type: " + spanType);
-      }
-      const newNode = createSpanNode(spanNode, spanDef);
-      state.domMap.set(spanNode.data.id, newNode);
-      newNode._mgNode = spanNode;
-      domNode.parentNode?.replaceChild(newNode, domNode);
-
-      if (spanDef.onSpanCreated) {
-        spanDef.onSpanCreated({
-          element: newNode as HTMLSpanElement,
-          node: spanNode,
-        });
-      }
-      return;
-    }
-
-    state.domMap.set(spanNode.data.id, domNode);
-    domNode._mgNode = spanNode;
-    if (domNode.textContent !== data.content) {
-      // avoid reset of cursor
-      domNode.textContent = data.content;
-    }
   }
 
   protected typeOfDomNode(node: Node): number | undefined {
