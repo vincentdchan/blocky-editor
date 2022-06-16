@@ -399,23 +399,8 @@ export class Editor {
     }
 
     const { data } = treeNode;
-    if (data.t === "span") {
-      const { content, id } = data;
-      const currentContent = node.textContent || "";
-      if (content !== currentContent) {
-        actions.push({
-          type: "update-span",
-          targetId: id,
-          value: { content: currentContent },
-          get diffs() {
-            return lazy(() => {
-              return fastdiff(content, currentContent, currentOffset);
-            })();
-          },
-        });
-      }
-    } else if (data.t === "block") {
-      this.checkBlockContent(node, treeNode, actions, newSpanTuples);
+    if (data.t === "block") {
+      this.checkBlockContent(node, treeNode, currentOffset);
     }
   }
 
@@ -424,76 +409,84 @@ export class Editor {
    */
   private checkBlockContent(
     node: Node,
-    lineNode: TreeNode<DocNode>,
-    actions: Action[],
-    newSpans?: NewSpanTuple[]
+    blockNode: TreeNode<DocNode>,
+    currentOffset?: number,
   ) {
-    const contentContainer = node.firstChild! as HTMLElement;
+    const block = blockNode.data as Block;
+    const blockDef = this.registry.block.getBlockDefById(block.flags);
 
-    let prevId: string | undefined;
+    blockDef?.onBlockContentChanged?.({
+      node: node as HTMLDivElement,
+      block,
+      offset: currentOffset,
+    });
 
-    let ptr = contentContainer.firstChild;
+    // const contentContainer = node.firstChild! as HTMLElement;
 
-    const nodesToRemoved: Node[] = [];
+    // let prevId: string | undefined;
 
-    while (ptr) {
-      if (ptr instanceof Text) {
-        if (ptr._mgNode) {
-          const node = ptr._mgNode as TreeNode<DocNode>;
-          prevId = node.data.id;
-        } else {
-          // add a new node
-          const newId = this.idGenerator.mkSpanId();
-          actions.push({
-            type: "new-span",
-            targetId: lineNode.data.id,
-            afterId: prevId,
-            content: {
-              id: newId,
-              t: "span",
-              flags: 0,
-              content: ptr.textContent || "",
-            },
-          });
-          prevId = newId;
-          newSpans?.push({
-            node: ptr,
-            id: newId,
-          });
-        }
-      } else if (ptr instanceof HTMLSpanElement) {
-        if (ptr._mgNode) {
-          const node = ptr._mgNode as TreeNode<DocNode>;
-          prevId = node.data.id;
-        } else {
-          // add a new node
-          const newId = this.idGenerator.mkSpanId();
-          const dataType = parseInt(ptr.getAttribute("data-type") || "0", 0);
-          actions.push({
-            type: "new-span",
-            targetId: lineNode.data.id,
-            afterId: prevId,
-            content: {
-              id: newId,
-              t: "span",
-              flags: dataType,
-              content: ptr.textContent || "",
-            },
-          });
-          prevId = newId;
-          newSpans?.push({
-            node: ptr,
-            id: newId,
-          });
-        }
-      } else {
-        nodesToRemoved.push(ptr);
-      }
+    // let ptr = contentContainer.firstChild;
 
-      ptr = ptr.nextSibling;
-    }
+    // const nodesToRemoved: Node[] = [];
 
-    nodesToRemoved.forEach((node) => node.parentNode?.removeChild(node));
+    // while (ptr) {
+    //   if (ptr instanceof Text) {
+    //     if (ptr._mgNode) {
+    //       const node = ptr._mgNode as TreeNode<DocNode>;
+    //       prevId = node.data.id;
+    //     } else {
+    //       // add a new node
+    //       const newId = this.idGenerator.mkSpanId();
+    //       actions.push({
+    //         type: "new-span",
+    //         targetId: lineNode.data.id,
+    //         afterId: prevId,
+    //         content: {
+    //           id: newId,
+    //           t: "span",
+    //           flags: 0,
+    //           content: ptr.textContent || "",
+    //         },
+    //       });
+    //       prevId = newId;
+    //       newSpans?.push({
+    //         node: ptr,
+    //         id: newId,
+    //       });
+    //     }
+    //   } else if (ptr instanceof HTMLSpanElement) {
+    //     if (ptr._mgNode) {
+    //       const node = ptr._mgNode as TreeNode<DocNode>;
+    //       prevId = node.data.id;
+    //     } else {
+    //       // add a new node
+    //       const newId = this.idGenerator.mkSpanId();
+    //       const dataType = parseInt(ptr.getAttribute("data-type") || "0", 0);
+    //       actions.push({
+    //         type: "new-span",
+    //         targetId: lineNode.data.id,
+    //         afterId: prevId,
+    //         content: {
+    //           id: newId,
+    //           t: "span",
+    //           flags: dataType,
+    //           content: ptr.textContent || "",
+    //         },
+    //       });
+    //       prevId = newId;
+    //       newSpans?.push({
+    //         node: ptr,
+    //         id: newId,
+    //       });
+    //     }
+    //   } else {
+    //     nodesToRemoved.push(ptr);
+    //   }
+
+    //   ptr = ptr.nextSibling;
+    // }
+
+    // nodesToRemoved.forEach((node) => node.parentNode?.removeChild(node));
   }
 
   private checkNodesChanged(actions: Action[], newSpanTuples: NewSpanTuple[]) {
@@ -733,13 +726,13 @@ export class Editor {
 
       if (cursorOffset < data.content.length) {
         const before = data.content.slice(0, cursorOffset);
-        actions.push({
-          type: "update-span",
-          targetId: node.data.id,
-          value: {
-            content: before,
-          },
-        });
+        // actions.push({
+        //   type: "update-span",
+        //   targetId: node.data.id,
+        //   value: {
+        //     content: before,
+        //   },
+        // });
       }
 
       removeNodesAfter(node, actions);
@@ -817,11 +810,11 @@ export class Editor {
       ptr.data.flags === lastNodeOfPrevLine.data.flags
     ) {
       const content = lastNodeOfPrevLine.data.content + ptr.data.content;
-      actions.push({
-        type: "update-span",
-        targetId: lastNodeOfPrevLine.data.id,
-        value: { content },
-      });
+      // actions.push({
+      //   type: "update-span",
+      //   targetId: lastNodeOfPrevLine.data.id,
+      //   value: { content },
+      // });
       ptr = ptr.next;
     }
 
@@ -833,17 +826,17 @@ export class Editor {
         if (!firstId) {
           firstId = newId;
         }
-        actions.push({
-          type: "new-span",
-          targetId: lineId,
-          afterId,
-          content: {
-            t: "span",
-            id: newId,
-            content: currentSpan.content,
-            flags: currentSpan.flags,
-          },
-        });
+        // actions.push({
+        //   type: "new-span",
+        //   targetId: lineId,
+        //   afterId,
+        //   content: {
+        //     t: "span",
+        //     id: newId,
+        //     content: currentSpan.content,
+        //     flags: currentSpan.flags,
+        //   },
+        // });
         afterId = newId;
       }
 

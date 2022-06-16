@@ -125,18 +125,6 @@ class State {
 
   private apply(action: Action) {
     switch (action.type) {
-      case "update-span": {
-        const node = this.idMap.get(action.targetId);
-        if (!node) {
-          throw new Error(
-            "can not apply action, id not found: " + action.targetId,
-          );
-        }
-
-        Object.assign(node.data, action.value);
-        break;
-      }
-
       case "new-block": {
         const node = this.idMap.get(action.targetId);
         if (!node) {
@@ -179,22 +167,6 @@ class State {
         insertAfter(node, blockNode, afterNode);
 
         this.newBlockInserted.emit(newBlock);
-        break;
-      }
-
-      case "new-span": {
-        const lineNode = this.idMap.get(action.targetId);
-        if (!lineNode) {
-          throw new Error(
-            "can not apply action, id not found: " + action.targetId,
-          );
-        }
-        const { content, afterId } = action;
-        const spanNode: TreeNode<DocNode> = createNode(content);
-        this.insertNode(spanNode);
-
-        const afterNode = afterId ? this.idMap.get(afterId) : undefined;
-        insertAfter(lineNode.firstChild!, spanNode, afterNode);
         break;
       }
 
@@ -254,16 +226,16 @@ export function normalizeLine(line: TreeNode<DocNode>, actions: Action[]) {
     }
 
     const newContent = prevContent + currentData.content;
-    actions.push({
-      type: "update-span",
-      targetId: prevData.id,
-      value: {
-        content: newContent,
-      },
-    }, {
-      type: "delete",
-      targetId: currentData.id,
-    });
+    // actions.push({
+    //   type: "update-span",
+    //   targetId: prevData.id,
+    //   value: {
+    //     content: newContent,
+    //   },
+    // }, {
+    //   type: "delete",
+    //   targetId: currentData.id,
+    // });
     prevContent = newContent;
   });
 }

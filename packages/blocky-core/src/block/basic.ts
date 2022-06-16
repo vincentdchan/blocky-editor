@@ -15,6 +15,12 @@ export interface BlockFocusedEvent {
   cursor: CollapsedCursor;
 }
 
+export interface BlockContentChangedEvent {
+  node: HTMLDivElement;
+  block: Block;
+  offset?: number;
+}
+
 
 export interface IBlockDefinition {
   name: string;
@@ -40,6 +46,8 @@ export interface IBlockDefinition {
    * 
    */
   onBlockFocused?(e: BlockFocusedEvent): void;
+
+  onBlockContentChanged?(e: BlockContentChangedEvent): void;
 
   render?(container: HTMLElement, editorController: EditorController, id: string): void;
 

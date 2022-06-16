@@ -2,11 +2,13 @@ import { elem } from "blocky-common/es/dom";
 import {
   type IBlockDefinition,
   type BlockCreatedEvent,
-  BlockFocusedEvent,
+  type BlockFocusedEvent,
+  type BlockContentChangedEvent,
 } from "./basic";
 import { type EditorController } from "@pkg/view/controller";
 import { Block } from "@pkg/model";
 import { TextModel } from "@pkg/model/textModel";
+import * as fastDiff from "fast-diff";
 
 export const TextBlockName = "text";
 
@@ -79,6 +81,36 @@ class TextBlockDefinition implements IBlockDefinition {
       const { node, offset } = pos;
       setRangeIfDifferent(selection, node, offset, node, offset);
     }
+  }
+
+  onBlockContentChanged({ node, block, offset }: BlockContentChangedEvent) {
+    const contentContainer = this.findContentContainer(node);
+    let textContent = "";
+
+    let ptr = contentContainer.firstChild;
+    while (ptr) {
+      textContent += ptr.textContent;
+      ptr = ptr.nextSibling;
+    }
+
+    const textModel = block.data as TextModel;
+    const oldContent = textModel.toString();
+
+    const diffs = fastDiff(oldContent, textContent, offset);
+
+    let index = 0;
+    for (const [t, content] of diffs) {
+      if (t === fastDiff.EQUAL) {
+        index += content.length;
+      } else if (t === fastDiff.INSERT) {
+        textModel.insert(index, content);
+        index += content.length;
+      } else if (t === fastDiff.DELETE) {
+        textModel.delete(index, content.length);
+        index -= content.length;
+      }
+    }
+    console.log("content:", textModel.toString(), textModel.nodeBegin);
   }
 
   render(container: HTMLElement, editorController: EditorController, id: string): void {

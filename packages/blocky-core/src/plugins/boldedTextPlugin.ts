@@ -36,51 +36,51 @@ function makeBoldedTextPlugin(): IPlugin {
     const newContent = oldContent.slice(startOffset, endOffset);
     const spanId = editor.registry.span.getSpanIdByName(SpanName)!;
 
-    const actions: Action[] = [
-      {
-        type: "update-span",
-        targetId: spanNode.data.id,
-        value: {
-          flags: spanId,
-          content: newContent,
-        },
-      },
-    ];
+    // const actions: Action[] = [
+    //   {
+    //     type: "update-span",
+    //     targetId: spanNode.data.id,
+    //     value: {
+    //       flags: spanId,
+    //       content: newContent,
+    //     },
+    //   },
+    // ];
 
-    const { idGenerator } = editor;
+    // const { idGenerator } = editor;
 
-    if (contentBefore.length > 0) {
-      const newId = idGenerator.mkSpanId();
-      const prevId = spanNode.prev;
-      actions.push({
-        type: "new-span",
-        targetId: lineNode.data.id,
-        afterId: prevId?.data.id,
-        content: {
-          id: newId,
-          t: "span",
-          flags: 0,
-          content: contentBefore,
-        },
-      });
-    }
+    // if (contentBefore.length > 0) {
+    //   const newId = idGenerator.mkSpanId();
+    //   const prevId = spanNode.prev;
+    //   actions.push({
+    //     type: "new-span",
+    //     targetId: lineNode.data.id,
+    //     afterId: prevId?.data.id,
+    //     content: {
+    //       id: newId,
+    //       t: "span",
+    //       flags: 0,
+    //       content: contentBefore,
+    //     },
+    //   });
+    // }
 
-    if (contentAfter.length > 0) {
-      const newId = idGenerator.mkSpanId();
-      actions.push({
-        type: "new-span",
-        targetId: lineNode.data.id,
-        afterId: spanNode.data.id,
-        content: {
-          id: newId,
-          t: "span",
-          flags: 0,
-          content: contentAfter,
-        },
-      });
-    }
+    // if (contentAfter.length > 0) {
+    //   const newId = idGenerator.mkSpanId();
+    //   actions.push({
+    //     type: "new-span",
+    //     targetId: lineNode.data.id,
+    //     afterId: spanNode.data.id,
+    //     content: {
+    //       id: newId,
+    //       t: "span",
+    //       flags: 0,
+    //       content: contentAfter,
+    //     },
+    //   });
+    // }
 
-    editor.applyActions(actions);
+    // editor.applyActions(actions);
     editor.render(() => {
       editor.state.cursorState = {
         type: "collapsed",

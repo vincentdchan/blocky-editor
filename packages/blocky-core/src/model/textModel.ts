@@ -40,7 +40,7 @@ export class TextModel {
         const before = ptr.content.slice(0, index);
         const after = ptr.content.slice(index);
         ptr.content = before + text + after;
-        break;
+        return;
       } else if (index === 0) {
         this.insertNodeBefore({ content: text, attributes }, ptr);
         break;
