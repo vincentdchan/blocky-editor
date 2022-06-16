@@ -7,7 +7,7 @@ import {
   Block,
 } from "./basic";
 import { type EditorController } from "@pkg/view/controller";
-import { BlockData } from "@pkg/model";
+import { type BlockData, type TreeNode } from "@pkg/model";
 import { TextModel } from "@pkg/model/textModel";
 import * as fastDiff from "fast-diff";
 
@@ -21,16 +21,35 @@ interface TextPosition {
 }
 
 class TextBlock extends Block {
+  #container: HTMLElement | undefined;
 
-  constructor(private data: BlockData) {
+  constructor(private def: TextBlockDefinition, private data: BlockData) {
     super();
   }
 
-  findContentContainer(parent: HTMLElement) {
+  override findTextOffsetInBlock(blockNode: TreeNode<BlockData>, focusedNode: Node, offsetInNode: number): number {
+    const blockContainer = this.#container!;
+    const contentContainer = this.findContentContainer!(blockContainer as HTMLElement);
+    let counter = 0;
+    let ptr = contentContainer.firstChild;
+
+    while (ptr) {
+      if (ptr === focusedNode) {
+        break;
+      }
+      counter += ptr.textContent?.length ?? 0;
+      ptr = ptr.nextSibling;
+    }
+
+    return counter + offsetInNode;
+  }
+
+  protected findContentContainer(parent: HTMLElement) {
     return parent.firstChild! as HTMLElement;
   }
 
   override render(container: HTMLElement, editorController: EditorController) {
+    this.#container = container;
     const { id } = this.data;
     const blockNode = editorController.state.idMap.get(id)!;
     const block = blockNode.data as BlockData<TextModel>;
@@ -75,7 +94,7 @@ class TextBlockDefinition implements IBlockDefinition {
   public editable: boolean = true;
 
   onBlockCreated(data: BlockData): Block {
-    return new TextBlock(data);
+    return new TextBlock(this, data);
   }
 
   findContentContainer(parent: HTMLElement) {

@@ -277,24 +277,9 @@ export class Editor {
   
   private findTextOffsetInBlock(blockNode: TreeNode<BlockData>, focusedNode: Node, offsetInNode: number): number {
     const { data } = blockNode;
-    const blockDef = this.registry.block.getBlockDefById(data.flags)!;
-    if (!blockDef.editable) {
-      return 0;
-    }
-    const blockContainer = this.state.domMap.get(data.id)!;
-    const contentContainer = blockDef.findContentContainer!(blockContainer as HTMLElement);
-    let counter = 0;
-    let ptr = contentContainer.firstChild;
+    const block = this.state.blocks.get(data.id)!;
 
-    while (ptr) {
-      if (ptr === focusedNode) {
-        break;
-      }
-      counter += ptr.textContent?.length ?? 0;
-      ptr = ptr.nextSibling;
-    }
-
-    return counter + offsetInNode;
+    return block.findTextOffsetInBlock(blockNode, focusedNode, offsetInNode);
   }
 
   private selectionChanged = () => {

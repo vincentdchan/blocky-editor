@@ -30,15 +30,6 @@ export interface IBlockDefinition {
 
   onBlockCreated(model: BlockData): Block;
 
-  /**
-   * if a block's type is [[Text]],
-   * this method must be provided.
-   * 
-   * A text block must have a child element to contain
-   * the text content.
-   */
-  findContentContainer?(parent: HTMLElement): HTMLElement;
-
   onContainerCreated?(e: BlockCreatedEvent): void;
 
   /**
@@ -61,6 +52,10 @@ export class Block implements IDisposable {
   onBlockFocused(e: BlockFocusedEvent): void {}
 
   render(container: HTMLElement, editorController: EditorController) {}
+
+  findTextOffsetInBlock(blockNode: TreeNode<BlockData>, focusedNode: Node, offsetInNode: number): number {
+    return 0;
+  }
 
   dispose(): void {}
 
