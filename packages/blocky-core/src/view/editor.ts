@@ -622,7 +622,7 @@ export class Editor {
     // }
   }
 
-  private handleCursorStateChanged = (
+  public handleCursorStateChanged = (
     newState: CursorState | undefined,
     oldState: CursorState | undefined
   ) => {

@@ -1,6 +1,6 @@
 import { Slot } from "blocky-common/es/events";
 import { observe } from "blocky-common/es/observable";
-import { DocNode, State, TreeNode } from "@pkg/model";
+import { AttributesObject, BlockData, DocNode, State, TreeNode } from "@pkg/model";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
@@ -11,6 +11,7 @@ import { type ToolbarFactory } from "@pkg/view/toolbarDelegate";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { type Editor } from "./editor";
 import { type CursorState } from "@pkg/model/cursor";
+import { Action } from "@pkg/model/actions";
 
 export interface IEditorControllerOptions {
   pluginRegistry?: PluginRegistry;
@@ -106,6 +107,33 @@ export class EditorController {
         };
       }
     });
+  }
+
+  formatText(blockId: string, index: number, length: number, attribs?: AttributesObject) {
+    if (length === 0) {
+      return;
+    }
+
+    const blockNode = this.state.idMap.get(blockId) as TreeNode<BlockData>;
+
+    const block = blockNode.data;
+
+    const actions: Action[] = [
+      {
+        type: "text-format",
+        targetId: block.id,
+        index,
+        length,
+        attributes: attribs,
+      },
+    ];
+    const { editor } = this;
+    if (!editor) {
+      return;
+    }
+
+    editor.applyActions(actions);
+    editor.handleCursorStateChanged(editor.state.cursorState, undefined);
   }
 
   deleteBlock(id: string) {
