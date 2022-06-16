@@ -8,4 +8,4 @@ export { type ToolbarFactory } from "./view/toolbarDelegate";
 export { type IPlugin } from "./registry/pluginRegistry";
 export { SpanType, type SpanDefinition } from "./registry/spanRegistry";
 export { type IBlockDefinition, Block } from "./block/basic";
-export { type CursorState, State as DocumentState, type BlockData } from "./model";
+export { type CursorState, State as DocumentState, type BlockData, TextModel } from "./model";

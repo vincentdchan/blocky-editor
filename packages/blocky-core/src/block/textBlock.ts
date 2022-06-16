@@ -48,6 +48,94 @@ class TextBlock extends Block {
     return parent.firstChild! as HTMLElement;
   }
 
+  override blockDidMount({ element }: BlockCreatedEvent): void {
+    const content = elem("div", TextContentClass);
+
+    const block = this.data.data as TextModel;
+    const level = block.level;
+    if (level === 1) {
+      element.classList.add("blocky-heading1");
+    } else if (level === 2) {
+      element.classList.add("blocky-heading2");
+    } else if (level === 3) {
+      element.classList.add("blocky-heading3");
+    }
+
+    element.appendChild(content);
+  }
+
+  override blockFocused({ node: blockDom, selection, cursor }: BlockFocusedEvent): void {
+    const contentContainer = this.findContentContainer(blockDom);
+
+    const { offset } = cursor;
+    const pos = this.findFocusPosition(blockDom, offset);
+    if (!pos) {
+      const { firstChild } = contentContainer;
+
+      if (firstChild == null) {
+        setRangeIfDifferent(selection, contentContainer, 0, contentContainer, 0);
+        return;
+      }
+
+      setRangeIfDifferent(selection, firstChild, 0, firstChild, 0);
+    } else {
+      const { node, offset } = pos;
+      setRangeIfDifferent(selection, node, offset, node, offset);
+    }
+  }
+
+  private findFocusPosition(
+    blockDom: HTMLElement,
+    absoluteOffset: number
+  ): TextPosition | undefined {
+    const contentContainer = this.findContentContainer(blockDom);
+    let ptr = contentContainer.firstChild;
+
+    while (ptr) {
+      const contentLength = ptr.textContent?.length ?? 0;
+      if (absoluteOffset <= contentLength) {
+        return { node: ptr, offset: absoluteOffset };
+      } else {
+        absoluteOffset -= contentLength;
+      }
+
+      ptr = ptr.nextSibling;
+    }
+
+    return;
+  }
+
+  override blockContentChanged({ node, offset }: BlockContentChangedEvent): void {
+    const contentContainer = this.findContentContainer(node);
+    let textContent = "";
+
+    const blockData = this.data;
+    let ptr = contentContainer.firstChild;
+    while (ptr) {
+      textContent += ptr.textContent;
+      ptr = ptr.nextSibling;
+    }
+
+    const textModel = blockData.data as TextModel;
+    const oldContent = textModel.toString();
+
+    const diffs = fastDiff(oldContent, textContent, offset);
+
+    let index = 0;
+    for (const [t, content] of diffs) {
+      if (t === fastDiff.EQUAL) {
+        index += content.length;
+      } else if (t === fastDiff.INSERT) {
+        textModel.insert(index, content);
+        index += content.length;
+      } else if (t === fastDiff.DELETE) {
+        textModel.delete(index, content.length);
+        index -= content.length;
+      }
+    }
+    console.log("content:", textModel.toString(), textModel.nodeBegin);
+  }
+
   override render(container: HTMLElement, editorController: EditorController) {
     this.#container = container;
     const { id } = this.data;
@@ -95,133 +183,6 @@ class TextBlockDefinition implements IBlockDefinition {
 
   onBlockCreated(data: BlockData): Block {
     return new TextBlock(this, data);
-  }
-
-  findContentContainer(parent: HTMLElement) {
-    return parent.firstChild! as HTMLElement;
-  }
-
-  onContainerCreated({ element, block }: BlockCreatedEvent) {
-    const content = elem("div", TextContentClass);
-
-    const level = block.data?.level ?? 0;
-    if (level === 1) {
-      element.classList.add("blocky-heading1");
-    } else if (level === 2) {
-      element.classList.add("blocky-heading2");
-    } else if (level === 3) {
-      element.classList.add("blocky-heading3");
-    }
-
-    element.appendChild(content);
-  }
-
-  private findFocusPosition(
-    blockDom: HTMLElement,
-    absoluteOffset: number
-  ): TextPosition | undefined {
-    const contentContainer = this.findContentContainer(blockDom);
-    let ptr = contentContainer.firstChild;
-
-    while (ptr) {
-      const contentLength = ptr.textContent?.length ?? 0;
-      if (absoluteOffset <= contentLength) {
-        return { node: ptr, offset: absoluteOffset };
-      } else {
-        absoluteOffset -= contentLength;
-      }
-
-      ptr = ptr.nextSibling;
-    }
-
-    return;
-  }
-
-  onBlockFocused({ node: blockDom, selection, cursor }: BlockFocusedEvent) {
-    const contentContainer = this.findContentContainer(blockDom);
-
-    const { offset } = cursor;
-    const pos = this.findFocusPosition(blockDom, offset);
-    if (!pos) {
-      const { firstChild } = contentContainer;
-
-      if (firstChild == null) {
-        setRangeIfDifferent(selection, contentContainer, 0, contentContainer, 0);
-        return;
-      }
-
-      setRangeIfDifferent(selection, firstChild, 0, firstChild, 0);
-    } else {
-      const { node, offset } = pos;
-      setRangeIfDifferent(selection, node, offset, node, offset);
-    }
-  }
-
-  onBlockContentChanged({ node, block, offset }: BlockContentChangedEvent) {
-    const contentContainer = this.findContentContainer(node);
-    let textContent = "";
-
-    let ptr = contentContainer.firstChild;
-    while (ptr) {
-      textContent += ptr.textContent;
-      ptr = ptr.nextSibling;
-    }
-
-    const textModel = block.data as TextModel;
-    const oldContent = textModel.toString();
-
-    const diffs = fastDiff(oldContent, textContent, offset);
-
-    let index = 0;
-    for (const [t, content] of diffs) {
-      if (t === fastDiff.EQUAL) {
-        index += content.length;
-      } else if (t === fastDiff.INSERT) {
-        textModel.insert(index, content);
-        index += content.length;
-      } else if (t === fastDiff.DELETE) {
-        textModel.delete(index, content.length);
-        index -= content.length;
-      }
-    }
-    console.log("content:", textModel.toString(), textModel.nodeBegin);
-  }
-
-  render(container: HTMLElement, editorController: EditorController, id: string): void {
-    const blockNode = editorController.state.idMap.get(id)!;
-    const block = blockNode.data as BlockData<TextModel>;
-    const textModel = block.data;
-    if (!textModel) {
-      return;
-    }
-
-    const contentContainer = this.findContentContainer(container);
-    this.renderBlockTextContent(contentContainer, textModel);
-  }
-
-  private renderBlockTextContent(contentContainer: HTMLElement, textModel: TextModel) {
-    let nodePtr = textModel.nodeBegin;
-    let domPtr = contentContainer.firstChild;
-    let prevDom: Node | null = null;
-
-    while (nodePtr) {
-      if (!domPtr) {
-        domPtr = document.createTextNode(nodePtr.content);
-        contentContainer.insertBefore(domPtr, prevDom);
-      }
-
-      nodePtr = nodePtr.next;
-      prevDom = domPtr;
-      domPtr = domPtr.nextSibling;
-    }
-
-    // remove remaining text
-    while (domPtr) {
-      const next = domPtr.nextSibling;
-      domPtr.parentNode?.removeChild(domPtr);
-
-      domPtr = next;
-    }
   }
 
 }

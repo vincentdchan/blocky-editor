@@ -24,20 +24,6 @@ import { type Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { validate as validateNode } from "./validator";
 
-const DummyTextContentId = "block-text-content";
-
-function createBlockWithContent(line: BlockData): TreeNode<DocNode> {
-  const lineNode: TreeNode<BlockData> = createNode(line);
-
-  const lineContentNode: TreeNode<DocNode> = createNode({
-    t: "block-text-content",
-    id: DummyTextContentId,
-  });
-
-  appendChild(lineNode, lineContentNode);
-
-  return lineNode;
-}
 
 class State {
   static fromMarkup(doc: MDoc, blockRegistry: BlockRegistry): State {
@@ -150,28 +136,20 @@ class State {
           throw new Error(`block name '${blockName} not found'`);
         }
 
+        const blockDef = this.blockRegistry.getBlockDefById(blockId)!;
+
         const newBlock: BlockData = {
           t: "block",
           id: action.newId,
           flags: blockId,
           data: action.data,
         };
+        const block = blockDef.onBlockCreated(newBlock);
 
-        const blockNode = createBlockWithContent(newBlock);
+        const blockNode = createNode(newBlock);
         this.insertNode(blockNode);
 
-        if (blockId === 0) {
-          const lineContentNode = blockNode.firstChild!;
-
-          const { spans } = action;
-          if (spans) {
-            for (const span of spans) {
-              const spanNode: TreeNode<DocNode> = createNode(span);
-              this.insertNode(spanNode);
-              appendChild(lineContentNode, spanNode);
-            }
-          }
-        }
+        this.blocks.set(action.newId, block);
 
         insertAfter(node, blockNode, afterNode);
 

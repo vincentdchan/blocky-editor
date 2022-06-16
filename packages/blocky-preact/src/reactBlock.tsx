@@ -65,9 +65,5 @@ export function makeReactBlock(options: ReactBlockOptions): IBlockDefinition {
     onBlockCreated(model: BlockData): Block {
       return new ReactBlock(model, options);
     },
-    blockWillUnmount(container: HTMLElement) {
-      console.log("unmount react block");
-      unmountComponentAtNode(container);
-    },
   };
 }

@@ -1,5 +1,5 @@
 import { Component, type RefObject, createRef } from "preact";
-import { type EditorController } from "blocky-core";
+import { type EditorController, TextModel } from "blocky-core";
 import {
   type IDisposable,
   flattenDisposable,
@@ -91,7 +91,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
     }
     editorController.insertBlockAfterId(focusedNode.data.id, {
       autoFocus: true,
-      data: { level },
+      data: new TextModel(level),
     });
   };
 

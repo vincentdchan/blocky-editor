@@ -177,11 +177,12 @@ export class DocRenderer {
     blockContainer.addEventListener("mouseenter", () => {
       editor.placeBannerAt(blockContainer, blockNode);
     });
-    blockDef.onContainerCreated?.({
+
+    const block = editor.state.blocks.get(data.id)!;
+    block.blockDidMount({
       element: blockContainer,
       node: blockNode,
       clsPrefix,
-      block: blockNode.data as BlockData,
     });
   }
 

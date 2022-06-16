@@ -10,3 +10,4 @@ export {
 } from "./tree";
 export { default as State, normalizeLine } from "./state";
 export { type CursorState } from "./cursor";
+export { TextModel } from "./textModel";

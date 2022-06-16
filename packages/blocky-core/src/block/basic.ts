@@ -7,7 +7,6 @@ export interface BlockCreatedEvent {
   element: HTMLElement;
   clsPrefix: string;
   node: TreeNode<DocNode>;
-  block: BlockData,
 }
 
 export interface BlockFocusedEvent {
@@ -18,7 +17,6 @@ export interface BlockFocusedEvent {
 
 export interface BlockContentChangedEvent {
   node: HTMLDivElement;
-  block: BlockData;
   offset?: number;
 }
 
@@ -30,7 +28,11 @@ export interface IBlockDefinition {
 
   onBlockCreated(model: BlockData): Block;
 
-  onContainerCreated?(e: BlockCreatedEvent): void;
+}
+
+export class Block implements IDisposable {
+
+  blockDidMount(e: BlockCreatedEvent) {}
 
   /**
    * Handle the block is focused.
@@ -39,17 +41,9 @@ export interface IBlockDefinition {
    * equal to the block'id. The children is out of situation.
    * 
    */
-  onBlockFocused?(e: BlockFocusedEvent): void;
+  blockFocused(e: BlockFocusedEvent): void {}
 
-  onBlockContentChanged?(e: BlockContentChangedEvent): void;
-
-  blockWillUnmount?(container: HTMLElement): void;
-
-}
-
-export class Block implements IDisposable {
-
-  onBlockFocused(e: BlockFocusedEvent): void {}
+  blockContentChanged(e: BlockContentChangedEvent): void {}
 
   render(container: HTMLElement, editorController: EditorController) {}
 

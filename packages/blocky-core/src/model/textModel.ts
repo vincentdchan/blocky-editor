@@ -16,6 +16,8 @@ export class TextModel {
   #nodeEnd?: TextNode;
   #length = 0;
 
+  constructor(public readonly level: number = 0) {}
+
   public insert(index: number, text: string, attributes?: AttributesObject) {
     this.#length += text.length;
     if (!this.#nodeBegin) {
@@ -88,7 +90,7 @@ export class TextModel {
     let ptr: TextNode | undefined = this.#nodeBegin;
 
     while (ptr) {
-      if (index  < ptr.content.length) {
+      if (index < ptr.content.length) {
         const before = ptr.content.slice(0, index);
         const lenFormatted = ptr.content.length - index;
         const next = ptr.next;
@@ -96,7 +98,7 @@ export class TextModel {
         if (length >= lenFormatted) {
           const after = ptr.content.slice(index);
           ptr.content = before;
-          
+
           length -= lenFormatted;
 
           this.insertNodeBefore({ content: after, attributes }, next);
@@ -110,7 +112,10 @@ export class TextModel {
           ptr.content = before;
 
           this.insertNodeBefore({ content: mid, attributes }, next);
-          this.insertNodeBefore({ content: after, attributes: ptr.attributes }, next);
+          this.insertNodeBefore(
+            { content: after, attributes: ptr.attributes },
+            next
+          );
           return;
         }
       }
@@ -183,7 +188,7 @@ export class TextModel {
 
     this.eraseNode(next);
   }
-  
+
   private eraseNode(node: TextNode) {
     if (this.#nodeBegin === node) {
       this.#nodeBegin = node.next;
@@ -228,5 +233,4 @@ export class TextModel {
   get length() {
     return this.#length;
   }
-
 }

@@ -395,12 +395,11 @@ export class Editor {
     blockNode: TreeNode<DocNode>,
     currentOffset?: number,
   ) {
-    const block = blockNode.data as BlockData;
-    const blockDef = this.registry.block.getBlockDefById(block.flags);
+    const blockData = blockNode.data as BlockData;
+    const block = this.state.blocks.get(blockData.id)!;
 
-    blockDef?.onBlockContentChanged?.({
+    block.blockContentChanged({
       node: node as HTMLDivElement,
-      block,
       offset: currentOffset,
     });
 
@@ -568,10 +567,10 @@ export class Editor {
       const data = treeNode.data;
 
       if (data.t === "block") {
-        const block = data as BlockData;
-        const blockType = block.flags;
-        const blockDef = this.registry.block.getBlockDefById(blockType);
-        blockDef?.blockWillUnmount?.(node as HTMLElement);
+        const blockData = data as BlockData;
+        const block = this.state.blocks.get(blockData.id);
+        block?.dispose();
+        this.state.blocks.delete(blockData.id);
       }
 
       this.state.domMap.delete(data.id);
@@ -945,12 +944,13 @@ export class Editor {
     cursor: CollapsedCursor
   ) {
     const dataType = blockDom.getAttribute("data-type") || "";
-    const blockDef = this.registry.block.getBlockDefByName(dataType);
-    if (!blockDef) {
+    const node = blockDom._mgNode as TreeNode<DocNode> | undefined
+    if (!node) {
       return;
     }
 
-    blockDef.onBlockFocused?.({ node: blockDom, cursor, selection: sel });
+    const block = this.state.blocks.get(node.data.id)!;
+    block.blockFocused({ node: blockDom, cursor, selection: sel });
   }
 
   private handlePaste = (e: ClipboardEvent) => {
