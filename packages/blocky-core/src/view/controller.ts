@@ -70,13 +70,13 @@ export class EditorController {
     }
   }
 
-  mount(editor: Editor) {
+  public mount(editor: Editor) {
     this.editor = editor;
 
     observe(this.state, "cursorState", (s: CursorState | undefined) => this.cursorChanged.emit(s));
   }
 
-  insertBlockAfterId(afterId: string, options?: IInsertOptions) {
+  public insertBlockAfterId(afterId: string, options?: IInsertOptions) {
     const { editor } = this;
     if (!editor) {
       return;
@@ -109,7 +109,7 @@ export class EditorController {
     });
   }
 
-  formatText(blockId: string, index: number, length: number, attribs?: AttributesObject) {
+  public formatText(blockId: string, index: number, length: number, attribs?: AttributesObject) {
     if (length === 0) {
       return;
     }
@@ -136,7 +136,43 @@ export class EditorController {
     editor.handleCursorStateChanged(editor.state.cursorState, undefined);
   }
 
-  deleteBlock(id: string) {
+  public formatTextOnSelectedText(attribs?: AttributesObject) {
+    const editor = this.editor;
+    if (!editor) {
+      return;
+    }
+    const { cursorState } = editor.state;
+    if (!cursorState) {
+      return;
+    }
+
+    if (cursorState.type === "collapsed") {
+      return;
+    }
+
+    const { startId, endId, startOffset, endOffset } = cursorState;
+
+    if (startId === endId) {
+      // make a single fragment bolded
+      const blockNode = editor.state.idMap.get(startId);
+      if (!blockNode) {
+        console.error(`${startId} not found`);
+        return;
+      }
+      if (blockNode.data.t !== "block") {
+        console.error(`${startId} is not a block`);
+        return;
+      }
+      this.formatText(
+        blockNode.data.id,
+        startOffset,
+        endOffset - startOffset,
+        attribs
+      );
+    }
+  }
+
+  public deleteBlock(id: string) {
     const { editor } = this;
     if (!editor) {
       return;

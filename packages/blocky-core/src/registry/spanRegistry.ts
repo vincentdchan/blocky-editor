@@ -2,23 +2,21 @@ import type { AttributesObject } from "@pkg/model/textModel";
 
 export type SpanRenderer = (element: HTMLSpanElement, attribs: AttributesObject) => void;
 
+export interface SpanStyle {
+  name: string;
+  className: string;
+  onSpanCreated?: (elem: HTMLElement) => void;
+}
+
 // 0 for normal item
 export class SpanRegistry {
 
-  #renderer: SpanRenderer[] = []
+  public readonly styles: Map<string, SpanStyle> = new Map();
+  public readonly classnames: Map<string, SpanStyle> = new Map();
 
-  on(renderer: SpanRenderer) {
-    this.#renderer.push(renderer);
-  }
-
-  emit(element: HTMLSpanElement, attribs: AttributesObject) {
-    for (const renderer of this.#renderer) {
-      try {
-        renderer(element, attribs);
-      } catch (e) {
-        console.error(e);
-      }
-    }
+  register(style: SpanStyle) {
+    this.styles.set(style.name, style);
+    this.classnames.set(style.className, style);
   }
 
 }

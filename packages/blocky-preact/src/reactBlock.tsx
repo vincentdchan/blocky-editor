@@ -34,9 +34,10 @@ class ReactBlock extends Block {
     super();
   }
 
-  override render(container: HTMLElement, editorController: EditorController) {
+  override render(container: HTMLElement) {
     const { component } = this.options;
     this.#rendered = container;
+    const editorController = this.editor.controller;
     reactRender(
       <ReactBlockContext.Provider value={{ editorController, blockId: this.data.id }}>
         {component()}
@@ -50,6 +51,7 @@ class ReactBlock extends Block {
       unmountComponentAtNode(this.#rendered);
       this.#rendered = undefined;;
     }
+    super.dispose();
   }
 
 }

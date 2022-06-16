@@ -1,6 +1,6 @@
 import { makeObservable } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
-import type { DocNode, Span, BlockData } from "./nodes";
+import type { DocNode, BlockData } from "./nodes";
 import {
   type TreeNode,
   type TreeRoot,
@@ -9,18 +9,16 @@ import {
   appendChild,
   insertAfter,
   removeNode,
-  forEach,
 } from "./tree";
 import { Action } from "./actions";
 import {
   MDoc,
   traverse,
   toNodeDoc,
-  toNodeSpan,
   MNode,
 } from "./markup";
 import { type CursorState } from "@pkg/model/cursor";
-import { type Block } from "@pkg/block/basic";
+import { Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { validate as validateNode } from "./validator";
 import { TextModel } from "./textModel";
@@ -57,19 +55,12 @@ class State {
 
             const blockDef = blockRegistry.getBlockDefById(node.flags)!;
             const block = blockDef.onBlockCreated({ model: blockData });
+            state.newBlockCreated.emit(block);
 
             state.idMap.set(node.id, blockNode);
             state.blocks.set(node.id, block);
 
             nextNode = blockNode;
-            break;
-          }
-
-          case "span": {
-            const modelSpan = toNodeSpan(node);
-            const treeNode: TreeNode<Span> = createNode(modelSpan);
-            appendChild(parentNode!.firstChild!, treeNode);
-            nextNode = treeNode;
             break;
           }
 
@@ -93,6 +84,7 @@ class State {
   public readonly domMap: Map<string, Node> = new Map();
   public readonly blocks: Map<string, Block> = new Map();
   public readonly newBlockInserted: Slot<BlockData> = new Slot;
+  public readonly newBlockCreated: Slot<Block> = new Slot;
   public readonly blockDeleted: Slot<BlockData> = new Slot;
   public cursorState: CursorState | undefined;
 
@@ -145,6 +137,7 @@ class State {
           data: action.data,
         };
         const block = blockDef.onBlockCreated({ model: newBlock });
+        this.newBlockCreated.emit(block);
 
         const blockNode = createNode(newBlock);
         this.insertNode(blockNode);
@@ -194,49 +187,6 @@ class State {
   }
 }
 
-export function normalizeLine(line: TreeNode<DocNode>, actions: Action[]) {
-  if (line.data.t !== "block") {
-    throw new Error("node is not a line");
-  }
-
-  const lineContentNode = line.firstChild;
-  if (!lineContentNode) {
-    return;
-  }
-
-  let prevNode: TreeNode<DocNode> | undefined;
-  let prevContent: string | undefined;
-  forEach(lineContentNode, (spanNode: TreeNode<DocNode>) => {
-    if (!prevNode) {
-      prevNode = spanNode;
-      const prevData = prevNode.data as Span;
-      prevContent = prevData.content;
-      return;
-    }
-
-    const prevData = prevNode.data as Span;
-    const currentData = spanNode.data as Span;
-    if (prevData.flags !== currentData.flags) {
-      prevNode = spanNode;
-      prevContent = prevData.content;
-      return;
-    }
-
-    const newContent = prevContent + currentData.content;
-    // actions.push({
-    //   type: "update-span",
-    //   targetId: prevData.id,
-    //   value: {
-    //     content: newContent,
-    //   },
-    // }, {
-    //   type: "delete",
-    //   targetId: currentData.id,
-    // });
-    prevContent = newContent;
-  });
-}
-
 export function serializeJSON(state: State): any {
   const { root } = state;
   return serializeTreeNode(root);
@@ -247,14 +197,12 @@ function serializeTreeNode(node: TreeNode<DocNode>): any {
 
   let children: any[] | undefined;
 
-  if (data.t !== "span") {
-    children = [];
-    let ptr = node.firstChild;
-    while (ptr) {
-      children.push(serializeTreeNode(ptr));
+  children = [];
+  let ptr = node.firstChild;
+  while (ptr) {
+    children.push(serializeTreeNode(ptr));
 
-      ptr = ptr.next;
-    }
+    ptr = ptr.next;
   }
 
   const result: any = { ...data };

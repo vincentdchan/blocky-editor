@@ -1,4 +1,3 @@
-import type { Span } from "@pkg/model/nodes";
 import { type AttributesObject } from "@pkg/model/textModel";
 
 export interface NewBlockAction {
@@ -7,7 +6,6 @@ export interface NewBlockAction {
   targetId: string;
   afterId: string;
   newId: string;
-  spans?: Span[];
   data?: any;
 }
 

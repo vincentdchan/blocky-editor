@@ -7,10 +7,11 @@ import {
   type BlockContentChangedEvent,
   Block,
 } from "./basic";
-import { type EditorController } from "@pkg/view/controller";
 import { type BlockData } from "@pkg/model";
-import { TextModel, TextNode } from "@pkg/model/textModel";
+import { TextModel, TextNode, type AttributesObject } from "@pkg/model/textModel";
 import * as fastDiff from "fast-diff";
+import { type Editor } from "@pkg/view/editor";
+import { areEqualShallow } from "blocky-common/src/object";
 
 export const TextBlockName = "text";
 
@@ -19,6 +20,30 @@ const TextContentClass = "blocky-block-text-content";
 interface TextPosition {
   node: Node;
   offset: number;
+}
+
+interface FormattedTextSlice {
+  index: number;
+  length: number;
+  attributes?: AttributesObject;
+}
+
+function textModelToFormats(textModel: TextModel): FormattedTextSlice[] {
+  const formats: FormattedTextSlice[] = [];
+
+  let ptr = textModel.nodeBegin;
+  let index: number = 0;
+  while (ptr) {
+    formats.push({
+      index,
+      length: ptr.content.length,
+      attributes: ptr.attributes,
+    });
+    index += ptr.content.length;
+    ptr = ptr.next;
+  }
+
+  return formats;
 }
 
 class TextBlock extends Block {
@@ -115,13 +140,50 @@ class TextBlock extends Block {
     return;
   }
 
+  private getAttributeObjectFromElement(element: HTMLElement): AttributesObject {
+    const attributes: AttributesObject = {};
+    const spanRegistry = this.editor.registry.span;
+
+    for (const clsName of element.classList) {
+      const style = spanRegistry.classnames.get(clsName);
+      if (style) {
+        attributes[style.name] = true;
+      }
+    }
+
+    return attributes;
+  }
+
+  /**
+   * Convert DOM to [[FormattedTextSlice]]
+   */
+  private getFormattedTextSliceFromNode(index: number, node: Node): FormattedTextSlice {
+    if (node instanceof HTMLSpanElement || node instanceof HTMLAnchorElement) {
+      const attributes = this.getAttributeObjectFromElement(node);
+      return { index, length: node.textContent?.length ?? 0, attributes };
+    } else {
+      return {
+        index,
+        length: node.textContent?.length ?? 0,
+        attributes: undefined,
+      };
+    }
+  }
+
   override blockContentChanged({ node, offset }: BlockContentChangedEvent): void {
     const contentContainer = this.findContentContainer(node);
+    const formats: FormattedTextSlice[] = [];
+
     let textContent = "";
 
     const blockData = this.data;
     let ptr = contentContainer.firstChild;
+    let idx = 0;
     while (ptr) {
+      const format = this.getFormattedTextSliceFromNode(idx, ptr);
+      formats.push(format);
+
+      idx += ptr.textContent?.length ?? 0;
       textContent += ptr.textContent;
       ptr = ptr.nextSibling;
     }
@@ -143,13 +205,48 @@ class TextBlock extends Block {
         index -= content.length;
       }
     }
-    console.log("content:", textModel.toString(), textModel.nodeBegin);
+
+    this.diffAndApplyFormats(formats, textModel);
   }
 
-  override render(container: HTMLElement, editorController: EditorController) {
+  private diffAndApplyFormats(newFormats: FormattedTextSlice[], textModel: TextModel) {
+    const oldFormats: FormattedTextSlice[] = textModelToFormats(textModel);
+
+    const slices: (FormattedTextSlice | undefined)[] = Array(textModel.length);
+    
+    for (const format of newFormats) {
+      slices[format.index] = format;
+    }
+
+    for (const oldFormat of oldFormats) {
+      const f = slices[oldFormat.index];
+      if (!f) {  // format doesn't anymore, erase it.
+        textModel.format(oldFormat.index, oldFormat.length, undefined);
+        continue;
+      }
+
+      if (!areEqualShallow(f.attributes, oldFormat.attributes)) {
+        if (oldFormat.length !== f.length) {  // length are different, erase it firstly
+          textModel.format(oldFormat.index, oldFormat.length, undefined);
+        }
+        textModel.format(f.index, f.length, f.attributes);
+      }
+
+      slices[oldFormat.index] = undefined;
+    }
+
+    for (let i = 0, len = slices.length; i < len; i++) {
+      const f = slices[i];
+      if (f) {
+        textModel.format(f.index, f.length, f.attributes);
+      }
+    }
+  }
+
+  override render(container: HTMLElement) {
     this.#container = container;
     const { id } = this.data;
-    const blockNode = editorController.state.idMap.get(id)!;
+    const blockNode = this.editor.state.idMap.get(id)!;
     const block = blockNode.data as BlockData<TextModel>;
     const textModel = block.data;
     if (!textModel) {
@@ -157,22 +254,22 @@ class TextBlock extends Block {
     }
 
     const contentContainer = this.findContentContainer(container);
-    this.renderBlockTextContent(contentContainer, textModel, editorController);
+    this.renderBlockTextContent(contentContainer, textModel);
   }
 
-  private renderBlockTextContent(contentContainer: HTMLElement, textModel: TextModel, editorController: EditorController) {
+  private renderBlockTextContent(contentContainer: HTMLElement, textModel: TextModel) {
     let nodePtr = textModel.nodeBegin;
     let domPtr: Node | null = contentContainer.firstChild;
     let prevDom: Node | null = null;
 
     while (nodePtr) {
       if (!domPtr) {
-        domPtr = createDomByNode(nodePtr, editorController);
+        domPtr = createDomByNode(nodePtr, this.editor);
         contentContainer.insertBefore(domPtr, prevDom?.nextSibling ?? null);
       } else {  // is old
         if (!isNodeMatch(nodePtr, domPtr)) {
           const oldDom = domPtr;
-          const newNode = createDomByNode(nodePtr, editorController);
+          const newNode = createDomByNode(nodePtr, this.editor);
 
           nodePtr = nodePtr.next;
           prevDom = domPtr;
@@ -201,13 +298,31 @@ class TextBlock extends Block {
 
 }
 
-function createDomByNode(node: TextNode, editorController: EditorController): Node {
+function createDomByNode(node: TextNode, editor: Editor): Node {
   if (node.attributes) {
-    const d = elem("span");
+    let d: HTMLElement;
+
+    const { href, ...restAttr } = node.attributes;
+
+    if (typeof href === "string") {
+      d = elem("a");
+      d.setAttribute("href", href);
+    } else {
+      d = elem("span");
+    }
+
     d.textContent = node.content;
 
-    if (node.attributes) {
-      editorController.spanRegistry.emit(d, node.attributes);
+    const spanRegistry = editor.registry.span;
+
+    for (const key of Object.keys(restAttr)) {
+      if (restAttr[key]) {
+        const style = spanRegistry.styles.get(key);
+        if (style) {
+          d.classList.add(style.className);
+          style.onSpanCreated?.(d);
+        }
+      }
     }
 
     return d;

@@ -11,19 +11,23 @@
   background-color: var(--main-bg-color);
   border: none;
   margin: 0px;
-  width: 24px;
   height: 24px;
-  font-family: 'Times New Roman', Times, serif;
+
+  &.rect {
+    width: 24px;
+  }
 
   &:hover {
     background-color: rgba(0, 0, 0, 0.1);
   }
 
   &.bold {
+    font-family: 'Times New Roman', Times, serif;
     font-weight: 600;
   }
 
   &.italic {
+    font-family: 'Times New Roman', Times, serif;
     font-style: italic;
   }
 }

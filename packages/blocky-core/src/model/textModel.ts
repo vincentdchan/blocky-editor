@@ -11,6 +11,11 @@ export interface TextNode {
   attributes?: AttributesObject;
 }
 
+export interface TextSlice {
+  content: string;
+  attributes?: AttributesObject;
+}
+
 export class TextModel {
   #nodeBegin?: TextNode;
   #nodeEnd?: TextNode;
@@ -38,7 +43,7 @@ export class TextModel {
 
     let ptr: TextNode | undefined = this.#nodeBegin;
     while (ptr) {
-      if (areEqualShallow(ptr.attributes, attributes)) {
+      if (index <= ptr.content.length && areEqualShallow(ptr.attributes, attributes)) {
         const before = ptr.content.slice(0, index);
         const after = ptr.content.slice(index);
         ptr.content = before + text + after;
@@ -53,6 +58,43 @@ export class TextModel {
     }
 
     this.insertAtLast({ content: text, attributes });
+  }
+
+  public slice(start: number, end?: number): TextSlice[] {
+    const result: TextSlice[] = [];
+
+    if (typeof end === "undefined") {
+      end = this.length;
+    }
+
+    let ptr = this.nodeBegin;
+
+    while (ptr) {
+      const { content, attributes } = ptr;
+      if (start < ptr.content.length) {
+        let tmpEnd = end;
+
+        if (tmpEnd > content.length) {
+          tmpEnd = content.length;
+        }
+
+        result.push({
+          content: content.slice(Math.max(start, 0), tmpEnd),
+          attributes,
+        });
+
+        if (end < 0) {
+          break;
+        }
+      }
+
+      start -= content.length;
+      end -= content.length;
+
+      ptr = ptr.next;
+    }
+
+    return result;
   }
 
   private insertAtLast(node: TextNode) {

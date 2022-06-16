@@ -1,4 +1,4 @@
-import { TextModel } from "@pkg/model/textModel";
+import { TextModel, type TextSlice } from "@pkg/model/textModel";
 import { test, expect } from "vitest";
 
 function modelToSpans(model: TextModel): string[] {
@@ -115,4 +115,36 @@ test("textModel delete node #3", () => {
     "This is text",
   ]);
   expect(styles[0]).toBeUndefined();
+});
+
+test("textModel slice", () => {
+  const text = new TextModel();
+  text.insert(0, "This is bolded text");
+  text.format(8, 6, {
+    bold: true,
+  });
+  const slices = text.slice(5);
+  expect(slices).toEqual([
+    { content: "is ", attributes: undefined, },
+    { content: "bolded", attributes: { bold: true }, },
+    { content: " text", attributes: undefined },
+  ]);
+});
+
+test("textModel insert", () => {
+  const slices: TextSlice[] = [
+    { content: "is ", attributes: undefined, },
+    { content: "bolded", attributes: { bold: true }, },
+    { content: " text", attributes: undefined },
+  ];
+
+  const textModel = new TextModel();
+
+  let ptr = 0;
+  for (const slice of slices) {
+    textModel.insert(ptr, slice.content, slice.attributes);
+    ptr += slice.content.length;
+  }
+
+  expect(textModel.toString()).toEqual("is bolded text");
 });
