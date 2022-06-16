@@ -42,6 +42,7 @@ function makeBoldedTextPlugin(): IPlugin {
     ];
 
     editor.applyActions(actions);
+    editor.render();
   };
   const makeBold = (editor: Editor) => {
     const { cursorState } = editor.state;

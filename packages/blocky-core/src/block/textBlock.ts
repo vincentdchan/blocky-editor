@@ -8,7 +8,7 @@ import {
 } from "./basic";
 import { type EditorController } from "@pkg/view/controller";
 import { type BlockData, type TreeNode } from "@pkg/model";
-import { TextModel } from "@pkg/model/textModel";
+import { TextModel, TextNode } from "@pkg/model/textModel";
 import * as fastDiff from "fast-diff";
 
 export const TextBlockName = "text";
@@ -32,6 +32,11 @@ class TextBlock extends Block {
     const contentContainer = this.findContentContainer!(blockContainer as HTMLElement);
     let counter = 0;
     let ptr = contentContainer.firstChild;
+
+    const parentOfFocused = focusedNode.parentNode!;
+    if (parentOfFocused instanceof HTMLSpanElement) {
+      focusedNode = parentOfFocused;
+    }
 
     while (ptr) {
       if (ptr === focusedNode) {
@@ -94,7 +99,11 @@ class TextBlock extends Block {
     while (ptr) {
       const contentLength = ptr.textContent?.length ?? 0;
       if (absoluteOffset <= contentLength) {
-        return { node: ptr, offset: absoluteOffset };
+        let node = ptr;
+        if (node instanceof HTMLSpanElement && node.firstChild) {
+          node = node.firstChild
+        }
+        return { node, offset: absoluteOffset };
       } else {
         absoluteOffset -= contentLength;
       }
@@ -152,13 +161,27 @@ class TextBlock extends Block {
 
   private renderBlockTextContent(contentContainer: HTMLElement, textModel: TextModel) {
     let nodePtr = textModel.nodeBegin;
-    let domPtr = contentContainer.firstChild;
+    let domPtr: Node | null = contentContainer.firstChild;
     let prevDom: Node | null = null;
 
     while (nodePtr) {
       if (!domPtr) {
-        domPtr = document.createTextNode(nodePtr.content);
-        contentContainer.insertBefore(domPtr, prevDom);
+        domPtr = createDomByNode(nodePtr);
+        contentContainer.insertBefore(domPtr, prevDom?.nextSibling ?? null);
+      } else {  // is old
+        if (!isNodeMatch(nodePtr, domPtr)) {
+          const oldDom = domPtr;
+          const newNode = createDomByNode(nodePtr);
+
+          nodePtr = nodePtr.next;
+          prevDom = domPtr;
+          domPtr = domPtr.nextSibling;
+
+          contentContainer.replaceChild(newNode, oldDom);
+          continue;
+        } else if (domPtr.textContent !== nodePtr.content) {
+          domPtr.textContent = nodePtr.content;
+        }
       }
 
       nodePtr = nodePtr.next;
@@ -175,6 +198,28 @@ class TextBlock extends Block {
     }
   }
 
+}
+
+function createDomByNode(node: TextNode): Node {
+  if (node.attributes) {
+    const d = elem("span");
+    d.textContent = node.content;
+    return d;
+  } else {
+    return document.createTextNode(node.content);
+  }
+}
+
+function isNodeMatch(node: TextNode, dom: Node): boolean {
+  if (node.attributes && dom instanceof HTMLSpanElement) {
+    return true;
+  }
+
+  if (!node.attributes && node instanceof Text) {
+    return true;
+  }
+
+  return false;
 }
 
 class TextBlockDefinition implements IBlockDefinition {

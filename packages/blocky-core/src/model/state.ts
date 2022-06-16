@@ -23,7 +23,7 @@ import { type CursorState } from "@pkg/model/cursor";
 import { type Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { validate as validateNode } from "./validator";
-
+import { TextModel } from "./textModel";
 
 class State {
   static fromMarkup(doc: MDoc, blockRegistry: BlockRegistry): State {
@@ -170,6 +170,16 @@ class State {
 
         if (node.data.t === "block") {
           this.blockDeleted.emit(node.data);
+        }
+        break;
+      }
+
+      case "text-format": {
+        const { targetId, index, length, attributes } = action;
+        const blockNode = this.idMap.get(targetId) as TreeNode<BlockData>;
+        const data = blockNode.data.data;
+        if (data && data instanceof TextModel) {
+          data.format(index, length, attributes);
         }
         break;
       }

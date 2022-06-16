@@ -82,7 +82,7 @@ export class TextModel {
     node.next = next;
   }
 
-  public format(index: number, length: number, attributes: AttributesObject) {
+  public format(index: number, length: number, attributes?: AttributesObject) {
     if (index > this.#length || index < 0) {
       throw new Error(`The begin offset ${index} is out of range.`);
     }
