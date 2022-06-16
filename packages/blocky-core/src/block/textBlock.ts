@@ -7,10 +7,10 @@ import {
   type BlockContentChangedEvent,
   Block,
 } from "./basic";
-import { type EditorController } from "@pkg/view/controller";
 import { type BlockData } from "@pkg/model";
 import { TextModel, TextNode } from "@pkg/model/textModel";
 import * as fastDiff from "fast-diff";
+import { type Editor } from "@pkg/view/editor";
 
 export const TextBlockName = "text";
 
@@ -146,10 +146,10 @@ class TextBlock extends Block {
     console.log("content:", textModel.toString(), textModel.nodeBegin);
   }
 
-  override render(container: HTMLElement, editorController: EditorController) {
+  override render(container: HTMLElement) {
     this.#container = container;
     const { id } = this.data;
-    const blockNode = editorController.state.idMap.get(id)!;
+    const blockNode = this.editor.state.idMap.get(id)!;
     const block = blockNode.data as BlockData<TextModel>;
     const textModel = block.data;
     if (!textModel) {
@@ -157,22 +157,22 @@ class TextBlock extends Block {
     }
 
     const contentContainer = this.findContentContainer(container);
-    this.renderBlockTextContent(contentContainer, textModel, editorController);
+    this.renderBlockTextContent(contentContainer, textModel);
   }
 
-  private renderBlockTextContent(contentContainer: HTMLElement, textModel: TextModel, editorController: EditorController) {
+  private renderBlockTextContent(contentContainer: HTMLElement, textModel: TextModel) {
     let nodePtr = textModel.nodeBegin;
     let domPtr: Node | null = contentContainer.firstChild;
     let prevDom: Node | null = null;
 
     while (nodePtr) {
       if (!domPtr) {
-        domPtr = createDomByNode(nodePtr, editorController);
+        domPtr = createDomByNode(nodePtr, this.editor);
         contentContainer.insertBefore(domPtr, prevDom?.nextSibling ?? null);
       } else {  // is old
         if (!isNodeMatch(nodePtr, domPtr)) {
           const oldDom = domPtr;
-          const newNode = createDomByNode(nodePtr, editorController);
+          const newNode = createDomByNode(nodePtr, this.editor);
 
           nodePtr = nodePtr.next;
           prevDom = domPtr;
@@ -201,13 +201,13 @@ class TextBlock extends Block {
 
 }
 
-function createDomByNode(node: TextNode, editorController: EditorController): Node {
+function createDomByNode(node: TextNode, editor: Editor): Node {
   if (node.attributes) {
     const d = elem("span");
     d.textContent = node.content;
 
     if (node.attributes) {
-      editorController.spanRegistry.emit(d, node.attributes);
+      editor.registry.span.emit(d, node.attributes);
     }
 
     return d;

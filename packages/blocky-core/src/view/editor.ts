@@ -12,7 +12,7 @@ import {
   type TreeNode,
   type DocNode,
   type BlockData,
-} from "@pkg/model/index";
+} from "@pkg/model";
 import { CollapsedCursor, type CursorState } from "@pkg/model/cursor";
 import { Action } from "@pkg/model/actions";
 import {
@@ -27,6 +27,7 @@ import { BannerDelegate, type BannerFactory } from "./bannerDelegate";
 import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import type { EditorController } from "./controller";
+import { Block } from "@pkg/block/basic";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
@@ -79,14 +80,6 @@ export interface IEditorOptions {
   idGenerator?: IdGenerator;
   bannerFactory?: BannerFactory;
   toolbarFactory?: ToolbarFactory;
-}
-
-/**
- * The spans created by the browser
- */
-interface NewSpanTuple {
-  node: Node;
-  id: string;
 }
 
 /**
@@ -171,10 +164,19 @@ export class Editor {
       clsPrefix: "blocky",
       editor: this,
     });
+
+    for (const block of this.state.blocks.values()) {
+      block.setEditor(this);
+    }
+
+    this.disposables.push(
+      this.state.newBlockCreated.on((block: Block) => {
+        block.setEditor(this);
+      })
+    );
   }
 
   public render(done?: AfterFn) {
-    console.log("render");
     const newDom = this.#renderer.render(this.#renderedDom);
     if (!this.#renderedDom) {
       this.#container.appendChild(newDom);
@@ -198,19 +200,6 @@ export class Editor {
       done();
     } else {
       this.selectionChanged();
-    }
-  }
-
-  private getTreeNodeFromDom(node: Node): TreeNode<DocNode> | undefined {
-    if (node._mgNode) {
-      return node._mgNode;
-    }
-
-    if (node instanceof Text && node.parentNode instanceof HTMLSpanElement) {
-      const parent = node.parentNode;
-      if (parent._mgNode) {
-        return parent._mgNode;
-      }
     }
   }
 

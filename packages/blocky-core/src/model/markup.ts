@@ -115,8 +115,3 @@ export function toNodeDoc(doc: MDoc): DocNode.Document {
     id: doc.id,
   };
 }
-
-export function toNodeSpan(span: MSpan): DocNode.Span {
-  const { id, flags, content } = span;
-  return { t: "span", id, flags, content };
-}

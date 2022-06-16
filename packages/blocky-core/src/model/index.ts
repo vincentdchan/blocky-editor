@@ -8,6 +8,6 @@ export {
 	map as treeMap,
 	childrenToArray as treeChildrenToArray,
 } from "./tree";
-export { default as State, normalizeLine } from "./state";
+export { default as State } from "./state";
 export { type CursorState } from "./cursor";
 export { TextModel, type AttributesObject } from "./textModel";

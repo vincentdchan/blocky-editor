@@ -1,7 +1,7 @@
 import { type IDisposable } from "blocky-common/es/disposable";
 import type { BlockData } from "@pkg/model";
 import { type CollapsedCursor } from "@pkg/model/cursor";
-import { type EditorController } from "@pkg/view/controller";
+import { type Editor } from "@pkg/view/editor";
 
 export interface BlockDidMountEvent {
   element: HTMLElement;
@@ -35,6 +35,16 @@ export interface IBlockDefinition {
 }
 
 export class Block implements IDisposable {
+  #editor: Editor | undefined;
+
+  setEditor(editor: Editor) {
+    this.#editor = editor;
+  }
+
+  get editor(): Editor {
+    return this.#editor!;
+  }
+
 
   blockDidMount(e: BlockDidMountEvent) {}
 
@@ -49,12 +59,14 @@ export class Block implements IDisposable {
 
   blockContentChanged(e: BlockContentChangedEvent): void {}
 
-  render(container: HTMLElement, editorController: EditorController) {}
+  render(container: HTMLElement) {}
 
   findTextOffsetInBlock(focusedNode: Node, offsetInNode: number): number {
     return 0;
   }
 
-  dispose(): void {}
+  dispose(): void {
+    this.#editor = undefined;
+  }
 
 }

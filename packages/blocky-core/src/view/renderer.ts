@@ -115,7 +115,7 @@ export class DocRenderer {
       }
 
       const block = this.editor.state.blocks.get(id)!;
-      block.render(domPtr as HTMLElement, this.editor.controller);
+      block.render(domPtr as HTMLElement);
 
       nodePtr = nodePtr.next;
       prevPtr = domPtr;
