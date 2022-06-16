@@ -1,6 +1,5 @@
 import {
   type IBlockDefinition,
-  BlockContentType,
   type EditorController,
 } from "blocky-core";
 import {
@@ -32,7 +31,7 @@ export function makeReactBlock(options: ReactBlockOptions): IBlockDefinition {
   const { name, component } = options;
   return {
     name,
-    type: BlockContentType.Custom,
+    editable: false,
     render(
       container: HTMLElement,
       editorController: EditorController,

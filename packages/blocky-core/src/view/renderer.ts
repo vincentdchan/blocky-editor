@@ -8,7 +8,7 @@ import {
 } from "@pkg/model/index";
 import type { Editor, EditorRegistry } from "@pkg/view/editor";
 import type { SpanDefinition } from "@pkg/registry/spanRegistry";
-import { BlockContentType, IBlockDefinition } from "@pkg/block/basic";
+import { type IBlockDefinition } from "@pkg/block/basic";
 
 function createSpanNode(
   spanNode: TreeNode<Span>,
@@ -175,7 +175,7 @@ export class DocRenderer {
     const { editor, clsPrefix } = this;
     const data = blockNode.data as Block;
 
-    if (blockDef.type === BlockContentType.Custom) {
+    if (!blockDef.editable) {
       blockContainer.contentEditable = "false";
     }
 

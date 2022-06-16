@@ -1,7 +1,6 @@
 import { elem } from "blocky-common/es/dom";
 import {
   type IBlockDefinition,
-  BlockContentType,
   type BlockCreatedEvent,
   BlockFocusedEvent,
 } from "./basic";
@@ -20,7 +19,7 @@ interface TextPosition {
 
 class TextBlockDefinition implements IBlockDefinition {
   public name: string = TextBlockName;
-  public type: BlockContentType = BlockContentType.Text;
+  public editable: boolean = true;
 
   findContentContainer(parent: HTMLElement) {
     return parent.firstChild! as HTMLElement;

@@ -2,11 +2,6 @@ import type { TreeNode, DocNode, Block } from "@pkg/model";
 import { type CollapsedCursor } from "@pkg/model/cursor";
 import { type EditorController } from "@pkg/view/controller";
 
-export enum BlockContentType {
-  Text,
-  Custom,
-}
-
 export interface BlockCreatedEvent {
   element: HTMLElement;
   clsPrefix: string;
@@ -23,7 +18,8 @@ export interface BlockFocusedEvent {
 
 export interface IBlockDefinition {
   name: string;
-  type: BlockContentType;
+
+  editable?: boolean;
 
   /**
    * if a block's type is [[Text]],

@@ -1,4 +1,4 @@
-import { type IBlockDefinition, BlockContentType } from "@pkg/block/basic";
+import { type IBlockDefinition } from "@pkg/block/basic";
 import { makeTextBlockDefinition, TextBlockName } from "@pkg/block/textBlock";
 
 export class BlockRegistry {
@@ -11,13 +11,9 @@ export class BlockRegistry {
   }
 
   register(blockType: IBlockDefinition): number {
-    const { name, type, findContentContainer } = blockType;
+    const { name } = blockType;
     if (this.#nameMap.has(name)) {
       throw new Error(`SpanType '${name}' exists`);
-    }
-
-    if (type === BlockContentType.Text && typeof findContentContainer === "undefined") {
-      throw new Error(`missing method of plugin '${name}': findContentContainer`);
     }
 
     const id = this.#types.length;

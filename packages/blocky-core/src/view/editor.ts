@@ -30,7 +30,6 @@ import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import type { EditorController } from "./controller";
 import fastdiff from "fast-diff";
-import { BlockContentType } from "..";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
@@ -281,7 +280,7 @@ export class Editor {
   private findTextOffsetInBlock(blockNode: TreeNode<Block>, focusedNode: Node, offsetInNode: number): number {
     const { data } = blockNode;
     const blockDef = this.registry.block.getBlockDefById(data.flags)!;
-    if (blockDef.type !== BlockContentType.Text) {
+    if (!blockDef.editable) {
       return 0;
     }
     const blockContainer = this.state.domMap.get(data.id)!;
