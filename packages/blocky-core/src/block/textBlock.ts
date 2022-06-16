@@ -4,9 +4,10 @@ import {
   type BlockCreatedEvent,
   type BlockFocusedEvent,
   type BlockContentChangedEvent,
+  Block,
 } from "./basic";
 import { type EditorController } from "@pkg/view/controller";
-import { Block } from "@pkg/model";
+import { BlockData } from "@pkg/model";
 import { TextModel } from "@pkg/model/textModel";
 import * as fastDiff from "fast-diff";
 
@@ -19,9 +20,63 @@ interface TextPosition {
   offset: number;
 }
 
+class TextBlock extends Block {
+
+  constructor(private data: BlockData) {
+    super();
+  }
+
+  findContentContainer(parent: HTMLElement) {
+    return parent.firstChild! as HTMLElement;
+  }
+
+  override render(container: HTMLElement, editorController: EditorController) {
+    const { id } = this.data;
+    const blockNode = editorController.state.idMap.get(id)!;
+    const block = blockNode.data as BlockData<TextModel>;
+    const textModel = block.data;
+    if (!textModel) {
+      return;
+    }
+
+    const contentContainer = this.findContentContainer(container);
+    this.renderBlockTextContent(contentContainer, textModel);
+  }
+
+  private renderBlockTextContent(contentContainer: HTMLElement, textModel: TextModel) {
+    let nodePtr = textModel.nodeBegin;
+    let domPtr = contentContainer.firstChild;
+    let prevDom: Node | null = null;
+
+    while (nodePtr) {
+      if (!domPtr) {
+        domPtr = document.createTextNode(nodePtr.content);
+        contentContainer.insertBefore(domPtr, prevDom);
+      }
+
+      nodePtr = nodePtr.next;
+      prevDom = domPtr;
+      domPtr = domPtr.nextSibling;
+    }
+
+    // remove remaining text
+    while (domPtr) {
+      const next = domPtr.nextSibling;
+      domPtr.parentNode?.removeChild(domPtr);
+
+      domPtr = next;
+    }
+  }
+
+}
+
 class TextBlockDefinition implements IBlockDefinition {
   public name: string = TextBlockName;
   public editable: boolean = true;
+
+  onBlockCreated(data: BlockData): Block {
+    return new TextBlock(data);
+  }
 
   findContentContainer(parent: HTMLElement) {
     return parent.firstChild! as HTMLElement;
@@ -115,7 +170,7 @@ class TextBlockDefinition implements IBlockDefinition {
 
   render(container: HTMLElement, editorController: EditorController, id: string): void {
     const blockNode = editorController.state.idMap.get(id)!;
-    const block = blockNode.data as Block<TextModel>;
+    const block = blockNode.data as BlockData<TextModel>;
     const textModel = block.data;
     if (!textModel) {
       return;

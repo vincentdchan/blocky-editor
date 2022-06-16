@@ -4,7 +4,7 @@ export interface Document {
   id: string;
 }
 
-export interface Block<T = any> {
+export interface BlockData<T = any> {
   t: "block";
   id: string;
   flags: number;
@@ -25,6 +25,6 @@ export interface Span {
 
 export type DocNode =
   | Document
-  | Block
+  | BlockData
   | BlockTextContent
   | Span

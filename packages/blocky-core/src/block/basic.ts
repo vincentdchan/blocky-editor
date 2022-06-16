@@ -1,4 +1,5 @@
-import type { TreeNode, DocNode, Block } from "@pkg/model";
+import { type IDisposable } from "blocky-common/es/disposable";
+import type { TreeNode, DocNode, BlockData } from "@pkg/model";
 import { type CollapsedCursor } from "@pkg/model/cursor";
 import { type EditorController } from "@pkg/view/controller";
 
@@ -6,7 +7,7 @@ export interface BlockCreatedEvent {
   element: HTMLElement;
   clsPrefix: string;
   node: TreeNode<DocNode>;
-  block: Block,
+  block: BlockData,
 }
 
 export interface BlockFocusedEvent {
@@ -17,7 +18,7 @@ export interface BlockFocusedEvent {
 
 export interface BlockContentChangedEvent {
   node: HTMLDivElement;
-  block: Block;
+  block: BlockData;
   offset?: number;
 }
 
@@ -26,6 +27,8 @@ export interface IBlockDefinition {
   name: string;
 
   editable?: boolean;
+
+  onBlockCreated(model: BlockData): Block;
 
   /**
    * if a block's type is [[Text]],
@@ -49,8 +52,16 @@ export interface IBlockDefinition {
 
   onBlockContentChanged?(e: BlockContentChangedEvent): void;
 
-  render?(container: HTMLElement, editorController: EditorController, id: string): void;
-
   blockWillUnmount?(container: HTMLElement): void;
+
+}
+
+export class Block implements IDisposable {
+
+  onBlockFocused(e: BlockFocusedEvent): void {}
+
+  render(container: HTMLElement, editorController: EditorController) {}
+
+  dispose(): void {}
 
 }

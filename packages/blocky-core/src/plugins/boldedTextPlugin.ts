@@ -1,8 +1,8 @@
 import type { IPlugin } from "@pkg/registry/pluginRegistry";
 import { SpanType } from "@pkg/registry/spanRegistry";
-import { type TreeNode, type DocNode, type Span } from "@pkg/model";
-import { Action } from "@pkg/model/actions";
+import { type TreeNode, type DocNode, type BlockData } from "@pkg/model";
 import type { Editor } from "@pkg/view/editor";
+import { type Action } from "@pkg/model/actions";
 import { isHotkey } from "is-hotkey";
 
 const SpanName = "bold";
@@ -17,9 +17,9 @@ const SpanName = "bold";
  * 
  */
 function makeBoldedTextPlugin(): IPlugin {
-  const makeSingleFragmentBolded = (
+  const makeTextBlockRangeBolded = (
     editor: Editor,
-    spanNode: TreeNode<DocNode>,
+    blockNode: TreeNode<DocNode>,
     startOffset: number,
     endOffset: number
   ) => {
@@ -27,67 +27,21 @@ function makeBoldedTextPlugin(): IPlugin {
       return;
     }
 
-    const lineNode = spanNode.parent!.parent!;
+    const block = blockNode.data as BlockData;
 
-    const span = spanNode.data as Span;
-    const oldContent = span.content;
-    const contentBefore = oldContent.slice(0, startOffset);
-    const contentAfter = oldContent.slice(endOffset);
-    const newContent = oldContent.slice(startOffset, endOffset);
-    const spanId = editor.registry.span.getSpanIdByName(SpanName)!;
+    const actions: Action[] = [
+      {
+        type: "text-format",
+        targetId: block.id,
+        index: startOffset,
+        length: endOffset - startOffset,
+        attributes: {
+          bold: true
+        },
+      },
+    ];
 
-    // const actions: Action[] = [
-    //   {
-    //     type: "update-span",
-    //     targetId: spanNode.data.id,
-    //     value: {
-    //       flags: spanId,
-    //       content: newContent,
-    //     },
-    //   },
-    // ];
-
-    // const { idGenerator } = editor;
-
-    // if (contentBefore.length > 0) {
-    //   const newId = idGenerator.mkSpanId();
-    //   const prevId = spanNode.prev;
-    //   actions.push({
-    //     type: "new-span",
-    //     targetId: lineNode.data.id,
-    //     afterId: prevId?.data.id,
-    //     content: {
-    //       id: newId,
-    //       t: "span",
-    //       flags: 0,
-    //       content: contentBefore,
-    //     },
-    //   });
-    // }
-
-    // if (contentAfter.length > 0) {
-    //   const newId = idGenerator.mkSpanId();
-    //   actions.push({
-    //     type: "new-span",
-    //     targetId: lineNode.data.id,
-    //     afterId: spanNode.data.id,
-    //     content: {
-    //       id: newId,
-    //       t: "span",
-    //       flags: 0,
-    //       content: contentAfter,
-    //     },
-    //   });
-    // }
-
-    // editor.applyActions(actions);
-    editor.render(() => {
-      editor.state.cursorState = {
-        type: "collapsed",
-        targetId: spanNode.data.id,
-        offset: newContent.length,
-      };
-    });
+    editor.applyActions(actions);
   };
   const makeBold = (editor: Editor) => {
     const { cursorState } = editor.state;
@@ -103,12 +57,16 @@ function makeBoldedTextPlugin(): IPlugin {
 
     if (startId === endId) {
       // make a single fragment bolded
-      const spanNode = editor.state.idMap.get(startId);
-      if (!spanNode) {
+      const blockNode = editor.state.idMap.get(startId);
+      if (!blockNode) {
         console.error(`${startId} not found`);
         return;
       }
-      makeSingleFragmentBolded(editor, spanNode, startOffset, endOffset);
+      if (blockNode.data.t !== "block") {
+        console.error(`${startId} is not a block`);
+        return;
+      }
+      makeTextBlockRangeBolded(editor, blockNode, startOffset, endOffset);
     } else {
       console.log("unimplemented bold");
     }

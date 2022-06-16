@@ -1,6 +1,6 @@
 import { makeObservable } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
-import type { DocNode, Block, Span } from "./nodes";
+import type { DocNode, Span, BlockData } from "./nodes";
 import {
   type TreeNode,
   type TreeRoot,
@@ -20,13 +20,14 @@ import {
   MNode,
 } from "./markup";
 import { type CursorState } from "@pkg/model/cursor";
+import { type Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { validate as validateNode } from "./validator";
 
 const DummyTextContentId = "block-text-content";
 
-function createBlockWithContent(line: Block): TreeNode<DocNode> {
-  const lineNode: TreeNode<Block> = createNode(line);
+function createBlockWithContent(line: BlockData): TreeNode<DocNode> {
+  const lineNode: TreeNode<BlockData> = createNode(line);
 
   const lineContentNode: TreeNode<DocNode> = createNode({
     t: "block-text-content",
@@ -59,14 +60,21 @@ class State {
           }
 
           case "block": {
-            const block: Block = {
+            const blockData: BlockData = {
               t: "block",
               id: node.id,
-              flags: 0,
+              flags: node.flags,
               data: node.data,
             }
-            const blockNode: TreeNode<Block> = createNode(block);
+            const blockNode: TreeNode<BlockData> = createNode(blockData);
             appendChild(parentNode!, blockNode);
+
+            const blockDef = blockRegistry.getBlockDefById(node.flags)!;
+            const block = blockDef.onBlockCreated(blockData);
+
+            state.idMap.set(node.id, blockNode);
+            state.blocks.set(node.id, block);
+
             nextNode = blockNode;
             break;
           }
@@ -97,8 +105,9 @@ class State {
 
   public readonly idMap: Map<string, TreeNode<DocNode>> = new Map();
   public readonly domMap: Map<string, Node> = new Map();
-  public readonly newBlockInserted: Slot<Block> = new Slot;
-  public readonly blockDeleted: Slot<Block> = new Slot;
+  public readonly blocks: Map<string, Block> = new Map();
+  public readonly newBlockInserted: Slot<BlockData> = new Slot;
+  public readonly blockDeleted: Slot<BlockData> = new Slot;
   public cursorState: CursorState | undefined;
 
   constructor(public readonly root: TreeRoot<DocNode>, public readonly blockRegistry: BlockRegistry) {
@@ -141,7 +150,7 @@ class State {
           throw new Error(`block name '${blockName} not found'`);
         }
 
-        const newBlock: Block = {
+        const newBlock: BlockData = {
           t: "block",
           id: action.newId,
           flags: blockId,

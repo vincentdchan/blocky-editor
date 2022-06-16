@@ -9,3 +9,4 @@ export {
 	childrenToArray as treeChildrenToArray,
 } from "./tree";
 export { default as State, normalizeLine } from "./state";
+export { type CursorState } from "./cursor";

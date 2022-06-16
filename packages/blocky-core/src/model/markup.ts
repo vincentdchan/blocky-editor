@@ -15,6 +15,7 @@ export interface MBlock {
   t: "block";
   id: string;
   data?: any;
+  flags: number;
   children?: MBlock[];
 }
 
@@ -39,9 +40,10 @@ export class MarkupGenerator {
     };
   }
 
-  block(): MBlock {
+  block(blockType: number): MBlock {
     return {
       t: "block",
+      flags: blockType,
       id: this.idGen.mkBlockId(),
     };
   }
@@ -58,6 +60,7 @@ export class MarkupGenerator {
     return {
       t: "block",
       id: this.idGen.mkBlockId(),
+      flags: 0,
       data: textModel,
     };
   }

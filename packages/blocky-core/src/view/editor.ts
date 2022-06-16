@@ -5,7 +5,6 @@ import {
   type IDisposable,
   flattenDisposable,
 } from "blocky-common/es/disposable";
-import { lazy } from "blocky-common/es/lazy";
 import { type Position } from "blocky-common/es/position";
 import { DocRenderer } from "@pkg/view/renderer";
 import {
@@ -13,7 +12,7 @@ import {
   type TreeNode,
   type DocNode,
   type Span,
-  type Block,
+  type BlockData,
 } from "@pkg/model/index";
 import { CollapsedCursor, type CursorState } from "@pkg/model/cursor";
 import { Action } from "@pkg/model/actions";
@@ -29,7 +28,6 @@ import { BannerDelegate, type BannerFactory } from "./bannerDelegate";
 import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import type { EditorController } from "./controller";
-import fastdiff from "fast-diff";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
@@ -262,13 +260,13 @@ export class Editor {
     }
   }
 
-  private findBlockNodeContainer(node: Node): TreeNode<Block> | undefined {
+  private findBlockNodeContainer(node: Node): TreeNode<BlockData> | undefined {
     let ptr: Node | null = node;
 
     while (ptr) {
       const node = ptr._mgNode as TreeNode<DocNode> | undefined;
       if (node && node.data.t === "block") {
-        return node as TreeNode<Block>;
+        return node as TreeNode<BlockData>;
       }
 
       ptr = ptr.parentNode;
@@ -277,7 +275,7 @@ export class Editor {
     return;
   }
   
-  private findTextOffsetInBlock(blockNode: TreeNode<Block>, focusedNode: Node, offsetInNode: number): number {
+  private findTextOffsetInBlock(blockNode: TreeNode<BlockData>, focusedNode: Node, offsetInNode: number): number {
     const { data } = blockNode;
     const blockDef = this.registry.block.getBlockDefById(data.flags)!;
     if (!blockDef.editable) {
@@ -412,7 +410,7 @@ export class Editor {
     blockNode: TreeNode<DocNode>,
     currentOffset?: number,
   ) {
-    const block = blockNode.data as Block;
+    const block = blockNode.data as BlockData;
     const blockDef = this.registry.block.getBlockDefById(block.flags);
 
     blockDef?.onBlockContentChanged?.({
@@ -585,7 +583,7 @@ export class Editor {
       const data = treeNode.data;
 
       if (data.t === "block") {
-        const block = data as Block;
+        const block = data as BlockData;
         const blockType = block.flags;
         const blockDef = this.registry.block.getBlockDefById(blockType);
         blockDef?.blockWillUnmount?.(node as HTMLElement);
