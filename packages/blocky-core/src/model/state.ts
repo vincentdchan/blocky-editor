@@ -56,7 +56,7 @@ class State {
             appendChild(parentNode!, blockNode);
 
             const blockDef = blockRegistry.getBlockDefById(node.flags)!;
-            const block = blockDef.onBlockCreated(blockData);
+            const block = blockDef.onBlockCreated({ model: blockData });
 
             state.idMap.set(node.id, blockNode);
             state.blocks.set(node.id, block);
@@ -144,7 +144,7 @@ class State {
           flags: blockId,
           data: action.data,
         };
-        const block = blockDef.onBlockCreated(newBlock);
+        const block = blockDef.onBlockCreated({ model: newBlock });
 
         const blockNode = createNode(newBlock);
         this.insertNode(blockNode);

@@ -2,6 +2,7 @@ import {
   type IBlockDefinition,
   type EditorController,
   type BlockData,
+  type BlockCreatedEvent,
   Block,
 } from "blocky-core";
 import {
@@ -62,7 +63,7 @@ export function makeReactBlock(options: ReactBlockOptions): IBlockDefinition {
   return {
     name,
     editable: false,
-    onBlockCreated(model: BlockData): Block {
+    onBlockCreated({ model }: BlockCreatedEvent): Block {
       return new ReactBlock(model, options);
     },
   };

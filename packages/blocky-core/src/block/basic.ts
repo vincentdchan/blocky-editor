@@ -1,12 +1,16 @@
 import { type IDisposable } from "blocky-common/es/disposable";
-import type { TreeNode, DocNode, BlockData } from "@pkg/model";
+import type { BlockData } from "@pkg/model";
 import { type CollapsedCursor } from "@pkg/model/cursor";
 import { type EditorController } from "@pkg/view/controller";
 
-export interface BlockCreatedEvent {
+export interface BlockDidMountEvent {
   element: HTMLElement;
   clsPrefix: string;
-  node: TreeNode<DocNode>;
+}
+
+export interface BlockCreatedEvent {
+  model: BlockData;
+  // editor: Editor;
 }
 
 export interface BlockFocusedEvent {
@@ -26,13 +30,13 @@ export interface IBlockDefinition {
 
   editable?: boolean;
 
-  onBlockCreated(model: BlockData): Block;
+  onBlockCreated(e: BlockCreatedEvent): Block;
 
 }
 
 export class Block implements IDisposable {
 
-  blockDidMount(e: BlockCreatedEvent) {}
+  blockDidMount(e: BlockDidMountEvent) {}
 
   /**
    * Handle the block is focused.
@@ -47,7 +51,7 @@ export class Block implements IDisposable {
 
   render(container: HTMLElement, editorController: EditorController) {}
 
-  findTextOffsetInBlock(blockNode: TreeNode<BlockData>, focusedNode: Node, offsetInNode: number): number {
+  findTextOffsetInBlock(focusedNode: Node, offsetInNode: number): number {
     return 0;
   }
 
