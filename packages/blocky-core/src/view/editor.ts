@@ -12,6 +12,7 @@ import {
   type TreeNode,
   type DocNode,
   type BlockData,
+  TextModel,
 } from "@pkg/model";
 import { CollapsedCursor, type CursorState } from "@pkg/model/cursor";
 import { Action } from "@pkg/model/actions";
@@ -30,17 +31,6 @@ import type { EditorController } from "./controller";
 import { Block } from "@pkg/block/basic";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
-
-function removeNodesAfter(node: TreeNode<DocNode>, actions: Action[]) {
-  let ptr = node.next;
-  while (ptr) {
-    actions.push({
-      type: "delete",
-      targetId: ptr.data.id,
-    });
-    ptr = ptr.next;
-  }
-}
 
 function areEqualShallow(a: any, b: any) {
   if (typeof a === "object" && typeof b === "object") {
@@ -544,42 +534,38 @@ export class Editor {
         return;
       }
 
-      const { data } = node;
-
-      const lineNode = node.parent?.parent;
-      if (!lineNode) {
+      const blockData = node.data as BlockData;
+      if (!blockData.data || !(blockData.data instanceof TextModel)) {
         return;
       }
-
-      const parentNode = lineNode.parent;
-      if (!parentNode) {
-        return;
-      }
+      const textModel = blockData.data as TextModel;
 
       const cursorOffset = cursorState.offset;
 
+      const newTextModel = new TextModel();
+      newTextModel.insert(0, textModel.toString().slice(cursorOffset));
+
+      textModel.delete(cursorOffset, textModel.length - cursorOffset);
+      
+      const newId = this.idGenerator.mkBlockId();
       const actions: Action[] = [
         {
           type: "new-block",
           blockName: TextBlockName,
-          targetId: parentNode.data.id,
-          newId: this.idGenerator.mkBlockId(),
-          afterId: lineNode.data.id,
+          targetId: node.parent!.data.id,
+          newId,
+          afterId: node.data.id,
+          data: newTextModel,
         },
       ];
 
-
-      removeNodesAfter(node, actions);
       this.applyActions(actions);
       this.render(() => {
-        // if (remain.length > 0) {
-        //   const firstSpan = remain[0];
-        //   this.state.cursorState = {
-        //     type: "collapsed",
-        //     targetId: firstSpan.id,
-        //     offset: 0,
-        //   };
-        // }
+        this.state.cursorState = {
+          type: "collapsed",
+          targetId: newId,
+          offset: 0,
+        };
       });
     } else {
       console.error("unhandled");
