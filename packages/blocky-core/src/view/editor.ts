@@ -542,8 +542,15 @@ export class Editor {
 
       const cursorOffset = cursorState.offset;
 
+      const slices = textModel.slice(cursorOffset);
+
       const newTextModel = new TextModel();
-      newTextModel.insert(0, textModel.toString().slice(cursorOffset));
+
+      let ptr = 0;
+      for (const slice of slices) {
+        newTextModel.insert(ptr, slice.content, slice.attributes);
+        ptr += slice.content.length;
+      }
 
       textModel.delete(cursorOffset, textModel.length - cursorOffset);
       

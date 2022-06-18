@@ -8,7 +8,7 @@ import {
   Block,
 } from "./basic";
 import { type BlockData } from "@pkg/model";
-import { TextModel, TextNode } from "@pkg/model/textModel";
+import { TextModel, TextNode, type AttributesObject } from "@pkg/model/textModel";
 import * as fastDiff from "fast-diff";
 import { type Editor } from "@pkg/view/editor";
 
@@ -19,6 +19,11 @@ const TextContentClass = "blocky-block-text-content";
 interface TextPosition {
   node: Node;
   offset: number;
+}
+
+interface FormattedTextSlice {
+  index: number;
+  attributes?: AttributesObject;
 }
 
 class TextBlock extends Block {
@@ -115,13 +120,49 @@ class TextBlock extends Block {
     return;
   }
 
+  private getAttributeObjectFromElement(element: HTMLElement): AttributesObject {
+    const attributes: AttributesObject = {};
+    const spanRegistry = this.editor.registry.span;
+
+    for (const clsName of element.classList) {
+      const style = spanRegistry.classnames.get(clsName);
+      if (style) {
+        attributes[style.name] = true;
+      }
+    }
+
+    return attributes;
+  }
+
+  /**
+   * Convert DOM to [[FormattedTextSlice]]
+   */
+  private getFormattedTextSliceFromNode(index: number, node: Node): FormattedTextSlice {
+    if (node instanceof HTMLSpanElement || node instanceof HTMLAnchorElement) {
+      const attributes = this.getAttributeObjectFromElement(node);
+      return { index, attributes };
+    } else {
+      return {
+        index,
+        attributes: undefined,
+      };
+    }
+  }
+
   override blockContentChanged({ node, offset }: BlockContentChangedEvent): void {
     const contentContainer = this.findContentContainer(node);
+    const formats: FormattedTextSlice[] = [];
+
     let textContent = "";
 
     const blockData = this.data;
     let ptr = contentContainer.firstChild;
+    let idx = 0;
     while (ptr) {
+      const format = this.getFormattedTextSliceFromNode(idx, ptr);
+      formats.push(format);
+
+      idx += ptr.textContent?.length ?? 0;
       textContent += ptr.textContent;
       ptr = ptr.nextSibling;
     }
@@ -143,7 +184,6 @@ class TextBlock extends Block {
         index -= content.length;
       }
     }
-    console.log("content:", textModel.toString(), textModel.nodeBegin);
   }
 
   override render(container: HTMLElement) {
@@ -203,11 +243,29 @@ class TextBlock extends Block {
 
 function createDomByNode(node: TextNode, editor: Editor): Node {
   if (node.attributes) {
-    const d = elem("span");
+    let d: HTMLElement;
+
+    const { href, ...restAttr } = node.attributes;
+
+    if (typeof href !== "string") {
+      d = elem("a");
+      d.setAttribute("href", href);
+    } else {
+      d = elem("span");
+    }
+
     d.textContent = node.content;
 
-    if (node.attributes) {
-      editor.registry.span.emit(d, node.attributes);
+    const spanRegistry = editor.registry.span;
+
+    for (const key of Object.keys(restAttr)) {
+      if (restAttr[key]) {
+        const style = spanRegistry.styles.get(key);
+        if (style) {
+          d.classList.add(style.className);
+          style.onSpanCreated?.(d);
+        }
+      }
     }
 
     return d;

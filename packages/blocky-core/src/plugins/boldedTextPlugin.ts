@@ -1,7 +1,6 @@
 import type { IPlugin } from "@pkg/registry/pluginRegistry";
 import type { Editor } from "@pkg/view/editor";
 import { isHotkey } from "is-hotkey";
-import { AttributesObject } from "@pkg/model/textModel";
 
 /**
  * This plugin is used to make the editor support bolded text.
@@ -51,13 +50,10 @@ function makeBoldedTextPlugin(): IPlugin {
   return {
     name: "bolded-text",
     onInitialized(editor: Editor) {
-      editor.registry.span.on(
-        (element: HTMLSpanElement, attribs: AttributesObject) => {
-          if (attribs.bold === true) {
-            element.classList.add("mg-editor-bold");
-          }
-        }
-      );
+      editor.registry.span.register({
+        name: "bold",
+        className: "mg-editor-bold",
+      })
       editor.keyDown.on((e: KeyboardEvent) => {
         if (isHotkey("mod+b", e)) {
           e.preventDefault();
