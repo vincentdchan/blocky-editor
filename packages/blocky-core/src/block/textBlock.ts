@@ -1,13 +1,14 @@
-import { elem } from "blocky-common/es/dom";
+import { clearAllChildren, elem } from "blocky-common/es/dom";
 import {
   type IBlockDefinition,
   type BlockCreatedEvent,
   type BlockDidMountEvent,
   type BlockFocusedEvent,
   type BlockContentChangedEvent,
+  type BlockPasteEvent,
   Block,
 } from "./basic";
-import { type BlockData } from "@pkg/model";
+import { type BlockData, TextType, CursorState } from "@pkg/model";
 import { TextModel, TextNode, type AttributesObject } from "@pkg/model/textModel";
 import * as fastDiff from "fast-diff";
 import { type Editor } from "@pkg/view/editor";
@@ -18,6 +19,8 @@ export const TextBlockName = "text";
 const TextContentClass = "blocky-block-text-content";
 
 const DataRefKey = "data-href";
+
+const zeroSpaceEmptyChar = String.fromCharCode(160);
 
 interface TextPosition {
   node: Node;
@@ -51,8 +54,8 @@ function textModelToFormats(textModel: TextModel): FormattedTextSlice[] {
 class TextBlock extends Block {
   #container: HTMLElement | undefined;
 
-  constructor(private def: TextBlockDefinition, private data: BlockData) {
-    super();
+  constructor(private def: TextBlockDefinition, props: BlockData) {
+    super(props);
   }
 
   override findTextOffsetInBlock(focusedNode: Node, offsetInNode: number): number {
@@ -77,28 +80,34 @@ class TextBlock extends Block {
     return counter + offsetInNode;
   }
 
-  protected findContentContainer(parent: HTMLElement) {
-    return parent.firstChild! as HTMLElement;
+  protected findContentContainer(parent: HTMLElement): HTMLElement {
+    let ptr = parent.firstElementChild;
+
+    while (ptr) {
+      if (ptr.classList.contains(TextContentClass)) {
+        return ptr as HTMLElement;
+      }
+      ptr = ptr.nextElementSibling;
+    }
+
+    throw new Error("content not found");
+  }
+
+  private createContentContainer(): HTMLElement {
+    const e = elem("div", TextContentClass);
+    e.setAttribute("placeholder", zeroSpaceEmptyChar)
+    return e;
   }
 
   override blockDidMount({ element }: BlockDidMountEvent): void {
-    const content = elem("div", TextContentClass);
-
-    const block = this.data.data as TextModel;
-    const level = block.level;
-    if (level === 1) {
-      element.classList.add("blocky-heading1");
-    } else if (level === 2) {
-      element.classList.add("blocky-heading2");
-    } else if (level === 3) {
-      element.classList.add("blocky-heading3");
-    }
-
+    const content = this.createContentContainer();
     element.appendChild(content);
   }
 
   override blockFocused({ node: blockDom, selection, cursor }: BlockFocusedEvent): void {
     const contentContainer = this.findContentContainer(blockDom);
+
+    contentContainer.setAttribute("placeholder", "Empty content")
 
     const { offset } = cursor;
     const pos = this.findFocusPosition(blockDom, offset);
@@ -115,6 +124,12 @@ class TextBlock extends Block {
       const { node, offset } = pos;
       setRangeIfDifferent(selection, node, offset, node, offset);
     }
+  }
+
+  override blockBlur({ node: blockDom }: BlockFocusedEvent): void {
+    const contentContainer = this.findContentContainer(blockDom);
+    const zeroSpaceEmptyChar = String.fromCharCode(160);
+    contentContainer.setAttribute("placeholder", zeroSpaceEmptyChar)
   }
 
   private findFocusPosition(
@@ -183,7 +198,7 @@ class TextBlock extends Block {
 
     let textContent = "";
 
-    const blockData = this.data;
+    const blockData = this.props;
     let ptr = contentContainer.firstChild;
     let idx = 0;
     while (ptr) {
@@ -252,7 +267,7 @@ class TextBlock extends Block {
 
   override render(container: HTMLElement) {
     this.#container = container;
-    const { id } = this.data;
+    const { id } = this.props;
     const blockNode = this.editor.state.idMap.get(id)!;
     const block = blockNode.data as BlockData<TextModel>;
     const textModel = block.data;
@@ -309,7 +324,66 @@ class TextBlock extends Block {
     }
   }
 
+  private createBulletSpan() {
+    const container = elem("div", "blocky-bullet");
+    container.contentEditable = "false";
+
+    const bulletContent = elem("div", "blocky-bullet-content");
+    container.appendChild(bulletContent);
+
+    return container;
+  }
+
+  private ensureContentContainerStyle(contentContainer: HTMLElement, textModel: TextModel): HTMLElement {
+    const renderedType = contentContainer.getAttribute("data-type");
+    const { textType } = textModel;
+
+    const forceRenderContentStyle = (parent: HTMLElement, contentContainer: HTMLElement, textType: TextType) => {
+      switch (textType) {
+        case TextType.Bulleted: {
+          const bulletSpan = this.createBulletSpan();
+          parent.insertBefore(bulletSpan, contentContainer);
+
+          contentContainer.classList.add("blocky-bulleted");
+          break;
+        }
+
+        case TextType.Heading1:
+        case TextType.Heading2:
+        case TextType.Heading3:
+          contentContainer.classList.add(`blocky-heading${textType}`);
+          break;
+        
+        default: {}
+
+      }
+
+      contentContainer.setAttribute("data-type", textType.toString());
+    }
+
+    const parent = contentContainer.parentElement!;
+    if (!renderedType) {
+      forceRenderContentStyle(parent, contentContainer, textType);
+      return contentContainer;
+    }
+
+    const oldDataType = parseInt(renderedType, 10);
+    if (oldDataType !== textType) {
+      clearAllChildren(parent);
+
+      const newContainer = this.createContentContainer();
+      parent.appendChild(newContainer);
+      forceRenderContentStyle(parent, newContainer, textType);
+
+      return newContainer;
+    }
+
+    return contentContainer;
+  }
+
   private renderBlockTextContent(contentContainer: HTMLElement, textModel: TextModel) {
+    contentContainer = this.ensureContentContainerStyle(contentContainer, textModel);
+
     let nodePtr = textModel.nodeBegin;
     let domPtr: Node | null = contentContainer.firstChild;
     let prevDom: Node | null = null;
@@ -367,6 +441,77 @@ class TextBlockDefinition implements IBlockDefinition {
 
   onBlockCreated({ model: data }: BlockCreatedEvent): Block {
     return new TextBlock(this, data);
+  }
+
+  onPaste({ after: cursorState, node: container, editor }: BlockPasteEvent): CursorState | undefined {
+    if (!cursorState) {
+      return;
+    }
+
+    if (cursorState.type === "open") {
+      return;
+    }
+
+    const currentNode = editor.state.idMap.get(cursorState.targetId)!;
+    const parentId = currentNode.parent!.data.id;
+
+    const newId = editor.idGenerator.mkBlockId();
+
+    const textModel = this.getTextModelFromDOM(editor, container);
+
+    editor.applyActions([{
+      type: "new-block",
+      targetId: parentId,
+      afterId: cursorState.targetId,
+      newId,
+      blockName: "text",
+      data: textModel,
+    }], true);
+
+    return {
+      type: "collapsed",
+      targetId: newId,
+      offset: 0,
+    };
+  }
+
+  /**
+   * Rebuild the data structure from the pasted html.
+   */
+  private getTextModelFromDOM(editor: Editor, node: HTMLElement): TextModel {
+    const result = new TextModel();
+
+    // TODO: Maybe using querySelector is slow.
+    // Should make a benchmark here
+    const textContentContainer = node.querySelector(".blocky-block-text-content");
+    let index: number = 0;
+    if (textContentContainer) {
+      let childPtr = textContentContainer.firstChild;
+
+      const dataType = textContentContainer.getAttribute("data-type") || "0";
+      const dataTypeInt = parseInt(dataType, 10);
+      result.textType = dataTypeInt;
+
+      while (childPtr) {
+        if (childPtr instanceof Text) {
+          const content = childPtr.textContent ?? "";
+          result.insert(index, content);
+          index += content.length;
+        } else if (childPtr instanceof HTMLElement) {
+          const content = childPtr.textContent ?? "";
+          const attributes = editor.getAttributesBySpan(childPtr as HTMLSpanElement);
+          result.insert(index, content, attributes);
+          index += content.length;
+        }
+
+        childPtr = childPtr.nextSibling;
+      }
+
+    } else {
+      result.insert(0, node.textContent ?? "");
+    }
+
+    return result;
   }
 
 }

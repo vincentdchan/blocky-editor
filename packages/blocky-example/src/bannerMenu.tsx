@@ -1,5 +1,5 @@
 import { Component, type RefObject, createRef } from "preact";
-import { type EditorController, TextModel } from "blocky-core";
+import { type EditorController, TextModel, TextType } from "blocky-core";
 import {
   type IDisposable,
   flattenDisposable,
@@ -19,6 +19,14 @@ interface BannerState {
   menuY: number;
   showDelete: boolean;
 }
+
+const BannerIcon = `
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M16 17L48 17" stroke="#CAC4C4" stroke-width="6" stroke-linecap="round"/>
+<path d="M16 32L48 32" stroke="#CAC4C4" stroke-width="6" stroke-linecap="round"/>
+<path d="M16 47L48 47" stroke="#CAC4C4" stroke-width="6" stroke-linecap="round"/>
+</svg>
+`;
 
 class BannerMenu extends Component<BannerProps, BannerState> {
   #bannerRef: RefObject<HTMLDivElement> = createRef();
@@ -44,6 +52,8 @@ class BannerMenu extends Component<BannerProps, BannerState> {
     );
 
     this.handleBlocksChanged();
+
+    this.#bannerRef.current!.innerHTML = BannerIcon;
   }
 
   override componentWillUnmount() {
@@ -83,7 +93,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
     });
   };
 
-  private insertHeading = (level: number) => () => {
+  private insertText = (typeType: TextType) => () => {
     const { editorController } = this.props;
     const focusedNode = editorController.bannerFocusedNode;
     if (!focusedNode) {
@@ -91,7 +101,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
     }
     editorController.insertBlockAfterId(focusedNode.data.id, {
       autoFocus: true,
-      data: new TextModel(level),
+      data: new TextModel(typeType),
     });
   };
 
@@ -124,10 +134,10 @@ class BannerMenu extends Component<BannerProps, BannerState> {
       <Menu
         style={{ position: "fixed", left: `${menuX}px`, top: `${menuY}px` }}
       >
-        <MenuItem onClick={this.insertHeading(0)}>Text</MenuItem>
-        <MenuItem onClick={this.insertHeading(1)}>Heading1</MenuItem>
-        <MenuItem onClick={this.insertHeading(2)}>Heading2</MenuItem>
-        <MenuItem onClick={this.insertHeading(3)}>Heading3</MenuItem>
+        <MenuItem onClick={this.insertText(TextType.Normal)}>Text</MenuItem>
+        <MenuItem onClick={this.insertText(TextType.Heading1)}>Heading1</MenuItem>
+        <MenuItem onClick={this.insertText(TextType.Heading2)}>Heading2</MenuItem>
+        <MenuItem onClick={this.insertText(TextType.Heading3)}>Heading3</MenuItem>
         <MenuItem onClick={this.insertImage}>Image</MenuItem>
         {showDelete && (
           <>

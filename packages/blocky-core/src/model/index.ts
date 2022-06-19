@@ -10,4 +10,4 @@ export {
 } from "./tree";
 export { default as State } from "./state";
 export { type CursorState } from "./cursor";
-export { TextModel, type AttributesObject } from "./textModel";
+export * from "./textModel";

@@ -1,6 +1,6 @@
 import { type IDisposable } from "blocky-common/es/disposable";
 import type { BlockData } from "@pkg/model";
-import { type CollapsedCursor } from "@pkg/model/cursor";
+import { CursorState, type CollapsedCursor } from "@pkg/model/cursor";
 import { type Editor } from "@pkg/view/editor";
 
 export interface BlockDidMountEvent {
@@ -13,10 +13,22 @@ export interface BlockCreatedEvent {
   // editor: Editor;
 }
 
+export interface BlockPasteEvent {
+  after: CursorState | undefined;
+  editor: Editor;
+  node: HTMLElement;
+}
+
 export interface BlockFocusedEvent {
   selection: Selection;
   node: HTMLDivElement;
   cursor: CollapsedCursor;
+}
+
+export interface BlockBlurEvent {
+  selection: Selection;
+  node: HTMLDivElement;
+  cursor: CursorState | undefined;
 }
 
 export interface BlockContentChangedEvent {
@@ -30,12 +42,16 @@ export interface IBlockDefinition {
 
   editable?: boolean;
 
+  onPaste?(e: BlockPasteEvent): CursorState | undefined;
+
   onBlockCreated(e: BlockCreatedEvent): Block;
 
 }
 
-export class Block implements IDisposable {
+export class Block<T = any> implements IDisposable {
   #editor: Editor | undefined;
+
+  constructor(public props: BlockData<T>) {}
 
   setEditor(editor: Editor) {
     this.#editor = editor;
@@ -56,6 +72,8 @@ export class Block implements IDisposable {
    * 
    */
   blockFocused(e: BlockFocusedEvent): void {}
+
+  blockBlur(e: BlockBlurEvent): void {}
 
   blockContentChanged(e: BlockContentChangedEvent): void {}
 

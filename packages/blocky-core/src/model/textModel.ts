@@ -1,4 +1,5 @@
 import { areEqualShallow } from "blocky-common/es/object";
+import { Slot } from "blocky-common/es/events";
 
 export interface AttributesObject {
   [key: string]: any;
@@ -16,14 +17,34 @@ export interface TextSlice {
   attributes?: AttributesObject;
 }
 
+export interface TextInsertEvent {
+  index: number;
+  text: string;
+  attributes?: AttributesObject;
+}
+
+export enum TextType {
+  Bulleted = -1,
+  Normal = 0,
+  Heading1,
+  Heading2,
+  Heading3,
+}
+
 export class TextModel {
   #nodeBegin?: TextNode;
   #nodeEnd?: TextNode;
   #length = 0;
 
-  constructor(public readonly level: number = 0) {}
+  public readonly onInsert: Slot<TextInsertEvent> = new Slot();
+
+  constructor(public textType: TextType = TextType.Normal) {}
 
   public insert(index: number, text: string, attributes?: AttributesObject) {
+    if (text.length === 0) {
+      return;
+    }
+
     this.#length += text.length;
     if (!this.#nodeBegin) {
       if (index !== 0) {
@@ -37,20 +58,45 @@ export class TextModel {
       return;
     }
 
-    if (text.length === 0) {
-      return;
-    }
-
     let ptr: TextNode | undefined = this.#nodeBegin;
     while (ptr) {
-      if (index <= ptr.content.length && areEqualShallow(ptr.attributes, attributes)) {
+      if (index === 0) {
+        if (areEqualShallow(ptr.attributes, attributes)) {
+          ptr.content = text + ptr.content;
+        } else {
+          this.insertNodeBefore({ content: text, attributes }, ptr);
+        }
+        this.onInsert.emit({ index, text, attributes });
+        return;
+      } else if (index <= ptr.content.length) {
+        if (areEqualShallow(ptr.attributes, attributes)) {
+          const before = ptr.content.slice(0, index);
+          const after = ptr.content.slice(index);
+          ptr.content = before + text + after;
+          this.onInsert.emit({ index, text, attributes });
+          return;
+        }
+
         const before = ptr.content.slice(0, index);
         const after = ptr.content.slice(index);
-        ptr.content = before + text + after;
+
+        ptr.content = before;
+        const prev = ptr;
+
+        const mid: TextNode = {
+          content: text,
+          attributes,
+        };
+
+        if (after.length > 0) {
+          this.insertNodeBefore(mid, prev.next);
+          this.insertNodeBefore({ content: after, attributes: prev.attributes }, mid.next);
+        } else {
+          this.insertNodeBefore(mid, prev.next);
+        }
+
+        this.onInsert.emit({ index, text, attributes });
         return;
-      } else if (index === 0) {
-        this.insertNodeBefore({ content: text, attributes }, ptr);
-        break;
       }
 
       index -= ptr.content.length;
@@ -58,6 +104,8 @@ export class TextModel {
     }
 
     this.insertAtLast({ content: text, attributes });
+
+    this.onInsert.emit({ index, text, attributes });
   }
 
   public slice(start: number, end?: number): TextSlice[] {
@@ -176,7 +224,7 @@ export class TextModel {
     if (index > this.#length || index < 0) {
       throw new Error(`The begin offset ${index} is out of range.`);
     } else if (end > this.#length || end < 0) {
-      throw new Error(`The end offset ${end} is out of range.`);
+      throw new Error(`The end offset ${end} is out of range ${this.#length}.`);
     }
     this.#length -= length;
 

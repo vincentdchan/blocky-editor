@@ -13,6 +13,8 @@ import {
   type DocNode,
   type BlockData,
   TextModel,
+  type AttributesObject,
+  TextType,
 } from "@pkg/model";
 import { CollapsedCursor, type CursorState } from "@pkg/model/cursor";
 import { Action } from "@pkg/model/actions";
@@ -72,6 +74,11 @@ export interface IEditorOptions {
   toolbarFactory?: ToolbarFactory;
 }
 
+enum MineType  {
+  PlainText = "text/plain",
+  Html = "text/html",
+}
+
 /**
  * The internal view layer object of the editor.
  * It's not recommended to manipulate this class by the user.
@@ -84,6 +91,7 @@ export class Editor {
   #container: HTMLDivElement;
   #renderedDom: HTMLDivElement | undefined;
   #renderer: DocRenderer;
+  #lastFocusedId: string | undefined;
   public readonly bannerDelegate: BannerDelegate;
   public readonly toolbarDelegate: ToolbarDelegate;
   public idGenerator: IdGenerator;
@@ -92,8 +100,9 @@ export class Editor {
 
   public readonly state: DocumentState;
   public readonly registry: EditorRegistry;
-  public readonly keyUp = new Slot<KeyboardEvent>();
   public readonly keyDown = new Slot<KeyboardEvent>();
+
+  public readonly preservedTextType: Set<TextType> = new Set([TextType.Bulleted]);
 
   public composing: boolean = false;
   private disposables: IDisposable[] = [];
@@ -157,15 +166,19 @@ export class Editor {
       editor: this,
     });
 
-    for (const block of this.state.blocks.values()) {
-      block.setEditor(this);
-    }
+    this.initBlockCreated();
+  }
 
+  private initBlockCreated() {
     this.disposables.push(
       this.state.newBlockCreated.on((block: Block) => {
         block.setEditor(this);
       })
     );
+
+    for (const block of this.state.blocks.values()) {
+      this.state.newBlockCreated.emit(block);
+    }
   }
 
   public render(done?: AfterFn) {
@@ -512,10 +525,6 @@ export class Editor {
       }
     } else if (e.key === "Backspace") {
       this.handleBackspace(e);
-    } else if (e.key === "ArrowUp") {
-      this.keyUp.emit(e);
-    } else if (e.key === "ArrowDown") {
-      this.keyDown.emit(e);
     } else if (e.key === "Delete") {
       this.handleDelete(e);
     }
@@ -547,6 +556,9 @@ export class Editor {
       const slices = textModel.slice(cursorOffset);
 
       const newTextModel = new TextModel();
+      if (this.preservedTextType.has(textModel.textType)) {  // preserved data type
+        newTextModel.textType = textModel.textType;
+      }
 
       let ptr = 0;
       for (const slice of slices) {
@@ -721,13 +733,216 @@ export class Editor {
       return;
     }
 
+    this.blurBlock();
+
+    this.#lastFocusedId = node.data.id;
     const block = this.state.blocks.get(node.data.id)!;
     block.blockFocused({ node: blockDom, cursor, selection: sel });
   }
 
+  private blurBlock() {
+    if (!this.#lastFocusedId) {
+      return;
+    }
+    const block = this.state.blocks.get(this.#lastFocusedId)!;
+    if (!block) {
+      this.#lastFocusedId = undefined;
+      return;
+    }
+
+    const dom = this.state.domMap.get(this.#lastFocusedId);
+    const sel = window.getSelection()!;
+    if (dom) {
+      block.blockBlur({
+        node: dom as HTMLDivElement,
+        cursor: this.state.cursorState,
+        selection: sel,
+      });
+    }
+
+    this.#lastFocusedId = undefined;
+  }
+
   private handlePaste = (e: ClipboardEvent) => {
-    e.preventDefault();
+    e.preventDefault();  // take over the paste event
+
+    const { clipboardData } = e;
+
+    if (!clipboardData) {
+      return;
+    }
+
+    const types = e.clipboardData?.types;
+    if (!types) {
+      return;
+    }
+
+    const htmlData = clipboardData.getData(MineType.Html);
+    if (htmlData) {
+      this.pasteHTMLOnCursor(htmlData);
+      return;
+    }
+
+    const plainText = clipboardData.getData(MineType.PlainText);
+    if (plainText) {
+      this.pastePlainTextOnCursor(plainText);
+      return;
+    }
   };
+
+  /**
+   * Use the API provided by the browser to parse the html for the bundle size.
+   * Maybe use an external library is better for unit tests. But it will increase
+   * the size of the bundles.
+   */
+  private pasteHTMLOnCursor(html: string) {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, MineType.Html);
+      this.pasteHTMLBodyOnCursor(doc.body);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  private pasteHTMLBodyOnCursor(body: HTMLElement) {
+    let ptr = body.firstElementChild;
+    let afterCursor: CursorState | undefined = this.state.cursorState;
+    const blockRegistry = this.registry.block;
+
+    while (ptr) {
+      if (ptr instanceof HTMLSpanElement) {
+        const attributes: AttributesObject = this.getAttributesBySpan(ptr);
+        let textContent = "";
+
+        const testContent = ptr.textContent;
+        if (testContent) {
+          textContent = testContent;
+        }
+
+        afterCursor = this.insertTextAt(afterCursor, textContent, Object.keys(attributes).length > 0 ? attributes : undefined);
+      } else if (ptr instanceof HTMLDivElement) {
+        const dataType = ptr.getAttribute("data-type") || "";
+        const blockDef = blockRegistry.getBlockDefByName(dataType);
+        const pasteHandler = blockDef?.onPaste;
+        if (pasteHandler) {
+          const cursor = pasteHandler.call(blockDef, {
+            after: afterCursor,
+            editor: this,
+            node: ptr,
+          });
+          if (cursor) {
+            afterCursor = cursor;
+          }
+        } else {
+          afterCursor = this.insertBlockByDefaultAt(afterCursor, dataType);
+        }
+      }
+      ptr = ptr.nextElementSibling;
+    }
+
+    this.render(() => {
+      this.state.cursorState = afterCursor;
+    });
+  }
+
+  /**
+   * Calculate the attributes from the dom.
+   * It's used for pasting text, and to recognize the dom created by the browser.
+   */
+  public getAttributesBySpan(span: HTMLSpanElement): AttributesObject {
+    const spanRegistry = this.registry.span;
+    const attributes: AttributesObject = {};
+    const href = span.getAttribute("data-href");
+    if (href) {
+      attributes["href"] = href;
+    }
+
+    for (const cls of span.classList) {
+      const style = spanRegistry.classnames.get(cls);
+      if (style) {
+        attributes[style.name] = true;
+      }
+    }
+
+    return attributes;
+  }
+
+  private insertBlockByDefaultAt(cursorState: CursorState | undefined, blockName: string): CursorState | undefined {
+    if (!cursorState) {
+      return;
+    }
+
+    if (cursorState.type === "open") {
+      return;
+    }
+
+    const currentNode = this.state.idMap.get(cursorState.targetId)!;
+    const parentId = currentNode.parent!.data.id;
+
+    const newId = this.idGenerator.mkBlockId();
+
+    let data: any;
+    if (blockName === "text") {
+      data = new TextModel;
+    }
+
+    this.applyActions([{
+      type: "new-block",
+      targetId: parentId,
+      afterId: cursorState.targetId,
+      newId,
+      blockName,
+      data,
+    }]);
+
+    return {
+      type: "collapsed",
+      targetId: newId,
+      offset: 0,
+    };
+  }
+
+  private pastePlainTextOnCursor(text: string) {
+    this.insertTextAt(this.state.cursorState, text);
+  }
+
+  private insertTextAt(cursorState: CursorState | undefined, text: string, attributes?: AttributesObject): CursorState | undefined {
+    if (!cursorState) {
+      return;
+    }
+
+    if (cursorState.type === "open") {
+      return;
+    }
+
+    const textModel = this.getTextModelByBlockId(cursorState.targetId);
+    if (!textModel) {
+      return;
+    }
+
+    const afterOffset = cursorState.offset + text.length;
+    textModel.insert(cursorState.offset, text, attributes);
+    return {
+      type: "collapsed",
+      targetId: cursorState.targetId,
+      offset: afterOffset
+    };
+  }
+
+  getTextModelByBlockId(blockId: string): TextModel | undefined {
+    const treeNode = this.state.idMap.get(blockId);
+    if (!treeNode) {
+      return;
+    }
+
+    const blockData = treeNode.data as BlockData;
+    const treeData = blockData.data;
+
+    if (treeData && treeData instanceof TextModel) {
+      return treeData;
+    }
+  }
 
   dispose() {
     document.removeEventListener("selectionchange", this.selectionChanged);
