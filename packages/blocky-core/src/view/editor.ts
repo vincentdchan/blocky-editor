@@ -580,28 +580,81 @@ export class Editor {
   }
 
   private handleDelete(e: KeyboardEvent) {
-    e.preventDefault();
+    if (this.deleteBlockOnFocusedCursor()) {
+      e.preventDefault();
+    }
   }
 
   private handleBackspace(e: KeyboardEvent) {
-    // const { cursorState } = this.state;
-    // if (!cursorState) {
-    //   return;
-    // }
-    // if (cursorState.type === "open") {
-    //   return;
-    // }
-    // const { targetId, offset } = cursorState;
-    // const node = this.state.idMap.get(targetId);
-    // if (!node) {
-    //   return;
-    // }
-    // if (offset === 0) {
-    //   // at the beginning of a line
-    //   e.preventDefault();
-    //   this.tryBackDeleteThisLine(node);
-    //   return;
-    // }
+    if (this.deleteBlockOnFocusedCursor()) {
+      e.preventDefault();
+    }
+  }
+
+  private deleteBlockOnFocusedCursor(): boolean {
+    const { cursorState } = this.state;
+    if (!cursorState) {
+      return false;
+    }
+    if (cursorState.type === "open") {
+      return false;
+    }
+
+    const { targetId } = cursorState;
+
+    if (!this.idGenerator.isBlockId(targetId)) {
+      return false;
+    }
+
+    const node = this.state.idMap.get(targetId);
+    if (!node) {
+      return false;
+    }
+    const prevNode = node.prev;
+
+    const blockData = node.data as BlockData;
+    const blockDef = this.registry.block.getBlockDefById(blockData.flags)!;
+
+    if (blockDef.editable !== false) {
+      return false;
+    }
+
+    this.applyActions([{
+      type: "delete",
+      targetId,
+    }]);
+    this.render(() => {
+      if (prevNode) {
+        this.state.cursorState = {
+          type: "collapsed",
+          targetId: prevNode.data.id,
+          offset: 0,
+        };
+        this.focusEndOfNode(prevNode);
+      } else {
+        this.state.cursorState = undefined;
+      }
+    });
+    return true;
+  }
+
+  private focusEndOfNode(treeNode: TreeNode<DocNode>) {
+    const blockData = treeNode.data as BlockData;
+    const data = blockData.data;
+    if (data && data instanceof TextModel) {
+      const length = data.length;
+      this.state.cursorState = {
+        type: "collapsed",
+        targetId: treeNode.data.id,
+        offset: length,
+      };
+    } else {
+      this.state.cursorState = {
+        type: "collapsed",
+        targetId: treeNode.data.id,
+        offset: 0,
+      };
+    }
   }
 
   public handleCursorStateChanged = (
