@@ -11,6 +11,7 @@ import { type BlockData } from "@pkg/model";
 import { TextModel, TextNode, type AttributesObject } from "@pkg/model/textModel";
 import * as fastDiff from "fast-diff";
 import { type Editor } from "@pkg/view/editor";
+import { areEqualShallow } from "blocky-common/src/object";
 
 export const TextBlockName = "text";
 
@@ -23,7 +24,26 @@ interface TextPosition {
 
 interface FormattedTextSlice {
   index: number;
+  length: number;
   attributes?: AttributesObject;
+}
+
+function textModelToFormats(textModel: TextModel): FormattedTextSlice[] {
+  const formats: FormattedTextSlice[] = [];
+
+  let ptr = textModel.nodeBegin;
+  let index: number = 0;
+  while (ptr) {
+    formats.push({
+      index,
+      length: ptr.content.length,
+      attributes: ptr.attributes,
+    });
+    index += ptr.content.length;
+    ptr = ptr.next;
+  }
+
+  return formats;
 }
 
 class TextBlock extends Block {
@@ -140,10 +160,11 @@ class TextBlock extends Block {
   private getFormattedTextSliceFromNode(index: number, node: Node): FormattedTextSlice {
     if (node instanceof HTMLSpanElement || node instanceof HTMLAnchorElement) {
       const attributes = this.getAttributeObjectFromElement(node);
-      return { index, attributes };
+      return { index, length: node.textContent?.length ?? 0, attributes };
     } else {
       return {
         index,
+        length: node.textContent?.length ?? 0,
         attributes: undefined,
       };
     }
@@ -182,6 +203,42 @@ class TextBlock extends Block {
       } else if (t === fastDiff.DELETE) {
         textModel.delete(index, content.length);
         index -= content.length;
+      }
+    }
+
+    this.diffAndApplyFormats(formats, textModel);
+  }
+
+  private diffAndApplyFormats(newFormats: FormattedTextSlice[], textModel: TextModel) {
+    const oldFormats: FormattedTextSlice[] = textModelToFormats(textModel);
+
+    const slices: (FormattedTextSlice | undefined)[] = Array(textModel.length);
+    
+    for (const format of newFormats) {
+      slices[format.index] = format;
+    }
+
+    for (const oldFormat of oldFormats) {
+      const f = slices[oldFormat.index];
+      if (!f) {  // format doesn't anymore, erase it.
+        textModel.format(oldFormat.index, oldFormat.length, undefined);
+        continue;
+      }
+
+      if (!areEqualShallow(f.attributes, oldFormat.attributes)) {
+        if (oldFormat.length !== f.length) {  // length are different, erase it firstly
+          textModel.format(oldFormat.index, oldFormat.length, undefined);
+        }
+        textModel.format(f.index, f.length, f.attributes);
+      }
+
+      slices[oldFormat.index] = undefined;
+    }
+
+    for (let i = 0, len = slices.length; i < len; i++) {
+      const f = slices[i];
+      if (f) {
+        textModel.format(f.index, f.length, f.attributes);
       }
     }
   }
@@ -247,7 +304,7 @@ function createDomByNode(node: TextNode, editor: Editor): Node {
 
     const { href, ...restAttr } = node.attributes;
 
-    if (typeof href !== "string") {
+    if (typeof href === "string") {
       d = elem("a");
       d.setAttribute("href", href);
     } else {
