@@ -17,6 +17,8 @@ export const TextBlockName = "text";
 
 const TextContentClass = "blocky-block-text-content";
 
+const DataRefKey = "data-href";
+
 interface TextPosition {
   node: Node;
   offset: number;
@@ -151,6 +153,11 @@ class TextBlock extends Block {
       }
     }
 
+    const dataRef = element.getAttribute(DataRefKey);
+    if (typeof dataRef === "string") {
+      attributes.href = dataRef;
+    }
+
     return attributes;
   }
 
@@ -158,7 +165,7 @@ class TextBlock extends Block {
    * Convert DOM to [[FormattedTextSlice]]
    */
   private getFormattedTextSliceFromNode(index: number, node: Node): FormattedTextSlice {
-    if (node instanceof HTMLSpanElement || node instanceof HTMLAnchorElement) {
+    if (node instanceof HTMLSpanElement) {
       const attributes = this.getAttributeObjectFromElement(node);
       return { index, length: node.textContent?.length ?? 0, attributes };
     } else {
@@ -257,6 +264,51 @@ class TextBlock extends Block {
     this.renderBlockTextContent(contentContainer, textModel);
   }
 
+  private createAnchorNode(href: string): HTMLSpanElement {
+    const e = elem("span");
+    e.classList.add(this.editor.anchorSpanClass);
+    e.setAttribute(DataRefKey, href);
+
+    e.addEventListener("click", (e: MouseEvent) => {
+      e.preventDefault();
+      this.editor.openExternalLink(href);
+    });
+
+    return e;
+  }
+
+  private createDomByNode(node: TextNode, editor: Editor): Node {
+    if (node.attributes) {
+      let d: HTMLElement;
+
+      const { href, ...restAttr } = node.attributes;
+
+      if (typeof href === "string") {
+        d = this.createAnchorNode(href);
+      } else {
+        d = elem("span");
+      }
+
+      d.textContent = node.content;
+
+      const spanRegistry = editor.registry.span;
+
+      for (const key of Object.keys(restAttr)) {
+        if (restAttr[key]) {
+          const style = spanRegistry.styles.get(key);
+          if (style) {
+            d.classList.add(style.className);
+            style.onSpanCreated?.(d);
+          }
+        }
+      }
+
+      return d;
+    } else {
+      return document.createTextNode(node.content);
+    }
+  }
+
   private renderBlockTextContent(contentContainer: HTMLElement, textModel: TextModel) {
     let nodePtr = textModel.nodeBegin;
     let domPtr: Node | null = contentContainer.firstChild;
@@ -264,12 +316,12 @@ class TextBlock extends Block {
 
     while (nodePtr) {
       if (!domPtr) {
-        domPtr = createDomByNode(nodePtr, this.editor);
+        domPtr = this.createDomByNode(nodePtr, this.editor);
         contentContainer.insertBefore(domPtr, prevDom?.nextSibling ?? null);
       } else {  // is old
         if (!isNodeMatch(nodePtr, domPtr)) {
           const oldDom = domPtr;
-          const newNode = createDomByNode(nodePtr, this.editor);
+          const newNode = this.createDomByNode(nodePtr, this.editor);
 
           nodePtr = nodePtr.next;
           prevDom = domPtr;
@@ -298,49 +350,15 @@ class TextBlock extends Block {
 
 }
 
-function createDomByNode(node: TextNode, editor: Editor): Node {
-  if (node.attributes) {
-    let d: HTMLElement;
-
-    const { href, ...restAttr } = node.attributes;
-
-    if (typeof href === "string") {
-      d = elem("a");
-      d.setAttribute("href", href);
-    } else {
-      d = elem("span");
-    }
-
-    d.textContent = node.content;
-
-    const spanRegistry = editor.registry.span;
-
-    for (const key of Object.keys(restAttr)) {
-      if (restAttr[key]) {
-        const style = spanRegistry.styles.get(key);
-        if (style) {
-          d.classList.add(style.className);
-          style.onSpanCreated?.(d);
-        }
-      }
-    }
-
-    return d;
-  } else {
-    return document.createTextNode(node.content);
-  }
-}
-
 function isNodeMatch(node: TextNode, dom: Node): boolean {
-  if (node.attributes && dom instanceof HTMLSpanElement) {
-    return true;
+  if (node.attributes) {
+    if (typeof node.attributes.href === "string") {
+      return dom instanceof HTMLElement && typeof dom.getAttribute(DataRefKey) === "string";
+    }
+    return dom instanceof HTMLSpanElement;
   }
 
-  if (!node.attributes && node instanceof Text) {
-    return true;
-  }
-
-  return false;
+  return node instanceof Text;
 }
 
 class TextBlockDefinition implements IBlockDefinition {

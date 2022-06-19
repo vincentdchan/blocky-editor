@@ -35,6 +35,11 @@
   color: gray;
 }
 
+.blocky-text-anchor {
+  cursor: pointer;
+  color: rgb(52, 184, 220);
+}
+
 .blocky-heading1 {
   font-size: 32px;
   font-weight: 600;

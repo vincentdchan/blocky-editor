@@ -88,6 +88,8 @@ export class Editor {
   public readonly toolbarDelegate: ToolbarDelegate;
   public idGenerator: IdGenerator;
 
+  public readonly anchorSpanClass: string = "blocky-text-anchor";
+
   public readonly state: DocumentState;
   public readonly registry: EditorRegistry;
   public readonly keyUp = new Slot<KeyboardEvent>();
@@ -577,6 +579,11 @@ export class Editor {
     } else {
       console.error("unhandled");
     }
+  }
+
+  public openExternalLink(link: string) {
+    // TODO: handle this in plugin
+    window.open(link, '_blank')?.focus();
   }
 
   private handleDelete(e: KeyboardEvent) {

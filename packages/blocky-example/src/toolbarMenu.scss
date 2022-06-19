@@ -2,6 +2,7 @@
 .blocky-example-toolbar-container {
   background-color: var(--main-bg-color);
   box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.2);
+  padding: 0px;
   border-radius: 4px;
   overflow: hidden;
   box-sizing: border-box;
@@ -29,5 +30,24 @@
   &.italic {
     font-family: 'Times New Roman', Times, serif;
     font-style: italic;
+  }
+}
+
+.blocky-example-anchor-toolbar {
+  position: fixed;
+  padding: 4px 8px;
+
+  input {
+    border: none;
+    margin-right: 8px;
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  button {
+    font-size: 12px;
+    padding: 2px 4px;
   }
 }
