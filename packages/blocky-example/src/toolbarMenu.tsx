@@ -100,9 +100,9 @@ class ToolbarMenu extends Component<ToolbarMenuProps, ToolbarMenuState> {
           <ToolbarMenuItem className="bold rect" onClick={this.handleBold}>
             B
           </ToolbarMenuItem>
-          <ToolbarMenuItem className="italic rect" onClick={this.handleItalic}>
+          {/* <ToolbarMenuItem className="italic rect" onClick={this.handleItalic}>
             I
-          </ToolbarMenuItem>
+          </ToolbarMenuItem> */}
           <ToolbarMenuItem onClick={this.handleLinkClicked}>
             Link
           </ToolbarMenuItem>
