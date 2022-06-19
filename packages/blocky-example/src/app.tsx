@@ -23,8 +23,8 @@ function makeController(): EditorController {
     bannerFactory: makePreactBanner((editorController: EditorController) => (
       <BannerMenu editorController={editorController} />
     )),
-    toolbarFactory: makePreactToolbar(() => {
-      return <ToolbarMenu />;
+    toolbarFactory: makePreactToolbar((editorController: EditorController) => {
+      return <ToolbarMenu editorController={editorController} />;
     }),
   });
 }

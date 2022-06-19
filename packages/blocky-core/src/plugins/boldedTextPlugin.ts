@@ -12,41 +12,6 @@ import { isHotkey } from "is-hotkey";
  *
  */
 function makeBoldedTextPlugin(): IPlugin {
-  const makeBold = (editor: Editor) => {
-    const { cursorState } = editor.state;
-    if (!cursorState) {
-      return;
-    }
-
-    if (cursorState.type === "collapsed") {
-      return;
-    }
-
-    const { startId, endId, startOffset, endOffset } = cursorState;
-
-    if (startId === endId) {
-      // make a single fragment bolded
-      const blockNode = editor.state.idMap.get(startId);
-      if (!blockNode) {
-        console.error(`${startId} not found`);
-        return;
-      }
-      if (blockNode.data.t !== "block") {
-        console.error(`${startId} is not a block`);
-        return;
-      }
-      editor.controller.formatText(
-        blockNode.data.id,
-        startOffset,
-        endOffset - startOffset,
-        {
-          bold: true,
-        }
-      );
-    } else {
-      console.log("unimplemented bold");
-    }
-  };
   return {
     name: "bolded-text",
     onInitialized(editor: Editor) {
@@ -57,7 +22,9 @@ function makeBoldedTextPlugin(): IPlugin {
       editor.keyDown.on((e: KeyboardEvent) => {
         if (isHotkey("mod+b", e)) {
           e.preventDefault();
-          makeBold(editor);
+          editor.controller.formatTextOnSelectedText({
+            bold: true
+          });
           return;
         }
       });
