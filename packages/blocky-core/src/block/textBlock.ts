@@ -7,7 +7,7 @@ import {
   type BlockContentChangedEvent,
   Block,
 } from "./basic";
-import { type BlockData } from "@pkg/model";
+import { type BlockData, TextType } from "@pkg/model";
 import { TextModel, TextNode, type AttributesObject } from "@pkg/model/textModel";
 import * as fastDiff from "fast-diff";
 import { type Editor } from "@pkg/view/editor";
@@ -51,8 +51,8 @@ function textModelToFormats(textModel: TextModel): FormattedTextSlice[] {
 class TextBlock extends Block {
   #container: HTMLElement | undefined;
 
-  constructor(private def: TextBlockDefinition, private data: BlockData) {
-    super();
+  constructor(private def: TextBlockDefinition, props: BlockData) {
+    super(props);
   }
 
   override findTextOffsetInBlock(focusedNode: Node, offsetInNode: number): number {
@@ -81,19 +81,12 @@ class TextBlock extends Block {
     return parent.firstChild! as HTMLElement;
   }
 
+  private createContentContainer(): HTMLElement {
+    return elem("div", TextContentClass);
+  }
+
   override blockDidMount({ element }: BlockDidMountEvent): void {
-    const content = elem("div", TextContentClass);
-
-    const block = this.data.data as TextModel;
-    const level = block.level;
-    if (level === 1) {
-      element.classList.add("blocky-heading1");
-    } else if (level === 2) {
-      element.classList.add("blocky-heading2");
-    } else if (level === 3) {
-      element.classList.add("blocky-heading3");
-    }
-
+    const content = this.createContentContainer();
     element.appendChild(content);
   }
 
@@ -183,7 +176,7 @@ class TextBlock extends Block {
 
     let textContent = "";
 
-    const blockData = this.data;
+    const blockData = this.props;
     let ptr = contentContainer.firstChild;
     let idx = 0;
     while (ptr) {
@@ -252,7 +245,7 @@ class TextBlock extends Block {
 
   override render(container: HTMLElement) {
     this.#container = container;
-    const { id } = this.data;
+    const { id } = this.props;
     const blockNode = this.editor.state.idMap.get(id)!;
     const block = blockNode.data as BlockData<TextModel>;
     const textModel = block.data;
@@ -309,7 +302,52 @@ class TextBlock extends Block {
     }
   }
 
+  private ensureContentContainerStyle(contentContainer: HTMLElement, textModel: TextModel): HTMLElement {
+    const renderedType = contentContainer.getAttribute("data-type");
+    const { textType } = textModel;
+
+    const forceRenderContentStyle = (contentContainer: HTMLElement, textType: TextType) => {
+      switch (textType) {
+        case TextType.Bulleted:
+          contentContainer.classList.add("blocky-bulleted");
+          break;
+
+        case TextType.Heading1:
+        case TextType.Heading2:
+        case TextType.Heading3:
+          contentContainer.classList.add(`blocky-heading${textType}`);
+          break;
+        
+        default: {}
+
+      }
+
+      contentContainer.setAttribute("data-type", textType.toString());
+    }
+
+    if (!renderedType) {
+      forceRenderContentStyle(contentContainer, textType);
+      return contentContainer;
+    }
+
+    const oldDataType = parseInt(renderedType, 10);
+    if (oldDataType !== textType) {
+      const parent = contentContainer.parentElement!;
+
+      const newContainer = this.createContentContainer();
+      forceRenderContentStyle(newContainer, textType);
+
+      parent.replaceChild(newContainer, contentContainer);
+
+      return newContainer;
+    }
+
+    return contentContainer;
+  }
+
   private renderBlockTextContent(contentContainer: HTMLElement, textModel: TextModel) {
+    contentContainer = this.ensureContentContainerStyle(contentContainer, textModel);
+
     let nodePtr = textModel.nodeBegin;
     let domPtr: Node | null = contentContainer.firstChild;
     let prevDom: Node | null = null;

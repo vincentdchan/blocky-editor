@@ -30,8 +30,8 @@ class ReactBlock extends Block {
 
   #rendered: HTMLElement | undefined;
 
-  constructor(private data: BlockData, private options: ReactBlockOptions) {
-    super();
+  constructor(props: BlockData, private options: ReactBlockOptions) {
+    super(props);
   }
 
   override render(container: HTMLElement) {
@@ -39,7 +39,7 @@ class ReactBlock extends Block {
     this.#rendered = container;
     const editorController = this.editor.controller;
     reactRender(
-      <ReactBlockContext.Provider value={{ editorController, blockId: this.data.id }}>
+      <ReactBlockContext.Provider value={{ editorController, blockId: this.props.id }}>
         {component()}
       </ReactBlockContext.Provider>,
       container

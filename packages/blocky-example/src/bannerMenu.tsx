@@ -1,5 +1,5 @@
 import { Component, type RefObject, createRef } from "preact";
-import { type EditorController, TextModel } from "blocky-core";
+import { type EditorController, TextModel, TextType } from "blocky-core";
 import {
   type IDisposable,
   flattenDisposable,
@@ -83,7 +83,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
     });
   };
 
-  private insertHeading = (level: number) => () => {
+  private insertText = (typeType: TextType) => () => {
     const { editorController } = this.props;
     const focusedNode = editorController.bannerFocusedNode;
     if (!focusedNode) {
@@ -91,7 +91,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
     }
     editorController.insertBlockAfterId(focusedNode.data.id, {
       autoFocus: true,
-      data: new TextModel(level),
+      data: new TextModel(typeType),
     });
   };
 
@@ -124,10 +124,10 @@ class BannerMenu extends Component<BannerProps, BannerState> {
       <Menu
         style={{ position: "fixed", left: `${menuX}px`, top: `${menuY}px` }}
       >
-        <MenuItem onClick={this.insertHeading(0)}>Text</MenuItem>
-        <MenuItem onClick={this.insertHeading(1)}>Heading1</MenuItem>
-        <MenuItem onClick={this.insertHeading(2)}>Heading2</MenuItem>
-        <MenuItem onClick={this.insertHeading(3)}>Heading3</MenuItem>
+        <MenuItem onClick={this.insertText(TextType.Normal)}>Text</MenuItem>
+        <MenuItem onClick={this.insertText(TextType.Heading1)}>Heading1</MenuItem>
+        <MenuItem onClick={this.insertText(TextType.Heading2)}>Heading2</MenuItem>
+        <MenuItem onClick={this.insertText(TextType.Heading3)}>Heading3</MenuItem>
         <MenuItem onClick={this.insertImage}>Image</MenuItem>
         {showDelete && (
           <>

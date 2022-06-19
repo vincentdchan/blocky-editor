@@ -11,5 +11,7 @@ export {
   State as DocumentState,
   type BlockData,
   type AttributesObject,
+  type TextInsertEvent,
   TextModel,
+  TextType,
 } from "./model";

@@ -1,4 +1,5 @@
 import { areEqualShallow } from "blocky-common/es/object";
+import { Slot } from "blocky-common/es/events";
 
 export interface AttributesObject {
   [key: string]: any;
@@ -16,12 +17,28 @@ export interface TextSlice {
   attributes?: AttributesObject;
 }
 
+export interface TextInsertEvent {
+  index: number;
+  text: string;
+  attributes?: AttributesObject;
+}
+
+export enum TextType {
+  Bulleted = -1,
+  Normal = 0,
+  Heading1,
+  Heading2,
+  Heading3,
+}
+
 export class TextModel {
   #nodeBegin?: TextNode;
   #nodeEnd?: TextNode;
   #length = 0;
 
-  constructor(public readonly level: number = 0) {}
+  public readonly onInsert: Slot<TextInsertEvent> = new Slot();
+
+  constructor(public textType: TextType = TextType.Normal) {}
 
   public insert(index: number, text: string, attributes?: AttributesObject) {
     this.#length += text.length;
@@ -47,6 +64,7 @@ export class TextModel {
         const before = ptr.content.slice(0, index);
         const after = ptr.content.slice(index);
         ptr.content = before + text + after;
+        this.onInsert.emit({ index, text, attributes });
         return;
       } else if (index === 0) {
         this.insertNodeBefore({ content: text, attributes }, ptr);
@@ -58,6 +76,8 @@ export class TextModel {
     }
 
     this.insertAtLast({ content: text, attributes });
+
+    this.onInsert.emit({ index, text, attributes });
   }
 
   public slice(start: number, end?: number): TextSlice[] {

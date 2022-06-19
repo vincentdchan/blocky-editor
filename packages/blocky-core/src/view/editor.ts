@@ -157,15 +157,19 @@ export class Editor {
       editor: this,
     });
 
-    for (const block of this.state.blocks.values()) {
-      block.setEditor(this);
-    }
+    this.initBlockCreated();
+  }
 
+  private initBlockCreated() {
     this.disposables.push(
       this.state.newBlockCreated.on((block: Block) => {
         block.setEditor(this);
       })
     );
+
+    for (const block of this.state.blocks.values()) {
+      this.state.newBlockCreated.emit(block);
+    }
   }
 
   public render(done?: AfterFn) {

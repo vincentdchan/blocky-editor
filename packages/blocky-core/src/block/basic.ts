@@ -34,8 +34,10 @@ export interface IBlockDefinition {
 
 }
 
-export class Block implements IDisposable {
+export class Block<T = any> implements IDisposable {
   #editor: Editor | undefined;
+
+  constructor(public props: BlockData<T>) {}
 
   setEditor(editor: Editor) {
     this.#editor = editor;

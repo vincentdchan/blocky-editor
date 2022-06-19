@@ -18,7 +18,7 @@ function makeBoldedTextPlugin(): IPlugin {
       editor.registry.span.register({
         name: "bold",
         className: "mg-editor-bold",
-      })
+      });
       editor.keyDown.on((e: KeyboardEvent) => {
         if (isHotkey("mod+b", e)) {
           e.preventDefault();
