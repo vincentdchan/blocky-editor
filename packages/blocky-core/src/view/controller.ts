@@ -136,13 +136,9 @@ export class EditorController {
     editor.handleCursorStateChanged(editor.state.cursorState, undefined);
   }
 
-  public formatTextOnSelectedText(attribs?: AttributesObject) {
+  public formatTextOnCursor(cursorState: CursorState, attribs?: AttributesObject) {
     const editor = this.editor;
     if (!editor) {
-      return;
-    }
-    const { cursorState } = editor.state;
-    if (!cursorState) {
       return;
     }
 
@@ -170,6 +166,18 @@ export class EditorController {
         attribs
       );
     }
+  }
+
+  public formatTextOnSelectedText(attribs?: AttributesObject) {
+    const editor = this.editor;
+    if (!editor) {
+      return;
+    }
+    const { cursorState } = editor.state;
+    if (!cursorState) {
+      return;
+    }
+    this.formatTextOnCursor(cursorState, attribs);
   }
 
   public deleteBlock(id: string) {
