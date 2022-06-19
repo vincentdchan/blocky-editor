@@ -124,6 +124,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
       <Menu
         style={{ position: "fixed", left: `${menuX}px`, top: `${menuY}px` }}
       >
+        <MenuItem onClick={this.insertHeading(0)}>Text</MenuItem>
         <MenuItem onClick={this.insertHeading(1)}>Heading1</MenuItem>
         <MenuItem onClick={this.insertHeading(2)}>Heading2</MenuItem>
         <MenuItem onClick={this.insertHeading(3)}>Heading3</MenuItem>
