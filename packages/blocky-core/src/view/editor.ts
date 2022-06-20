@@ -14,6 +14,7 @@ import {
   type BlockData,
   TextModel,
   type AttributesObject,
+  TextType,
 } from "@pkg/model";
 import { CollapsedCursor, type CursorState } from "@pkg/model/cursor";
 import { Action } from "@pkg/model/actions";
@@ -99,6 +100,8 @@ export class Editor {
   public readonly state: DocumentState;
   public readonly registry: EditorRegistry;
   public readonly keyDown = new Slot<KeyboardEvent>();
+
+  public readonly preservedTextType: Set<TextType> = new Set([TextType.Bulleted]);
 
   public composing: boolean = false;
   private disposables: IDisposable[] = [];
@@ -552,6 +555,9 @@ export class Editor {
       const slices = textModel.slice(cursorOffset);
 
       const newTextModel = new TextModel();
+      if (this.preservedTextType.has(textModel.textType)) {  // preserved data type
+        newTextModel.textType = textModel.textType;
+      }
 
       let ptr = 0;
       for (const slice of slices) {
