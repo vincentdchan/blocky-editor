@@ -1,4 +1,4 @@
-import { type IBlockDefinition } from "@pkg/block/basic";
+import { type IBlockDefinition, type TryParsePastedDOMEvent } from "@pkg/block/basic";
 import { makeTextBlockDefinition, TextBlockName } from "@pkg/block/textBlock";
 
 export class BlockRegistry {
@@ -36,6 +36,15 @@ export class BlockRegistry {
 
   getBlockIdByName(name: string): number | undefined {
     return this.#nameMap.get(name);
+  }
+
+  handlePasteElement(e: TryParsePastedDOMEvent): void {
+    for (const def of this.#types) {
+      def.tryParsePastedDOM?.(e);
+      if (e.defaultPrevented) {
+        return;
+      }
+    }
   }
 
 }
