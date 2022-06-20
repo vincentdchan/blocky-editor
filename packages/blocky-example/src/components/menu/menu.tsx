@@ -9,7 +9,7 @@ export interface MenuProps {
 export class Menu extends Component<MenuProps> {
   override render({ children, style }: MenuProps) {
     return (
-      <div className="blocky-menu" style={style}>
+      <div className="blocky-menu blocky-default-fonts" style={style}>
         {children}
       </div>
     );

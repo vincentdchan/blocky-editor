@@ -52,7 +52,7 @@ export class DocRenderer {
     const { editor, clsPrefix } = this;
     const { state } = editor;
     const createNewDocument = () => {
-      const newDom = elem("div", `${clsPrefix}-documents`);
+      const newDom = elem("div", `${clsPrefix}-documents ${clsPrefix}-default-fonts`);
       this.renderDocument(state.root, newDom);
       state.domMap.set(state.root.data.id, newDom);
       return newDom;
