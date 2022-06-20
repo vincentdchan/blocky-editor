@@ -60,15 +60,43 @@ export class TextModel {
 
     let ptr: TextNode | undefined = this.#nodeBegin;
     while (ptr) {
-      if (index <= ptr.content.length && areEqualShallow(ptr.attributes, attributes)) {
-        const before = ptr.content.slice(0, index);
-        const after = ptr.content.slice(index);
-        ptr.content = before + text + after;
+      if (index === 0) {
+        if (areEqualShallow(ptr.attributes, attributes)) {
+          ptr.content = text + ptr.content;
+        } else {
+          this.insertNodeBefore({ content: text, attributes }, ptr);
+        }
         this.onInsert.emit({ index, text, attributes });
         return;
-      } else if (index === 0) {
-        this.insertNodeBefore({ content: text, attributes }, ptr);
-        break;
+      } else if (index <= ptr.content.length) {
+        if (areEqualShallow(ptr.attributes, attributes)) {
+          const before = ptr.content.slice(0, index);
+          const after = ptr.content.slice(index);
+          ptr.content = before + text + after;
+          this.onInsert.emit({ index, text, attributes });
+          return;
+        }
+
+        const before = ptr.content.slice(0, index);
+        const after = ptr.content.slice(index);
+
+        ptr.content = before;
+        const prev = ptr;
+
+        const mid: TextNode = {
+          content: text,
+          attributes,
+        };
+
+        if (after.length > 0) {
+          this.insertNodeBefore(mid, prev.next);
+          this.insertNodeBefore({ content: after, attributes: prev.attributes }, mid.next);
+        } else {
+          this.insertNodeBefore(mid, prev.next);
+        }
+
+        this.onInsert.emit({ index, text, attributes });
+        return;
       }
 
       index -= ptr.content.length;
@@ -196,7 +224,7 @@ export class TextModel {
     if (index > this.#length || index < 0) {
       throw new Error(`The begin offset ${index} is out of range.`);
     } else if (end > this.#length || end < 0) {
-      throw new Error(`The end offset ${end} is out of range.`);
+      throw new Error(`The end offset ${end} is out of range ${this.#length}.`);
     }
     this.#length -= length;
 

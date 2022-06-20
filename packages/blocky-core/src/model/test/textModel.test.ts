@@ -131,7 +131,7 @@ test("textModel slice", () => {
   ]);
 });
 
-test("textModel insert", () => {
+test("textModel insert #1", () => {
   const slices: TextSlice[] = [
     { content: "is ", attributes: undefined, },
     { content: "bolded", attributes: { bold: true }, },
@@ -147,6 +147,61 @@ test("textModel insert", () => {
   }
 
   expect(textModel.toString()).toEqual("is bolded text");
+});
+
+test("textModel insert #2", () => {
+  const slices: TextSlice[] = [
+    { content: "is ", attributes: undefined, },
+    { content: "bolded", attributes: { bold: true }, },
+    { content: " text", attributes: undefined },
+  ];
+
+  const textModel = new TextModel();
+
+  let ptr = 0;
+  for (const slice of slices) {
+    textModel.insert(ptr, slice.content, slice.attributes);
+    ptr += slice.content.length;
+  }
+
+  let idx = 10;
+  textModel.insert(idx, "# ");
+  idx += 2;
+  textModel.insert(idx, "B ", { bold: true });
+  expect(textModel.toString()).toEqual("is bolded # B text");
+});
+
+test("textModel insert #3", () => {
+  const slices: TextSlice[] = [
+    { content: "is ", attributes: undefined, },
+    { content: "bolded", attributes: { bold: true }, },
+    { content: " text", attributes: undefined },
+  ];
+
+  const textModel = new TextModel();
+
+  let ptr = 0;
+  for (const slice of slices) {
+    textModel.insert(ptr, slice.content, slice.attributes);
+    ptr += slice.content.length;
+  }
+
+  ptr = textModel.length;
+  textModel.insert(ptr, "#1");
+  ptr += 2;
+  textModel.insert(ptr, "#2", { bold: true });
+  ptr += 2;
+  textModel.insert(ptr, "#3");
+  expect(textModel.toString()).toEqual("is bolded text#1#2#3");
+});
+
+test("textModel insert #3", () => {
+  const textModel = new TextModel();
+
+  textModel.insert(0, "Hello World");
+  textModel.insert(0, "#");
+  expect(textModel.length).toEqual("Hello World".length + 1);
+  expect(textModel.toString()).toEqual("#Hello World");
 });
 
 test("textModel insert at end", () => {
