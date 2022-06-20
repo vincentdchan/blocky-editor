@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "Vincent Chan <okcdz@diverse.space>",
   "license": "MIT",
   "devDependencies": {
     "typescript": "^4.7.3"

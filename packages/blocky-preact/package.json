@@ -1,15 +1,16 @@
 {
   "name": "blocky-preact",
   "version": "1.0.0",
-  "description": "",
+  "description": "The Preact wrapper of the blocky editor",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "homepage": "https://github.com/vincentdchan/blocky-editor",
+  "keywords": ["editor", "preact"],
+  "author": "Vincent Chan <okcdz@diverse.space>",
+  "license": "MIT",
   "devDependencies": {
     "@types/node": "^17.0.41",
     "typescript": "^4.7.3"

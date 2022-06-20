@@ -1,15 +1,16 @@
 {
   "name": "blocky-core",
   "version": "1.0.0",
-  "description": "",
+  "description": "The core of the blocky editor",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
     "watch": "rollup -w -c rollup.config.js",
     "test": "vitest"
   },
-  "keywords": [],
-  "author": "",
+  "homepage": "https://github.com/vincentdchan/blocky-editor",
+  "keywords": ["editor", "notion"],
+  "author": "Vincent Chan <okcdz@diverse.space>",
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-typescript": "^8.3.2",
