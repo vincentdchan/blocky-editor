@@ -1,4 +1,5 @@
 import { $on, removeNode } from "blocky-common/es/dom";
+import { Cell } from "blocky-common/es/cell";
 import { observe, runInAction } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
 import {
@@ -30,7 +31,7 @@ import { BannerDelegate, type BannerFactory } from "./bannerDelegate";
 import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import type { EditorController } from "./controller";
-import { Block } from "@pkg/block/basic";
+import { Block, BlockPasteEvent, TryParsePastedDOMEvent } from "@pkg/block/basic";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
@@ -808,42 +809,117 @@ export class Editor {
   private pasteHTMLBodyOnCursor(body: HTMLElement) {
     let ptr = body.firstElementChild;
     let afterCursor: CursorState | undefined = this.state.cursorState;
-    const blockRegistry = this.registry.block;
 
     while (ptr) {
-      if (ptr instanceof HTMLSpanElement) {
-        const attributes: AttributesObject = this.getAttributesBySpan(ptr);
-        let textContent = "";
+      const cursor = this.pasteNodeAt(afterCursor, ptr as HTMLElement);
 
-        const testContent = ptr.textContent;
-        if (testContent) {
-          textContent = testContent;
-        }
-
-        afterCursor = this.insertTextAt(afterCursor, textContent, Object.keys(attributes).length > 0 ? attributes : undefined);
-      } else if (ptr instanceof HTMLDivElement) {
-        const dataType = ptr.getAttribute("data-type") || "";
-        const blockDef = blockRegistry.getBlockDefByName(dataType);
-        const pasteHandler = blockDef?.onPaste;
-        if (pasteHandler) {
-          const cursor = pasteHandler.call(blockDef, {
-            after: afterCursor,
-            editor: this,
-            node: ptr,
-          });
-          if (cursor) {
-            afterCursor = cursor;
-          }
-        } else {
-          afterCursor = this.insertBlockByDefaultAt(afterCursor, dataType);
-        }
+      if (cursor) {
+        afterCursor = cursor;
       }
+
       ptr = ptr.nextElementSibling;
     }
 
     this.render(() => {
       this.state.cursorState = afterCursor;
     });
+  }
+
+  private tryPasteDivElementAsBlock(element: HTMLDivElement, cursorState: Cell<CursorState | undefined>): boolean {
+    const blockRegistry = this.registry.block;
+    const dataType = element.getAttribute("data-type");
+    if (!dataType) {
+      return false;
+    }
+    const blockDef = blockRegistry.getBlockDefByName(dataType);
+    if (!blockDef) {
+      return false;
+    }
+
+    const pasteHandler = blockDef?.onPaste;
+    if (pasteHandler) {
+      const evt = new BlockPasteEvent({
+        after: cursorState.get(),
+        editor: this,
+        node: element,
+      });
+      console.log(evt);
+      const newCursor = pasteHandler.call(blockDef, evt);
+      if (newCursor) {
+        cursorState.set(newCursor);
+      }
+    } else {
+      const newCursor = this.insertBlockByDefaultAt(cursorState.get(), dataType);
+      if (newCursor) {
+        cursorState.set(newCursor);
+      }
+    }
+
+    return true;
+  }
+
+  private pasteNodeAt(cursorState: CursorState | undefined, element: HTMLElement): CursorState | undefined {
+    const blockRegistry = this.registry.block;
+
+    const evt = new TryParsePastedDOMEvent({
+      after: cursorState,
+      editor: this,
+      node: element,
+    });
+    blockRegistry.handlePasteElement(evt);
+    if (evt.defaultPrevented) {
+      return evt.after;
+    }
+
+    if (element instanceof HTMLSpanElement) {
+      const attributes: AttributesObject = this.getAttributesBySpan(element);
+      let textContent = "";
+
+      const testContent = element.textContent;
+      if (testContent) {
+        textContent = testContent;
+      }
+
+      return this.insertTextAt(cursorState, textContent, Object.keys(attributes).length > 0 ? attributes : undefined);
+    } else if (element instanceof HTMLDivElement) {
+      const cursorCell = new Cell(cursorState);
+      if (this.tryPasteDivElementAsBlock(element, cursorCell)) {
+        return cursorCell.get();
+      } else {
+        console.warn("unknown dom:", element);
+      }
+    } else if (
+      element instanceof HTMLParagraphElement ||
+      element instanceof HTMLHeadingElement ||
+      element instanceof HTMLLIElement
+    ) {  // is a <p> or <h1>
+      const blockDef = blockRegistry.getBlockDefByName("text");
+      const pasteHandler = blockDef?.onPaste;
+      const evt = new BlockPasteEvent({
+        after: cursorState,
+        editor: this,
+        node: element,
+      });
+      if (pasteHandler) {
+        const cursor = pasteHandler.call(blockDef, evt);
+        return cursor;
+      } else {
+       return this.insertBlockByDefaultAt(cursorState, "text");
+      }
+    } else if (element instanceof HTMLUListElement) {
+      let childPtr = element.firstElementChild;
+      let returnCursor: CursorState | undefined = cursorState;
+
+      while (childPtr) {
+        returnCursor = this.pasteNodeAt(returnCursor, childPtr as HTMLElement);
+        childPtr = childPtr.nextElementSibling;
+      }
+
+      return returnCursor;
+    } else {
+      console.warn("unknown dom:", element);
+    }
+    return;
   }
 
   /**

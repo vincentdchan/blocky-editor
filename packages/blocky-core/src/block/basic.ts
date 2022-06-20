@@ -13,10 +13,44 @@ export interface BlockCreatedEvent {
   // editor: Editor;
 }
 
-export interface BlockPasteEvent {
+export interface BlockPasteEventProps {
   after: CursorState | undefined;
   editor: Editor;
   node: HTMLElement;
+}
+
+export class BlockPasteEvent extends Event {
+  after: CursorState | undefined;
+  editor: Editor;
+  node: HTMLElement;
+
+  constructor({ after, editor, node }: BlockPasteEventProps) {
+    super("BlockPaste");
+    this.after = after;
+    this.editor = editor;
+    this.node = node;
+  }
+
+}
+
+export interface TryParsePastedDOMEventProps {
+  after: CursorState | undefined;
+  editor: Editor;
+  node: HTMLElement;
+}
+
+export class TryParsePastedDOMEvent extends Event {
+  after: CursorState | undefined;
+  editor: Editor;
+  node: HTMLElement;
+
+  constructor({ after, editor, node }: TryParsePastedDOMEventProps) {
+    super("TryParsePastedDOM");
+    this.after = after;
+    this.editor = editor;
+    this.node = node;
+  }
+
 }
 
 export interface BlockFocusedEvent {
@@ -36,13 +70,37 @@ export interface BlockContentChangedEvent {
   offset?: number;
 }
 
-
 export interface IBlockDefinition {
   name: string;
 
   editable?: boolean;
 
+  /**
+   * This method is used to handle pasting specific
+   * block copy from the blocky editor.
+   * 
+   * If you want to handle the HTML pasted from another
+   * source, please implement [[tryParsePastedDOM]].
+   */
   onPaste?(e: BlockPasteEvent): CursorState | undefined;
+
+  /**
+   * 
+   * If this method is implemented, all the nodes
+   * pasted from from the clipboard.
+   * 
+   * The plugin should tell the editor if this dom
+   * is handled. If it's handled, the editor will not
+   * handle it anymore.
+   * 
+   * Call [[preventDefault()]] if the plugin has handled
+   * the node.
+   * 
+   * Otherwise, the editor will pass it to other plugins,
+   * or handle it with default handler if no plugins handles.
+   * 
+   */
+  tryParsePastedDOM?(e: TryParsePastedDOMEvent): void;
 
   onBlockCreated(e: BlockCreatedEvent): Block;
 

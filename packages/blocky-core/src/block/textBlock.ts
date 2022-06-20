@@ -511,6 +511,17 @@ class TextBlockDefinition implements IBlockDefinition {
       result.insert(0, node.textContent ?? "");
     }
 
+    const { tagName } = node;
+    if (tagName === "H1") {
+      result.textType = TextType.Heading1;
+    } else if (tagName === "H2") {
+      result.textType = TextType.Heading2;
+    } else if (tagName === "H3") {
+      result.textType = TextType.Heading3;
+    } else if (tagName === "LI") {
+      result.textType = TextType.Bulleted;
+    }
+
     return result;
   }
 
