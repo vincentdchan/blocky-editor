@@ -35,7 +35,7 @@
 }
 
 .blocky-block-text-content:empty::before {
-  content: "Empty line";
+  content: attr(placeholder);
   color: gray;
 }
 

@@ -25,6 +25,12 @@ export interface BlockFocusedEvent {
   cursor: CollapsedCursor;
 }
 
+export interface BlockBlurEvent {
+  selection: Selection;
+  node: HTMLDivElement;
+  cursor: CursorState | undefined;
+}
+
 export interface BlockContentChangedEvent {
   node: HTMLDivElement;
   offset?: number;
@@ -66,6 +72,8 @@ export class Block<T = any> implements IDisposable {
    * 
    */
   blockFocused(e: BlockFocusedEvent): void {}
+
+  blockBlur(e: BlockBlurEvent): void {}
 
   blockContentChanged(e: BlockContentChangedEvent): void {}
 

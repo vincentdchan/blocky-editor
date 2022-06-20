@@ -20,6 +20,8 @@ const TextContentClass = "blocky-block-text-content";
 
 const DataRefKey = "data-href";
 
+const zeroSpaceEmptyChar = String.fromCharCode(160);
+
 interface TextPosition {
   node: Node;
   offset: number;
@@ -92,7 +94,9 @@ class TextBlock extends Block {
   }
 
   private createContentContainer(): HTMLElement {
-    return elem("div", TextContentClass);
+    const e = elem("div", TextContentClass);
+    e.setAttribute("placeholder", zeroSpaceEmptyChar)
+    return e;
   }
 
   override blockDidMount({ element }: BlockDidMountEvent): void {
@@ -102,6 +106,8 @@ class TextBlock extends Block {
 
   override blockFocused({ node: blockDom, selection, cursor }: BlockFocusedEvent): void {
     const contentContainer = this.findContentContainer(blockDom);
+
+    contentContainer.setAttribute("placeholder", "Empty content")
 
     const { offset } = cursor;
     const pos = this.findFocusPosition(blockDom, offset);
@@ -118,6 +124,12 @@ class TextBlock extends Block {
       const { node, offset } = pos;
       setRangeIfDifferent(selection, node, offset, node, offset);
     }
+  }
+
+  override blockBlur({ node: blockDom }: BlockFocusedEvent): void {
+    const contentContainer = this.findContentContainer(blockDom);
+    const zeroSpaceEmptyChar = String.fromCharCode(160);
+    contentContainer.setAttribute("placeholder", zeroSpaceEmptyChar)
   }
 
   private findFocusPosition(

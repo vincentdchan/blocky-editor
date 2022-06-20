@@ -91,6 +91,7 @@ export class Editor {
   #container: HTMLDivElement;
   #renderedDom: HTMLDivElement | undefined;
   #renderer: DocRenderer;
+  #lastFocusedId: string | undefined;
   public readonly bannerDelegate: BannerDelegate;
   public readonly toolbarDelegate: ToolbarDelegate;
   public idGenerator: IdGenerator;
@@ -732,8 +733,34 @@ export class Editor {
       return;
     }
 
+    this.blurBlock();
+
+    this.#lastFocusedId = node.data.id;
     const block = this.state.blocks.get(node.data.id)!;
     block.blockFocused({ node: blockDom, cursor, selection: sel });
+  }
+
+  private blurBlock() {
+    if (!this.#lastFocusedId) {
+      return;
+    }
+    const block = this.state.blocks.get(this.#lastFocusedId)!;
+    if (!block) {
+      this.#lastFocusedId = undefined;
+      return;
+    }
+
+    const dom = this.state.domMap.get(this.#lastFocusedId);
+    const sel = window.getSelection()!;
+    if (dom) {
+      block.blockBlur({
+        node: dom as HTMLDivElement,
+        cursor: this.state.cursorState,
+        selection: sel,
+      });
+    }
+
+    this.#lastFocusedId = undefined;
   }
 
   private handlePaste = (e: ClipboardEvent) => {

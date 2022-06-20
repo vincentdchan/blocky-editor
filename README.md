@@ -19,6 +19,7 @@ Blocky Editor is an editor which supports the concept of blocks. It can help you
 - Preact: Wrap the editor in [Preact](https://preactjs.com/). Provide the UI facilities such
   toolbar and banner.
 - Example: The example to demonstrate how to use the editor.
+  - Gzipped size: ~23kb (one-time loading)
 
 ## Resources
 
