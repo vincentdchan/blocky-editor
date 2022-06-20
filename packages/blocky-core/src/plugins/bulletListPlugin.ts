@@ -1,7 +1,7 @@
 import type { IPlugin } from "@pkg/registry/pluginRegistry";
 import type { Editor } from "@pkg/view/editor";
 import type { Block } from "@pkg/block/basic";
-import { TextModel, TextType, type TextInsertEvent } from "@pkg/model";
+import { BlockData, TextModel, TextType, type TextInsertEvent } from "@pkg/model";
 
 function makeBulletListPlugin(): IPlugin {
   const turnTextBlockIntoBulletList = (editor: Editor, blockId: string, textModel: TextModel) => {
@@ -28,10 +28,46 @@ function makeBulletListPlugin(): IPlugin {
       });
     }
   };
+  /**
+   * If the user presses a Backspace on the start of a bullet list,
+   * turn it back to a normal text.
+   */
+  const handleKeydown = (editor: Editor) => (e: KeyboardEvent) => {
+    if (e.key !== "Backspace") {
+      return;
+    }
+    const { cursorState } = editor.state;
+    if (!cursorState) {
+      return;
+    }
+    if (cursorState.type === "open") {
+      return;
+    }
+
+    const { targetId } = cursorState;
+    const treeNode = editor.state.idMap.get(targetId);
+    if (!treeNode) {
+      return;
+    }
+
+    const blockData = treeNode.data as BlockData;
+    const treeData = blockData.data;
+    if (treeData && treeData instanceof TextModel && treeData.textType === TextType.Bulleted) {
+      treeData.textType = TextType.Normal;
+      editor.render(() => {
+        editor.state.cursorState = {
+          type: "collapsed",
+          targetId,
+          offset: 0,
+        };
+      });
+    }
+  };
   return {
     name: "bullet-list",
     onInitialized(editor: Editor) {
       editor.state.newBlockCreated.on(handleNewBlockCreated(editor));
+      editor.keyDown.on(handleKeydown(editor));
     },
   };
 }
