@@ -843,7 +843,6 @@ export class Editor {
         editor: this,
         node: element,
       });
-      console.log(evt);
       const newCursor = pasteHandler.call(blockDef, evt);
       if (newCursor) {
         cursorState.set(newCursor);
