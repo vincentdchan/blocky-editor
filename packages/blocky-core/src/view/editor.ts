@@ -207,6 +207,8 @@ export class Editor {
     } else {
       this.selectionChanged();
     }
+
+    this.controller.emitNextTicks();
   }
 
   private trySelectOnParent(startContainer: Node): boolean {
@@ -780,7 +782,7 @@ export class Editor {
 
     const htmlData = clipboardData.getData(MineType.Html);
     if (htmlData) {
-      this.pasteHTMLOnCursor(htmlData);
+      this.pasteHTMLAtCursor(htmlData);
       return;
     }
 
@@ -796,7 +798,7 @@ export class Editor {
    * Maybe use an external library is better for unit tests. But it will increase
    * the size of the bundles.
    */
-  private pasteHTMLOnCursor(html: string) {
+  public pasteHTMLAtCursor(html: string) {
     try {
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, MineType.Html);
