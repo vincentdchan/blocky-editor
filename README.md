@@ -20,6 +20,11 @@ Blocky Editor is an editor which supports the concept of blocks. It can help you
   toolbar and banner.
 - Example: The example to demonstrate how to use the editor.
 
+## Resources
+
+- [Get started](./docs/get-started.md)
+- [How to write a block](./docs/how-to-write-a-block.md)
+
 ## Compatibility
 
 Tested on
