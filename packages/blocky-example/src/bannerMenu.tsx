@@ -20,6 +20,14 @@ interface BannerState {
   showDelete: boolean;
 }
 
+const BannerIcon = `
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M16 17L48 17" stroke="#CAC4C4" stroke-width="6" stroke-linecap="round"/>
+<path d="M16 32L48 32" stroke="#CAC4C4" stroke-width="6" stroke-linecap="round"/>
+<path d="M16 47L48 47" stroke="#CAC4C4" stroke-width="6" stroke-linecap="round"/>
+</svg>
+`;
+
 class BannerMenu extends Component<BannerProps, BannerState> {
   #bannerRef: RefObject<HTMLDivElement> = createRef();
 
@@ -44,6 +52,8 @@ class BannerMenu extends Component<BannerProps, BannerState> {
     );
 
     this.handleBlocksChanged();
+
+    this.#bannerRef.current!.innerHTML = BannerIcon;
   }
 
   override componentWillUnmount() {
