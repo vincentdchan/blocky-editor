@@ -1,7 +1,7 @@
 import type { IPlugin } from "@pkg/registry/pluginRegistry";
 import type { Editor } from "@pkg/view/editor";
 import type { Block } from "@pkg/block/basic";
-import { BlockData, TextModel, TextType, type TextInsertEvent } from "@pkg/model";
+import { TextModel, TextType, type TextInsertEvent } from "@pkg/model";
 
 function makeBulletListPlugin(): IPlugin {
   const turnTextBlockIntoBulletList = (editor: Editor, blockId: string, textModel: TextModel) => {
@@ -45,15 +45,10 @@ function makeBulletListPlugin(): IPlugin {
     }
 
     const { targetId } = cursorState;
-    const treeNode = editor.state.idMap.get(targetId);
-    if (!treeNode) {
-      return;
-    }
 
-    const blockData = treeNode.data as BlockData;
-    const treeData = blockData.data;
-    if (treeData && treeData instanceof TextModel && treeData.textType === TextType.Bulleted) {
-      treeData.textType = TextType.Normal;
+    const textModel = editor.getTextModelByBlockId(targetId);
+    if (textModel && textModel.textType === TextType.Bulleted) {
+      textModel.textType = TextType.Normal;
       editor.render(() => {
         editor.state.cursorState = {
           type: "collapsed",

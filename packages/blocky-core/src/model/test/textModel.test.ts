@@ -148,3 +148,11 @@ test("textModel insert", () => {
 
   expect(textModel.toString()).toEqual("is bolded text");
 });
+
+test("textModel insert at end", () => {
+  const textModel = new TextModel();
+
+  textModel.insert(0, "Hello ");
+  textModel.insert(textModel.length, "World");
+  expect(textModel.toString(), "Hello World");
+});

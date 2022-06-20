@@ -13,6 +13,7 @@ import {
   type DocNode,
   type BlockData,
   TextModel,
+  type AttributesObject,
 } from "@pkg/model";
 import { CollapsedCursor, type CursorState } from "@pkg/model/cursor";
 import { Action } from "@pkg/model/actions";
@@ -70,6 +71,11 @@ export interface IEditorOptions {
   idGenerator?: IdGenerator;
   bannerFactory?: BannerFactory;
   toolbarFactory?: ToolbarFactory;
+}
+
+enum MineType  {
+  PlainText = "text/plain",
+  Html = "text/html",
 }
 
 /**
@@ -725,8 +731,126 @@ export class Editor {
   }
 
   private handlePaste = (e: ClipboardEvent) => {
-    e.preventDefault();
+    e.preventDefault();  // take over the paste event
+
+    const { clipboardData } = e;
+
+    if (!clipboardData) {
+      return;
+    }
+
+    const types = e.clipboardData?.types;
+    if (!types) {
+      return;
+    }
+
+    const htmlData = clipboardData.getData(MineType.Html);
+    if (htmlData) {
+      this.pasteHTMLOnCursor(htmlData);
+      return;
+    }
+
+    const plainText = clipboardData.getData(MineType.PlainText);
+    if (plainText) {
+      this.pastePlainTextOnCursor(plainText);
+      return;
+    }
   };
+
+  /**
+   * Use the API provided by the browser to parse the html for the bundle size.
+   * Maybe use an external library is better for unit tests. But it will increase
+   * the size of the bundles.
+   */
+  private pasteHTMLOnCursor(html: string) {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, MineType.Html);
+      this.pasteHTMLBodyOnCursor(doc.body);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  private pasteHTMLBodyOnCursor(body: HTMLElement) {
+    let ptr = body.firstElementChild;
+    let afterCursor: CursorState | undefined = this.state.cursorState;
+    const spanRegistry = this.registry.span;
+
+    while (ptr) {
+      if (ptr instanceof HTMLSpanElement) {
+        const attributes: AttributesObject = {};
+        let textContent = "";
+
+        const href = ptr.getAttribute("data-href");
+        if (href) {
+          attributes["href"] = href;
+        }
+
+        const testContent = ptr.textContent;
+        if (testContent) {
+          textContent = testContent;
+        }
+
+        for (const cls of ptr.classList) {
+          const style = spanRegistry.classnames.get(cls);
+          if (style) {
+            attributes[style.name] = true;
+          }
+        }
+
+        afterCursor = this.insertTextAt(afterCursor, textContent, Object.keys(attributes).length > 0 ? attributes : undefined);
+      } else if (ptr instanceof HTMLDivElement) {
+
+      }
+      ptr = ptr.nextElementSibling;
+    }
+
+    this.render(() => {
+      this.state.cursorState = afterCursor;
+    });
+  }
+
+  private pastePlainTextOnCursor(text: string) {
+    this.insertTextAt(this.state.cursorState, text);
+  }
+
+  private insertTextAt(cursorState: CursorState | undefined, text: string, attributes?: AttributesObject): CursorState | undefined {
+    if (!cursorState) {
+      return;
+    }
+
+    if (cursorState.type === "open") {
+      return;
+    }
+
+    const textModel = this.getTextModelByBlockId(cursorState.targetId);
+    if (!textModel) {
+      return;
+    }
+
+    const afterOffset = cursorState.offset + text.length;
+    textModel.insert(cursorState.offset, text, attributes);
+    return {
+      type: "collapsed",
+      targetId: cursorState.targetId,
+      offset: afterOffset
+    };
+  }
+
+  getTextModelByBlockId(blockId: string): TextModel | undefined {
+    const treeNode = this.state.idMap.get(blockId);
+    if (!treeNode) {
+      return;
+    }
+
+    const blockData = treeNode.data as BlockData;
+    const treeData = blockData.data;
+
+    if (treeData && treeData instanceof TextModel) {
+      return treeData;
+    }
+  }
 
   dispose() {
     document.removeEventListener("selectionchange", this.selectionChanged);
