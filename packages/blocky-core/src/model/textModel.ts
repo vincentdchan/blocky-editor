@@ -41,6 +41,10 @@ export class TextModel {
   constructor(public textType: TextType = TextType.Normal) {}
 
   public insert(index: number, text: string, attributes?: AttributesObject) {
+    if (text.length === 0) {
+      return;
+    }
+
     this.#length += text.length;
     if (!this.#nodeBegin) {
       if (index !== 0) {
@@ -51,10 +55,6 @@ export class TextModel {
         attributes,
       };
       this.#nodeEnd = this.#nodeBegin;
-      return;
-    }
-
-    if (text.length === 0) {
       return;
     }
 

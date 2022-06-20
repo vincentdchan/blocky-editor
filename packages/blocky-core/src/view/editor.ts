@@ -775,33 +775,35 @@ export class Editor {
   private pasteHTMLBodyOnCursor(body: HTMLElement) {
     let ptr = body.firstElementChild;
     let afterCursor: CursorState | undefined = this.state.cursorState;
-    const spanRegistry = this.registry.span;
+    const blockRegistry = this.registry.block;
 
     while (ptr) {
       if (ptr instanceof HTMLSpanElement) {
-        const attributes: AttributesObject = {};
+        const attributes: AttributesObject = this.getAttributesBySpan(ptr);
         let textContent = "";
-
-        const href = ptr.getAttribute("data-href");
-        if (href) {
-          attributes["href"] = href;
-        }
 
         const testContent = ptr.textContent;
         if (testContent) {
           textContent = testContent;
         }
 
-        for (const cls of ptr.classList) {
-          const style = spanRegistry.classnames.get(cls);
-          if (style) {
-            attributes[style.name] = true;
-          }
-        }
-
         afterCursor = this.insertTextAt(afterCursor, textContent, Object.keys(attributes).length > 0 ? attributes : undefined);
       } else if (ptr instanceof HTMLDivElement) {
-
+        const dataType = ptr.getAttribute("data-type") || "";
+        const blockDef = blockRegistry.getBlockDefByName(dataType);
+        const pasteHandler = blockDef?.onPaste;
+        if (pasteHandler) {
+          const cursor = pasteHandler.call(blockDef, {
+            after: afterCursor,
+            editor: this,
+            node: ptr,
+          });
+          if (cursor) {
+            afterCursor = cursor;
+          }
+        } else {
+          afterCursor = this.insertBlockByDefaultAt(afterCursor, dataType);
+        }
       }
       ptr = ptr.nextElementSibling;
     }
@@ -809,6 +811,63 @@ export class Editor {
     this.render(() => {
       this.state.cursorState = afterCursor;
     });
+  }
+
+  /**
+   * Calculate the attributes from the dom.
+   * It's used for pasting text, and to recognize the dom created by the browser.
+   */
+  public getAttributesBySpan(span: HTMLSpanElement): AttributesObject {
+    const spanRegistry = this.registry.span;
+    const attributes: AttributesObject = {};
+    const href = span.getAttribute("data-href");
+    if (href) {
+      attributes["href"] = href;
+    }
+
+    for (const cls of span.classList) {
+      const style = spanRegistry.classnames.get(cls);
+      if (style) {
+        attributes[style.name] = true;
+      }
+    }
+
+    return attributes;
+  }
+
+  private insertBlockByDefaultAt(cursorState: CursorState | undefined, blockName: string): CursorState | undefined {
+    if (!cursorState) {
+      return;
+    }
+
+    if (cursorState.type === "open") {
+      return;
+    }
+
+    const currentNode = this.state.idMap.get(cursorState.targetId)!;
+    const parentId = currentNode.parent!.data.id;
+
+    const newId = this.idGenerator.mkBlockId();
+
+    let data: any;
+    if (blockName === "text") {
+      data = new TextModel;
+    }
+
+    this.applyActions([{
+      type: "new-block",
+      targetId: parentId,
+      afterId: cursorState.targetId,
+      newId,
+      blockName,
+      data,
+    }]);
+
+    return {
+      type: "collapsed",
+      targetId: newId,
+      offset: 0,
+    };
   }
 
   private pastePlainTextOnCursor(text: string) {

@@ -5,9 +5,10 @@ import {
   type BlockDidMountEvent,
   type BlockFocusedEvent,
   type BlockContentChangedEvent,
+  type BlockPasteEvent,
   Block,
 } from "./basic";
-import { type BlockData, TextType } from "@pkg/model";
+import { type BlockData, TextType, CursorState } from "@pkg/model";
 import { TextModel, TextNode, type AttributesObject } from "@pkg/model/textModel";
 import * as fastDiff from "fast-diff";
 import { type Editor } from "@pkg/view/editor";
@@ -428,6 +429,77 @@ class TextBlockDefinition implements IBlockDefinition {
 
   onBlockCreated({ model: data }: BlockCreatedEvent): Block {
     return new TextBlock(this, data);
+  }
+
+  onPaste({ after: cursorState, node: container, editor }: BlockPasteEvent): CursorState | undefined {
+    if (!cursorState) {
+      return;
+    }
+
+    if (cursorState.type === "open") {
+      return;
+    }
+
+    const currentNode = editor.state.idMap.get(cursorState.targetId)!;
+    const parentId = currentNode.parent!.data.id;
+
+    const newId = editor.idGenerator.mkBlockId();
+
+    const textModel = this.getTextModelFromDOM(editor, container);
+
+    editor.applyActions([{
+      type: "new-block",
+      targetId: parentId,
+      afterId: cursorState.targetId,
+      newId,
+      blockName: "text",
+      data: textModel,
+    }], true);
+
+    return {
+      type: "collapsed",
+      targetId: newId,
+      offset: 0,
+    };
+  }
+
+  /**
+   * Rebuild the data structure from the pasted html.
+   */
+  private getTextModelFromDOM(editor: Editor, node: HTMLElement): TextModel {
+    const result = new TextModel();
+
+    // TODO: Maybe using querySelector is slow.
+    // Should make a benchmark here
+    const textContentContainer = node.querySelector(".blocky-block-text-content");
+    let index: number = 0;
+    if (textContentContainer) {
+      let childPtr = textContentContainer.firstChild;
+
+      const dataType = textContentContainer.getAttribute("data-type") || "0";
+      const dataTypeInt = parseInt(dataType, 10);
+      result.textType = dataTypeInt;
+
+      while (childPtr) {
+        if (childPtr instanceof Text) {
+          const content = childPtr.textContent ?? "";
+          result.insert(index, content);
+          index += content.length;
+        } else if (childPtr instanceof HTMLElement) {
+          const content = childPtr.textContent ?? "";
+          const attributes = editor.getAttributesBySpan(childPtr as HTMLSpanElement);
+          result.insert(index, content, attributes);
+          index += content.length;
+        }
+
+        childPtr = childPtr.nextSibling;
+      }
+
+    } else {
+      result.insert(0, node.textContent ?? "");
+    }
+
+    return result;
   }
 
 }
