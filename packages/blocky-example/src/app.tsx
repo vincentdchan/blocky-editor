@@ -7,6 +7,7 @@ import { makeImageBlockPlugin } from "./plugins/imageBlock";
 import BannerMenu from "./bannerMenu";
 import ToolbarMenu from "./toolbarMenu";
 import TianShuiWeiImage from "./tianshuiwei.jpg";
+import { ReadMeContent } from "./readme";
 import "blocky-core/css/bolded-text-plugin.css";
 import "blocky-core/css/blocky-core.css";
 import "./app.scss";
@@ -51,9 +52,18 @@ class App extends Component<{}, AppState> {
   constructor(props: {}) {
     super(props);
     this.editorController = makeController();
+    this.editorController.enqueueNextTick(this.firstTick);
     this.state = {
       headingContent: "Blocky Editor",
     };
+  }
+
+  private firstTick = () => {
+    const { editor } = this.editorController;
+    if (!editor) {
+      return;
+    }
+    editor.pasteHTMLAtCursor(ReadMeContent);
   }
 
   private handleHeadingChanged = (e: JSX.TargetedEvent<HTMLInputElement>) => {

@@ -12,7 +12,7 @@
 }
 
 .blocky-editor-blocks-container {
-  padding: 12px 56px 32px 56px;
+  padding: 12px 56px 72px 56px;
 }
 
 .blocky-editor-banner-delegate {
@@ -45,16 +45,19 @@
 }
 
 .blocky-heading1 {
+  padding-top: 8px;
   font-size: 32px;
   font-weight: 600;
 }
 
 .blocky-heading2 {
+  padding-top: 8px;
   font-size: 28px;
   font-weight: 600;
 }
 
 .blocky-heading3 {
+  padding-top: 8px;
   font-size: 24px;
   font-weight: 600;
 }

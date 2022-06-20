@@ -13,7 +13,17 @@ export class BlockyEditor extends Component<Props> {
   override componentDidMount() {
     const { controller } = this.props;
     this.#editor = Editor.fromController(this.#containerRef.current!, controller);
-    this.#editor.render();
+    const editor = this.#editor;
+    editor.render(() => {
+      const firstChild = editor.state.root.firstChild;
+      if (firstChild?.data.t === "block") {
+        editor.state.cursorState = {
+          type: "collapsed",
+          targetId: firstChild.data.id,
+          offset: 0,
+        };
+      }
+    });
   }
 
   override componentWillUnmount() {
