@@ -904,7 +904,10 @@ export class Editor {
   }
 
   private pastePlainTextOnCursor(text: string) {
-    this.insertTextAt(this.state.cursorState, text);
+    const cursor = this.insertTextAt(this.state.cursorState, text);
+    this.render(() => {
+      this.state.cursorState = cursor;
+    });
   }
 
   private insertTextAt(cursorState: CursorState | undefined, text: string, attributes?: AttributesObject): CursorState | undefined {
