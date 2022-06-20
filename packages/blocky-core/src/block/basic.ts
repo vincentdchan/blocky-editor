@@ -19,13 +19,26 @@ export interface BlockPasteEventProps {
   node: HTMLElement;
 }
 
-export class BlockPasteEvent extends Event {
+export class BlockEvent {
+  #defaultPrevented = false;
+
+  preventDefault(): void {
+    this.#defaultPrevented = true;
+  }
+
+  get defaultPrevented() {
+    return this.#defaultPrevented;
+  }
+
+}
+
+export class BlockPasteEvent extends BlockEvent {
   after: CursorState | undefined;
   editor: Editor;
   node: HTMLElement;
 
   constructor({ after, editor, node }: BlockPasteEventProps) {
-    super("BlockPaste");
+    super();
     this.after = after;
     this.editor = editor;
     this.node = node;
@@ -39,13 +52,13 @@ export interface TryParsePastedDOMEventProps {
   node: HTMLElement;
 }
 
-export class TryParsePastedDOMEvent extends Event {
+export class TryParsePastedDOMEvent extends BlockEvent {
   after: CursorState | undefined;
   editor: Editor;
   node: HTMLElement;
 
   constructor({ after, editor, node }: TryParsePastedDOMEventProps) {
-    super("TryParsePastedDOM");
+    super();
     this.after = after;
     this.editor = editor;
     this.node = node;

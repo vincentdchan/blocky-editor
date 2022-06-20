@@ -33,7 +33,8 @@ export interface IEditorControllerOptions {
 }
 
 export interface IInsertOptions {
-  autoFocus: boolean;
+  autoFocus?: boolean;
+  noRender?: boolean;
   blockName?: string;
   data?: any;
 }
@@ -76,11 +77,8 @@ export class EditorController {
     observe(this.state, "cursorState", (s: CursorState | undefined) => this.cursorChanged.emit(s));
   }
 
-  public insertBlockAfterId(afterId: string, options?: IInsertOptions) {
-    const { editor } = this;
-    if (!editor) {
-      return;
-    }
+  public insertBlockAfterId(afterId: string, options?: IInsertOptions): string {
+    const editor = this.editor!;
 
     const prevNode = this.state.idMap.get(afterId)!;
     const parentNode = prevNode.parent!;
@@ -98,15 +96,19 @@ export class EditorController {
         data: options?.data,
       },
     ]);
-    editor.render(() => {
-      if (options?.autoFocus) {
-        this.state.cursorState = {
-          type: "collapsed",
-          targetId: newId,
-          offset: 0,
-        };
-      }
-    });
+    if (options?.noRender !== true) {
+      editor.render(() => {
+        if (options?.autoFocus) {
+          this.state.cursorState = {
+            type: "collapsed",
+            targetId: newId,
+            offset: 0,
+          };
+        }
+      });
+    }
+
+    return newId;
   }
 
   public formatText(blockId: string, index: number, length: number, attribs?: AttributesObject) {

@@ -4,6 +4,7 @@ import {
   type BlockData,
   type BlockCreatedEvent,
   Block,
+  TryParsePastedDOMEvent,
 } from "blocky-core";
 import {
   render as reactRender,
@@ -14,7 +15,8 @@ import { unmountComponentAtNode } from "preact/compat";
 
 export interface ReactBlockOptions {
   name: string;
-  component: () => ComponentChild;
+  component: (data: BlockData) => ComponentChild;
+  tryParsePastedDOM?(e: TryParsePastedDOMEvent): void;
 }
 
 export interface IReactBlockContext {
@@ -40,7 +42,7 @@ class ReactBlock extends Block {
     const editorController = this.editor.controller;
     reactRender(
       <ReactBlockContext.Provider value={{ editorController, blockId: this.props.id }}>
-        {component()}
+        {component(this.props)}
       </ReactBlockContext.Provider>,
       container
     );
@@ -61,12 +63,13 @@ class ReactBlock extends Block {
  * Help to write a block in React's style.
  */
 export function makeReactBlock(options: ReactBlockOptions): IBlockDefinition {
-  const { name } = options;
+  const { name, tryParsePastedDOM } = options;
   return {
     name,
     editable: false,
     onBlockCreated({ model }: BlockCreatedEvent): Block {
       return new ReactBlock(model, options);
     },
+    tryParsePastedDOM: tryParsePastedDOM && tryParsePastedDOM.bind(options),
   };
 }

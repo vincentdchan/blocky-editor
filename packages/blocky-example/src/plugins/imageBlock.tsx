@@ -1,4 +1,4 @@
-import { type Editor, type IPlugin } from "blocky-core";
+import { type TryParsePastedDOMEvent, type Editor, type IPlugin, type BlockData } from "blocky-core";
 import { makeReactBlock, DefaultBlockOutline } from "blocky-preact";
 import { type RefObject, createRef } from "preact";
 import { PureComponent } from "preact/compat";
@@ -7,16 +7,24 @@ import "./imageBlock.scss";
 
 export const ImageBlockName = "image";
 
+interface ImageBlockProps {
+  blockData: BlockData;
+}
+
 interface ImageBlockState {
   data?: string;
 }
 
-class ImageBlock extends PureComponent<{}, ImageBlockState> {
+class ImageBlock extends PureComponent<ImageBlockProps, ImageBlockState> {
   #selectorRef: RefObject<HTMLInputElement> = createRef();
 
-  constructor(props: {}) {
+  constructor(props: ImageBlockProps) {
     super(props);
-    this.state = {};
+
+    const initData = props.blockData.data;
+    this.state = {
+      data: initData?.src,
+    };
   }
 
   private handleUpload = () => {
@@ -77,7 +85,26 @@ export function makeImageBlockPlugin(): IPlugin {
       editor.registry.block.register(
         makeReactBlock({
           name: ImageBlockName,
-          component: () => <ImageBlock />,
+          component: (data: BlockData) => <ImageBlock blockData={data} />,
+          tryParsePastedDOM(e: TryParsePastedDOMEvent) {
+            const { node, editor, after } = e;
+            const img = node.querySelector("img");
+            if (img && after && after.type === "collapsed") {
+              const newId = editor.controller.insertBlockAfterId(after.targetId, {
+                noRender: true,
+                blockName: ImageBlockName,
+                data: {
+                  src: img.getAttribute("src"),
+                },
+              });
+              e.preventDefault();
+              e.after = {
+                type: "collapsed",
+                targetId: newId,
+                offset: 0,
+              };
+            }
+          }
         })
       );
     },
