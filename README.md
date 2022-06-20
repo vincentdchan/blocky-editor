@@ -11,6 +11,8 @@ Blocky Editor is an editor which supports the concept of blocks. It can help you
 
 ## Packages
 
+![](./arch.png)
+
 - Common: Provide the common utilities used by the editor.
 - Core: Written in VanillaJS. Can be used standalone without any 
   UI frameworks.
