@@ -1,4 +1,4 @@
-import { elem } from "blocky-common/es/dom";
+import { clearAllChildren, elem } from "blocky-common/es/dom";
 import {
   type IBlockDefinition,
   type BlockCreatedEvent,
@@ -77,8 +77,17 @@ class TextBlock extends Block {
     return counter + offsetInNode;
   }
 
-  protected findContentContainer(parent: HTMLElement) {
-    return parent.firstChild! as HTMLElement;
+  protected findContentContainer(parent: HTMLElement): HTMLElement {
+    let ptr = parent.firstElementChild;
+
+    while (ptr) {
+      if (ptr.classList.contains(TextContentClass)) {
+        return ptr as HTMLElement;
+      }
+      ptr = ptr.nextElementSibling;
+    }
+
+    throw new Error("content not found");
   }
 
   private createContentContainer(): HTMLElement {
@@ -302,15 +311,29 @@ class TextBlock extends Block {
     }
   }
 
+  private createBulletSpan() {
+    const container = elem("div", "blocky-bullet");
+    container.contentEditable = "false";
+
+    const bulletContent = elem("div", "blocky-bullet-content");
+    container.appendChild(bulletContent);
+
+    return container;
+  }
+
   private ensureContentContainerStyle(contentContainer: HTMLElement, textModel: TextModel): HTMLElement {
     const renderedType = contentContainer.getAttribute("data-type");
     const { textType } = textModel;
 
-    const forceRenderContentStyle = (contentContainer: HTMLElement, textType: TextType) => {
+    const forceRenderContentStyle = (parent: HTMLElement, contentContainer: HTMLElement, textType: TextType) => {
       switch (textType) {
-        case TextType.Bulleted:
+        case TextType.Bulleted: {
+          const bulletSpan = this.createBulletSpan();
+          parent.insertBefore(bulletSpan, contentContainer);
+
           contentContainer.classList.add("blocky-bulleted");
           break;
+        }
 
         case TextType.Heading1:
         case TextType.Heading2:
@@ -325,19 +348,19 @@ class TextBlock extends Block {
       contentContainer.setAttribute("data-type", textType.toString());
     }
 
+    const parent = contentContainer.parentElement!;
     if (!renderedType) {
-      forceRenderContentStyle(contentContainer, textType);
+      forceRenderContentStyle(parent, contentContainer, textType);
       return contentContainer;
     }
 
     const oldDataType = parseInt(renderedType, 10);
     if (oldDataType !== textType) {
-      const parent = contentContainer.parentElement!;
+      clearAllChildren(parent);
 
       const newContainer = this.createContentContainer();
-      forceRenderContentStyle(newContainer, textType);
-
-      parent.replaceChild(newContainer, contentContainer);
+      parent.appendChild(newContainer);
+      forceRenderContentStyle(parent, newContainer, textType);
 
       return newContainer;
     }

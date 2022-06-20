@@ -92,7 +92,6 @@ export class Editor {
 
   public readonly state: DocumentState;
   public readonly registry: EditorRegistry;
-  public readonly keyUp = new Slot<KeyboardEvent>();
   public readonly keyDown = new Slot<KeyboardEvent>();
 
   public composing: boolean = false;
@@ -516,10 +515,6 @@ export class Editor {
       }
     } else if (e.key === "Backspace") {
       this.handleBackspace(e);
-    } else if (e.key === "ArrowUp") {
-      this.keyUp.emit(e);
-    } else if (e.key === "ArrowDown") {
-      this.keyDown.emit(e);
     } else if (e.key === "Delete") {
       this.handleDelete(e);
     }

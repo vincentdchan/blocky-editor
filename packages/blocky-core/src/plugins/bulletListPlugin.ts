@@ -5,7 +5,6 @@ import { TextModel, TextType, type TextInsertEvent } from "@pkg/model";
 
 function makeBulletListPlugin(): IPlugin {
   const turnTextBlockIntoBulletList = (editor: Editor, blockId: string, textModel: TextModel) => {
-    console.log(" to bullet");
     textModel.delete(0, 2);
     textModel.textType = TextType.Bulleted;
     editor.render(() => {

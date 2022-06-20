@@ -73,4 +73,16 @@
 
 .blocky-editor-block {
   margin-bottom: 4px;
+  display: flex;
+}
+
+.blocky-bullet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+}
+
+.blocky-bullet-content::before {
+  content: "•";
 }
