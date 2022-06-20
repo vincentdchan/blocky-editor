@@ -7,3 +7,12 @@ Blocky Editor is an editor which supports the concept of blocks. It can help you
 
 - Extremely small.
 - Extensible. Extend the editor with custom blocks and spans.
+- Static typed.
+
+## Compatibility
+
+Tested on
+
+- Google Chrome
+- Microsoft Edge
+- Safari
