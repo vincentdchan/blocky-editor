@@ -86,9 +86,9 @@
 
 .blocky-bullet {
   display: flex;
-  align-items: center;
   justify-content: center;
   width: 24px;
+  min-width: 24px;
 }
 
 .blocky-bullet-content::before {
