@@ -63,7 +63,7 @@ test("textModel format #1", () => {
   ]);
 });
 
-test.only("textModel format #2", () => {
+test("textModel format #2", () => {
   const text = new TextModel();
   text.insert(0, "This is bolded text");
   text.format(8, 6, {
