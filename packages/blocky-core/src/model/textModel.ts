@@ -170,6 +170,8 @@ export class TextModel {
 
     node.prev = next.prev;
     node.next = next;
+
+    next.prev = node;
   }
 
   public format(index: number, length: number, attributes?: AttributesObject) {
