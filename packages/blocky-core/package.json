@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
     "watch": "rollup -w -c rollup.config.js",
-    "test": "vitest"
+    "test": "vitest",
+    "test:prod": "vitest --run"
   },
   "homepage": "https://github.com/vincentdchan/blocky-editor",
   "keywords": ["editor", "notion"],
