@@ -13,8 +13,7 @@ Blocky Editor is an editor which supports the concept of blocks. It can help you
 
 ![](./packages/blocky-example/src/arch.png)
 
-- Common: Provide the common utilities used by the editor.
-- Core: Written in VanillaJS. Can be used standalone without any 
+- Core: The core of the editor. Written in vanilla JS. It can be used standalone without any 
   UI frameworks.
 - Preact: Wrap the editor in [Preact](https://preactjs.com/). Provide the UI facilities such as
   toolbar and banner.

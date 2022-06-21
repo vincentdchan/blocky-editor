@@ -13,6 +13,7 @@ import { TextModel, TextNode, type AttributesObject } from "@pkg/model/textModel
 import * as fastDiff from "fast-diff";
 import { type Editor } from "@pkg/view/editor";
 import { areEqualShallow } from "blocky-common/src/object";
+import { Position } from "blocky-common/src/position";
 
 export const TextBlockName = "text";
 
@@ -56,6 +57,24 @@ class TextBlock extends Block {
 
   constructor(private def: TextBlockDefinition, props: BlockData) {
     super(props);
+  }
+
+  override getBannerOffset(): Position {
+    const blockData = this.props;
+    const textModel = blockData.data as TextModel;
+
+    if (textModel) {
+      if (textModel.textType > 0) {
+        return { x: 0, y: 12 };
+      }
+
+      if (textModel.textType === TextType.Normal) {
+        return { x: 0, y: 2 };
+      }
+
+    }
+
+    return { x: 0, y: 0 };
   }
 
   override findTextOffsetInBlock(focusedNode: Node, offsetInNode: number): number {

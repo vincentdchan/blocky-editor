@@ -453,11 +453,22 @@ export class Editor {
   }
 
   public placeBannerAt(blockContainer: HTMLElement, node: TreeNode<DocNode>) {
-    const { y } = this.getRelativeOffsetByDom(blockContainer);
+    const block = this.state.blocks.get(node.data.id);
+    if (!block) {
+      return;
+    }
+
+    let { x, y } = this.getRelativeOffsetByDom(blockContainer);
+
+    x = 24;
+
+    const offset = block.getBannerOffset();
+    x += offset.x;
+    y += offset.y;
 
     this.bannerDelegate.focusedNode = node;
     this.bannerDelegate.show();
-    this.bannerDelegate.setPosition(24, y + 2);
+    this.bannerDelegate.setPosition(x, y);
   }
 
   /**
