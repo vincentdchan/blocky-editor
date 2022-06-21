@@ -927,12 +927,14 @@ export class Editor {
    * Calculate the attributes from the dom.
    * It's used for pasting text, and to recognize the dom created by the browser.
    */
-  public getAttributesBySpan(span: HTMLSpanElement): AttributesObject {
+  public getAttributesBySpan(span: HTMLElement): AttributesObject {
     const spanRegistry = this.registry.span;
     const attributes: AttributesObject = {};
     const href = span.getAttribute("data-href");
     if (href) {
       attributes["href"] = href;
+    } else if (span instanceof HTMLAnchorElement) {
+      attributes["href"] = span.getAttribute("href");
     }
 
     for (const cls of span.classList) {

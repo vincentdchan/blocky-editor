@@ -483,7 +483,13 @@ class TextBlockDefinition implements IBlockDefinition {
 
     // TODO: Maybe using querySelector is slow.
     // Should make a benchmark here
-    const textContentContainer = node.querySelector(".blocky-block-text-content");
+    let textContentContainer = node.querySelector(".blocky-block-text-content");
+
+    // if content container if not found, using the node directly
+    if (!textContentContainer) {
+      textContentContainer = node;
+    }
+
     let index: number = 0;
     if (textContentContainer) {
       let childPtr = textContentContainer.firstChild;
@@ -499,7 +505,7 @@ class TextBlockDefinition implements IBlockDefinition {
           index += content.length;
         } else if (childPtr instanceof HTMLElement) {
           const content = childPtr.textContent ?? "";
-          const attributes = editor.getAttributesBySpan(childPtr as HTMLSpanElement);
+          const attributes = editor.getAttributesBySpan(childPtr);
           result.insert(index, content, attributes);
           index += content.length;
         }
