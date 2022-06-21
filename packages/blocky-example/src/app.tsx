@@ -80,8 +80,12 @@ class App extends Component<{}, AppState> {
             <img src={TianShuiWeiImage} />
           </div>
           <div className="blocky-example-badge-container">
-            <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/vincentdchan/blocky-editor?style=social" />
-            <img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/cdz_solo?style=social"></img>
+            <a href="https://github.com/vincentdchan/blocky-editor" target="_blank">
+              <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/vincentdchan/blocky-editor?style=social" />
+            </a>
+            <a href="https://twitter.com/cdz_solo" target="_blank">
+              <img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/cdz_solo?style=social"></img>
+            </a>
           </div>
           <div className="blocky-example-title-container">
             <input

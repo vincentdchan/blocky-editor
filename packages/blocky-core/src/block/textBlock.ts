@@ -9,7 +9,7 @@ import {
   type CursorDomResult,
   Block,
 } from "./basic";
-import { type BlockData, TextType, CursorState } from "@pkg/model";
+import { type BlockData, TextType, CursorState, DocNode } from "@pkg/model";
 import { TextModel, TextNode, type AttributesObject } from "@pkg/model/textModel";
 import * as fastDiff from "fast-diff";
 import { type Editor } from "@pkg/view/editor";
@@ -470,7 +470,7 @@ class TextBlockDefinition implements IBlockDefinition {
     return new TextBlock(this, data);
   }
 
-  onPaste({ after: cursorState, node: container, editor }: BlockPasteEvent): CursorState | undefined {
+  onPaste({ after: cursorState, node: container, editor, tryMerge }: BlockPasteEvent): CursorState | undefined {
     if (!cursorState) {
       return;
     }
@@ -481,10 +481,17 @@ class TextBlockDefinition implements IBlockDefinition {
 
     const currentNode = editor.state.idMap.get(cursorState.targetId)!;
     const parentId = currentNode.parent!.data.id;
+    const nodeData = currentNode.data as BlockData;
+    const blockData = nodeData.data;
+    const textModel = this.getTextModelFromDOM(editor, container);
+
+    if (tryMerge && blockData instanceof TextModel) {
+      const oldTextModel = blockData as TextModel;
+      oldTextModel.append(textModel);
+      return;
+    }
 
     const newId = editor.idGenerator.mkBlockId();
-
-    const textModel = this.getTextModelFromDOM(editor, container);
 
     editor.applyActions([{
       type: "new-block",

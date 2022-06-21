@@ -312,6 +312,16 @@ export class TextModel {
     return result;
   }
 
+  public append(that: TextModel) {
+    let ptr = that.nodeBegin;
+    let index = this.#length;
+    while (ptr) {
+      this.insert(index, ptr.content, ptr.attributes);
+      index += ptr.content.length;
+      ptr = ptr.next;
+    }
+  }
+
   get nodeBegin() {
     return this.#nodeBegin;
   }
