@@ -551,6 +551,30 @@ export class Editor {
     e.preventDefault();
   }
 
+  private insertEmptyTextAfterBlock(parentId: string, id: string) {
+    const newTextModel = new TextModel();
+    const newId = this.idGenerator.mkBlockId();
+    const actions: Action[] = [
+      {
+        type: "new-block",
+        blockName: TextBlockName,
+        targetId: parentId,
+        newId,
+        afterId: id,
+        data: newTextModel,
+      },
+    ];
+
+    this.applyActions(actions);
+    this.render(() => {
+      this.state.cursorState = {
+        type: "collapsed",
+        targetId: newId,
+        offset: 0,
+      };
+    });
+  }
+
   private commitNewLine() {
     const { cursorState } = this.state;
     if (!cursorState) {
@@ -563,7 +587,10 @@ export class Editor {
       }
 
       const blockData = node.data as BlockData;
+      const targetId = node.parent!.data.id;
       if (!blockData.data || !(blockData.data instanceof TextModel)) {
+        // default behavior
+        this.insertEmptyTextAfterBlock(targetId, cursorState.targetId);
         return;
       }
       const textModel = blockData.data as TextModel;
@@ -590,7 +617,7 @@ export class Editor {
         {
           type: "new-block",
           blockName: TextBlockName,
-          targetId: node.parent!.data.id,
+          targetId,
           newId,
           afterId: node.data.id,
           data: newTextModel,
