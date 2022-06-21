@@ -44,7 +44,7 @@ test("textModel delete all", () => {
   expect(text.toString()).toBe("");
 });
 
-test("textModel format", () => {
+test("textModel format #1", () => {
   const text = new TextModel();
   text.insert(0, "This is bolded text");
   text.format(8, 6, {
@@ -61,6 +61,20 @@ test("textModel format", () => {
     "bolded",
     " text",
   ]);
+});
+
+test.only("textModel format #2", () => {
+  const text = new TextModel();
+  text.insert(0, "This is bolded text");
+  text.format(8, 6, {
+    bold: true,
+  });
+
+  text.format(5, 2, {
+    bold: true,
+  });
+
+  expect(text.toString()).toEqual("This is bolded text");
 });
 
 test("textModel delete node #1", () => {
