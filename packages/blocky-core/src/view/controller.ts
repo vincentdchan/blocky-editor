@@ -118,7 +118,7 @@ export class EditorController {
   emitNextTicks() {
     const fns = this.#nextTick;
     if (fns.length > 0) {
-      window.requestAnimationFrame(() => {
+      setTimeout(() => {
         for (const fn of fns) {
           try {
             fn();
@@ -126,7 +126,7 @@ export class EditorController {
             console.error(err);
           }
         }
-      });
+      }, 0);
     }
     this.#nextTick = [];
   }
