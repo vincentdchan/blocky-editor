@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "postinstall": "ts-patch install",
+    "prepare": "cp ./README.md ./packages/blocky-core",
     "build": "tsc --build packages/blocky-preact",
     "watch": "tsc --build -w packages/blocky-preact",
     "test": "echo \"Error: no test specified\" && exit 1"
