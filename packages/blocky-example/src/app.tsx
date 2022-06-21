@@ -79,6 +79,10 @@ class App extends Component<{}, AppState> {
           <div className="blocky-example-image">
             <img src={TianShuiWeiImage} />
           </div>
+          <div className="blocky-example-badge-container">
+            <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/vincentdchan/blocky-editor?style=social" />
+            <img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/cdz_solo?style=social"></img>
+          </div>
           <div className="blocky-example-title-container">
             <input
               value={this.state.headingContent}
