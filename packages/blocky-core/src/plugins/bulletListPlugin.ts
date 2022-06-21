@@ -48,6 +48,7 @@ function makeBulletListPlugin(): IPlugin {
 
     const textModel = editor.getTextModelByBlockId(targetId);
     if (textModel && textModel.textType === TextType.Bulleted) {
+      e.preventDefault();
       textModel.textType = TextType.Normal;
       editor.render(() => {
         editor.state.cursorState = {
