@@ -306,7 +306,6 @@ export class Editor {
         endOffset: absoluteEndOffset,
       };
     }
-    console.log("selection:", this.state.cursorState);
 
     const { toolbarDelegate } = this;
 
@@ -429,7 +428,6 @@ export class Editor {
       return;
     }
 
-    console.log("apply:", actions);
     let afterFn: AfterFn | undefined;
     runInAction(this.state, () => {
       afterFn = this.registry.plugin.emitBeforeApply(this, actions);
