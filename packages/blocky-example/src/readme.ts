@@ -13,9 +13,13 @@ export const ReadMeContent = `
   <img src=${ArchImageUrl} />
 </p>
 <ul>
-  <li>Common: Provide the common utilities used by the editor.</li>
+  <li>Core: The core of the editor. Written in vanilla JS. It can be used standalone without any 
+  UI frameworks.</li>
   <li>Preact: Wrap the editor in <a href="https://preactjs.com/">Preact</a>. Provide the UI facilities such as toolbar and banner.</li>
-  <li>Example: The example to demonstrate how to use the editor.</li>
+  <li>
+    Example(this page): The example to demonstrate how to use the editor.
+    Gzipped size: ~23kb (one-time loading)
+  </li>
 </ul>
 <h2>Resources</h2>
 <ul>

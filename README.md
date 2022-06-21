@@ -3,6 +3,8 @@
 
 Blocky Editor is an editor which supports the concept of blocks. It can help you to build an editor like Notion. It's tiny, fast and extensible. You can extend it with blocks.
 
+[Demo](https://blocky-editor.dev/)
+
 ## Features
 
 - Extremely small.
@@ -13,12 +15,11 @@ Blocky Editor is an editor which supports the concept of blocks. It can help you
 
 ![](./packages/blocky-example/src/arch.png)
 
-- Common: Provide the common utilities used by the editor.
-- Core: Written in VanillaJS. Can be used standalone without any 
+- Core(![npm](https://img.shields.io/npm/v/blocky-core)): The core of the editor. Written in vanilla JS. It can be used standalone without any 
   UI frameworks.
-- Preact: Wrap the editor in [Preact](https://preactjs.com/). Provide the UI facilities such as
+- Preact(![npm](https://img.shields.io/npm/v/blocky-preact)): Wrap the editor in [Preact](https://preactjs.com/). Provide the UI facilities such as
   toolbar and banner.
-- Example: The example to demonstrate how to use the editor.
+- [Example](https://blocky-editor.dev/): The example to demonstrate how to use the editor.
   - Gzipped size: ~23kb (one-time loading)
 
 ## Resources

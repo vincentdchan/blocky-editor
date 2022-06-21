@@ -2,6 +2,7 @@ import { type IDisposable } from "blocky-common/es/disposable";
 import type { BlockData } from "@pkg/model";
 import { CursorState, type CollapsedCursor } from "@pkg/model/cursor";
 import { type Editor } from "@pkg/view/editor";
+import { type Position } from "blocky-common/src/position";
 
 export interface BlockDidMountEvent {
   element: HTMLElement;
@@ -13,10 +14,16 @@ export interface BlockCreatedEvent {
   // editor: Editor;
 }
 
+export interface CursorDomResult {
+  node: Node;
+  offset: number;
+}
+
 export interface BlockPasteEventProps {
   after: CursorState | undefined;
   editor: Editor;
   node: HTMLElement;
+  tryMerge: boolean;
 }
 
 export class BlockEvent {
@@ -36,12 +43,14 @@ export class BlockPasteEvent extends BlockEvent {
   after: CursorState | undefined;
   editor: Editor;
   node: HTMLElement;
+  tryMerge: boolean;
 
-  constructor({ after, editor, node }: BlockPasteEventProps) {
+  constructor({ after, editor, node, tryMerge }: BlockPasteEventProps) {
     super();
     this.after = after;
     this.editor = editor;
     this.node = node;
+    this.tryMerge = tryMerge;
   }
 
 }
@@ -132,6 +141,13 @@ export class Block<T = any> implements IDisposable {
     return this.#editor!;
   }
 
+  /**
+   * Return the offset of the coordinate of the banner
+   * relative to the top-right conner of the block.
+   */
+  getBannerOffset(): Position {
+    return { x: 0, y: 0 };
+  }
 
   blockDidMount(e: BlockDidMountEvent) {}
 
@@ -149,6 +165,10 @@ export class Block<T = any> implements IDisposable {
   blockContentChanged(e: BlockContentChangedEvent): void {}
 
   render(container: HTMLElement) {}
+
+  getCursorDomByOffset(offset: number): CursorDomResult | undefined {
+    return;
+  }
 
   findTextOffsetInBlock(focusedNode: Node, offsetInNode: number): number {
     return 0;

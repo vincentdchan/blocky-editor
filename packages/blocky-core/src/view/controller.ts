@@ -117,15 +117,17 @@ export class EditorController {
 
   emitNextTicks() {
     const fns = this.#nextTick;
-    window.requestAnimationFrame(() => {
-      for (const fn of fns) {
-        try {
-          fn();
-        } catch (err) {
-          console.error(err);
+    if (fns.length > 0) {
+      setTimeout(() => {
+        for (const fn of fns) {
+          try {
+            fn();
+          } catch (err) {
+            console.error(err);
+          }
         }
-      }
-    });
+      }, 0);
+    }
     this.#nextTick = [];
   }
 
@@ -137,6 +139,7 @@ export class EditorController {
     if (length === 0) {
       return;
     }
+
 
     const blockNode = this.state.idMap.get(blockId) as TreeNode<BlockData>;
 
@@ -156,8 +159,19 @@ export class EditorController {
       return;
     }
 
-    editor.applyActions(actions);
-    editor.handleCursorStateChanged(editor.state.cursorState, undefined);
+    // prevent the cursor from jumping around
+    editor.state.cursorState = undefined;
+
+    editor.state.applyActions(actions);
+    editor.render(() => {
+      editor.state.cursorState = {
+        type: "open",
+        startId: block.id,
+        endId: block.id,
+        startOffset: index,
+        endOffset: index + length,
+      };
+    });
   }
 
   public formatTextOnCursor(cursorState: CursorState, attribs?: AttributesObject) {

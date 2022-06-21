@@ -17,7 +17,7 @@ import {
   type AttributesObject,
   TextType,
 } from "@pkg/model";
-import { CollapsedCursor, type CursorState } from "@pkg/model/cursor";
+import { CollapsedCursor, OpenCursorState, type CursorState } from "@pkg/model/cursor";
 import { Action } from "@pkg/model/actions";
 import {
   IPlugin,
@@ -306,7 +306,6 @@ export class Editor {
         endOffset: absoluteEndOffset,
       };
     }
-    console.log("selection:", this.state.cursorState);
 
     const { toolbarDelegate } = this;
 
@@ -356,13 +355,14 @@ export class Editor {
     currentOffset?: number,
   ) {
     const treeNode = node._mgNode as TreeNode<DocNode>;
+    const targetId = treeNode.data.id;
     if (!node.parentNode) {
       // dom has been removed
 
       this.destructBlockNode(node);
       actions.push({
         type: "delete",
-        targetId: treeNode.data.id,
+        targetId,
       });
       return;
     }
@@ -391,7 +391,6 @@ export class Editor {
   }
 
   private checkNodesChanged(actions: Action[]) {
-    console.log("check nodes changed");
     const doms = this.state.domMap.values();
     for (const dom of doms) {
       this.checkMarkedDom(dom, actions, undefined);
@@ -429,7 +428,6 @@ export class Editor {
       return;
     }
 
-    console.log("apply:", actions);
     let afterFn: AfterFn | undefined;
     runInAction(this.state, () => {
       afterFn = this.registry.plugin.emitBeforeApply(this, actions);
@@ -453,11 +451,22 @@ export class Editor {
   }
 
   public placeBannerAt(blockContainer: HTMLElement, node: TreeNode<DocNode>) {
-    const { y } = this.getRelativeOffsetByDom(blockContainer);
+    const block = this.state.blocks.get(node.data.id);
+    if (!block) {
+      return;
+    }
+
+    let { x, y } = this.getRelativeOffsetByDom(blockContainer);
+
+    x = 24;
+
+    const offset = block.getBannerOffset();
+    x += offset.x;
+    y += offset.y;
 
     this.bannerDelegate.focusedNode = node;
     this.bannerDelegate.show();
-    this.bannerDelegate.setPosition(24, y + 2);
+    this.bannerDelegate.setPosition(x, y);
   }
 
   /**
@@ -692,8 +701,6 @@ export class Editor {
       return;
     }
 
-    console.log("new cursor state: ", newState, oldState);
-
     const sel = window.getSelection();
     if (!sel) {
       return;
@@ -705,10 +712,15 @@ export class Editor {
     }
 
     if (newState.type === "open") {
+      this.focusOnOpenCursor(newState, sel);
       return;
     }
 
-    const { targetId } = newState;
+    this.focusOnCollapsedCursor(newState, sel);
+  };
+
+  private focusOnCollapsedCursor(collapsedCursor: CollapsedCursor, sel: Selection) {
+    const { targetId } = collapsedCursor;
 
     const targetNode = this.state.domMap.get(targetId);
     if (!targetNode) {
@@ -719,11 +731,43 @@ export class Editor {
       targetNode instanceof HTMLDivElement &&
       targetNode.classList.contains(this.#renderer.blockClassName)
     ) {
-      this.focusBlock(sel, targetNode, newState);
+      this.focusBlock(sel, targetNode, collapsedCursor);
     } else {
       console.error("unknown element:", targetNode);
     }
-  };
+  }
+
+  private focusOnOpenCursor(openCursor: OpenCursorState, sel: Selection) {
+    const { startId, startOffset, endId, endOffset } = openCursor;
+
+    const startBlock = this.state.blocks.get(startId);
+    if (!startBlock) {
+      return;
+    }
+
+    const endBlock = this.state.blocks.get(endId);
+    if (!endBlock) {
+      return;
+    }
+
+    const startCursorDom = startBlock.getCursorDomByOffset(startOffset);
+
+    if (!startCursorDom) {
+      return;
+    }
+
+    const endCursorDom = endBlock.getCursorDomByOffset(endOffset);
+
+    if (!endCursorDom) {
+      return;
+    }
+
+    const range = document.createRange();
+    range.setStart(startCursorDom.node, startCursorDom.offset);
+    range.setEnd(endCursorDom.node, endCursorDom.offset);
+
+    sel.addRange(range);
+  }
 
   /**
    * It's hard to define the behavior of focusing on a block.
@@ -817,13 +861,15 @@ export class Editor {
     let ptr = body.firstElementChild;
     let afterCursor: CursorState | undefined = this.state.cursorState;
 
+    let index = 0;
     while (ptr) {
-      const cursor = this.pasteNodeAt(afterCursor, ptr as HTMLElement);
+      const cursor = this.pasteNodeAt(afterCursor, ptr as HTMLElement, index === 0);
 
       if (cursor) {
         afterCursor = cursor;
       }
 
+      index++;
       ptr = ptr.nextElementSibling;
     }
 
@@ -832,7 +878,7 @@ export class Editor {
     });
   }
 
-  private tryPasteDivElementAsBlock(element: HTMLDivElement, cursorState: Cell<CursorState | undefined>): boolean {
+  private tryPasteDivElementAsBlock(element: HTMLDivElement, cursorState: Cell<CursorState | undefined>, tryMerge: boolean = false): boolean {
     const blockRegistry = this.registry.block;
     const dataType = element.getAttribute("data-type");
     if (!dataType) {
@@ -849,6 +895,7 @@ export class Editor {
         after: cursorState.get(),
         editor: this,
         node: element,
+        tryMerge,
       });
       const newCursor = pasteHandler.call(blockDef, evt);
       if (newCursor) {
@@ -864,7 +911,13 @@ export class Editor {
     return true;
   }
 
-  private pasteNodeAt(cursorState: CursorState | undefined, element: HTMLElement): CursorState | undefined {
+  /**
+   * 
+   * Paste the content of element at the cursor.
+   * 
+   * @param tryMerge Indicate whether the content should be merged to the previous block.
+   */
+  private pasteNodeAt(cursorState: CursorState | undefined, element: HTMLElement, tryMerge: boolean = false): CursorState | undefined {
     const blockRegistry = this.registry.block;
 
     const evt = new TryParsePastedDOMEvent({
@@ -889,7 +942,7 @@ export class Editor {
       return this.insertTextAt(cursorState, textContent, Object.keys(attributes).length > 0 ? attributes : undefined);
     } else if (element instanceof HTMLDivElement) {
       const cursorCell = new Cell(cursorState);
-      if (this.tryPasteDivElementAsBlock(element, cursorCell)) {
+      if (this.tryPasteDivElementAsBlock(element, cursorCell, tryMerge)) {
         return cursorCell.get();
       } else {
         console.warn("unknown dom:", element);
@@ -905,6 +958,7 @@ export class Editor {
         after: cursorState,
         editor: this,
         node: element,
+        tryMerge,
       });
       if (pasteHandler) {
         const cursor = pasteHandler.call(blockDef, evt);
@@ -917,7 +971,7 @@ export class Editor {
       let returnCursor: CursorState | undefined = cursorState;
 
       while (childPtr) {
-        returnCursor = this.pasteNodeAt(returnCursor, childPtr as HTMLElement);
+        returnCursor = this.pasteNodeAt(returnCursor, childPtr as HTMLElement, false);
         childPtr = childPtr.nextElementSibling;
       }
 

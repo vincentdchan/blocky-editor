@@ -222,7 +222,7 @@ export class TextModel {
   public delete(index: number, length: number) {
     const end = index + length;
     if (index > this.#length || index < 0) {
-      throw new Error(`The begin offset ${index} is out of range.`);
+      throw new Error(`The begin offset ${index} is out of range ${this.#length}.`);
     } else if (end > this.#length || end < 0) {
       throw new Error(`The end offset ${end} is out of range ${this.#length}.`);
     }
@@ -310,6 +310,16 @@ export class TextModel {
     }
 
     return result;
+  }
+
+  public append(that: TextModel) {
+    let ptr = that.nodeBegin;
+    let index = this.#length;
+    while (ptr) {
+      this.insert(index, ptr.content, ptr.attributes);
+      index += ptr.content.length;
+      ptr = ptr.next;
+    }
   }
 
   get nodeBegin() {
