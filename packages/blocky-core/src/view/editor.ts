@@ -335,7 +335,12 @@ export class Editor {
     }
 
     const containerRect = this.#container.getBoundingClientRect();
-    const rect = range.getBoundingClientRect();
+    // Do NOT call getBoundingClientRect, we need the first rect
+    // not the rect of all ranges.
+    const rect = range.getClientRects()[0];
+    if (!rect) {
+      return false;
+    }
 
     const x = rect.x - containerRect.x;
     const y = rect.y - containerRect.y - rect.height - 12;
