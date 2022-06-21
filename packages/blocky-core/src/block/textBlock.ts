@@ -9,11 +9,11 @@ import {
   type CursorDomResult,
   Block,
 } from "./basic";
-import { type BlockData, TextType, CursorState, DocNode } from "@pkg/model";
+import { type BlockData, TextType, CursorState } from "@pkg/model";
+import { areEqualShallow } from "blocky-common/es/object";
 import { TextModel, TextNode, type AttributesObject } from "@pkg/model/textModel";
 import fastDiff from "fast-diff";
 import { type Editor } from "@pkg/view/editor";
-import { areEqualShallow } from "blocky-common/src/object";
 import { Position } from "blocky-common/src/position";
 
 export const TextBlockName = "text";
