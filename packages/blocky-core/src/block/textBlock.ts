@@ -6,6 +6,7 @@ import {
   type BlockFocusedEvent,
   type BlockContentChangedEvent,
   type BlockPasteEvent,
+  type CursorDomResult,
   Block,
 } from "./basic";
 import { type BlockData, TextType, CursorState } from "@pkg/model";
@@ -71,7 +72,6 @@ class TextBlock extends Block {
       if (textModel.textType === TextType.Normal) {
         return { x: 0, y: 2 };
       }
-
     }
 
     return { x: 0, y: 0 };
@@ -143,6 +143,14 @@ class TextBlock extends Block {
       const { node, offset } = pos;
       setRangeIfDifferent(selection, node, offset, node, offset);
     }
+  }
+
+  override getCursorDomByOffset(offset: number): CursorDomResult | undefined {
+    if (!this.#container) {
+      return;
+    }
+
+    return this.findFocusPosition(this.#container, offset);
   }
 
   override blockBlur({ node: blockDom }: BlockFocusedEvent): void {

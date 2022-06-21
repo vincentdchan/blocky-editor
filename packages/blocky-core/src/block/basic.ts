@@ -14,6 +14,11 @@ export interface BlockCreatedEvent {
   // editor: Editor;
 }
 
+export interface CursorDomResult {
+  node: Node;
+  offset: number;
+}
+
 export interface BlockPasteEventProps {
   after: CursorState | undefined;
   editor: Editor;
@@ -157,6 +162,10 @@ export class Block<T = any> implements IDisposable {
   blockContentChanged(e: BlockContentChangedEvent): void {}
 
   render(container: HTMLElement) {}
+
+  getCursorDomByOffset(offset: number): CursorDomResult | undefined {
+    return;
+  }
 
   findTextOffsetInBlock(focusedNode: Node, offsetInNode: number): number {
     return 0;

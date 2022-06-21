@@ -17,7 +17,7 @@ import {
   type AttributesObject,
   TextType,
 } from "@pkg/model";
-import { CollapsedCursor, type CursorState } from "@pkg/model/cursor";
+import { CollapsedCursor, OpenCursorState, type CursorState } from "@pkg/model/cursor";
 import { Action } from "@pkg/model/actions";
 import {
   IPlugin,
@@ -703,8 +703,6 @@ export class Editor {
       return;
     }
 
-    console.log("new cursor state: ", newState, oldState);
-
     const sel = window.getSelection();
     if (!sel) {
       return;
@@ -716,10 +714,15 @@ export class Editor {
     }
 
     if (newState.type === "open") {
+      this.focusOnOpenCursor(newState, sel);
       return;
     }
 
-    const { targetId } = newState;
+    this.focusOnCollapsedCursor(newState, sel);
+  };
+
+  private focusOnCollapsedCursor(collapsedCursor: CollapsedCursor, sel: Selection) {
+    const { targetId } = collapsedCursor;
 
     const targetNode = this.state.domMap.get(targetId);
     if (!targetNode) {
@@ -730,11 +733,43 @@ export class Editor {
       targetNode instanceof HTMLDivElement &&
       targetNode.classList.contains(this.#renderer.blockClassName)
     ) {
-      this.focusBlock(sel, targetNode, newState);
+      this.focusBlock(sel, targetNode, collapsedCursor);
     } else {
       console.error("unknown element:", targetNode);
     }
-  };
+  }
+
+  private focusOnOpenCursor(openCursor: OpenCursorState, sel: Selection) {
+    const { startId, startOffset, endId, endOffset } = openCursor;
+
+    const startBlock = this.state.blocks.get(startId);
+    if (!startBlock) {
+      return;
+    }
+
+    const endBlock = this.state.blocks.get(endId);
+    if (!endBlock) {
+      return;
+    }
+
+    const startCursorDom = startBlock.getCursorDomByOffset(startOffset);
+
+    if (!startCursorDom) {
+      return;
+    }
+
+    const endCursorDom = endBlock.getCursorDomByOffset(endOffset);
+
+    if (!endCursorDom) {
+      return;
+    }
+
+    const range = document.createRange();
+    range.setStart(startCursorDom.node, startCursorDom.offset);
+    range.setEnd(endCursorDom.node, endCursorDom.offset);
+
+    sel.addRange(range);
+  }
 
   /**
    * It's hard to define the behavior of focusing on a block.
