@@ -355,13 +355,14 @@ export class Editor {
     currentOffset?: number,
   ) {
     const treeNode = node._mgNode as TreeNode<DocNode>;
+    const targetId = treeNode.data.id;
     if (!node.parentNode) {
       // dom has been removed
 
       this.destructBlockNode(node);
       actions.push({
         type: "delete",
-        targetId: treeNode.data.id,
+        targetId,
       });
       return;
     }
@@ -390,7 +391,6 @@ export class Editor {
   }
 
   private checkNodesChanged(actions: Action[]) {
-    console.log("check nodes changed");
     const doms = this.state.domMap.values();
     for (const dom of doms) {
       this.checkMarkedDom(dom, actions, undefined);

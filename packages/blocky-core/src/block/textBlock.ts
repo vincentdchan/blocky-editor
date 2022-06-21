@@ -251,7 +251,7 @@ class TextBlock extends Block {
         index += content.length;
       } else if (t === fastDiff.DELETE) {
         textModel.delete(index, content.length);
-        index -= content.length;
+        // index -= content.length;
       }
     }
 
