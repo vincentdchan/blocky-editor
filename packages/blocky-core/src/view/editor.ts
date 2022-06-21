@@ -861,13 +861,15 @@ export class Editor {
     let ptr = body.firstElementChild;
     let afterCursor: CursorState | undefined = this.state.cursorState;
 
+    let index = 0;
     while (ptr) {
-      const cursor = this.pasteNodeAt(afterCursor, ptr as HTMLElement);
+      const cursor = this.pasteNodeAt(afterCursor, ptr as HTMLElement, index === 0);
 
       if (cursor) {
         afterCursor = cursor;
       }
 
+      index++;
       ptr = ptr.nextElementSibling;
     }
 
@@ -876,7 +878,7 @@ export class Editor {
     });
   }
 
-  private tryPasteDivElementAsBlock(element: HTMLDivElement, cursorState: Cell<CursorState | undefined>): boolean {
+  private tryPasteDivElementAsBlock(element: HTMLDivElement, cursorState: Cell<CursorState | undefined>, tryMerge: boolean = false): boolean {
     const blockRegistry = this.registry.block;
     const dataType = element.getAttribute("data-type");
     if (!dataType) {
@@ -893,6 +895,7 @@ export class Editor {
         after: cursorState.get(),
         editor: this,
         node: element,
+        tryMerge,
       });
       const newCursor = pasteHandler.call(blockDef, evt);
       if (newCursor) {
@@ -908,7 +911,13 @@ export class Editor {
     return true;
   }
 
-  private pasteNodeAt(cursorState: CursorState | undefined, element: HTMLElement): CursorState | undefined {
+  /**
+   * 
+   * Paste the content of element at the cursor.
+   * 
+   * @param tryMerge Indicate whether the content should be merged to the previous block.
+   */
+  private pasteNodeAt(cursorState: CursorState | undefined, element: HTMLElement, tryMerge: boolean = false): CursorState | undefined {
     const blockRegistry = this.registry.block;
 
     const evt = new TryParsePastedDOMEvent({
@@ -933,7 +942,7 @@ export class Editor {
       return this.insertTextAt(cursorState, textContent, Object.keys(attributes).length > 0 ? attributes : undefined);
     } else if (element instanceof HTMLDivElement) {
       const cursorCell = new Cell(cursorState);
-      if (this.tryPasteDivElementAsBlock(element, cursorCell)) {
+      if (this.tryPasteDivElementAsBlock(element, cursorCell, tryMerge)) {
         return cursorCell.get();
       } else {
         console.warn("unknown dom:", element);
@@ -949,6 +958,7 @@ export class Editor {
         after: cursorState,
         editor: this,
         node: element,
+        tryMerge,
       });
       if (pasteHandler) {
         const cursor = pasteHandler.call(blockDef, evt);
@@ -961,7 +971,7 @@ export class Editor {
       let returnCursor: CursorState | undefined = cursorState;
 
       while (childPtr) {
-        returnCursor = this.pasteNodeAt(returnCursor, childPtr as HTMLElement);
+        returnCursor = this.pasteNodeAt(returnCursor, childPtr as HTMLElement, false);
         childPtr = childPtr.nextElementSibling;
       }
 

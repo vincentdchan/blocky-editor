@@ -23,6 +23,7 @@ export interface BlockPasteEventProps {
   after: CursorState | undefined;
   editor: Editor;
   node: HTMLElement;
+  tryMerge: boolean;
 }
 
 export class BlockEvent {
@@ -42,12 +43,14 @@ export class BlockPasteEvent extends BlockEvent {
   after: CursorState | undefined;
   editor: Editor;
   node: HTMLElement;
+  tryMerge: boolean;
 
-  constructor({ after, editor, node }: BlockPasteEventProps) {
+  constructor({ after, editor, node, tryMerge }: BlockPasteEventProps) {
     super();
     this.after = after;
     this.editor = editor;
     this.node = node;
+    this.tryMerge = tryMerge;
   }
 
 }
