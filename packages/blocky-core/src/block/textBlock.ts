@@ -560,7 +560,7 @@ class TextBlockDefinition implements IBlockDefinition {
     const textElement = this.getTextElementFromDOM(editor, container);
     const textModel = textElement.firstChild! as TextModel;
 
-    if (tryMerge && nodeData?.getAttribute("type") === "text") {
+    if (tryMerge && nodeData?.nodeName === "text") {
       const oldTextModel = nodeData.firstChild! as TextModel;
       oldTextModel.append(textModel);
       return;

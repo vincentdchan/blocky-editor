@@ -13,13 +13,12 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
     name: "yjs",
     onInitialized(editor: Editor) {
       editor.state.newBlockInserted.on((node: TreeNode) => {
-        const element = new Y.XmlElement("block");
         const blockDef = editor.registry.block.getBlockDefById(node.blockTypeId);
         if (!blockDef) {
           return;
         }
+        const element = new Y.XmlElement(blockDef.name);
         element.setAttribute("id", node.id);
-        element.setAttribute("type", blockDef.name);
 
         const prevNode = node.prev;
         if (prevNode) {
