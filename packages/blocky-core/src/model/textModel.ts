@@ -1,9 +1,6 @@
 import { areEqualShallow } from "blocky-common/es/object";
 import { Slot } from "blocky-common/es/events";
-
-export interface AttributesObject {
-  [key: string]: any;
-}
+import { type IModelText, type AttributesObject } from "./element";
 
 export interface TextNode {
   prev?: TextNode;
@@ -31,7 +28,9 @@ export enum TextType {
   Heading3,
 }
 
-export class TextModel {
+export class TextModel implements IModelText {
+  public type: "text" = "text";
+
   #nodeBegin?: TextNode;
   #nodeEnd?: TextNode;
   #length = 0;
