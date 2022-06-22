@@ -1,6 +1,11 @@
 import { Component, JSX } from "preact";
 import { EditorController } from "blocky-core";
-import { BlockyEditor, makePreactBanner, makePreactToolbar } from "blocky-preact";
+import {
+  BlockyEditor,
+  makePreactBanner,
+  makePreactToolbar,
+  type BannerRenderProps,
+} from "blocky-preact";
 import makeBoldedTextPlugin from "blocky-core/dist/plugins/boldedTextPlugin";
 import makeBulletListPlugin from "blocky-core/dist/plugins/bulletListPlugin";
 import makeHeadingsPlugin from "blocky-core/dist/plugins/headingsPlugin";
@@ -35,9 +40,14 @@ function makeController(): EditorController {
      * Tell the editor how to render the banner.
      * We use a banner written in Preact here.
      */
-    bannerFactory: makePreactBanner((editorController: EditorController) => (
-      <BannerMenu editorController={editorController} />
-    )),
+    bannerFactory: makePreactBanner(
+      ({ editorController, focusedNode }: BannerRenderProps) => (
+        <BannerMenu
+          editorController={editorController}
+          focusedNode={focusedNode}
+        />
+      )
+    ),
     /**
      * Tell the editor how to render the banner.
      * We use a toolbar written in Preact here.
@@ -66,7 +76,7 @@ class App extends Component<{}, AppState> {
       return;
     }
     editor.pasteHTMLAtCursor(ReadMeContent);
-  }
+  };
 
   private handleHeadingChanged = (e: JSX.TargetedEvent<HTMLInputElement>) => {
     this.setState({
@@ -82,11 +92,20 @@ class App extends Component<{}, AppState> {
             <img src={TianShuiWeiImage} />
           </div>
           <div className="blocky-example-badge-container">
-            <a href="https://github.com/vincentdchan/blocky-editor" target="_blank">
-              <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/vincentdchan/blocky-editor?style=social" />
+            <a
+              href="https://github.com/vincentdchan/blocky-editor"
+              target="_blank"
+            >
+              <img
+                alt="GitHub Repo stars"
+                src="https://img.shields.io/github/stars/vincentdchan/blocky-editor?style=social"
+              />
             </a>
             <a href="https://twitter.com/cdz_solo" target="_blank">
-              <img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/cdz_solo?style=social"></img>
+              <img
+                alt="Twitter Follow"
+                src="https://img.shields.io/twitter/follow/cdz_solo?style=social"
+              ></img>
             </a>
           </div>
           <div className="blocky-example-title-container">

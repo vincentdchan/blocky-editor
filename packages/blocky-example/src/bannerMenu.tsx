@@ -5,6 +5,7 @@ import {
   createTextElement,
   setTextType,
   ElementModel,
+  type TreeNode,
 } from "blocky-core";
 import {
   type IDisposable,
@@ -17,6 +18,7 @@ import "./bannerMenu.scss";
 
 export interface BannerProps {
   editorController: EditorController;
+  focusedNode?: TreeNode;
 }
 
 interface BannerState {
@@ -94,8 +96,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
   };
 
   private insertText = (typeType: TextType) => () => {
-    const { editorController } = this.props;
-    const focusedNode = editorController.bannerFocusedNode;
+    const { editorController, focusedNode } = this.props;
     if (!focusedNode) {
       return;
     }
@@ -108,8 +109,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
   };
 
   private insertImage = () => {
-    const { editorController } = this.props;
-    const focusedNode = editorController.bannerFocusedNode;
+    const { editorController, focusedNode } = this.props;
     if (!focusedNode) {
       return;
     }
@@ -121,8 +121,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
   };
 
   private deleteBlock = () => {
-    const { editorController } = this.props;
-    const focusedNode = editorController.bannerFocusedNode;
+    const { editorController, focusedNode } = this.props;
     if (!focusedNode) {
       return;
     }
