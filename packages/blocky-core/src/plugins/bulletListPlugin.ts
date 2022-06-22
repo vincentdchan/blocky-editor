@@ -19,7 +19,7 @@ function makeBulletListPlugin(): IPlugin {
     const blockData = block.props.data;
     if (blockData && blockData instanceof TextModel) {
       blockData.onInsert.on((e: TextInsertEvent) => {
-        if (e.index === 1 && e.text === " ") {
+        if (e.index === 1 && e.text.length === 1 && (e.text === " " || e.text.charCodeAt(0) === 160)) {
           const content = blockData.toString();
           if (content[0] === "-") {
             turnTextBlockIntoBulletList(editor, block.props.id, blockData);
@@ -44,7 +44,11 @@ function makeBulletListPlugin(): IPlugin {
       return;
     }
 
-    const { targetId } = cursorState;
+    const { targetId, offset } = cursorState;
+
+    if (offset !== 0) {
+      return;
+    }
 
     const textModel = editor.getTextModelByBlockId(targetId);
     if (textModel && textModel.textType === TextType.Bulleted) {
