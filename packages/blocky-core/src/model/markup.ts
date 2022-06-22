@@ -1,6 +1,6 @@
 import { TreeRoot } from "./tree";
 import type { IdGenerator } from "@pkg/helper/idHelper";
-import { TextModel } from "@pkg/model/textModel";
+import { TextModel, type IModelElement, createTextElement } from "@pkg/model";
 
 /*
  * Large document tree
@@ -14,7 +14,7 @@ export interface MDoc {
 export interface MBlock {
   t: "block";
   id: string;
-  data?: any;
+  data?: IModelElement;
   flags: number;
   children?: MBlock[];
 }
@@ -49,7 +49,8 @@ export class MarkupGenerator {
   }
 
   textBlock(content: MSpan[] = []): MBlock {
-    const textModel = new TextModel();
+    const textElement = createTextElement();
+    const textModel = textElement.firstChild! as TextModel;
 
     let ptr = 0;
     for (const span of content) {
@@ -61,7 +62,7 @@ export class MarkupGenerator {
       t: "block",
       id: this.idGen.mkBlockId(),
       flags: 0,
-      data: textModel,
+      data: textElement,
     };
   }
 

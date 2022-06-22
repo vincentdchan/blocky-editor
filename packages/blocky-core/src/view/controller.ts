@@ -1,7 +1,7 @@
 import { Slot } from "blocky-common/es/events";
 import { observe } from "blocky-common/es/observable";
 import { type Padding } from "blocky-common/es/dom";
-import { AttributesObject, State, TreeNode } from "@pkg/model";
+import { AttributesObject, IModelElement, State, TreeNode } from "@pkg/model";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
@@ -44,7 +44,7 @@ export interface IInsertOptions {
   autoFocus?: boolean;
   noRender?: boolean;
   blockName?: string;
-  data?: any;
+  data?: IModelElement;
 }
 
 export type NextTickFn = () => void;

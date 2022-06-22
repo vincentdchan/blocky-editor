@@ -14,4 +14,10 @@ export {
   type TreeNode,
   TextModel,
   TextType,
+  type IModelElement,
+  type IModelText,
+  type IModelChild,
+  ElementModel,
+  createTextElement,
+  setTextType,
 } from "./model";

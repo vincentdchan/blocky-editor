@@ -9,7 +9,14 @@ import {
   type CursorDomResult,
   Block,
 } from "./basic";
-import { type TreeNode, TextType, CursorState } from "@pkg/model";
+import {
+  type TreeNode,
+  TextType,
+  CursorState,
+  IModelElement,
+  createTextElement,
+  setTextType,
+} from "@pkg/model";
 import { areEqualShallow } from "blocky-common/es/object";
 import { TextModel, TextNode, type AttributesObject } from "@pkg/model";
 import fastDiff from "fast-diff";
@@ -56,30 +63,41 @@ function textModelToFormats(textModel: TextModel): FormattedTextSlice[] {
 class TextBlock extends Block {
   #container: HTMLElement | undefined;
 
-  constructor(private def: TextBlockDefinition, props: TreeNode<TextModel>) {
+  constructor(private def: TextBlockDefinition, props: TreeNode) {
     super(props);
   }
 
+  // private getTextModel(): TextModel {
+  //   return this.elementData.firstChild! as TextModel;
+  // }
+
+  private getTextType(): TextType {
+    const element = this.elementData;
+    return parseInt(element.getAttribute("textType") ?? "0", 10);
+  }
+
   override getBannerOffset(): Position {
-    const blockData = this.props;
-    const textModel = blockData.data as TextModel;
+    const textType = this.getTextType();
 
-    if (textModel) {
-      if (textModel.textType > 0) {
-        return { x: 0, y: 12 };
-      }
+    if (textType > 0) {
+      return { x: 0, y: 12 };
+    }
 
-      if (textModel.textType === TextType.Normal) {
-        return { x: 0, y: 2 };
-      }
+    if (textType === TextType.Normal) {
+      return { x: 0, y: 2 };
     }
 
     return { x: 0, y: 0 };
   }
 
-  override findTextOffsetInBlock(focusedNode: Node, offsetInNode: number): number {
+  override findTextOffsetInBlock(
+    focusedNode: Node,
+    offsetInNode: number
+  ): number {
     const blockContainer = this.#container!;
-    const contentContainer = this.findContentContainer!(blockContainer as HTMLElement);
+    const contentContainer = this.findContentContainer!(
+      blockContainer as HTMLElement
+    );
     let counter = 0;
     let ptr = contentContainer.firstChild;
 
@@ -114,7 +132,7 @@ class TextBlock extends Block {
 
   private createContentContainer(): HTMLElement {
     const e = elem("div", TextContentClass);
-    e.setAttribute("placeholder", zeroSpaceEmptyChar)
+    e.setAttribute("placeholder", zeroSpaceEmptyChar);
     return e;
   }
 
@@ -123,10 +141,14 @@ class TextBlock extends Block {
     element.appendChild(content);
   }
 
-  override blockFocused({ node: blockDom, selection, cursor }: BlockFocusedEvent): void {
+  override blockFocused({
+    node: blockDom,
+    selection,
+    cursor,
+  }: BlockFocusedEvent): void {
     const contentContainer = this.findContentContainer(blockDom);
 
-    contentContainer.setAttribute("placeholder", "Empty content")
+    contentContainer.setAttribute("placeholder", "Empty content");
 
     const { offset } = cursor;
     const pos = this.findFocusPosition(blockDom, offset);
@@ -134,7 +156,13 @@ class TextBlock extends Block {
       const { firstChild } = contentContainer;
 
       if (firstChild == null) {
-        setRangeIfDifferent(selection, contentContainer, 0, contentContainer, 0);
+        setRangeIfDifferent(
+          selection,
+          contentContainer,
+          0,
+          contentContainer,
+          0
+        );
         return;
       }
 
@@ -156,7 +184,7 @@ class TextBlock extends Block {
   override blockBlur({ node: blockDom }: BlockFocusedEvent): void {
     const contentContainer = this.findContentContainer(blockDom);
     const zeroSpaceEmptyChar = String.fromCharCode(160);
-    contentContainer.setAttribute("placeholder", zeroSpaceEmptyChar)
+    contentContainer.setAttribute("placeholder", zeroSpaceEmptyChar);
   }
 
   private findFocusPosition(
@@ -171,7 +199,7 @@ class TextBlock extends Block {
       if (absoluteOffset <= contentLength) {
         let node = ptr;
         if (node instanceof HTMLSpanElement && node.firstChild) {
-          node = node.firstChild
+          node = node.firstChild;
         }
         return { node, offset: absoluteOffset };
       } else {
@@ -184,7 +212,9 @@ class TextBlock extends Block {
     return;
   }
 
-  private getAttributeObjectFromElement(element: HTMLElement): AttributesObject {
+  private getAttributeObjectFromElement(
+    element: HTMLElement
+  ): AttributesObject {
     const attributes: AttributesObject = {};
     const spanRegistry = this.editor.registry.span;
 
@@ -206,7 +236,10 @@ class TextBlock extends Block {
   /**
    * Convert DOM to [[FormattedTextSlice]]
    */
-  private getFormattedTextSliceFromNode(index: number, node: Node): FormattedTextSlice {
+  private getFormattedTextSliceFromNode(
+    index: number,
+    node: Node
+  ): FormattedTextSlice {
     if (node instanceof HTMLSpanElement) {
       const attributes = this.getAttributeObjectFromElement(node);
       return { index, length: node.textContent?.length ?? 0, attributes };
@@ -219,7 +252,10 @@ class TextBlock extends Block {
     }
   }
 
-  override blockContentChanged({ node, offset }: BlockContentChangedEvent): void {
+  override blockContentChanged({
+    node,
+    offset,
+  }: BlockContentChangedEvent): void {
     const contentContainer = this.findContentContainer(node);
     const formats: FormattedTextSlice[] = [];
 
@@ -237,7 +273,11 @@ class TextBlock extends Block {
       ptr = ptr.nextSibling;
     }
 
-    const textModel = blockData.data as TextModel;
+    const textElement = blockData.data as IModelElement | undefined;
+    if (!textElement) {
+      return;
+    }
+    const textModel = textElement.firstChild! as TextModel;
     const oldContent = textModel.toString();
 
     const diffs = fastDiff(oldContent, textContent, offset);
@@ -258,24 +298,29 @@ class TextBlock extends Block {
     this.diffAndApplyFormats(formats, textModel);
   }
 
-  private diffAndApplyFormats(newFormats: FormattedTextSlice[], textModel: TextModel) {
+  private diffAndApplyFormats(
+    newFormats: FormattedTextSlice[],
+    textModel: TextModel
+  ) {
     const oldFormats: FormattedTextSlice[] = textModelToFormats(textModel);
 
     const slices: (FormattedTextSlice | undefined)[] = Array(textModel.length);
-    
+
     for (const format of newFormats) {
       slices[format.index] = format;
     }
 
     for (const oldFormat of oldFormats) {
       const f = slices[oldFormat.index];
-      if (!f) {  // format doesn't anymore, erase it.
+      if (!f) {
+        // format doesn't anymore, erase it.
         textModel.format(oldFormat.index, oldFormat.length, undefined);
         continue;
       }
 
       if (!areEqualShallow(f.attributes, oldFormat.attributes)) {
-        if (oldFormat.length !== f.length) {  // length are different, erase it firstly
+        if (oldFormat.length !== f.length) {
+          // length are different, erase it firstly
           textModel.format(oldFormat.index, oldFormat.length, undefined);
         }
         textModel.format(f.index, f.length, f.attributes);
@@ -296,10 +341,11 @@ class TextBlock extends Block {
     this.#container = container;
     const { id } = this.props;
     const blockNode = this.editor.state.idMap.get(id)!;
-    const textModel = blockNode.data as TextModel;
-    if (!textModel) {
+    const textElement = blockNode.data as IModelElement | undefined;
+    if (!textElement) {
       return;
     }
+    const textModel = textElement.firstChild! as TextModel;
 
     const contentContainer = this.findContentContainer(container);
     this.renderBlockTextContent(contentContainer, textModel);
@@ -360,11 +406,18 @@ class TextBlock extends Block {
     return container;
   }
 
-  private ensureContentContainerStyle(contentContainer: HTMLElement, textModel: TextModel): HTMLElement {
+  private ensureContentContainerStyle(
+    contentContainer: HTMLElement,
+    textModel: TextModel
+  ): HTMLElement {
     const renderedType = contentContainer.getAttribute("data-type");
-    const { textType } = textModel;
+    const textType = this.getTextType();
 
-    const forceRenderContentStyle = (parent: HTMLElement, contentContainer: HTMLElement, textType: TextType) => {
+    const forceRenderContentStyle = (
+      parent: HTMLElement,
+      contentContainer: HTMLElement,
+      textType: TextType
+    ) => {
       switch (textType) {
         case TextType.Bulleted: {
           const bulletSpan = this.createBulletSpan();
@@ -379,13 +432,13 @@ class TextBlock extends Block {
         case TextType.Heading3:
           contentContainer.classList.add(`blocky-heading${textType}`);
           break;
-        
-        default: {}
 
+        default: {
+        }
       }
 
       contentContainer.setAttribute("data-type", textType.toString());
-    }
+    };
 
     const parent = contentContainer.parentElement!;
     if (!renderedType) {
@@ -407,8 +460,14 @@ class TextBlock extends Block {
     return contentContainer;
   }
 
-  private renderBlockTextContent(contentContainer: HTMLElement, textModel: TextModel) {
-    contentContainer = this.ensureContentContainerStyle(contentContainer, textModel);
+  private renderBlockTextContent(
+    contentContainer: HTMLElement,
+    textModel: TextModel
+  ) {
+    contentContainer = this.ensureContentContainerStyle(
+      contentContainer,
+      textModel
+    );
 
     let nodePtr = textModel.nodeBegin;
     let domPtr: Node | null = contentContainer.firstChild;
@@ -418,7 +477,8 @@ class TextBlock extends Block {
       if (!domPtr) {
         domPtr = this.createDomByNode(nodePtr, this.editor);
         contentContainer.insertBefore(domPtr, prevDom?.nextSibling ?? null);
-      } else {  // is old
+      } else {
+        // is old
         if (!isNodeMatch(nodePtr, domPtr)) {
           const oldDom = domPtr;
           const newNode = this.createDomByNode(nodePtr, this.editor);
@@ -450,7 +510,6 @@ class TextBlock extends Block {
       domPtr = next;
     }
   }
-
 }
 
 function clearNodeAttributes(node: Node) {
@@ -462,7 +521,10 @@ function clearNodeAttributes(node: Node) {
 function isNodeMatch(node: TextNode, dom: Node): boolean {
   if (node.attributes) {
     if (typeof node.attributes.href === "string") {
-      return dom instanceof HTMLElement && typeof dom.getAttribute(DataRefKey) === "string";
+      return (
+        dom instanceof HTMLElement &&
+        typeof dom.getAttribute(DataRefKey) === "string"
+      );
     }
     return dom instanceof HTMLSpanElement;
   }
@@ -478,7 +540,12 @@ class TextBlockDefinition implements IBlockDefinition {
     return new TextBlock(this, data);
   }
 
-  onPaste({ after: cursorState, node: container, editor, tryMerge }: BlockPasteEvent): CursorState | undefined {
+  onPaste({
+    after: cursorState,
+    node: container,
+    editor,
+    tryMerge,
+  }: BlockPasteEvent): CursorState | undefined {
     if (!cursorState) {
       return;
     }
@@ -489,25 +556,31 @@ class TextBlockDefinition implements IBlockDefinition {
 
     const currentNode = editor.state.idMap.get(cursorState.targetId)!;
     const parentId = currentNode.parent!.id;
-    const nodeData = currentNode.data;
-    const textModel = this.getTextModelFromDOM(editor, container);
+    const nodeData = currentNode.data as IModelElement | undefined;
+    const textElement = this.getTextElementFromDOM(editor, container);
+    const textModel = textElement.firstChild! as TextModel;
 
-    if (tryMerge && nodeData instanceof TextModel) {
-      const oldTextModel = nodeData as TextModel;
+    if (tryMerge && nodeData?.getAttribute("type") === "text") {
+      const oldTextModel = nodeData.firstChild! as TextModel;
       oldTextModel.append(textModel);
       return;
     }
 
     const newId = editor.idGenerator.mkBlockId();
 
-    editor.applyActions([{
-      type: "new-block",
-      targetId: parentId,
-      afterId: cursorState.targetId,
-      newId,
-      blockName: "text",
-      data: textModel,
-    }], true);
+    editor.applyActions(
+      [
+        {
+          type: "new-block",
+          targetId: parentId,
+          afterId: cursorState.targetId,
+          newId,
+          blockName: "text",
+          data: textElement,
+        },
+      ],
+      true
+    );
 
     return {
       type: "collapsed",
@@ -519,8 +592,12 @@ class TextBlockDefinition implements IBlockDefinition {
   /**
    * Rebuild the data structure from the pasted html.
    */
-  private getTextModelFromDOM(editor: Editor, node: HTMLElement): TextModel {
-    const result = new TextModel();
+  private getTextElementFromDOM(
+    editor: Editor,
+    node: HTMLElement
+  ): IModelElement {
+    const result = createTextElement();
+    const textModel = result.firstChild! as TextModel;
 
     // TODO: Maybe using querySelector is slow.
     // Should make a benchmark here
@@ -537,44 +614,42 @@ class TextBlockDefinition implements IBlockDefinition {
 
       const dataType = textContentContainer.getAttribute("data-type") || "0";
       const dataTypeInt = parseInt(dataType, 10);
-      result.textType = dataTypeInt;
+      setTextType(result, dataTypeInt);
 
       while (childPtr) {
         if (childPtr instanceof Text) {
           const content = childPtr.textContent ?? "";
-          result.insert(index, content);
+          textModel.insert(index, content);
           index += content.length;
         } else if (childPtr instanceof HTMLElement) {
           const content = childPtr.textContent ?? "";
           const attributes = editor.getAttributesBySpan(childPtr);
-          result.insert(index, content, attributes);
+          textModel.insert(index, content, attributes);
           index += content.length;
         }
 
         childPtr = childPtr.nextSibling;
       }
-
     } else {
-      result.insert(0, node.textContent ?? "");
+      textModel.insert(0, node.textContent ?? "");
     }
 
     const { tagName } = node;
     if (tagName === "H1") {
-      result.textType = TextType.Heading1;
+      setTextType(result, TextType.Heading1);
     } else if (tagName === "H2") {
-      result.textType = TextType.Heading2;
+      setTextType(result, TextType.Heading2);
     } else if (tagName === "H3") {
-      result.textType = TextType.Heading3;
+      setTextType(result, TextType.Heading3);
     } else if (tagName === "LI") {
-      result.textType = TextType.Bulleted;
+      setTextType(result, TextType.Bulleted);
     }
 
     return result;
   }
-
 }
 
-function setRangeIfDifferent (
+function setRangeIfDifferent(
   sel: Selection,
   startContainer: Node,
   startOffset: number,

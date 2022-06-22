@@ -15,6 +15,10 @@ import {
   TextModel,
   type AttributesObject,
   TextType,
+  IModelElement,
+  getTextType,
+  createTextElement,
+  setTextType,
 } from "@pkg/model";
 import { CollapsedCursor, OpenCursorState, type CursorState } from "@pkg/model/cursor";
 import { Action } from "@pkg/model/actions";
@@ -571,7 +575,7 @@ export class Editor {
   }
 
   private insertEmptyTextAfterBlock(parentId: string, id: string) {
-    const newTextModel = new TextModel();
+    const newTextElement = createTextElement();
     const newId = this.idGenerator.mkBlockId();
     const actions: Action[] = [
       {
@@ -580,7 +584,7 @@ export class Editor {
         targetId: parentId,
         newId,
         afterId: id,
-        data: newTextModel,
+        data: newTextElement,
       },
     ];
 
@@ -605,22 +609,24 @@ export class Editor {
         return;
       }
 
-      const blockData = node.data;
+      const blockData = node.data as IModelElement | undefined;
       const targetId = node.parent!.id;
-      if (!blockData || !(blockData instanceof TextModel)) {
+      if (!blockData || blockData.getAttribute("type") !== "text") {
         // default behavior
         this.insertEmptyTextAfterBlock(targetId, cursorState.targetId);
         return;
       }
-      const textModel = blockData as TextModel;
+      const textModel = blockData.firstChild! as TextModel;
 
       const cursorOffset = cursorState.offset;
 
       const slices = textModel.slice(cursorOffset);
 
-      const newTextModel = new TextModel();
-      if (this.preservedTextType.has(textModel.textType)) {  // preserved data type
-        newTextModel.textType = textModel.textType;
+      const newTextElement = createTextElement();
+      const newTextModel = newTextElement.firstChild! as TextModel;
+      const textType = getTextType(blockData);
+      if (this.preservedTextType.has(textType)) {  // preserved data type
+        setTextType(newTextElement, textType);
       }
 
       let ptr = 0;
@@ -639,7 +645,7 @@ export class Editor {
           targetId,
           newId,
           afterId: node.id,
-          data: newTextModel,
+          data: newTextElement,
         },
       ];
 
@@ -1110,12 +1116,13 @@ export class Editor {
       return;
     }
 
-    const textModel = this.getTextModelByBlockId(cursorState.targetId);
-    if (!textModel) {
+    const textElement = this.getTextElementByBlockId(cursorState.targetId);
+    if (!textElement) {
       return;
     }
 
     const afterOffset = cursorState.offset + text.length;
+    const textModel = textElement.firstChild! as TextModel;
     textModel.insert(cursorState.offset, text, attributes);
     return {
       type: "collapsed",
@@ -1124,15 +1131,20 @@ export class Editor {
     };
   }
 
-  getTextModelByBlockId(blockId: string): TextModel | undefined {
+  getTextElementByBlockId(blockId: string): IModelElement | undefined {
     const treeNode = this.state.idMap.get(blockId);
     if (!treeNode) {
       return;
     }
 
-    const treeData = treeNode.data;
+    const treeData = treeNode.data as IModelElement | undefined;
+    if (!treeData) {
+      return;
+    }
 
-    if (treeData && treeData instanceof TextModel) {
+    const type = treeData.getAttribute("type");
+
+    if (type === "text") {
       return treeData;
     }
   }
