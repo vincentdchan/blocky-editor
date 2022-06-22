@@ -2,12 +2,13 @@ import { isWhiteSpace } from "blocky-common/es/text";
 import type { IPlugin } from "@pkg/registry/pluginRegistry";
 import type { Editor } from "@pkg/view/editor";
 import type { Block } from "@pkg/block/basic";
-import { TextModel, TextType, type TextInsertEvent } from "@pkg/model";
+import { type IModelElement, TextModel, TextType, type TextInsertEvent, setTextType, getTextType } from "@pkg/model";
 
 function makeBulletListPlugin(): IPlugin {
-  const turnTextBlockIntoBulletList = (editor: Editor, blockId: string, textModel: TextModel) => {
+  const turnTextBlockIntoBulletList = (editor: Editor, blockId: string, textElement: IModelElement) => {
+    const textModel = textElement.firstChild! as TextModel;
     textModel.delete(0, 2);
-    textModel.textType = TextType.Bulleted;
+    setTextType(textElement, TextType.Bulleted);
     editor.render(() => {
       editor.state.cursorState = {
         type: "collapsed",
@@ -17,17 +18,22 @@ function makeBulletListPlugin(): IPlugin {
     });
   };
   const handleNewBlockCreated = (editor: Editor) => (block: Block) => {
-    const blockData = block.props.data;
-    if (blockData && blockData instanceof TextModel) {
-      blockData.onInsert.on((e: TextInsertEvent) => {
-        if (e.index === 1 && e.text.length === 1 && isWhiteSpace(e.text)) {
-          const content = blockData.toString();
-          if (content[0] === "-") {
-            turnTextBlockIntoBulletList(editor, block.props.id, blockData);
-          }
-        }
-      });
+    const blockData = block.props.data as IModelElement | undefined;
+    if (!blockData) {
+      return;
     }
+    if (blockData.getAttribute("type") !== "text") {
+      return;
+    }
+    const textModel = blockData.firstChild! as TextModel;
+    textModel.onInsert.on((e: TextInsertEvent) => {
+      if (e.index === 1 && e.text.length === 1 && isWhiteSpace(e.text)) {
+        const content = blockData.toString();
+        if (content[0] === "-") {
+          turnTextBlockIntoBulletList(editor, block.props.id, blockData);
+        }
+      }
+    });
   };
   /**
    * If the user presses a Backspace on the start of a bullet list,
@@ -51,10 +57,14 @@ function makeBulletListPlugin(): IPlugin {
       return;
     }
 
-    const textModel = editor.getTextModelByBlockId(targetId);
-    if (textModel && textModel.textType === TextType.Bulleted) {
+    const textElement = editor.getTextElementByBlockId(targetId);
+    if (!textElement) {
+      return;
+    }
+    const textType = getTextType(textElement);
+    if (textType === TextType.Bulleted) {
       e.preventDefault();
-      textModel.textType = TextType.Normal;
+      setTextType(textElement, TextType.Normal);
       editor.render(() => {
         editor.state.cursorState = {
           type: "collapsed",

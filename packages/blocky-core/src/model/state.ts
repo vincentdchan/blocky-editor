@@ -42,7 +42,7 @@ class State {
           }
 
           case "block": {
-            const blockNode: TreeNode = createNode(node.id, node.flags, node.data);
+            const blockNode: TreeNode = createNode(node.id, node.flags, node.data!);
             appendChild(parentNode!, blockNode);
 
             const blockDef = blockRegistry.getBlockDefById(node.flags)!;
@@ -123,6 +123,9 @@ class State {
         const blockDef = this.blockRegistry.getBlockDefById(blockId)!;
 
 
+        if (!action.data) {
+          throw new Error("data is empty for new block");
+        }
         const blockNode = createNode(action.newId, blockId, action.data);
         this.insertNode(blockNode);
 

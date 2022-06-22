@@ -9,6 +9,7 @@ export interface IModelElement {
   nextSibling?: IModelChild;
   prevSibling?: IModelChild;
   firstChild?: IModelChild;
+  insert(index: number, child: IModelChild): void;
   setAttribute(name: string, value: string): void;
   getAttribute(name: string): string | undefined;
 }

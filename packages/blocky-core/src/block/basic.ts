@@ -3,6 +3,7 @@ import { CursorState, type CollapsedCursor } from "@pkg/model/cursor";
 import { type TreeNode } from "@pkg/model/tree";
 import { type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";
+import { type IModelElement } from "@pkg/model";
 
 export interface BlockDidMountEvent {
   element: HTMLElement;
@@ -128,10 +129,14 @@ export interface IBlockDefinition {
 
 }
 
-export class Block<T = any> implements IDisposable {
+export class Block implements IDisposable {
   #editor: Editor | undefined;
 
-  constructor(public props: TreeNode<T>) {}
+  constructor(public props: TreeNode) {}
+
+  get elementData(): IModelElement {
+    return this.props.data! as IModelElement;
+  }
 
   setEditor(editor: Editor) {
     this.#editor = editor;
