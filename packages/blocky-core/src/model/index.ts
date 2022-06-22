@@ -9,4 +9,6 @@ export {
 } from "./tree";
 export { default as State } from "./state";
 export { type CursorState } from "./cursor";
+export { type AttributesObject } from "./element";
 export * from "./textModel";
+export * from "./elementModel";
