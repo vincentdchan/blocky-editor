@@ -1,6 +1,7 @@
 import { areEqualShallow } from "blocky-common/es/object";
 import { Slot } from "blocky-common/es/events";
-import { type IModelText, type AttributesObject } from "./element";
+import { type IModelText, type IModelElement, type AttributesObject } from "./element";
+import { ElementModel } from "./elementModel";
 
 export interface TextNode {
   prev?: TextNode;
@@ -37,7 +38,7 @@ export class TextModel implements IModelText {
 
   public readonly onInsert: Slot<TextInsertEvent> = new Slot();
 
-  constructor(public textType: TextType = TextType.Normal) {}
+  constructor() {}
 
   public insert(index: number, text: string, attributes?: AttributesObject) {
     if (text.length === 0) {
@@ -334,4 +335,22 @@ export class TextModel implements IModelText {
   get length() {
     return this.#length;
   }
+}
+
+export function createTextElement(): IModelElement {
+  const result = new ElementModel("text");
+  result.setAttribute("type", "text");
+
+  const text = new TextModel();
+  result.insert(0, text);
+
+  return result;
+}
+
+export function getTextType(element: IModelElement): TextType {
+  return parseInt(element.getAttribute("textType") ?? "0", 10);
+}
+
+export function setTextType(element: IModelElement, textType: TextType) {
+  element.setAttribute("textType", textType.toString());
 }

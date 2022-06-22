@@ -1,31 +1,32 @@
+import { type IModelChild } from "./element";
 
-export interface TreeRoot extends TreeNode<any> {
+export interface TreeRoot extends TreeNode {
 
 }
 
-export interface TreeNode<T = any> {
-  parent?: TreeNode<T>;
-  prev?: TreeNode<T>;
-  next?: TreeNode<T>;
+export interface TreeNode {
+  parent?: TreeNode;
+  prev?: TreeNode;
+  next?: TreeNode;
   id: string;
   blockTypeId: number;
-  data?: T;
-  firstChild?: TreeNode<T>,
-  lastChild?: TreeNode<T>;
+  data?: IModelChild;
+  firstChild?: TreeNode,
+  lastChild?: TreeNode;
   childrenLength: number;
 }
 
-export function forEach<T>(parent: TreeNode<T>, f: (f: TreeNode<T>) => void) {
-  let ptr: TreeNode<T> | undefined = parent.firstChild;
+export function forEach(parent: TreeNode, f: (f: TreeNode) => void) {
+  let ptr: TreeNode | undefined = parent.firstChild;
   while (ptr) {
     f(ptr);
     ptr = ptr.next;
   }
 }
 
-export function map<T, R>(childrenStart: TreeNode<T>, f: (f: TreeNode<T>) => R): R[] {
+export function map<T, R>(childrenStart: TreeNode, f: (f: TreeNode) => R): R[] {
   const result: R[] = [];
-  let ptr: TreeNode<T> | undefined = childrenStart;
+  let ptr: TreeNode | undefined = childrenStart;
   while (ptr) {
     result.push(f(ptr));
     ptr = ptr.next;
@@ -33,11 +34,11 @@ export function map<T, R>(childrenStart: TreeNode<T>, f: (f: TreeNode<T>) => R):
   return result;
 }
 
-export function childrenToArray<T>(childrenStart: TreeNode<T>): TreeNode<T>[] {
-  return map<T, TreeNode<T>>(childrenStart, (node) => node);
+export function childrenToArray<T>(childrenStart: TreeNode): TreeNode[] {
+  return map<T, TreeNode>(childrenStart, (node) => node);
 }
 
-export function insertAfter<T>(parent: TreeNode<T>, node: TreeNode<T>, after?: TreeNode<T>) {
+export function insertAfter<T>(parent: TreeNode, node: TreeNode, after?: TreeNode) {
   node.parent = parent;
   if (!after) {
     if (parent.firstChild) {
@@ -69,7 +70,7 @@ export function insertAfter<T>(parent: TreeNode<T>, node: TreeNode<T>, after?: T
   parent.childrenLength++;
 }
 
-export function appendChild<T>(parent: TreeNode<T>, node: TreeNode<T>) {
+export function appendChild<T>(parent: TreeNode, node: TreeNode) {
   if (!parent.firstChild) {
     parent.firstChild = node;
   }
@@ -85,7 +86,15 @@ export function appendChild<T>(parent: TreeNode<T>, node: TreeNode<T>) {
   parent.childrenLength++;
 }
 
-export function createRoot<T>(id: string, blockTypeId: number = 0, data: T): TreeRoot {
+export function createRoot(id: string, blockTypeId: number = 0): TreeRoot {
+  return {
+    id,
+    blockTypeId,
+    childrenLength: 0,
+  };
+}
+
+export function createNode(id: string, blockTypeId: number = 0, data: IModelChild): TreeNode {
   return {
     id,
     blockTypeId,
@@ -94,16 +103,7 @@ export function createRoot<T>(id: string, blockTypeId: number = 0, data: T): Tre
   };
 }
 
-export function createNode<T>(id: string, blockTypeId: number = 0, data: T): TreeNode<T> {
-  return {
-    id,
-    blockTypeId,
-    data,
-    childrenLength: 0,
-  };
-}
-
-export function removeNode<T>(node: TreeNode<T>) {
+export function removeNode(node: TreeNode) {
   const { parent } = node;
   if (!parent) {
     return;

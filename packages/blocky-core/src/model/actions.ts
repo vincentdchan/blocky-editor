@@ -1,4 +1,4 @@
-import { type AttributesObject } from "@pkg/model";
+import { type AttributesObject, type IModelElement } from "@pkg/model";
 
 export interface NewBlockAction {
   type: "new-block";
@@ -6,7 +6,7 @@ export interface NewBlockAction {
   targetId: string;
   afterId: string;
   newId: string;
-  data?: any;
+  data?: IModelElement;
 }
 
 export interface DeleteLineAction {

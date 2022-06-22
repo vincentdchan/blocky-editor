@@ -1,4 +1,4 @@
-import { type TryParsePastedDOMEvent, type Editor, type IPlugin, type BlockData } from "blocky-core";
+import { type TryParsePastedDOMEvent, type Editor, type IPlugin, type TreeNode, ElementModel, IModelElement } from "blocky-core";
 import { makeReactBlock, DefaultBlockOutline } from "blocky-preact";
 import { type RefObject, createRef } from "preact";
 import { PureComponent } from "preact/compat";
@@ -8,7 +8,7 @@ import "./imageBlock.scss";
 export const ImageBlockName = "image";
 
 interface ImageBlockProps {
-  blockData: BlockData;
+  blockData: TreeNode;
 }
 
 interface ImageBlockState {
@@ -21,9 +21,9 @@ class ImageBlock extends PureComponent<ImageBlockProps, ImageBlockState> {
   constructor(props: ImageBlockProps) {
     super(props);
 
-    const initData = props.blockData.data;
+    const initData = props.blockData.data as IModelElement | undefined;
     this.state = {
-      data: initData?.src,
+      data: initData?.getAttribute("src"),
     };
   }
 
@@ -85,17 +85,20 @@ export function makeImageBlockPlugin(): IPlugin {
       editor.registry.block.register(
         makeReactBlock({
           name: ImageBlockName,
-          component: (data: BlockData) => <ImageBlock blockData={data} />,
+          component: (data: TreeNode) => <ImageBlock blockData={data} />,
           tryParsePastedDOM(e: TryParsePastedDOMEvent) {
             const { node, editor, after } = e;
             const img = node.querySelector("img");
             if (img && after && after.type === "collapsed") {
+              const element = new ElementModel("img");
+              const src = img.getAttribute("src");
+              if (src) {
+                element.setAttribute("src", src);
+              }
               const newId = editor.controller.insertBlockAfterId(after.targetId, {
                 noRender: true,
                 blockName: ImageBlockName,
-                data: {
-                  src: img.getAttribute("src"),
-                },
+                data: element,
               });
               e.preventDefault();
               e.after = {
