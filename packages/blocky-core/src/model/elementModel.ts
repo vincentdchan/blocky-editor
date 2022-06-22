@@ -1,9 +1,9 @@
 import { type IModelElement, type IModelChild } from "./element";
 
-// const bannedAttributesName: Set<string> = new Set([
-//   "nodeName",
-//   "type",
-// ]);
+const bannedAttributesName: Set<string> = new Set([
+  "nodeName",
+  "type",
+]);
 
 export class ElementModel implements IModelElement {
   type: "element" = "element";
@@ -28,9 +28,9 @@ export class ElementModel implements IModelElement {
   }
 
   setAttribute(name: string, value: string) {
-    // if (bannedAttributesName.has(name)) {
-    //   throw new Error(`'${name}' is preserved`);
-    // }
+    if (bannedAttributesName.has(name)) {
+      throw new Error(`'${name}' is preserved`);
+    }
     this.#attributes.set(name, value);
   }
 

@@ -611,7 +611,7 @@ export class Editor {
 
       const blockData = node.data as IModelElement | undefined;
       const targetId = node.parent!.id;
-      if (!blockData || blockData.getAttribute("type") !== "text") {
+      if (!blockData || blockData.nodeName !== "text") {
         // default behavior
         this.insertEmptyTextAfterBlock(targetId, cursorState.targetId);
         return;
@@ -1142,9 +1142,7 @@ export class Editor {
       return;
     }
 
-    const type = treeData.getAttribute("type");
-
-    if (type === "text") {
+    if (treeData.nodeName === "text") {
       return treeData;
     }
   }

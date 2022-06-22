@@ -17,9 +17,7 @@ function makeHeadingsPlugin(): IPlugin {
       return;
     }
 
-    const type = blockData.getAttribute("type");
-
-    if (type !== "text") {
+    if (blockData.nodeName !== "text") {
       return;
     }
 

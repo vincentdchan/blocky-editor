@@ -22,7 +22,7 @@ function makeBulletListPlugin(): IPlugin {
     if (!blockData) {
       return;
     }
-    if (blockData.getAttribute("type") !== "text") {
+    if (blockData.nodeName !== "text") {
       return;
     }
     const textModel = blockData.firstChild! as TextModel;

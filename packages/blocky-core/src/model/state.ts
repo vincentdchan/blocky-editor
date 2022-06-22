@@ -160,7 +160,7 @@ class State {
         const { targetId, index, length, attributes } = action;
         const blockNode = this.idMap.get(targetId) as TreeNode;
         const data = blockNode.data as IModelElement | undefined;
-        if (data && data.getAttribute("type") === "text") {
+        if (data && data.nodeName === "text") {
           const textModel = data.firstChild! as TextModel;
           textModel.format(index, length, attributes);
         }
