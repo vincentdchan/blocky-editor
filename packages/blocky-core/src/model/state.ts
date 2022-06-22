@@ -20,6 +20,7 @@ import { Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { validate as validateNode } from "./validator";
 import { TextModel } from "./textModel";
+import { IModelElement } from "./element";
 
 class State {
   static fromMarkup(doc: MDoc, blockRegistry: BlockRegistry): State {
@@ -158,9 +159,10 @@ class State {
       case "text-format": {
         const { targetId, index, length, attributes } = action;
         const blockNode = this.idMap.get(targetId) as TreeNode;
-        const data = blockNode.data;
-        if (data && data instanceof TextModel) {
-          data.format(index, length, attributes);
+        const data = blockNode.data as IModelElement | undefined;
+        if (data && data.getAttribute("type") === "text") {
+          const textModel = data.firstChild! as TextModel;
+          textModel.format(index, length, attributes);
         }
         break;
       }
