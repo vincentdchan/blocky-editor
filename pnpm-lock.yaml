@@ -23,7 +23,7 @@ importers:
       '@rollup/plugin-typescript': ^8.3.2
       '@types/is-hotkey': ^0.1.7
       '@types/node': ^17.0.41
-      blocky-common: workspace:*
+      blocky-common: workspace:^1.1.0
       fast-diff: ^1.2.0
       is-hotkey: ^0.2.0
       rollup: ^2.75.6

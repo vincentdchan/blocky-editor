@@ -11,10 +11,6 @@
   position: relative;
 }
 
-.blocky-editor-blocks-container {
-  padding: 12px 56px 72px 56px;
-}
-
 .blocky-editor-banner-delegate {
   position: absolute;
 }

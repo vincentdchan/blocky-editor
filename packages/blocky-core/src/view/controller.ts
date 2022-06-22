@@ -1,5 +1,6 @@
 import { Slot } from "blocky-common/es/events";
 import { observe } from "blocky-common/es/observable";
+import { type Padding } from "blocky-common/es/dom";
 import { AttributesObject, State, TreeNode } from "@pkg/model";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
@@ -30,6 +31,7 @@ export interface IEditorControllerOptions {
   idGenerator?: IdGenerator;
   bannerFactory?: BannerFactory;
   toolbarFactory?: ToolbarFactory;
+  padding?: Partial<Padding>;
 }
 
 export interface IInsertOptions {

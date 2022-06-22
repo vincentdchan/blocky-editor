@@ -8,6 +8,7 @@ function ensureChild<K extends keyof HTMLElementTagNameMap>(
   index: number,
   tag: K,
   cls?: string,
+  creator?: (element: HTMLElement) => void,
 ): HTMLElement {
   const item = dom.children.item(index);
   if (
@@ -21,6 +22,7 @@ function ensureChild<K extends keyof HTMLElementTagNameMap>(
     } else {
       dom.insertBefore(newItem, item);
     }
+    creator?.(newItem);
     return newItem;
   }
   return item as HTMLElement;
@@ -66,7 +68,11 @@ export class DocRenderer {
     dom._mgNode = model;
 
     const { clsPrefix } = this;
-    const blocksContainer = ensureChild(dom, 0, "div", `${clsPrefix}-editor-blocks-container`);
+    const blocksContainer = ensureChild(dom, 0, "div", `${clsPrefix}-editor-blocks-container`, (elem: HTMLElement) => {
+      const { padding } = this.editor;
+      const { top, right, bottom, left } = padding;
+      elem.style.padding = `${top}px ${right}px ${bottom}px ${left}px`;
+    });
     this.renderBlocks(blocksContainer, model);
   }
 

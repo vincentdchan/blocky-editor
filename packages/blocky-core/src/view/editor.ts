@@ -2,6 +2,7 @@ import { $on, removeNode } from "blocky-common/es/dom";
 import { Cell } from "blocky-common/es/cell";
 import { observe, runInAction } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
+import { type Padding } from "blocky-common/es/dom";
 import {
   type IDisposable,
   flattenDisposable,
@@ -71,11 +72,21 @@ export interface IEditorOptions {
   idGenerator?: IdGenerator;
   bannerFactory?: BannerFactory;
   toolbarFactory?: ToolbarFactory;
+  padding?: Partial<Padding>;
 }
 
 enum MineType  {
   PlainText = "text/plain",
   Html = "text/html",
+}
+
+function makeDefaultPadding(): Padding {
+  return {
+    top: 12,
+    right: 56,
+    bottom: 72,
+    left: 56,
+  };
 }
 
 /**
@@ -103,6 +114,8 @@ export class Editor {
 
   public readonly preservedTextType: Set<TextType> = new Set([TextType.Bulleted]);
 
+  public readonly padding: Padding;
+
   public composing: boolean = false;
   private disposables: IDisposable[] = [];
 
@@ -120,6 +133,7 @@ export class Editor {
       state: controller.state,
       bannerFactory: controller.options?.bannerFactory,
       toolbarFactory: controller.options?.toolbarFactory,
+      padding: controller.options?.padding,
     });
     controller.mount(editor);
     return editor;
@@ -136,11 +150,17 @@ export class Editor {
       idGenerator,
       bannerFactory,
       toolbarFactory,
+      padding,
     } = options;
     this.state = state;
     this.registry = registry;
     this.#container = container;
     this.idGenerator = idGenerator ?? makeDefaultIdGenerator();
+
+    this.padding = {
+      ...makeDefaultPadding(),
+      ...padding,
+    };
 
     this.bannerDelegate = new BannerDelegate(controller, bannerFactory);
     this.bannerDelegate.mount(this.#container);
