@@ -28,7 +28,7 @@ function makeBulletListPlugin(): IPlugin {
     const textModel = blockData.firstChild! as TextModel;
     textModel.onInsert.on((e: TextInsertEvent) => {
       if (e.index === 1 && e.text.length === 1 && isWhiteSpace(e.text)) {
-        const content = blockData.toString();
+        const content = textModel.toString();
         if (content[0] === "-") {
           turnTextBlockIntoBulletList(editor, block.props.id, blockData);
         }
