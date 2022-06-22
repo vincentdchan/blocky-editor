@@ -4,6 +4,7 @@ import {
   TextType,
   createTextElement,
   setTextType,
+  ElementModel,
 } from "blocky-core";
 import {
   type IDisposable,
@@ -115,6 +116,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
     editorController.insertBlockAfterId(focusedNode.id, {
       autoFocus: true,
       blockName: ImageBlockName,
+      data: new ElementModel("img"),
     });
   };
 
