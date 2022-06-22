@@ -1,4 +1,4 @@
-import { $on, removeNode } from "blocky-common/es/dom";
+import { $on, isContainNode, removeNode } from "blocky-common/es/dom";
 import { Cell } from "blocky-common/es/cell";
 import { observe, runInAction } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
@@ -745,8 +745,17 @@ export class Editor {
       return;
     }
 
+    // if selecting range is in the editor, erase it
+    // otherwise, ignore it.
     if (!newState) {
-      sel.removeAllRanges();
+      if (sel.rangeCount === 0) {
+        return;
+      }
+      const range = sel.getRangeAt(0)
+      const startContainer = range.startContainer;
+      if (isContainNode(startContainer, this.#container)) {
+        sel.removeAllRanges();
+      }
       return;
     }
 
