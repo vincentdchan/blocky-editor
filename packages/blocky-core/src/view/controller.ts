@@ -235,7 +235,4 @@ export class EditorController {
     editor.render();
   }
 
-  get bannerFocusedNode(): TreeNode | undefined {
-    return this.editor?.bannerDelegate.focusedNode;
-  }
 }
