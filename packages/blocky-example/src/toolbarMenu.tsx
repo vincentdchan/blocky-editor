@@ -130,6 +130,16 @@ interface AnchorToolbarProps {
 
 interface AnchorToolbarState {
   content: string;
+  valid: boolean;
+}
+
+function isUrl(text: string): boolean {
+  try {
+    new URL(text);
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 class AnchorToolbar extends Component<AnchorToolbarProps, AnchorToolbarState> {
@@ -139,6 +149,7 @@ class AnchorToolbar extends Component<AnchorToolbarProps, AnchorToolbarState> {
     super(props);
     this.state = {
       content: "",
+      valid: false,
     };
   }
 
@@ -151,8 +162,11 @@ class AnchorToolbar extends Component<AnchorToolbarProps, AnchorToolbarState> {
   };
 
   private handleContentChanged = (e: JSX.TargetedEvent<HTMLInputElement>) => {
+    const content = (e.target! as any).value as string;
+    const valid = isUrl(content);
     this.setState({
-      content: (e.target! as any).value,
+      content,
+      valid,
     });
   };
 
@@ -182,7 +196,7 @@ class AnchorToolbar extends Component<AnchorToolbarProps, AnchorToolbarState> {
           onChange={this.handleContentChanged}
           onKeyDown={this.handleKeydown}
         />
-        <Button onClick={this.handleConfirmed}>Confirm</Button>
+        <Button disabled={!state.valid} onClick={this.handleConfirmed}>Confirm</Button>
       </div>
     );
   }
