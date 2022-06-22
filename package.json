@@ -7,6 +7,7 @@
     "postinstall": "ts-patch install",
     "prepare": "cp ./README.md ./packages/blocky-core",
     "build": "tsc --build packages/blocky-preact",
+    "build:yjs": "tsc --build packages/blocky-yjs",
     "watch": "tsc --build -w packages/blocky-preact",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
