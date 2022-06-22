@@ -364,10 +364,7 @@ export class Editor {
       return;
     }
 
-    const { data } = treeNode;
-    if (data.t === "block") {
-      this.checkBlockContent(node, treeNode, currentOffset);
-    }
+    this.checkBlockContent(node, treeNode, currentOffset);
   }
 
   /**
@@ -378,9 +375,9 @@ export class Editor {
     blockNode: TreeNode,
     currentOffset?: number,
   ) {
-    const block = this.state.blocks.get(blockNode.id)!;
+    const block = this.state.blocks.get(blockNode.id);
 
-    block.blockContentChanged({
+    block?.blockContentChanged({
       node: node as HTMLDivElement,
       offset: currentOffset,
     });

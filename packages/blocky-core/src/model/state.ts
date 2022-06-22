@@ -3,7 +3,6 @@ import { Slot } from "blocky-common/es/events";
 import {
   type TreeNode,
   type TreeRoot,
-  createRoot,
   createNode,
   appendChild,
   insertAfter,
@@ -149,16 +148,14 @@ class State {
         this.idMap.delete(targetId);
         this.domMap.delete(targetId);
 
-        if (node.data.t === "block") {
-          this.blockDeleted.emit(node.data);
-        }
+        this.blockDeleted.emit(node);
         break;
       }
 
       case "text-format": {
         const { targetId, index, length, attributes } = action;
         const blockNode = this.idMap.get(targetId) as TreeNode;
-        const data = blockNode.data.data;
+        const data = blockNode.data;
         if (data && data instanceof TextModel) {
           data.format(index, length, attributes);
         }

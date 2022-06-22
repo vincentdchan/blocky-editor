@@ -140,7 +140,6 @@ export class EditorController {
       return;
     }
 
-
     const blockNode = this.state.idMap.get(blockId) as TreeNode;
 
     const actions: Action[] = [
@@ -189,10 +188,6 @@ export class EditorController {
       const blockNode = editor.state.idMap.get(startId);
       if (!blockNode) {
         console.error(`${startId} not found`);
-        return;
-      }
-      if (blockNode.data.t !== "block") {
-        console.error(`${startId} is not a block`);
         return;
       }
       this.formatText(
