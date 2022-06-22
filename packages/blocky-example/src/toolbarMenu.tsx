@@ -135,8 +135,9 @@ interface AnchorToolbarState {
 
 function isUrl(text: string): boolean {
   try {
-    new URL(text);
-    return true;
+    const url = new URL(text);
+    const { protocol } = url;
+    return protocol === "http:" || protocol === "https:";
   } catch (e) {
     return false;
   }
@@ -173,6 +174,9 @@ class AnchorToolbar extends Component<AnchorToolbarProps, AnchorToolbarState> {
   private handleKeydown = (e: JSX.TargetedKeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
+      if (!this.state.valid) {
+        return;
+      }
       this.handleConfirmed();
     }
   }
