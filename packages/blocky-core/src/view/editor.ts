@@ -299,6 +299,11 @@ export class Editor {
     const range = sel.getRangeAt(0);
     const { startContainer, endContainer, startOffset, endOffset } = range;
 
+    // not a dom in this editor, ignore it.
+    if (!isContainNode(startContainer, this.#container)) {
+      return;
+    }
+
     const startNode = this.findBlockNodeContainer(startContainer);
     if (!startNode) {
       this.handleTreeNodeNotFound(startContainer);
