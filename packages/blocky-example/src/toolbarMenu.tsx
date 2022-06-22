@@ -156,6 +156,13 @@ class AnchorToolbar extends Component<AnchorToolbarProps, AnchorToolbarState> {
     });
   };
 
+  private handleKeydown = (e: JSX.TargetedKeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      this.handleConfirmed();
+    }
+  }
+
   override componentDidMount() {
     this.#inputRef.current?.focus();
   }
@@ -173,6 +180,7 @@ class AnchorToolbar extends Component<AnchorToolbarProps, AnchorToolbarState> {
           placeholder="Link"
           value={state.content}
           onChange={this.handleContentChanged}
+          onKeyDown={this.handleKeydown}
         />
         <Button onClick={this.handleConfirmed}>Confirm</Button>
       </div>
