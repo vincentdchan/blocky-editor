@@ -1,6 +1,4 @@
 
-/src
-
 tsconfig.json
 vite.config.ts
 tsconfig.tsbuildinfo
