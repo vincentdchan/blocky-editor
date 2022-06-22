@@ -339,7 +339,6 @@ export class TextModel implements IModelText {
 
 export function createTextElement(): IModelElement {
   const result = new ElementModel("text");
-  result.setAttribute("type", "text");
 
   const text = new TextModel();
   result.insert(0, text);
