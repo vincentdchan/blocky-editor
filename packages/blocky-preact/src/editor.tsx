@@ -19,7 +19,7 @@ export class BlockyEditor extends Component<Props> {
       if (firstChild?.data.t === "block") {
         editor.state.cursorState = {
           type: "collapsed",
-          targetId: firstChild.data.id,
+          targetId: firstChild.id,
           offset: 0,
         };
       }

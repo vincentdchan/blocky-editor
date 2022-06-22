@@ -9,12 +9,12 @@ import {
   type CursorDomResult,
   Block,
 } from "./basic";
-import { type BlockData, TextType, CursorState } from "@pkg/model";
+import { type TreeNode, TextType, CursorState } from "@pkg/model";
 import { areEqualShallow } from "blocky-common/es/object";
 import { TextModel, TextNode, type AttributesObject } from "@pkg/model/textModel";
 import fastDiff from "fast-diff";
 import { type Editor } from "@pkg/view/editor";
-import { Position } from "blocky-common/src/position";
+import { type Position } from "blocky-common/es/position";
 
 export const TextBlockName = "text";
 
@@ -56,7 +56,7 @@ function textModelToFormats(textModel: TextModel): FormattedTextSlice[] {
 class TextBlock extends Block {
   #container: HTMLElement | undefined;
 
-  constructor(private def: TextBlockDefinition, props: BlockData) {
+  constructor(private def: TextBlockDefinition, props: TreeNode<TextModel>) {
     super(props);
   }
 
@@ -296,8 +296,7 @@ class TextBlock extends Block {
     this.#container = container;
     const { id } = this.props;
     const blockNode = this.editor.state.idMap.get(id)!;
-    const block = blockNode.data as BlockData<TextModel>;
-    const textModel = block.data;
+    const textModel = blockNode.data as TextModel;
     if (!textModel) {
       return;
     }
@@ -480,13 +479,12 @@ class TextBlockDefinition implements IBlockDefinition {
     }
 
     const currentNode = editor.state.idMap.get(cursorState.targetId)!;
-    const parentId = currentNode.parent!.data.id;
-    const nodeData = currentNode.data as BlockData;
-    const blockData = nodeData.data;
+    const parentId = currentNode.parent!.id;
+    const nodeData = currentNode.data;
     const textModel = this.getTextModelFromDOM(editor, container);
 
-    if (tryMerge && blockData instanceof TextModel) {
-      const oldTextModel = blockData as TextModel;
+    if (tryMerge && nodeData instanceof TextModel) {
+      const oldTextModel = nodeData as TextModel;
       oldTextModel.append(textModel);
       return;
     }

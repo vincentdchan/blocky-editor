@@ -11,8 +11,6 @@ import { DocRenderer } from "@pkg/view/renderer";
 import {
   State as DocumentState,
   type TreeNode,
-  type DocNode,
-  type BlockData,
   TextModel,
   type AttributesObject,
   TextType,
@@ -219,14 +217,14 @@ export class Editor {
 
     // parent is block
     if (parent instanceof HTMLElement && parent.classList.contains(this.#renderer.blockClassName)) {
-      const node = parent._mgNode as TreeNode<DocNode> | undefined;
+      const node = parent._mgNode as TreeNode | undefined;
       if (!node) {
         return false;
       }
 
       this.state.cursorState = {
         type: "collapsed",
-        targetId: node.data.id,
+        targetId: node.id,
         offset: 0
       };
 
@@ -242,13 +240,13 @@ export class Editor {
     }
   }
 
-  private findBlockNodeContainer(node: Node): TreeNode<BlockData> | undefined {
+  private findBlockNodeContainer(node: Node): TreeNode | undefined {
     let ptr: Node | null = node;
 
     while (ptr) {
-      const node = ptr._mgNode as TreeNode<DocNode> | undefined;
-      if (node && node.data.t === "block") {
-        return node as TreeNode<BlockData>;
+      const node = ptr._mgNode as TreeNode | undefined;
+      if (node) {
+        return node;
       }
 
       ptr = ptr.parentNode;
@@ -257,9 +255,8 @@ export class Editor {
     return;
   }
   
-  private findTextOffsetInBlock(blockNode: TreeNode<BlockData>, focusedNode: Node, offsetInNode: number): number {
-    const { data } = blockNode;
-    const block = this.state.blocks.get(data.id)!;
+  private findTextOffsetInBlock(blockNode: TreeNode, focusedNode: Node, offsetInNode: number): number {
+    const block = this.state.blocks.get(blockNode.id)!;
 
     return block.findTextOffsetInBlock(focusedNode, offsetInNode);
   }
@@ -288,7 +285,7 @@ export class Editor {
     if (range.collapsed) {
       this.state.cursorState = {
         type: "collapsed",
-        targetId: startNode.data.id,
+        targetId: startNode.id,
         offset: absoluteStartOffset,
       };
     } else {
@@ -300,9 +297,9 @@ export class Editor {
       const absoluteEndOffset = this.findTextOffsetInBlock(endNode, endContainer, endOffset);
       this.state.cursorState = {
         type: "open",
-        startId: startNode.data.id,
+        startId: startNode.id,
         startOffset: absoluteStartOffset,
-        endId: endNode.data.id,
+        endId: endNode.id,
         endOffset: absoluteEndOffset,
       };
     }
@@ -354,8 +351,8 @@ export class Editor {
     actions: Action[],
     currentOffset?: number,
   ) {
-    const treeNode = node._mgNode as TreeNode<DocNode>;
-    const targetId = treeNode.data.id;
+    const treeNode = node._mgNode as TreeNode;
+    const targetId = treeNode.id;
     if (!node.parentNode) {
       // dom has been removed
 
@@ -378,11 +375,10 @@ export class Editor {
    */
   private checkBlockContent(
     node: Node,
-    blockNode: TreeNode<DocNode>,
+    blockNode: TreeNode,
     currentOffset?: number,
   ) {
-    const blockData = blockNode.data as BlockData;
-    const block = this.state.blocks.get(blockData.id)!;
+    const block = this.state.blocks.get(blockNode.id)!;
 
     block.blockContentChanged({
       node: node as HTMLDivElement,
@@ -450,8 +446,8 @@ export class Editor {
     }
   }
 
-  public placeBannerAt(blockContainer: HTMLElement, node: TreeNode<DocNode>) {
-    const block = this.state.blocks.get(node.data.id);
+  public placeBannerAt(blockContainer: HTMLElement, node: TreeNode) {
+    const block = this.state.blocks.get(node.id);
     if (!block) {
       return;
     }
@@ -474,17 +470,13 @@ export class Editor {
    */
   public destructBlockNode(node: Node) {
     if (node._mgNode) {
-      const treeNode = node._mgNode as TreeNode<DocNode>;
-      const data = treeNode.data;
+      const treeNode = node._mgNode as TreeNode;
 
-      if (data.t === "block") {
-        const blockData = data as BlockData;
-        const block = this.state.blocks.get(blockData.id);
-        block?.dispose();
-        this.state.blocks.delete(blockData.id);
-      }
+      const block = this.state.blocks.get(treeNode.id);
+      block?.dispose();
+      this.state.blocks.delete(treeNode.id);
 
-      this.state.domMap.delete(data.id);
+      this.state.domMap.delete(treeNode.id);
     }
 
     // TODO: call destructor
@@ -586,14 +578,14 @@ export class Editor {
         return;
       }
 
-      const blockData = node.data as BlockData;
-      const targetId = node.parent!.data.id;
-      if (!blockData.data || !(blockData.data instanceof TextModel)) {
+      const blockData = node.data;
+      const targetId = node.parent!.id;
+      if (!blockData || !(blockData instanceof TextModel)) {
         // default behavior
         this.insertEmptyTextAfterBlock(targetId, cursorState.targetId);
         return;
       }
-      const textModel = blockData.data as TextModel;
+      const textModel = blockData as TextModel;
 
       const cursorOffset = cursorState.offset;
 
@@ -619,7 +611,7 @@ export class Editor {
           blockName: TextBlockName,
           targetId,
           newId,
-          afterId: node.data.id,
+          afterId: node.id,
           data: newTextModel,
         },
       ];
@@ -675,8 +667,7 @@ export class Editor {
     }
     const prevNode = node.prev;
 
-    const blockData = node.data as BlockData;
-    const blockDef = this.registry.block.getBlockDefById(blockData.flags)!;
+    const blockDef = this.registry.block.getBlockDefById(node.blockTypeId)!;
 
     if (blockDef.editable !== false) {
       return false;
@@ -690,7 +681,7 @@ export class Editor {
       if (prevNode) {
         this.state.cursorState = {
           type: "collapsed",
-          targetId: prevNode.data.id,
+          targetId: prevNode.id,
           offset: 0,
         };
         this.focusEndOfNode(prevNode);
@@ -701,20 +692,19 @@ export class Editor {
     return true;
   }
 
-  private focusEndOfNode(treeNode: TreeNode<DocNode>) {
-    const blockData = treeNode.data as BlockData;
-    const data = blockData.data;
+  private focusEndOfNode(treeNode: TreeNode) {
+    const { data } = treeNode;
     if (data && data instanceof TextModel) {
       const length = data.length;
       this.state.cursorState = {
         type: "collapsed",
-        targetId: treeNode.data.id,
+        targetId: treeNode.id,
         offset: length,
       };
     } else {
       this.state.cursorState = {
         type: "collapsed",
-        targetId: treeNode.data.id,
+        targetId: treeNode.id,
         offset: 0,
       };
     }
@@ -807,15 +797,15 @@ export class Editor {
     blockDom: HTMLDivElement,
     cursor: CollapsedCursor
   ) {
-    const node = blockDom._mgNode as TreeNode<DocNode> | undefined
+    const node = blockDom._mgNode as TreeNode | undefined
     if (!node) {
       return;
     }
 
     this.blurBlock();
 
-    this.#lastFocusedId = node.data.id;
-    const block = this.state.blocks.get(node.data.id)!;
+    this.#lastFocusedId = node.id;
+    const block = this.state.blocks.get(node.id)!;
     block.blockFocused({ node: blockDom, cursor, selection: sel });
   }
 
@@ -1043,7 +1033,7 @@ export class Editor {
     }
 
     const currentNode = this.state.idMap.get(cursorState.targetId)!;
-    const parentId = currentNode.parent!.data.id;
+    const parentId = currentNode.parent!.id;
 
     const newId = this.idGenerator.mkBlockId();
 
@@ -1104,8 +1094,7 @@ export class Editor {
       return;
     }
 
-    const blockData = treeNode.data as BlockData;
-    const treeData = blockData.data;
+    const treeData = treeNode.data;
 
     if (treeData && treeData instanceof TextModel) {
       return treeData;

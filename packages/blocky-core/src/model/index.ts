@@ -1,5 +1,4 @@
 // export * from "./diff";
-export * from "./nodes";
 export {
   type TreeRoot,
   type TreeNode,
