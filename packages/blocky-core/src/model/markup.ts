@@ -1,4 +1,4 @@
-import * as DocNode from "./nodes";
+import { TreeRoot } from "./tree";
 import type { IdGenerator } from "@pkg/helper/idHelper";
 import { TextModel } from "@pkg/model/textModel";
 
@@ -109,9 +109,10 @@ export function traverse<R>(
   return result;
 }
 
-export function toNodeDoc(doc: MDoc): DocNode.Document {
+export function toNodeDoc(doc: MDoc): TreeRoot {
   return {
-    t: "doc",
     id: doc.id,
+    blockTypeId: -1,
+    childrenLength: 0,
   };
 }

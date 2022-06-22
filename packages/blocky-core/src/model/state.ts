@@ -1,10 +1,8 @@
 import { makeObservable } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
-import type { DocNode, BlockData } from "./nodes";
 import {
   type TreeNode,
   type TreeRoot,
-  createRoot,
   createNode,
   appendChild,
   insertAfter,
@@ -25,17 +23,17 @@ import { TextModel } from "./textModel";
 
 class State {
   static fromMarkup(doc: MDoc, blockRegistry: BlockRegistry): State {
-    const rootNode = createRoot<DocNode>(toNodeDoc(doc));
+    const rootNode = toNodeDoc(doc);
     const state = new State(rootNode, blockRegistry);
 
-    traverse<TreeNode<DocNode>>(
+    traverse<TreeNode>(
       doc,
-      (node: MNode, parent?: MNode, parentNode?: TreeNode<DocNode>) => {
+      (node: MNode, parent?: MNode, parentNode?: TreeNode) => {
         if (state.idMap.has(node.id)) {
           throw new Error(`duplicated id: ${node.id}`);
         }
 
-        let nextNode: TreeNode<DocNode>;
+        let nextNode: TreeNode;
 
         switch (node.t) {
           case "doc": {
@@ -44,17 +42,11 @@ class State {
           }
 
           case "block": {
-            const blockData: BlockData = {
-              t: "block",
-              id: node.id,
-              flags: node.flags,
-              data: node.data,
-            }
-            const blockNode: TreeNode<BlockData> = createNode(blockData);
+            const blockNode: TreeNode = createNode(node.id, node.flags, node.data);
             appendChild(parentNode!, blockNode);
 
             const blockDef = blockRegistry.getBlockDefById(node.flags)!;
-            const block = blockDef.onBlockCreated({ model: blockData });
+            const block = blockDef.onBlockCreated({ model: blockNode });
             state.newBlockCreated.emit(block);
 
             state.idMap.set(node.id, blockNode);
@@ -80,15 +72,15 @@ class State {
     return state;
   }
 
-  public readonly idMap: Map<string, TreeNode<DocNode>> = new Map();
+  public readonly idMap: Map<string, TreeNode> = new Map();
   public readonly domMap: Map<string, Node> = new Map();
   public readonly blocks: Map<string, Block> = new Map();
-  public readonly newBlockInserted: Slot<BlockData> = new Slot;
+  public readonly newBlockInserted: Slot<TreeNode> = new Slot;
   public readonly newBlockCreated: Slot<Block> = new Slot;
-  public readonly blockDeleted: Slot<BlockData> = new Slot;
+  public readonly blockDeleted: Slot<TreeNode> = new Slot;
   public cursorState: CursorState | undefined;
 
-  constructor(public readonly root: TreeRoot<DocNode>, public readonly blockRegistry: BlockRegistry) {
+  constructor(public readonly root: TreeRoot, public readonly blockRegistry: BlockRegistry) {
     validateNode(root);
     makeObservable(this, "cursorState");
   }
@@ -101,7 +93,7 @@ class State {
 
   public getParent(id: string): undefined | string {
     const wrapper = this.idMap.get(id);
-    return wrapper?.parent?.data.id;
+    return wrapper?.parent?.id;
   }
 
   public applyActions(actions: Action[]) {
@@ -130,23 +122,18 @@ class State {
 
         const blockDef = this.blockRegistry.getBlockDefById(blockId)!;
 
-        const newBlock: BlockData = {
-          t: "block",
-          id: action.newId,
-          flags: blockId,
-          data: action.data,
-        };
-        const block = blockDef.onBlockCreated({ model: newBlock });
-        this.newBlockCreated.emit(block);
 
-        const blockNode = createNode(newBlock);
+        const blockNode = createNode(action.newId, blockId, action.data);
         this.insertNode(blockNode);
+
+        const block = blockDef.onBlockCreated({ model: blockNode });
+        this.newBlockCreated.emit(block);
 
         this.blocks.set(action.newId, block);
 
         insertAfter(node, blockNode, afterNode);
 
-        this.newBlockInserted.emit(newBlock);
+        this.newBlockInserted.emit(blockNode);
         break;
       }
 
@@ -161,16 +148,14 @@ class State {
         this.idMap.delete(targetId);
         this.domMap.delete(targetId);
 
-        if (node.data.t === "block") {
-          this.blockDeleted.emit(node.data);
-        }
+        this.blockDeleted.emit(node);
         break;
       }
 
       case "text-format": {
         const { targetId, index, length, attributes } = action;
-        const blockNode = this.idMap.get(targetId) as TreeNode<BlockData>;
-        const data = blockNode.data.data;
+        const blockNode = this.idMap.get(targetId) as TreeNode;
+        const data = blockNode.data;
         if (data && data instanceof TextModel) {
           data.format(index, length, attributes);
         }
@@ -179,11 +164,11 @@ class State {
     }
   }
 
-  private insertNode(node: TreeNode<DocNode>) {
-    if (this.idMap.has(node.data.id)) {
-      throw new Error(`duplicated id: ${node.data.id}`);
+  private insertNode(node: TreeNode) {
+    if (this.idMap.has(node.id)) {
+      throw new Error(`duplicated id: ${node.id}`);
     }
-    this.idMap.set(node.data.id, node);
+    this.idMap.set(node.id, node);
   }
 }
 
@@ -192,7 +177,7 @@ export function serializeJSON(state: State): any {
   return serializeTreeNode(root);
 }
 
-function serializeTreeNode(node: TreeNode<DocNode>): any {
+function serializeTreeNode(node: TreeNode): any {
   const { data } = node;
 
   let children: any[] | undefined;

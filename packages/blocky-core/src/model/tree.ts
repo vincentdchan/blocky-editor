@@ -1,13 +1,15 @@
 
-export interface TreeRoot<T> extends TreeNode<T> {
+export interface TreeRoot extends TreeNode<any> {
 
 }
 
-export interface TreeNode<T> {
+export interface TreeNode<T = any> {
   parent?: TreeNode<T>;
   prev?: TreeNode<T>;
   next?: TreeNode<T>;
-  data: T;
+  id: string;
+  blockTypeId: number;
+  data?: T;
   firstChild?: TreeNode<T>,
   lastChild?: TreeNode<T>;
   childrenLength: number;
@@ -83,15 +85,19 @@ export function appendChild<T>(parent: TreeNode<T>, node: TreeNode<T>) {
   parent.childrenLength++;
 }
 
-export function createRoot<T>(data: T): TreeRoot<T> {
+export function createRoot<T>(id: string, blockTypeId: number = 0, data: T): TreeRoot {
   return {
+    id,
+    blockTypeId,
     data,
     childrenLength: 0,
   };
 }
 
-export function createNode<T>(data: T): TreeNode<T> {
+export function createNode<T>(id: string, blockTypeId: number = 0, data: T): TreeNode<T> {
   return {
+    id,
+    blockTypeId,
     data,
     childrenLength: 0,
   };

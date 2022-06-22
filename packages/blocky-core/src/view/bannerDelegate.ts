@@ -1,13 +1,13 @@
 import { type IDisposable } from "blocky-common/es/disposable";
 import type { EditorController } from "@pkg/view/controller";
-import { type DocNode, type TreeNode } from "@pkg/model";
+import { type TreeNode } from "@pkg/model";
 import { UIDelegate } from "./uiDelegate";
 
 export type BannerFactory = (dom: HTMLDivElement, editorController: EditorController) => IDisposable | undefined;
 
 export class BannerDelegate extends UIDelegate {
 
-  public focusedNode: TreeNode<DocNode> | undefined;
+  public focusedNode: TreeNode | undefined;
 
   constructor(private editorController: EditorController, private factory?: BannerFactory) {
     super("blocky-editor-banner-delegate blocky-cm-noselect");

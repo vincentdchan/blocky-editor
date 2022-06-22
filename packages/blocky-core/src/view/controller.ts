@@ -1,6 +1,7 @@
 import { Slot } from "blocky-common/es/events";
 import { observe } from "blocky-common/es/observable";
-import { AttributesObject, BlockData, DocNode, State, TreeNode } from "@pkg/model";
+import { type Padding } from "blocky-common/es/dom";
+import { AttributesObject, State, TreeNode } from "@pkg/model";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
@@ -30,6 +31,13 @@ export interface IEditorControllerOptions {
   idGenerator?: IdGenerator;
   bannerFactory?: BannerFactory;
   toolbarFactory?: ToolbarFactory;
+
+  /**
+   * The inner padding of the editor
+   */
+  padding?: Partial<Padding>;
+
+  bannerXOffset?: number;
 }
 
 export interface IInsertOptions {
@@ -94,7 +102,7 @@ export class EditorController {
       {
         type: "new-block",
         blockName,
-        targetId: parentNode.data.id,
+        targetId: parentNode.id,
         newId,
         afterId,
         data: options?.data,
@@ -140,15 +148,12 @@ export class EditorController {
       return;
     }
 
-
-    const blockNode = this.state.idMap.get(blockId) as TreeNode<BlockData>;
-
-    const block = blockNode.data;
+    const blockNode = this.state.idMap.get(blockId) as TreeNode;
 
     const actions: Action[] = [
       {
         type: "text-format",
-        targetId: block.id,
+        targetId: blockNode.id,
         index,
         length,
         attributes: attribs,
@@ -166,8 +171,8 @@ export class EditorController {
     editor.render(() => {
       editor.state.cursorState = {
         type: "open",
-        startId: block.id,
-        endId: block.id,
+        startId: blockNode.id,
+        endId: blockNode.id,
         startOffset: index,
         endOffset: index + length,
       };
@@ -193,12 +198,8 @@ export class EditorController {
         console.error(`${startId} not found`);
         return;
       }
-      if (blockNode.data.t !== "block") {
-        console.error(`${startId} is not a block`);
-        return;
-      }
       this.formatText(
-        blockNode.data.id,
+        blockNode.id,
         startOffset,
         endOffset - startOffset,
         attribs
@@ -234,7 +235,7 @@ export class EditorController {
     editor.render();
   }
 
-  get bannerFocusedNode(): TreeNode<DocNode> | undefined {
+  get bannerFocusedNode(): TreeNode | undefined {
     return this.editor?.bannerDelegate.focusedNode;
   }
 }

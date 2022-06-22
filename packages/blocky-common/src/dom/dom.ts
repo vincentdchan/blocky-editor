@@ -1,5 +1,12 @@
 import { type IDisposable } from "../disposable";
 
+export interface Padding {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
 export function elem<K extends keyof HTMLElementTagNameMap>(tagName: K, className?: string): HTMLElementTagNameMap[K] {
   const result = document.createElement(tagName);
   if (className) {

@@ -1,3 +1,4 @@
+import { isWhiteSpace } from "blocky-common/es/text";
 import type { IPlugin } from "@pkg/registry/pluginRegistry";
 import type { Editor } from "@pkg/view/editor";
 import type { Block } from "@pkg/block/basic";
@@ -19,7 +20,7 @@ function makeBulletListPlugin(): IPlugin {
     const blockData = block.props.data;
     if (blockData && blockData instanceof TextModel) {
       blockData.onInsert.on((e: TextInsertEvent) => {
-        if (e.index === 1 && e.text === " ") {
+        if (e.index === 1 && e.text.length === 1 && isWhiteSpace(e.text)) {
           const content = blockData.toString();
           if (content[0] === "-") {
             turnTextBlockIntoBulletList(editor, block.props.id, blockData);
@@ -44,7 +45,11 @@ function makeBulletListPlugin(): IPlugin {
       return;
     }
 
-    const { targetId } = cursorState;
+    const { targetId, offset } = cursorState;
+
+    if (offset !== 0) {
+      return;
+    }
 
     const textModel = editor.getTextModelByBlockId(targetId);
     if (textModel && textModel.textType === TextType.Bulleted) {

@@ -1,12 +1,15 @@
 // import { Action } from "space/transactions";
 import { test, expect } from "vitest";
 import { type TreeNode, createNode, appendChild, insertAfter, removeNode } from "../tree";
+import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
+
+const i = makeDefaultIdGenerator();
 
 test("tree append", () => {
-  const parent: TreeNode<number> = createNode(0);
+  const parent: TreeNode<number> = createNode(i.mkBlockId(), 0, 0);
 
-  const child1 = createNode(1);
-  const child2 = createNode(2);
+  const child1 = createNode(i.mkBlockId(), 0, 1);
+  const child2 = createNode(i.mkBlockId(), 0, 2);
   
   appendChild(parent, child1);
   appendChild(parent, child2);
@@ -26,15 +29,15 @@ test("tree append", () => {
 });
 
 test("tree insert", () => {
-  const parent: TreeNode<number> = createNode(0);
+  const parent: TreeNode<number> = createNode(i.mkBlockId(), 0, 0);
 
-  const child1 = createNode(1);
-  const child2 = createNode(2);
+  const child1 = createNode(i.mkBlockId(), 0, 1);
+  const child2 = createNode(i.mkBlockId(), 0, 2);
   
   appendChild(parent, child1);
   appendChild(parent, child2);
 
-  const child3 = createNode(3);
+  const child3 = createNode(i.mkBlockId(), 0, 3);
 
   insertAfter(parent, child3, child1);
 
@@ -51,11 +54,11 @@ test("tree insert", () => {
 });
 
 test("tree remove", () => {
-  const parent: TreeNode<number> = createNode(0);
+  const parent: TreeNode<number> = createNode(i.mkBlockId(), 0, 0);
 
-  const child1 = createNode(1);
-  const child2 = createNode(2);
-  const child3 = createNode(3);
+  const child1 = createNode(i.mkBlockId(), 0, 1);
+  const child2 = createNode(i.mkBlockId(), 0, 2);
+  const child3 = createNode(i.mkBlockId(), 0, 3);
   
   appendChild(parent, child1);
   appendChild(parent, child2);

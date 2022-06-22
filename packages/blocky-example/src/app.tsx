@@ -3,6 +3,7 @@ import { EditorController } from "blocky-core";
 import { BlockyEditor, makePreactBanner, makePreactToolbar } from "blocky-preact";
 import makeBoldedTextPlugin from "blocky-core/dist/plugins/boldedTextPlugin";
 import makeBulletListPlugin from "blocky-core/dist/plugins/bulletListPlugin";
+import makeHeadingsPlugin from "blocky-core/dist/plugins/headingsPlugin";
 import { makeImageBlockPlugin } from "./plugins/imageBlock";
 import BannerMenu from "./bannerMenu";
 import ToolbarMenu from "./toolbarMenu";
@@ -27,6 +28,7 @@ function makeController(): EditorController {
     plugins: [
       makeBoldedTextPlugin(),
       makeBulletListPlugin(),
+      makeHeadingsPlugin(),
       makeImageBlockPlugin(),
     ],
     /**

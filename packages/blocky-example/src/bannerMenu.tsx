@@ -63,13 +63,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
   private handleBlocksChanged = () => {
     const { editorController } = this.props;
 
-    // TODO(optimize)
-    let blockCount = 0;
-    for (const node of editorController.state.idMap.values()) {
-      if (node.data.t === "block") {
-        blockCount++;
-      }
-    }
+    const blockCount = editorController.state.blocks.size;
 
     const showDelete = blockCount > 1;
     if (showDelete === this.state.showDelete) {
@@ -99,7 +93,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
     if (!focusedNode) {
       return;
     }
-    editorController.insertBlockAfterId(focusedNode.data.id, {
+    editorController.insertBlockAfterId(focusedNode.id, {
       autoFocus: true,
       data: new TextModel(typeType),
     });
@@ -111,7 +105,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
     if (!focusedNode) {
       return;
     }
-    editorController.insertBlockAfterId(focusedNode.data.id, {
+    editorController.insertBlockAfterId(focusedNode.id, {
       autoFocus: true,
       blockName: ImageBlockName,
     });
@@ -123,7 +117,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
     if (!focusedNode) {
       return;
     }
-    editorController.deleteBlock(focusedNode.data.id);
+    editorController.deleteBlock(focusedNode.id);
   };
 
   private renderMenu() {

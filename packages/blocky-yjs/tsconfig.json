@@ -15,22 +15,15 @@
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
     "moduleResolution": "node",
-    "inlineSourceMap": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
-    "jsxFactory": "h",
-    "jsxFragmentFactory": "Fragment",
-    "rootDir": "src",
-    "outDir": "dist",
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
     "declaration": true,
-    "declarationDir": "dist",
-    "composite": true,
-    "removeComments": false,
-    "plugins": [
-      { "transform": "typescript-transform-paths" },
-      { "transform": "typescript-transform-paths", "afterDeclarations": true }
-    ],
+    "declarationDir": "./dist",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": ".",
     "paths": {
       "@pkg/*": [
         "./src/*"
@@ -38,10 +31,10 @@
     }
   },
   "include": [
-    "plugins",
-    "src"
+    "src",
   ],
   "references": [
-    { "path": "../blocky-common" }
+    { "path": "../blocky-common" },
+    { "path": "../blocky-core" }
   ]
 }

@@ -16,10 +16,10 @@ export class BlockyEditor extends Component<Props> {
     const editor = this.#editor;
     editor.render(() => {
       const firstChild = editor.state.root.firstChild;
-      if (firstChild?.data.t === "block") {
+      if (firstChild) {
         editor.state.cursorState = {
           type: "collapsed",
-          targetId: firstChild.data.id,
+          targetId: firstChild.id,
           offset: 0,
         };
       }
