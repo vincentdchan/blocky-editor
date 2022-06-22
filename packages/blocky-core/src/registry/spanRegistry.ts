@@ -1,4 +1,4 @@
-import type { AttributesObject } from "@pkg/model/textModel";
+import type { AttributesObject } from "@pkg/model";
 
 export type SpanRenderer = (element: HTMLSpanElement, attribs: AttributesObject) => void;
 

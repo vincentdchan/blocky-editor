@@ -1,4 +1,4 @@
-import { type AttributesObject } from "@pkg/model/textModel";
+import { type AttributesObject } from "@pkg/model";
 
 export interface NewBlockAction {
   type: "new-block";
