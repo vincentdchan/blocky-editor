@@ -80,6 +80,22 @@ export class DocRenderer {
     return elem("div", this.blockClassName);
   }
 
+  private clearDeletedBlock(dom: Node | null): Node | null {
+    while (dom?._mgNode) {
+      const treeNode = dom?._mgNode as TreeNode;
+      const id = treeNode.id;
+      if (!this.editor.state.idMap.has(id)) {
+        const next = dom.nextSibling;
+        removeNode(dom);
+        dom = next;
+      } else {
+        break;
+      }
+    }
+
+    return dom;
+  }
+
   protected renderBlocks(blocksContainer: HTMLElement, parentNode: TreeNode) {
     let nodePtr = parentNode.firstChild;
     
@@ -94,6 +110,7 @@ export class DocRenderer {
     while (nodePtr) {
       const id = nodePtr.id;
       const blockDef = this.editor.registry.block.getBlockDefById(nodePtr.blockTypeId);
+      domPtr = this.clearDeletedBlock(domPtr);
 
       if (!blockDef) {
         throw new Error(`id not found: ${nodePtr.blockTypeId}`);
