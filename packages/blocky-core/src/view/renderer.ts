@@ -1,9 +1,5 @@
 import { clearAllChildren, elem, removeNode } from "blocky-common/es/dom";
-import {
-  type BlockData,
-  type TreeNode,
-  type DocNode,
-} from "@pkg/model/index";
+import { type TreeNode } from "@pkg/model";
 import type { Editor } from "@pkg/view/editor";
 import { type IBlockDefinition } from "@pkg/block/basic";
 
@@ -54,7 +50,7 @@ export class DocRenderer {
     const createNewDocument = () => {
       const newDom = elem("div", `${clsPrefix}-documents ${clsPrefix}-default-fonts`);
       this.renderDocument(state.root, newDom);
-      state.domMap.set(state.root.data.id, newDom);
+      state.domMap.set(state.root.id, newDom);
       return newDom;
     }
 
@@ -66,7 +62,7 @@ export class DocRenderer {
     }
   }
 
-  protected renderDocument(model: TreeNode<DocNode>, dom: HTMLDivElement) {
+  protected renderDocument(model: TreeNode, dom: HTMLDivElement) {
     dom._mgNode = model;
 
     const { clsPrefix } = this;
@@ -78,7 +74,7 @@ export class DocRenderer {
     return elem("div", this.blockClassName);
   }
 
-  protected renderBlocks(blocksContainer: HTMLElement, parentNode: TreeNode<DocNode>) {
+  protected renderBlocks(blocksContainer: HTMLElement, parentNode: TreeNode) {
     let nodePtr = parentNode.firstChild;
     
     if (!nodePtr) {
@@ -90,12 +86,11 @@ export class DocRenderer {
     let prevPtr: Node | undefined;
 
     while (nodePtr) {
-      const id = nodePtr.data.id;
-      const data = nodePtr.data as BlockData;
-      const blockDef = this.editor.registry.block.getBlockDefById(data.flags);
+      const id = nodePtr.id;
+      const blockDef = this.editor.registry.block.getBlockDefById(nodePtr.blockTypeId);
 
       if (!blockDef) {
-        throw new Error(`id not found: ${data.flags}`);
+        throw new Error(`id not found: ${nodePtr.blockTypeId}`);
       }
 
       if (!domPtr || typeof domPtr._mgNode === "undefined" || domPtr._mgNode !== nodePtr) {
@@ -132,22 +127,21 @@ export class DocRenderer {
     }
   }
 
-  private initBlockContainer(blockContainer: HTMLElement, blockNode: TreeNode<DocNode>, blockDef: IBlockDefinition) {
+  private initBlockContainer(blockContainer: HTMLElement, blockNode: TreeNode, blockDef: IBlockDefinition) {
     const { editor, clsPrefix } = this;
-    const data = blockNode.data as BlockData;
 
     if (!blockDef.editable) {
       blockContainer.contentEditable = "false";
     }
 
     blockContainer._mgNode = blockNode;
-    editor.state.domMap.set(data.id, blockContainer);
+    editor.state.domMap.set(blockNode.id, blockContainer);
     blockContainer.setAttribute("data-type", blockDef.name);
     blockContainer.addEventListener("mouseenter", () => {
       editor.placeBannerAt(blockContainer, blockNode);
     });
 
-    const block = editor.state.blocks.get(data.id)!;
+    const block = editor.state.blocks.get(blockNode.id)!;
     block.blockDidMount({
       element: blockContainer,
       clsPrefix,

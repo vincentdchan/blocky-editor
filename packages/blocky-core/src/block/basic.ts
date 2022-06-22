@@ -1,8 +1,8 @@
 import { type IDisposable } from "blocky-common/es/disposable";
-import type { BlockData } from "@pkg/model";
 import { CursorState, type CollapsedCursor } from "@pkg/model/cursor";
+import { type TreeNode } from "@pkg/model/tree";
 import { type Editor } from "@pkg/view/editor";
-import { type Position } from "blocky-common/src/position";
+import { type Position } from "blocky-common/es/position";
 
 export interface BlockDidMountEvent {
   element: HTMLElement;
@@ -10,7 +10,7 @@ export interface BlockDidMountEvent {
 }
 
 export interface BlockCreatedEvent {
-  model: BlockData;
+  model: TreeNode;
   // editor: Editor;
 }
 
@@ -131,7 +131,7 @@ export interface IBlockDefinition {
 export class Block<T = any> implements IDisposable {
   #editor: Editor | undefined;
 
-  constructor(public props: BlockData<T>) {}
+  constructor(public props: TreeNode<T>) {}
 
   setEditor(editor: Editor) {
     this.#editor = editor;

@@ -9,9 +9,9 @@ export { type IPlugin } from "./registry/pluginRegistry";
 export {
   type CursorState,
   State as DocumentState,
-  type BlockData,
   type AttributesObject,
   type TextInsertEvent,
+  type TreeNode,
   TextModel,
   TextType,
 } from "./model";

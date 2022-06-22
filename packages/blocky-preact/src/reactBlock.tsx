@@ -1,8 +1,8 @@
 import {
   type IBlockDefinition,
   type EditorController,
-  type BlockData,
   type BlockCreatedEvent,
+  type TreeNode,
   Block,
   TryParsePastedDOMEvent,
 } from "blocky-core";
@@ -15,7 +15,7 @@ import { unmountComponentAtNode } from "preact/compat";
 
 export interface ReactBlockOptions {
   name: string;
-  component: (data: BlockData) => ComponentChild;
+  component: (data: TreeNode) => ComponentChild;
   tryParsePastedDOM?(e: TryParsePastedDOMEvent): void;
 }
 
@@ -32,7 +32,7 @@ class ReactBlock extends Block {
 
   #rendered: HTMLElement | undefined;
 
-  constructor(props: BlockData, private options: ReactBlockOptions) {
+  constructor(props: TreeNode, private options: ReactBlockOptions) {
     super(props);
   }
 
