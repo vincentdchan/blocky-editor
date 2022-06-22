@@ -429,8 +429,11 @@ class TextBlock extends Block {
 
           contentContainer.replaceChild(newNode, oldDom);
           continue;
-        } else if (domPtr.textContent !== nodePtr.content) {
-          domPtr.textContent = nodePtr.content;
+        } else {
+          clearNodeAttributes(domPtr);
+          if (domPtr.textContent !== nodePtr.content) {
+            domPtr.textContent = nodePtr.content;
+          }
         }
       }
 
@@ -448,6 +451,12 @@ class TextBlock extends Block {
     }
   }
 
+}
+
+function clearNodeAttributes(node: Node) {
+  if (node instanceof HTMLSpanElement && node.style.length !== 0) {
+    node.setAttribute("style", "");
+  }
 }
 
 function isNodeMatch(node: TextNode, dom: Node): boolean {
