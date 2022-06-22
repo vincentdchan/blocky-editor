@@ -73,6 +73,7 @@ export interface IEditorOptions {
   bannerFactory?: BannerFactory;
   toolbarFactory?: ToolbarFactory;
   padding?: Partial<Padding>;
+  bannerXOffset?: number;
 }
 
 enum MineType  {
@@ -115,6 +116,7 @@ export class Editor {
   public readonly preservedTextType: Set<TextType> = new Set([TextType.Bulleted]);
 
   public readonly padding: Padding;
+  private bannerXOffset: number;
 
   public composing: boolean = false;
   private disposables: IDisposable[] = [];
@@ -134,6 +136,7 @@ export class Editor {
       bannerFactory: controller.options?.bannerFactory,
       toolbarFactory: controller.options?.toolbarFactory,
       padding: controller.options?.padding,
+      bannerXOffset: controller.options?.bannerXOffset,
     });
     controller.mount(editor);
     return editor;
@@ -151,6 +154,7 @@ export class Editor {
       bannerFactory,
       toolbarFactory,
       padding,
+      bannerXOffset,
     } = options;
     this.state = state;
     this.registry = registry;
@@ -161,6 +165,7 @@ export class Editor {
       ...makeDefaultPadding(),
       ...padding,
     };
+    this.bannerXOffset = bannerXOffset ?? 24;
 
     this.bannerDelegate = new BannerDelegate(controller, bannerFactory);
     this.bannerDelegate.mount(this.#container);
@@ -471,7 +476,7 @@ export class Editor {
 
     let { x, y } = this.getRelativeOffsetByDom(blockContainer);
 
-    x = 24;
+    x = this.bannerXOffset;
 
     const offset = block.getBannerOffset();
     x += offset.x;

@@ -31,7 +31,13 @@ export interface IEditorControllerOptions {
   idGenerator?: IdGenerator;
   bannerFactory?: BannerFactory;
   toolbarFactory?: ToolbarFactory;
+
+  /**
+   * The inner padding of the editor
+   */
   padding?: Partial<Padding>;
+
+  bannerXOffset?: number;
 }
 
 export interface IInsertOptions {

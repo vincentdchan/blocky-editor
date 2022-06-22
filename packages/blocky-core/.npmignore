@@ -2,5 +2,5 @@
 /src
 
 tsconfig.json
-rollup.config.js
 vite.config.ts
+tsconfig.tsbuildinfo
