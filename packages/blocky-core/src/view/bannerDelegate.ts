@@ -3,11 +3,27 @@ import type { EditorController } from "@pkg/view/controller";
 import { type TreeNode } from "@pkg/model";
 import { UIDelegate } from "./uiDelegate";
 
-export type BannerFactory = (dom: HTMLDivElement, editorController: EditorController) => IDisposable | undefined;
+export interface BannerInstance extends IDisposable {
+
+  onFocusedNodeChanged?(focusedNode: TreeNode | undefined): void;
+
+}
+
+export type BannerFactory = (dom: HTMLDivElement, editorController: EditorController) => BannerInstance | undefined;
 
 export class BannerDelegate extends UIDelegate {
 
-  public focusedNode: TreeNode | undefined;
+  #instance: BannerInstance | undefined;
+  #focusedNode: TreeNode | undefined;
+
+  get focusedNode(): TreeNode | undefined {
+    return this.#focusedNode;
+  }
+  
+  set focusedNode(v: TreeNode | undefined) {
+    this.#focusedNode = v;
+    this.#instance?.onFocusedNodeChanged?.(v);
+  }
 
   constructor(private editorController: EditorController, private factory?: BannerFactory) {
     super("blocky-editor-banner-delegate blocky-cm-noselect");
@@ -17,9 +33,9 @@ export class BannerDelegate extends UIDelegate {
     super.mount(parent);
 
     if (this.factory) {
-      const disposable = this.factory(this.container, this.editorController);
-      if (disposable) {
-        this.disposables.push(disposable);
+      this.#instance = this.factory(this.container, this.editorController);
+      if (this.#instance) {
+        this.disposables.push(this.#instance);
       }
     } else {
       this.renderFallback();
