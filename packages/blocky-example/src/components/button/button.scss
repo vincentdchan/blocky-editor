@@ -11,4 +11,9 @@
   &:hover {
     background-color: rgb(90, 197, 226);
   }
+
+  &[disabled] {
+    background-color: rgb(175, 175, 175);
+    border: none;
+  }
 }
