@@ -97,26 +97,31 @@ export class EditorController {
     const blockName = options?.blockName ?? TextBlockName;
 
     const newId = editor.idGenerator.mkBlockId();
-    editor.applyActions([
-      {
-        type: "new-block",
+
+    const updateState = () => {
+      editor.state.insertBlockAfter(
+        parentNode.id,
         blockName,
-        targetId: parentNode.id,
         newId,
+        options?.data,
         afterId,
-        data: options?.data,
-      },
-    ]);
+      );
+    };
     if (options?.noRender !== true) {
-      editor.render(() => {
+      editor.update(() => {
+        updateState();
         if (options?.autoFocus) {
-          this.state.cursorState = {
-            type: "collapsed",
-            targetId: newId,
-            offset: 0,
+          return () => {
+            this.state.cursorState = {
+              type: "collapsed",
+              targetId: newId,
+              offset: 0,
+            };
           };
         }
       });
+    } else {
+      updateState();
     }
 
     return newId;

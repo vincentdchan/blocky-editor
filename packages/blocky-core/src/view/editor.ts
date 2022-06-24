@@ -21,7 +21,6 @@ import {
   setTextType,
 } from "@pkg/model";
 import { CollapsedCursor, OpenCursorState, type CursorState } from "@pkg/model/cursor";
-import { Action } from "@pkg/model/actions";
 import {
   IPlugin,
   PluginRegistry,
@@ -447,33 +446,6 @@ export class Editor {
     this.checkMarkedDom(domNode, currentOffset);
   };
 
-  public applyActions(actions: Action[], noUpdate: boolean = false) {
-    if (actions.length === 0) {
-      return;
-    }
-
-    let afterFn: AfterFn | undefined;
-    runInAction(this.state, () => {
-      afterFn = this.registry.plugin.emitBeforeApply(this, actions);
-      this.state.applyActions(actions);
-    });
-    if (noUpdate) {
-      if (afterFn) {
-        afterFn();
-      } else if (actions.length > 0) {
-        this.selectionChanged();
-      }
-    } else {
-      this.render(() => {
-        if (afterFn) {
-          afterFn();
-        } else if (actions.length > 0) {
-          this.selectionChanged();
-        }
-      });
-    }
-  }
-
   public placeBannerAt(blockContainer: HTMLElement, node: TreeNode) {
     const block = this.state.blocks.get(node.id);
     if (!block) {
@@ -577,23 +549,22 @@ export class Editor {
   private insertEmptyTextAfterBlock(parentId: string, id: string) {
     const newTextElement = createTextElement();
     const newId = this.idGenerator.mkBlockId();
-    const actions: Action[] = [
-      {
-        type: "new-block",
-        blockName: TextBlockName,
-        targetId: parentId,
-        newId,
-        afterId: id,
-        data: newTextElement,
-      },
-    ];
 
-    this.applyActions(actions);
-    this.render(() => {
-      this.state.cursorState = {
-        type: "collapsed",
-        targetId: newId,
-        offset: 0,
+    this.update(() => {
+      this.state.insertBlockAfter(
+        parentId,
+        TextBlockName,
+        newId,
+        newTextElement,
+        id,
+      );
+
+      return () => {
+        this.state.cursorState = {
+          type: "collapsed",
+          targetId: newId,
+          offset: 0,
+        };
       };
     });
   }
@@ -638,23 +609,22 @@ export class Editor {
       textModel.delete(cursorOffset, textModel.length - cursorOffset);
       
       const newId = this.idGenerator.mkBlockId();
-      const actions: Action[] = [
-        {
-          type: "new-block",
-          blockName: TextBlockName,
-          targetId,
-          newId,
-          afterId: node.id,
-          data: newTextElement,
-        },
-      ];
 
-      this.applyActions(actions);
-      this.render(() => {
-        this.state.cursorState = {
-          type: "collapsed",
-          targetId: newId,
-          offset: 0,
+      this.update(() => {
+        this.state.insertBlockAfter(
+          targetId,
+          TextBlockName,
+          newId,
+          newTextElement,
+          node.id,
+        );
+
+        return () => {
+          this.state.cursorState = {
+            type: "collapsed",
+            targetId: newId,
+            offset: 0,
+          };
         };
       });
     } else {
@@ -662,6 +632,11 @@ export class Editor {
     }
   }
 
+  /**
+   * Update the state in fn, after
+   * fn is called, the render function
+   * will be called.
+   */
   public update(fn: () => AfterFn | void) {
     if (this.#isUpdating) {
       throw new Error("is in updating process");
@@ -1103,14 +1078,13 @@ export class Editor {
       data = new TextModel;
     }
 
-    this.applyActions([{
-      type: "new-block",
-      targetId: parentId,
-      afterId: cursorState.targetId,
-      newId,
+    this.state.insertBlockAfter(
+      parentId,
       blockName,
+      newId,
       data,
-    }]);
+      cursorState.targetId,
+    );
 
     return {
       type: "collapsed",
