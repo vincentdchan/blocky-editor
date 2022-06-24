@@ -35,6 +35,7 @@ import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import type { EditorController } from "./controller";
 import { Block, BlockPasteEvent, TryParsePastedDOMEvent } from "@pkg/block/basic";
+import { isHotkey } from "is-hotkey";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
@@ -567,6 +568,9 @@ export class Editor {
       this.handleBackspace(e);
     } else if (e.key === "Delete") {
       this.handleDelete(e);
+    } else if (isHotkey("mod+z", e)) {
+      // temporary disable undo
+      e.preventDefault();
     }
   };
 
