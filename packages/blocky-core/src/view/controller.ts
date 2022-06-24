@@ -1,7 +1,7 @@
 import { Slot } from "blocky-common/es/events";
 import { observe } from "blocky-common/es/observable";
 import { type Padding } from "blocky-common/es/dom";
-import { AttributesObject, IModelElement, State, TreeNode } from "@pkg/model";
+import { AttributesObject, IModelElement, State, TreeNode, IModelText } from "@pkg/model";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
@@ -12,7 +12,6 @@ import { type ToolbarFactory } from "@pkg/view/toolbarDelegate";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { type Editor } from "./editor";
 import { type CursorState } from "@pkg/model/cursor";
-import { Action } from "@pkg/model/actions";
 
 export interface IEditorControllerOptions {
   pluginRegistry?: PluginRegistry;
@@ -150,15 +149,6 @@ export class EditorController {
 
     const blockNode = this.state.idMap.get(blockId) as TreeNode;
 
-    const actions: Action[] = [
-      {
-        type: "text-format",
-        targetId: blockNode.id,
-        index,
-        length,
-        attributes: attribs,
-      },
-    ];
     const { editor } = this;
     if (!editor) {
       return;
@@ -167,14 +157,25 @@ export class EditorController {
     // prevent the cursor from jumping around
     editor.state.cursorState = undefined;
 
-    editor.state.applyActions(actions);
-    editor.render(() => {
-      editor.state.cursorState = {
-        type: "open",
-        startId: blockNode.id,
-        endId: blockNode.id,
-        startOffset: index,
-        endOffset: index + length,
+    editor.update(() => {
+      const { data } = blockNode;
+      if (!data) {
+        return;
+      }
+      if (data.type !== "element" || data.nodeName !== "text") {
+        return;
+      }
+      const textModel = data.firstChild! as IModelText;
+      textModel.format(index, length, attribs);
+
+      return () => {
+        editor.state.cursorState = {
+          type: "open",
+          startId: blockNode.id,
+          endId: blockNode.id,
+          startOffset: index,
+          endOffset: index + length,
+        };
       };
     });
   }

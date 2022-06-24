@@ -1,4 +1,4 @@
-import { type AttributesObject, type IModelElement } from "@pkg/model";
+import { type IModelElement } from "@pkg/model";
 
 export interface NewBlockAction {
   type: "new-block";
@@ -14,42 +14,9 @@ export interface DeleteLineAction {
   targetId: string;
 }
 
-
-export interface SetLineTypeAction {
-  type: "set-line-type";
-  targetId: string;
-}
-
-export interface TextFormatAction {
-  type: "text-format";
-  targetId: string;
-  index: number;
-  length: number;
-  attributes?: AttributesObject;
-}
-
-export interface TextInsertAction {
-  type: "text-insert";
-  targetId: string;
-  index: number;
-  content: string;
-  attributes?: AttributesObject;
-}
-
-export interface TextDeleteAction {
-  type: "text-delete";
-  targetId: string;
-  index: number;
-  length: number;
-}
-
 export type Action =
   | NewBlockAction
   | DeleteLineAction
-  | SetLineTypeAction
-  | TextFormatAction
-  | TextInsertAction
-  | TextDeleteAction;
 
 export interface Transaction {
   actions: Action[];
