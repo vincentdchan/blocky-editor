@@ -9,14 +9,8 @@ export interface NewBlockAction {
   data?: IModelElement;
 }
 
-export interface DeleteLineAction {
-  type: "delete";
-  targetId: string;
-}
-
 export type Action =
   | NewBlockAction
-  | DeleteLineAction
 
 export interface Transaction {
   actions: Action[];
