@@ -384,7 +384,6 @@ export class Editor {
 
   private checkMarkedDom(
     node: Node,
-    actions: Action[],
     currentOffset?: number,
   ) {
     const treeNode = node._mgNode as TreeNode;
@@ -393,10 +392,10 @@ export class Editor {
       // dom has been removed
 
       this.destructBlockNode(node);
-      actions.push({
-        type: "delete",
-        targetId,
-      });
+      const result = this.state.deleteBlock(targetId);
+      if (!result) {
+        console.log("delete failed:", targetId);
+      }
       return;
     }
 
@@ -419,17 +418,16 @@ export class Editor {
     });
   }
 
-  private checkNodesChanged(actions: Action[]) {
+  private checkNodesChanged() {
     const doms = this.state.domMap.values();
     for (const dom of doms) {
-      this.checkMarkedDom(dom, actions, undefined);
+      this.checkMarkedDom(dom, undefined);
     }
   }
 
   private handleOpenCursorContentChanged() {
-    const actions: Action[] = [];
-    this.checkNodesChanged(actions);
-    this.applyActions(actions);
+    this.checkNodesChanged();
+    this.render();
   }
 
   private handleContentChanged = (e?: any) => {
@@ -446,10 +444,7 @@ export class Editor {
       return;
     }
 
-    const actions: Action[] = [];
-
-    this.checkMarkedDom(domNode, actions, currentOffset);
-    this.applyActions(actions, true);
+    this.checkMarkedDom(domNode, currentOffset);
   };
 
   public applyActions(actions: Action[], noUpdate: boolean = false) {
@@ -731,21 +726,20 @@ export class Editor {
       return false;
     }
 
-    this.applyActions([{
-      type: "delete",
-      targetId,
-    }]);
-    this.render(() => {
-      if (prevNode) {
-        this.state.cursorState = {
-          type: "collapsed",
-          targetId: prevNode.id,
-          offset: 0,
-        };
-        this.focusEndOfNode(prevNode);
-      } else {
-        this.state.cursorState = undefined;
-      }
+    this.update(() => {
+      this.state.deleteBlock(targetId);
+      return () => {
+        if (prevNode) {
+          this.state.cursorState = {
+            type: "collapsed",
+            targetId: prevNode.id,
+            offset: 0,
+          };
+          this.focusEndOfNode(prevNode);
+        } else {
+          this.state.cursorState = undefined;
+        }
+      };
     });
     return true;
   }

@@ -19,8 +19,6 @@ import { type CursorState } from "@pkg/model/cursor";
 import { Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { validate as validateNode } from "./validator";
-import { TextModel } from "./textModel";
-import { IModelElement } from "./element";
 
 class State {
   static fromMarkup(doc: MDoc, blockRegistry: BlockRegistry): State {
@@ -86,12 +84,6 @@ class State {
     makeObservable(this, "cursorState");
   }
 
-  public deleteById(id: string) {
-    this.idMap.delete(id);
-    // TODO: remove all children
-    this.domMap.delete(id);
-  }
-
   public getParent(id: string): undefined | string {
     const wrapper = this.idMap.get(id);
     return wrapper?.parent?.id;
@@ -123,7 +115,6 @@ class State {
 
         const blockDef = this.blockRegistry.getBlockDefById(blockId)!;
 
-
         if (!action.data) {
           throw new Error("data is empty for new block");
         }
@@ -141,22 +132,21 @@ class State {
         break;
       }
 
-      case "delete": {
-        const { targetId } = action;
-        const node = this.idMap.get(targetId);
-        if (!node) {
-          return;
-        }
-        removeNode(node);
-
-        this.idMap.delete(targetId);
-        this.domMap.delete(targetId);
-
-        this.blockDeleted.emit(node);
-        break;
-      }
-
     }
+  }
+
+  public deleteBlock(blockId: string): boolean {
+    const node = this.idMap.get(blockId);
+    if (!node) {
+      return false;
+    }
+    removeNode(node);
+
+    this.idMap.delete(blockId);
+    this.domMap.delete(blockId);
+
+    this.blockDeleted.emit(node);
+    return true;
   }
 
   private insertNode(node: TreeNode) {

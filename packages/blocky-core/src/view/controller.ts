@@ -227,13 +227,9 @@ export class EditorController {
     }
 
     this.state.cursorState = undefined;
-    editor.applyActions([
-      {
-        type: "delete",
-        targetId: id,
-      },
-    ]);
-    editor.render();
+    editor.update(() => {
+      this.state.deleteBlock(id);
+    });
   }
 
 }
