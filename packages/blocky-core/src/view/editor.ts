@@ -108,6 +108,7 @@ export class Editor {
   #renderedDom: HTMLDivElement | undefined;
   #renderer: DocRenderer;
   #lastFocusedId: string | undefined;
+  #isUpdating: boolean = false;
   public readonly bannerDelegate: BannerDelegate;
   public readonly toolbarDelegate: ToolbarDelegate;
   public idGenerator: IdGenerator;
@@ -663,6 +664,26 @@ export class Editor {
       });
     } else {
       console.error("unhandled");
+    }
+  }
+
+  public update(fn: () => AfterFn | void) {
+    if (this.#isUpdating) {
+      throw new Error("is in updating process");
+    }
+
+    this.#isUpdating = true;
+    try {
+      let done: AfterFn | void;
+      runInAction(this.state, () => {
+        done = fn();
+      });
+      this.render(() => {
+        done?.();
+        this.selectionChanged();
+      });
+    } finally {
+      this.#isUpdating = false;
     }
   }
 
