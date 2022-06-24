@@ -8,7 +8,6 @@ import {
   insertAfter,
   removeNode,
 } from "./tree";
-import { Action } from "./actions";
 import {
   MDoc,
   traverse,
@@ -19,6 +18,7 @@ import { type CursorState } from "@pkg/model/cursor";
 import { Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { validate as validateNode } from "./validator";
+import { type IModelElement } from "./element";
 
 class State {
   static fromMarkup(doc: MDoc, blockRegistry: BlockRegistry): State {
@@ -89,50 +89,37 @@ class State {
     return wrapper?.parent?.id;
   }
 
-  public applyActions(actions: Action[]) {
-    for (const action of actions) {
-      this.apply(action);
+  public insertBlockAfter(parentId: string, blockName: string, newId: string, data?: IModelElement, afterId?: string) {
+    const node = this.idMap.get(parentId);
+    if (!node) {
+      throw new Error(
+        "can not apply action, parent id not found: " + parentId,
+      );
     }
-  }
 
-  private apply(action: Action) {
-    switch (action.type) {
-      case "new-block": {
-        const node = this.idMap.get(action.targetId);
-        if (!node) {
-          throw new Error(
-            "can not apply action, id not found: " + action.targetId,
-          );
-        }
+    const afterNode = afterId ? this.idMap.get(afterId) : undefined;
 
-        const afterNode = this.idMap.get(action.afterId);
-
-        const { blockName } = action;
-        const blockId = this.blockRegistry.getBlockIdByName(blockName);
-        if (typeof blockId !== "number") {
-          throw new Error(`block name '${blockName} not found'`);
-        }
-
-        const blockDef = this.blockRegistry.getBlockDefById(blockId)!;
-
-        if (!action.data) {
-          throw new Error("data is empty for new block");
-        }
-        const blockNode = createNode(action.newId, blockId, action.data);
-        this.insertNode(blockNode);
-
-        const block = blockDef.onBlockCreated({ model: blockNode });
-        this.newBlockCreated.emit(block);
-
-        this.blocks.set(action.newId, block);
-
-        insertAfter(node, blockNode, afterNode);
-
-        this.newBlockInserted.emit(blockNode);
-        break;
-      }
-
+    const blockId = this.blockRegistry.getBlockIdByName(blockName);
+    if (typeof blockId !== "number") {
+      throw new Error(`block name '${blockName} not found'`);
     }
+
+    const blockDef = this.blockRegistry.getBlockDefById(blockId)!;
+
+    if (!data) {
+      throw new Error("data is empty for new block");
+    }
+    const blockNode = createNode(newId, blockId, data);
+    this.insertNode(blockNode);
+
+    const block = blockDef.onBlockCreated({ model: blockNode });
+    this.newBlockCreated.emit(block);
+
+    this.blocks.set(newId, block);
+
+    insertAfter(node, blockNode, afterNode);
+
+    this.newBlockInserted.emit(blockNode);
   }
 
   public deleteBlock(blockId: string): boolean {

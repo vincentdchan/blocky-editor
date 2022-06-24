@@ -1,5 +1,4 @@
 import type { Editor } from "@pkg/view/editor";
-import { Action } from "@pkg/model/actions";
 
 export type AfterFn = () => void;
 
@@ -22,8 +21,6 @@ export interface IPlugin {
    * Will be triggered when the editor is initialized.
    */
   onInitialized?(editor: Editor): void;
-
-  beforeApply?(editor: Editor, actions: Action[]): (AfterFn | void);
 }
 
 export class PluginRegistry {
@@ -69,24 +66,5 @@ export class PluginRegistry {
   }) as any)
 
   emitInitPlugins: (editor: Editor) => void = this.genEmit(hookOnInitialized);
-
-  emitBeforeApply(editor: Editor, actions: Action[]): AfterFn | undefined {
-    const beforeApplyPlugins = this.#hook[hookBeforeApply]!;
-    const afterArray: AfterFn[] = []
-    for (const plugin of beforeApplyPlugins) {
-      const fn = plugin.beforeApply!(editor, actions);
-      if (fn) {
-        afterArray.push(fn);
-      }
-    }
-    if (afterArray.length === 0) {
-      return;
-    }
-    return () => {
-      for (const fn of afterArray) {
-        fn();
-      }
-    }
-  }
 
 }

@@ -568,18 +568,12 @@ class TextBlockDefinition implements IBlockDefinition {
 
     const newId = editor.idGenerator.mkBlockId();
 
-    editor.applyActions(
-      [
-        {
-          type: "new-block",
-          targetId: parentId,
-          afterId: cursorState.targetId,
-          newId,
-          blockName: "text",
-          data: textElement,
-        },
-      ],
-      true
+    editor.state.insertBlockAfter(
+      parentId,
+      "text",
+      newId,
+      textElement,
+      cursorState.targetId,
     );
 
     return {
