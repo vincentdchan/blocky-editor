@@ -104,39 +104,42 @@ class State {
   }
 
   public handleNewBlockMounted(parent: BlockyElement, child: BlockyNode) {
-    if (child.nodeName === "block") {
-      const blockElement = child as BlockElement;
-
-      this.insertElement(blockElement);
-
-      const blockDef = this.blockRegistry.getBlockDefByName(
-        blockElement.blockName
-      );
-      if (!blockDef) {
-        throw new Error("invalid block name: " + blockElement.blockName);
-      }
-
-      const block = blockDef.onBlockCreated({ blockElement });
-      this.newBlockCreated.emit(block);
-
-      this.blocks.set(blockElement.id, block);
-
-      this.newBlockInserted.emit(child as BlockElement);
+    if (child.nodeName !== "block") {
+      return;
     }
+    const blockElement = child as BlockElement;
+
+    this.insertElement(blockElement);
+
+    const blockDef = this.blockRegistry.getBlockDefByName(
+      blockElement.blockName
+    );
+    if (!blockDef) {
+      throw new Error("invalid block name: " + blockElement.blockName);
+    }
+
+    const block = blockDef.onBlockCreated({ blockElement });
+    this.newBlockCreated.emit(block);
+
+    this.blocks.set(blockElement.id, block);
+
+    this.newBlockInserted.emit(child as BlockElement);
   }
 
-  public deleteBlock(blockId: string): boolean {
-    const element = this.idMap.get(blockId) as BlockElement | undefined;
-    if (!element) {
+  /**
+   * TODO: recursive unmount block
+   */
+  public unmountBlock(parent: BlockyElement, child: BlockyNode): boolean {
+    if (child.nodeName !== "block") {
       return false;
     }
-    const parentElement = element.parent! as BlockyElement;
-    parentElement.removeChild(element);
+    const blockElement = child as BlockElement;
+    const blockId = blockElement.id;
 
     this.idMap.delete(blockId);
     this.domMap.delete(blockId);
 
-    this.blockDeleted.emit(element);
+    this.blockDeleted.emit(blockElement);
     return true;
   }
 

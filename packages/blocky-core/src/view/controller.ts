@@ -228,8 +228,18 @@ export class EditorController {
     }
 
     this.state.cursorState = undefined;
+    const blockNode = this.state.idMap.get(id);
+    if (!blockNode) {
+      return;
+    }
+
+    if (blockNode.nodeName !== "block") {
+      return;
+    }
+    
     editor.update(() => {
-      this.state.deleteBlock(id);
+      const parent = blockNode.parent! as BlockyElement;
+      parent.removeChild(blockNode);
     });
   }
 }

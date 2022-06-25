@@ -382,10 +382,9 @@ export class Editor {
       // dom has been removed
 
       this.destructBlockNode(node);
-      const result = this.state.deleteBlock(targetId);
-      if (!result) {
-        console.log("delete failed:", targetId);
-      }
+
+      const parent = treeNode.parent as BlockyElement | undefined;
+      parent?.removeChild(treeNode);
       return;
     }
 
@@ -678,7 +677,8 @@ export class Editor {
     }
 
     this.update(() => {
-      this.state.deleteBlock(targetId);
+      const parent = node.parent as BlockyElement | undefined;
+      parent?.removeChild(node);
       return () => {
         if (prevNode) {
           this.state.cursorState = {
