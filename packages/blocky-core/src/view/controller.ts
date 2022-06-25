@@ -80,7 +80,8 @@ export class EditorController {
       const { m } = this;
       this.state = State.fromMarkup(
         m.doc([m.textBlock([m.span("")])]),
-        this.blockRegistry
+        this.blockRegistry,
+        this.idGenerator,
       );
     }
   }

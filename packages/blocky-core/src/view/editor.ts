@@ -537,15 +537,8 @@ export class Editor {
     e.preventDefault();
   }
 
-  public createTextElement(): BlockElement {
-    const result = new BlockElement(TextBlockName, this.idGenerator.mkBlockId());
-    const textModel = new BlockyTextModel();
-    result.contentContainer.appendChild(textModel);
-    return result;
-  }
-
   private insertEmptyTextAfterBlock(parent: BlockyElement, afterId: string) {
-    const newTextElement = this.createTextElement();
+    const newTextElement = this.state.createTextElement();
     const currentBlock = this.state.idMap.get(afterId);
 
     this.update(() => {
@@ -583,7 +576,7 @@ export class Editor {
 
       const slices = textModel.slice(cursorOffset);
 
-      const newTextElement = this.createTextElement();
+      const newTextElement = this.state.createTextElement();
       const newTextModel = newTextElement.contentContainer.firstChild! as BlockyTextModel;
       const textType = getTextTypeForTextBlock(blockElement);
       if (this.preservedTextType.has(textType)) {  // preserved data type
@@ -1052,7 +1045,7 @@ export class Editor {
 
     const currentNode = this.state.idMap.get(cursorState.targetId)! as BlockElement;
 
-    const textElement = this.createTextElement();
+    const textElement = this.state.createTextElement();
 
     const parentElement = currentNode.parent! as BlockyElement;
     parentElement.insertAfter(textElement, currentNode);
