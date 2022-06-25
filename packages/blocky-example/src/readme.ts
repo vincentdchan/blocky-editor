@@ -14,11 +14,12 @@ export const ReadMeContent = `
 </p>
 <ul>
   <li>Core: The core of the editor. Written in vanilla JS. It can be used standalone without any 
-  UI frameworks.</li>
+  UI frameworks. Gzipped size: ~14kb</li>
   <li>Preact: Wrap the editor in <a href="https://preactjs.com/">Preact</a>. Provide the UI facilities such as toolbar and banner.</li>
+  <li>Yjs(WIP): Connect the document with <a href="https://github.com/yjs/yjs">yjs</a> for collaborating editing.</li>
   <li>
     Example(this page): The example to demonstrate how to use the editor.
-    Gzipped size: ~23kb (one-time loading)
+    Gzipped size: ~27kb (one-time loading)
   </li>
 </ul>
 <h2>Resources</h2>
