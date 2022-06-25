@@ -450,6 +450,39 @@ class TextBlock extends Block {
     return contentContainer;
   }
 
+  private isNodeMatch(node: TextNode, dom: Node): boolean {
+    if (node.attributes) {
+      if (typeof node.attributes.href === "string") {
+        return (
+          dom instanceof HTMLElement &&
+          typeof dom.getAttribute(DataRefKey) === "string"
+        );
+      }
+      const testSpan = dom instanceof HTMLSpanElement;
+      if (!testSpan) {
+        return false;
+      }
+
+      return this.isAttributesMatch(dom, node.attributes);
+    }
+
+    return node instanceof Text;
+  }
+
+  // TODO: optimize this method
+  private isAttributesMatch(span: HTMLSpanElement, attributes: AttributesObject): boolean {
+    for (const key of Object.keys(attributes)) {
+      if (key === "href") {
+        continue;
+      }
+      if (attributes[key] && !span.classList.contains(key)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   private renderBlockTextContent(
     contentContainer: HTMLElement,
     textModel: BlockyTextModel,
@@ -469,7 +502,7 @@ class TextBlock extends Block {
         contentContainer.insertBefore(domPtr, prevDom?.nextSibling ?? null);
       } else {
         // is old
-        if (!isNodeMatch(nodePtr, domPtr)) {
+        if (!this.isNodeMatch(nodePtr, domPtr)) {
           const oldDom = domPtr;
           const newNode = this.createDomByNode(nodePtr, this.editor);
 
@@ -506,20 +539,6 @@ function clearNodeAttributes(node: Node) {
   if (node instanceof HTMLSpanElement && node.style.length !== 0) {
     node.setAttribute("style", "");
   }
-}
-
-function isNodeMatch(node: TextNode, dom: Node): boolean {
-  if (node.attributes) {
-    if (typeof node.attributes.href === "string") {
-      return (
-        dom instanceof HTMLElement &&
-        typeof dom.getAttribute(DataRefKey) === "string"
-      );
-    }
-    return dom instanceof HTMLSpanElement;
-  }
-
-  return node instanceof Text;
 }
 
 class TextBlockDefinition implements IBlockDefinition {

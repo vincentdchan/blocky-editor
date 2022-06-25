@@ -45,12 +45,12 @@ class ToolbarMenu extends Component<ToolbarMenuProps, ToolbarMenuState> {
     });
   };
 
-  private handleItalic = () => {
-    const { editorController } = this.props;
-    editorController.formatTextOnSelectedText({
-      italic: true,
-    });
-  };
+  // private handleItalic = () => {
+  //   const { editorController } = this.props;
+  //   editorController.formatTextOnSelectedText({
+  //     italic: true,
+  //   });
+  // };
 
   private handleLinkClicked = () => {
     const { editorController } = this.props;
