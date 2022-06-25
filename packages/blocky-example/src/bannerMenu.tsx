@@ -98,7 +98,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
     if (!focusedNode) {
       return;
     }
-    const textElement = editorController.editor!.createTextElement();
+    const textElement = editorController.state.createTextElement();
     setTextTypeForTextBlock(textElement, typeType);
     editorController.insertBlockAfterId(textElement, focusedNode.id, {
       autoFocus: true,
