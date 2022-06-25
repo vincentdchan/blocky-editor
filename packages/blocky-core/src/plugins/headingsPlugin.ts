@@ -8,12 +8,12 @@ import { BlockyTextModel, TextType, type TextInsertEvent } from "@pkg/model";
 function makeHeadingsPlugin(): IPlugin {
   const handleNewBlockCreated = (editor: Editor) => (block: Block) => {
     const blockElement = block.props;
-    const blockContent = blockElement.contentContainer;
 
-    if (blockContent.firstChild?.nodeName !== "text") {
+    if (blockElement.blockName !== "text") {
       return;
     }
 
+    const blockContent = blockElement.contentContainer;
     const textModel = blockContent.firstChild as BlockyTextModel;
 
     textModel.onInsert.on((e: TextInsertEvent) => {
