@@ -1,7 +1,7 @@
-import { TextModel, type TextSlice } from "@pkg/model/textModel";
+import { BlockyTextModel, type TextSlice } from "@pkg/model/tree";
 import { test, expect } from "vitest";
 
-function modelToSpans(model: TextModel): string[] {
+function modelToSpans(model: BlockyTextModel): string[] {
   const textSpans: string[] = [];
 
   let ptr = model.nodeBegin;
@@ -13,7 +13,7 @@ function modelToSpans(model: TextModel): string[] {
   return textSpans;
 }
 
-function modelToStyles(model: TextModel): any[] {
+function modelToStyles(model: BlockyTextModel): any[] {
   const textSpans: any[] = [];
 
   let ptr = model.nodeBegin;
@@ -26,18 +26,18 @@ function modelToStyles(model: TextModel): any[] {
 }
 
 test("textModel init", () => {
-  const text = new TextModel();
+  const text = new BlockyTextModel();
   text.insert(0, "Hello world");
   expect(text.length).toBe("Hello world".length);
 });
 
 test("textModel delete", () => {
-  const text = new TextModel();
+  const text = new BlockyTextModel();
   text.insert(0, "Hello world");
 });
 
 test("textModel delete all", () => {
-  const text = new TextModel();
+  const text = new BlockyTextModel();
   text.insert(0, "Hello world");
   text.delete(0, "Hello world".length);
   expect(text.length).toBe(0);
@@ -45,7 +45,7 @@ test("textModel delete all", () => {
 });
 
 test("textModel format #1", () => {
-  const text = new TextModel();
+  const text = new BlockyTextModel();
   text.insert(0, "This is bolded text");
   text.format(8, 6, {
     bold: true,
@@ -64,7 +64,7 @@ test("textModel format #1", () => {
 });
 
 test("textModel format #2", () => {
-  const text = new TextModel();
+  const text = new BlockyTextModel();
   text.insert(0, "This is bolded text");
   text.format(8, 6, {
     bold: true,
@@ -78,7 +78,7 @@ test("textModel format #2", () => {
 });
 
 test("textModel delete node #1", () => {
-  const text = new TextModel();
+  const text = new BlockyTextModel();
   text.insert(0, "This is bolded text");
   text.format(8, 6, {
     bold: true,
@@ -96,7 +96,7 @@ test("textModel delete node #1", () => {
 });
 
 test("textModel delete node #2", () => {
-  const text = new TextModel();
+  const text = new BlockyTextModel();
   text.insert(0, "This is bolded text");
   text.format(8, 6, {
     bold: true,
@@ -114,7 +114,7 @@ test("textModel delete node #2", () => {
 });
 
 test("textModel delete node #3", () => {
-  const text = new TextModel();
+  const text = new BlockyTextModel();
   text.insert(0, "This is bolded text");
   text.format(8, 6, {
     bold: true,
@@ -132,7 +132,7 @@ test("textModel delete node #3", () => {
 });
 
 test("textModel slice", () => {
-  const text = new TextModel();
+  const text = new BlockyTextModel();
   text.insert(0, "This is bolded text");
   text.format(8, 6, {
     bold: true,
@@ -152,7 +152,7 @@ test("textModel insert #1", () => {
     { content: " text", attributes: undefined },
   ];
 
-  const textModel = new TextModel();
+  const textModel = new BlockyTextModel();
 
   let ptr = 0;
   for (const slice of slices) {
@@ -170,7 +170,7 @@ test("textModel insert #2", () => {
     { content: " text", attributes: undefined },
   ];
 
-  const textModel = new TextModel();
+  const textModel = new BlockyTextModel();
 
   let ptr = 0;
   for (const slice of slices) {
@@ -192,7 +192,7 @@ test("textModel insert #3", () => {
     { content: " text", attributes: undefined },
   ];
 
-  const textModel = new TextModel();
+  const textModel = new BlockyTextModel();
 
   let ptr = 0;
   for (const slice of slices) {
@@ -210,7 +210,7 @@ test("textModel insert #3", () => {
 });
 
 test("textModel insert #3", () => {
-  const textModel = new TextModel();
+  const textModel = new BlockyTextModel();
 
   textModel.insert(0, "Hello World");
   textModel.insert(0, "#");
@@ -219,7 +219,7 @@ test("textModel insert #3", () => {
 });
 
 test("textModel insert at end", () => {
-  const textModel = new TextModel();
+  const textModel = new BlockyTextModel();
 
   textModel.insert(0, "Hello ");
   textModel.insert(textModel.length, "World");

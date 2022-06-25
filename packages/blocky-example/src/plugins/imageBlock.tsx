@@ -1,14 +1,14 @@
-import { type TryParsePastedDOMEvent, type Editor, type IPlugin, type TreeNode, ElementModel, IModelElement } from "blocky-core";
+import { type TryParsePastedDOMEvent, type Editor, type IPlugin, BlockElement } from "blocky-core";
 import { makeReactBlock, DefaultBlockOutline } from "blocky-preact";
 import { type RefObject, createRef } from "preact";
 import { PureComponent } from "preact/compat";
 import Button from "@pkg/components/button";
 import "./imageBlock.scss";
 
-export const ImageBlockName = "image";
+export const ImageBlockName = "img";
 
 interface ImageBlockProps {
-  blockData: TreeNode;
+  blockElement: BlockElement;
 }
 
 interface ImageBlockState {
@@ -21,9 +21,8 @@ class ImageBlock extends PureComponent<ImageBlockProps, ImageBlockState> {
   constructor(props: ImageBlockProps) {
     super(props);
 
-    const initData = props.blockData.data as IModelElement | undefined;
     this.state = {
-      data: initData?.getAttribute("src"),
+      data: props.blockElement.contentContainer.getAttribute("src"),
     };
   }
 
@@ -85,20 +84,19 @@ export function makeImageBlockPlugin(): IPlugin {
       editor.registry.block.register(
         makeReactBlock({
           name: ImageBlockName,
-          component: (data: TreeNode) => <ImageBlock blockData={data} />,
+          component: (data: BlockElement) => <ImageBlock blockElement={data} />,
           tryParsePastedDOM(e: TryParsePastedDOMEvent) {
             const { node, editor, after } = e;
             const img = node.querySelector("img");
             if (img && after && after.type === "collapsed") {
-              const element = new ElementModel("img");
+              const newId = editor.idGenerator.mkBlockId();
+              const element = new BlockElement("img", newId);
               const src = img.getAttribute("src");
               if (src) {
                 element.setAttribute("src", src);
               }
-              const newId = editor.controller.insertBlockAfterId(after.targetId, {
+              editor.controller.insertBlockAfterId(element, after.targetId, {
                 noRender: true,
-                blockName: ImageBlockName,
-                data: element,
               });
               e.preventDefault();
               e.after = {

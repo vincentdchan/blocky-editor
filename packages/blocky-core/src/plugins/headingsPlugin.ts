@@ -2,26 +2,19 @@ import type { IPlugin } from "@pkg/registry/pluginRegistry";
 import { isWhiteSpace } from "blocky-common/es/text";
 import type { Editor } from "@pkg/view/editor";
 import type { Block } from "@pkg/block/basic";
-import {
-  type IModelElement,
-  TextModel,
-  TextType,
-  type TextInsertEvent,
-  setTextType,
-} from "@pkg/model";
+import { setTextTypeForTextBlock } from "@pkg/block/textBlock";
+import { BlockyTextModel, TextType, type TextInsertEvent } from "@pkg/model";
 
 function makeHeadingsPlugin(): IPlugin {
   const handleNewBlockCreated = (editor: Editor) => (block: Block) => {
-    const blockData = block.props.data as IModelElement | undefined;
-    if (!blockData) {
+    const blockElement = block.props;
+    const blockContent = blockElement.contentContainer;
+
+    if (blockContent.firstChild?.nodeName !== "text") {
       return;
     }
 
-    if (blockData.nodeName !== "text") {
-      return;
-    }
-
-    const textModel = blockData.firstChild! as TextModel;
+    const textModel = blockContent.firstChild as BlockyTextModel;
 
     textModel.onInsert.on((e: TextInsertEvent) => {
       let changed: boolean = false;
@@ -32,15 +25,15 @@ function makeHeadingsPlugin(): IPlugin {
         if (before === "#") {
           textModel.delete(0, 2);
           changed = true;
-          setTextType(blockData, TextType.Heading1);
+          setTextTypeForTextBlock(blockElement, TextType.Heading1);
         } else if (before === "##") {
           textModel.delete(0, 3);
           changed = true;
-          setTextType(blockData, TextType.Heading2);
+          setTextTypeForTextBlock(blockElement, TextType.Heading2);
         } else if (before === "###") {
           textModel.delete(0, 4);
           changed = true;
-          setTextType(blockData, TextType.Heading3);
+          setTextTypeForTextBlock(blockElement, TextType.Heading3);
         }
       }
 

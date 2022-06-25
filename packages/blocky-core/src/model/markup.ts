@@ -1,6 +1,6 @@
-import { TreeRoot } from "./tree";
 import type { IdGenerator } from "@pkg/helper/idHelper";
-import { TextModel, type IModelElement, createTextElement } from "@pkg/model";
+import { type AttributesObject, type BlockyNode } from "./element";
+import { BlockyTextModel } from "./tree";
 
 /*
  * Large document tree
@@ -13,9 +13,10 @@ export interface MDoc {
 
 export interface MBlock {
   t: "block";
-  id: string;
-  data?: IModelElement;
-  flags: number;
+  blockName: string;
+  id: string,
+  attributes?: AttributesObject;
+  data?: BlockyNode,
   children?: MBlock[];
 }
 
@@ -40,17 +41,16 @@ export class MarkupGenerator {
     };
   }
 
-  block(blockType: number): MBlock {
+  block(blockName: string): MBlock {
     return {
       t: "block",
-      flags: blockType,
+      blockName,
       id: this.idGen.mkBlockId(),
     };
   }
 
   textBlock(content: MSpan[] = []): MBlock {
-    const textElement = createTextElement();
-    const textModel = textElement.firstChild! as TextModel;
+    const textModel = new BlockyTextModel;
 
     let ptr = 0;
     for (const span of content) {
@@ -61,8 +61,8 @@ export class MarkupGenerator {
     return {
       t: "block",
       id: this.idGen.mkBlockId(),
-      flags: 0,
-      data: textElement,
+      blockName: "text",
+      data: textModel,
     };
   }
 
@@ -110,10 +110,10 @@ export function traverse<R>(
   return result;
 }
 
-export function toNodeDoc(doc: MDoc): TreeRoot {
-  return {
-    id: doc.id,
-    blockTypeId: -1,
-    childrenLength: 0,
-  };
-}
+// export function toNodeDoc(doc: MDoc): TreeRoot {
+//   return {
+//     id: doc.id,
+//     blockTypeId: -1,
+//     childrenLength: 0,
+//   };
+// }

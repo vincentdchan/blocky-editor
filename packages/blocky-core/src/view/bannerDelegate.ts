@@ -1,11 +1,11 @@
 import { type IDisposable } from "blocky-common/es/disposable";
 import type { EditorController } from "@pkg/view/controller";
-import { type TreeNode } from "@pkg/model";
+import { type BlockElement } from "@pkg/block/basic";
 import { UIDelegate } from "./uiDelegate";
 
 export interface BannerInstance extends IDisposable {
 
-  onFocusedNodeChanged?(focusedNode: TreeNode | undefined): void;
+  onFocusedNodeChanged?(focusedNode: BlockElement | undefined): void;
 
 }
 
@@ -14,13 +14,13 @@ export type BannerFactory = (dom: HTMLDivElement, editorController: EditorContro
 export class BannerDelegate extends UIDelegate {
 
   #instance: BannerInstance | undefined;
-  #focusedNode: TreeNode | undefined;
+  #focusedNode: BlockElement | undefined;
 
-  get focusedNode(): TreeNode | undefined {
+  get focusedNode(): BlockElement | undefined {
     return this.#focusedNode;
   }
   
-  set focusedNode(v: TreeNode | undefined) {
+  set focusedNode(v: BlockElement | undefined) {
     this.#focusedNode = v;
     this.#instance?.onFocusedNodeChanged?.(v);
   }
