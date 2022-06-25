@@ -93,7 +93,7 @@ export function makeImageBlockPlugin(): IPlugin {
               const element = new BlockElement("img", newId);
               const src = img.getAttribute("src");
               if (src) {
-                element.setAttribute("src", src);
+                element.contentContainer.setAttribute("src", src);
               }
               editor.controller.insertBlockAfterId(element, after.targetId, {
                 noRender: true,
