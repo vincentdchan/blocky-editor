@@ -32,7 +32,7 @@ export class BlockyTextModel implements BlockyNode {
   prevSibling: BlockyNode | null = null;
 
   get childrenLength(): number {
-     return 0;
+    return 0;
   }
 
   get firstChild(): BlockyNode | null {
@@ -381,10 +381,7 @@ export class BlockyElement implements BlockyNode {
     return this.#lastChild;
   }
 
-  insertAfter(
-    node: BlockyNode,
-    after?: BlockyNode
-  ) {
+  insertAfter(node: BlockyNode, after?: BlockyNode) {
     node.parent = this;
     node.state = this.state;
     if (!after) {
@@ -472,5 +469,7 @@ export class BlockyElement implements BlockyNode {
     node.prevSibling = null;
     node.nextSibling = null;
     this.childrenLength--;
+
+    this.state?.unmountBlock(this, node);
   }
 }
