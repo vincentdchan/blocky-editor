@@ -1,14 +1,15 @@
 import { isWhiteSpace } from "blocky-common/es/text";
 import type { IPlugin } from "@pkg/registry/pluginRegistry";
 import type { Editor } from "@pkg/view/editor";
-import type { Block } from "@pkg/block/basic";
-import { type IModelElement, TextModel, TextType, type TextInsertEvent, setTextType, getTextType } from "@pkg/model";
+import type { Block, BlockElement } from "@pkg/block/basic";
+import { setTextTypeForTextBlock, getTextTypeForTextBlock } from "@pkg/block/textBlock";
+import { BlockyTextModel, TextType, type TextInsertEvent } from "@pkg/model";
 
 function makeBulletListPlugin(): IPlugin {
-  const turnTextBlockIntoBulletList = (editor: Editor, blockId: string, textElement: IModelElement) => {
-    const textModel = textElement.firstChild! as TextModel;
+  const turnTextBlockIntoBulletList = (editor: Editor, blockId: string, textElement: BlockElement) => {
+    const textModel = textElement.contentContainer.firstChild! as BlockyTextModel;
     textModel.delete(0, 2);
-    setTextType(textElement, TextType.Bulleted);
+    setTextTypeForTextBlock(textElement, TextType.Bulleted);
     editor.render(() => {
       editor.state.cursorState = {
         type: "collapsed",
@@ -18,19 +19,16 @@ function makeBulletListPlugin(): IPlugin {
     });
   };
   const handleNewBlockCreated = (editor: Editor) => (block: Block) => {
-    const blockData = block.props.data as IModelElement | undefined;
-    if (!blockData) {
+    const textElement = block.props;
+    if (textElement.blockName !== "text") {
       return;
     }
-    if (blockData.nodeName !== "text") {
-      return;
-    }
-    const textModel = blockData.firstChild! as TextModel;
+    const textModel = textElement.contentContainer.firstChild! as BlockyTextModel;
     textModel.onInsert.on((e: TextInsertEvent) => {
       if (e.index === 1 && e.text.length === 1 && isWhiteSpace(e.text)) {
         const content = textModel.toString();
         if (content[0] === "-") {
-          turnTextBlockIntoBulletList(editor, block.props.id, blockData);
+          turnTextBlockIntoBulletList(editor, block.props.id, textElement);
         }
       }
     });
@@ -61,10 +59,10 @@ function makeBulletListPlugin(): IPlugin {
     if (!textElement) {
       return;
     }
-    const textType = getTextType(textElement);
+    const textType = getTextTypeForTextBlock(textElement);
     if (textType === TextType.Bulleted) {
       e.preventDefault();
-      setTextType(textElement, TextType.Normal);
+      setTextTypeForTextBlock(textElement, TextType.Normal);
       editor.render(() => {
         editor.state.cursorState = {
           type: "collapsed",

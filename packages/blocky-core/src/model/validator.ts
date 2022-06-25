@@ -1,4 +1,4 @@
-import { type TreeNode } from "./tree";
+import { type BlockyNode } from "./element";
 
 export class ValidateError extends Error {
 
@@ -8,16 +8,16 @@ export class ValidateError extends Error {
 
 }
 
-export function validate(node: TreeNode) {
+export function validate(node: BlockyNode) {
   let ptr = node.firstChild;
 
   while (ptr) {
     validateBlock(ptr);
 
-    ptr = ptr.next;
+    ptr = ptr.nextSibling;
   }
 }
 
-function validateBlock(blockNode: TreeNode) {
+function validateBlock(blockNode: BlockyNode) {
   // TODO: validate block
 }

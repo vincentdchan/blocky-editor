@@ -1,10 +1,10 @@
 import { render, type ComponentChild } from "preact";
 import { unmountComponentAtNode } from "preact/compat";
-import { type TreeNode, type BannerFactory, type EditorController, type BannerInstance } from "blocky-core";
+import { type BlockElement, type BannerFactory, type EditorController, type BannerInstance } from "blocky-core";
 
 export interface RenderProps {
   editorController: EditorController;
-  focusedNode?: TreeNode;
+  focusedNode?: BlockElement;
 }
 
 export type Renderer = (props: RenderProps) => ComponentChild;
@@ -14,13 +14,13 @@ export function makePreactBanner(renderer: Renderer): BannerFactory {
     container: HTMLDivElement,
     editorController: EditorController
   ): BannerInstance => {
-    let focusedNode: TreeNode | undefined;
+    let focusedNode: BlockElement | undefined;
     const renderFn = () => {
       render(renderer({ editorController, focusedNode }), container);
     }
     renderFn();
     return {
-      onFocusedNodeChanged(n: TreeNode) {
+      onFocusedNodeChanged(n: BlockElement) {
         focusedNode = n;
         renderFn();
       },

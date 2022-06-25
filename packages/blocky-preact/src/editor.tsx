@@ -1,5 +1,5 @@
 import { Component, createRef, type RefObject } from "preact";
-import { Editor, type EditorController } from "blocky-core";
+import { type BlockElement, Editor, type EditorController } from "blocky-core";
 
 export interface Props {
   controller: EditorController;
@@ -19,7 +19,7 @@ export class BlockyEditor extends Component<Props> {
       if (firstChild) {
         editor.state.cursorState = {
           type: "collapsed",
-          targetId: firstChild.id,
+          targetId: (firstChild as BlockElement).id,
           offset: 0,
         };
       }

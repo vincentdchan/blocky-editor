@@ -2,7 +2,7 @@ import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { test } from "vitest";
 import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { MarkupGenerator } from "@pkg/model/markup";
-import State, { serializeJSON } from "@pkg/model/state";
+import State from "@pkg/model/state";
 
 function makeDefaultUtils() {
   const blockRegistry = new BlockRegistry;
@@ -38,5 +38,5 @@ test("serialize", () => {
     m.doc([m.textBlock([m.span("Hello World")])]),
     blockRegistry
   );
-  console.log(serializeJSON(state));
+  // console.log(serializeJSON(state));
 });

@@ -8,17 +8,17 @@ import {
   type BlockPasteEvent,
   type CursorDomResult,
   Block,
+  BlockElement,
 } from "./basic";
 import {
-  type TreeNode,
   TextType,
   CursorState,
-  IModelElement,
-  createTextElement,
-  setTextType,
+  BlockyTextModel,
+  type AttributesObject,
+  type TextNode,
+  BlockyElement,
 } from "@pkg/model";
 import { areEqualShallow } from "blocky-common/es/object";
-import { TextModel, TextNode, type AttributesObject } from "@pkg/model";
 import fastDiff from "fast-diff";
 import { type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";
@@ -42,7 +42,7 @@ interface FormattedTextSlice {
   attributes?: AttributesObject;
 }
 
-function textModelToFormats(textModel: TextModel): FormattedTextSlice[] {
+function textModelToFormats(textModel: BlockyTextModel): FormattedTextSlice[] {
   const formats: FormattedTextSlice[] = [];
 
   let ptr = textModel.nodeBegin;
@@ -63,13 +63,9 @@ function textModelToFormats(textModel: TextModel): FormattedTextSlice[] {
 class TextBlock extends Block {
   #container: HTMLElement | undefined;
 
-  constructor(private def: TextBlockDefinition, props: TreeNode) {
+  constructor(private def: TextBlockDefinition, props: BlockElement) {
     super(props);
   }
-
-  // private getTextModel(): TextModel {
-  //   return this.elementData.firstChild! as TextModel;
-  // }
 
   private getTextType(): TextType {
     const element = this.elementData;
@@ -273,11 +269,9 @@ class TextBlock extends Block {
       ptr = ptr.nextSibling;
     }
 
-    const textElement = blockData.data as IModelElement | undefined;
-    if (!textElement) {
-      return;
-    }
-    const textModel = textElement.firstChild! as TextModel;
+    const contentModel = this.props.contentContainer;
+
+    const textModel = contentModel.firstChild! as BlockyTextModel;
     const oldContent = textModel.toString();
 
     const diffs = fastDiff(oldContent, textContent, offset);
@@ -300,7 +294,7 @@ class TextBlock extends Block {
 
   private diffAndApplyFormats(
     newFormats: FormattedTextSlice[],
-    textModel: TextModel
+    textModel: BlockyTextModel
   ) {
     const oldFormats: FormattedTextSlice[] = textModelToFormats(textModel);
 
@@ -339,13 +333,9 @@ class TextBlock extends Block {
 
   override render(container: HTMLElement) {
     this.#container = container;
-    const { id } = this.props;
-    const blockNode = this.editor.state.idMap.get(id)!;
-    const textElement = blockNode.data as IModelElement | undefined;
-    if (!textElement) {
-      return;
-    }
-    const textModel = textElement.firstChild! as TextModel;
+
+    const contentModel = this.props.contentContainer;
+    const textModel = contentModel.firstChild! as BlockyTextModel;
 
     const contentContainer = this.findContentContainer(container);
     this.renderBlockTextContent(contentContainer, textModel);
@@ -408,7 +398,7 @@ class TextBlock extends Block {
 
   private ensureContentContainerStyle(
     contentContainer: HTMLElement,
-    textModel: TextModel
+    textModel: BlockyTextModel 
   ): HTMLElement {
     const renderedType = contentContainer.getAttribute("data-type");
     const textType = this.getTextType();
@@ -462,7 +452,7 @@ class TextBlock extends Block {
 
   private renderBlockTextContent(
     contentContainer: HTMLElement,
-    textModel: TextModel
+    textModel: BlockyTextModel,
   ) {
     contentContainer = this.ensureContentContainerStyle(
       contentContainer,
@@ -536,7 +526,7 @@ class TextBlockDefinition implements IBlockDefinition {
   public name: string = TextBlockName;
   public editable: boolean = true;
 
-  onBlockCreated({ model: data }: BlockCreatedEvent): Block {
+  onBlockCreated({ blockElement: data }: BlockCreatedEvent): Block {
     return new TextBlock(this, data);
   }
 
@@ -554,31 +544,26 @@ class TextBlockDefinition implements IBlockDefinition {
       return;
     }
 
-    const currentNode = editor.state.idMap.get(cursorState.targetId)!;
-    const parentId = currentNode.parent!.id;
-    const nodeData = currentNode.data as IModelElement | undefined;
-    const textElement = this.getTextElementFromDOM(editor, container);
-    const textModel = textElement.firstChild! as TextModel;
+    const currentElement = editor.state.idMap.get(cursorState.targetId)! as BlockElement;
+    const parentElement = currentElement.parent! as BlockyElement;
+    const newTextElement = this.getTextElementFromDOM(editor, container);
+    const newTextModel = newTextElement.contentContainer.firstChild! as BlockyTextModel;
 
-    if (tryMerge && nodeData?.nodeName === "text") {
-      const oldTextModel = nodeData.firstChild! as TextModel;
-      oldTextModel.append(textModel);
+    if (tryMerge && currentElement.blockName === "text") {
+      const oldTextModel = currentElement.contentContainer.firstChild! as BlockyTextModel;
+      oldTextModel.append(newTextModel);
       return;
     }
 
-    const newId = editor.idGenerator.mkBlockId();
-
     editor.state.insertBlockAfter(
-      parentId,
-      "text",
-      newId,
-      textElement,
-      cursorState.targetId,
+      parentElement,
+      newTextElement,
+      cursorState.targetId
     );
 
     return {
       type: "collapsed",
-      targetId: newId,
+      targetId: newTextElement.id,
       offset: 0,
     };
   }
@@ -589,9 +574,12 @@ class TextBlockDefinition implements IBlockDefinition {
   private getTextElementFromDOM(
     editor: Editor,
     node: HTMLElement
-  ): IModelElement {
-    const result = createTextElement();
-    const textModel = result.firstChild! as TextModel;
+  ): BlockElement {
+    const newId = editor.idGenerator.mkBlockId();
+    const result = new BlockElement("text", newId);
+
+    const textModel = new BlockyTextModel;
+    result.contentContainer.appendChild(textModel);
 
     // TODO: Maybe using querySelector is slow.
     // Should make a benchmark here
@@ -608,7 +596,7 @@ class TextBlockDefinition implements IBlockDefinition {
 
       const dataType = textContentContainer.getAttribute("data-type") || "0";
       const dataTypeInt = parseInt(dataType, 10);
-      setTextType(result, dataTypeInt);
+      setTextTypeForTextBlock(result, dataTypeInt);
 
       while (childPtr) {
         if (childPtr instanceof Text) {
@@ -630,13 +618,13 @@ class TextBlockDefinition implements IBlockDefinition {
 
     const { tagName } = node;
     if (tagName === "H1") {
-      setTextType(result, TextType.Heading1);
+      setTextTypeForTextBlock(result, TextType.Heading1);
     } else if (tagName === "H2") {
-      setTextType(result, TextType.Heading2);
+      setTextTypeForTextBlock(result, TextType.Heading2);
     } else if (tagName === "H3") {
-      setTextType(result, TextType.Heading3);
+      setTextTypeForTextBlock(result, TextType.Heading3);
     } else if (tagName === "LI") {
-      setTextType(result, TextType.Bulleted);
+      setTextTypeForTextBlock(result, TextType.Bulleted);
     }
 
     return result;
@@ -682,4 +670,14 @@ function isRangeEqual(
 
 export function makeTextBlockDefinition(): IBlockDefinition {
   return new TextBlockDefinition();
+}
+
+export function setTextTypeForTextBlock(blockElement: BlockElement, textType: TextType) {
+  const contentModel = blockElement.contentContainer;
+  contentModel.setAttribute("textType", textType.toString());
+}
+
+export function getTextTypeForTextBlock(blockElement: BlockElement): TextType {
+  const contentModel = blockElement.contentContainer;
+  return parseInt(contentModel.getAttribute("textType") || "0", 10);
 }

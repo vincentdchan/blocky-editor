@@ -1,9 +1,8 @@
 import { type IDisposable } from "blocky-common/es/disposable";
 import { CursorState, type CollapsedCursor } from "@pkg/model/cursor";
-import { type TreeNode } from "@pkg/model/tree";
+import { BlockyElement } from "@pkg/model/tree";
 import { type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";
-import { type IModelElement } from "@pkg/model";
 
 export interface BlockDidMountEvent {
   element: HTMLElement;
@@ -11,8 +10,7 @@ export interface BlockDidMountEvent {
 }
 
 export interface BlockCreatedEvent {
-  model: TreeNode;
-  // editor: Editor;
+  blockElement: BlockElement;
 }
 
 export interface CursorDomResult {
@@ -129,13 +127,39 @@ export interface IBlockDefinition {
 
 }
 
+export class BlockElement extends BlockyElement {
+
+  public contentContainer: BlockyElement;
+  public childrenContainer: BlockyElement;
+
+  constructor(blockName: string, id: string) {
+    super("block");
+    this.contentContainer = new BlockyElement("block-content");
+    this.childrenContainer = new BlockyElement("block-children");
+    this.appendChild(this.contentContainer);
+    this.appendChild(this.childrenContainer);
+
+    this.setAttribute("blockName", blockName);
+    this.setAttribute("id", id);
+  }
+
+  get blockName(): string {
+    return this.getAttribute("blockName")!;
+  }
+
+  get id(): string {
+    return this.getAttribute("id")!;
+  }
+
+}
+
 export class Block implements IDisposable {
   #editor: Editor | undefined;
 
-  constructor(public props: TreeNode) {}
+  constructor(public props: BlockElement) {}
 
-  get elementData(): IModelElement {
-    return this.props.data! as IModelElement;
+  get elementData(): BlockyElement {
+    return this.props.contentContainer;
   }
 
   setEditor(editor: Editor) {
