@@ -1,38 +1,30 @@
 import { makeObservable } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
-import {
-  type TreeNode,
-  type TreeRoot,
-  createNode,
-  appendChild,
-  insertAfter,
-  removeNode,
-} from "./tree";
+import { BlockyElement } from "./tree";
+import { type BlockyNode } from "./element";
 import {
   MDoc,
   traverse,
-  toNodeDoc,
   MNode,
 } from "./markup";
 import { type CursorState } from "@pkg/model/cursor";
-import { Block } from "@pkg/block/basic";
+import { Block, BlockElement } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { validate as validateNode } from "./validator";
-import { type IModelElement } from "./element";
 
 class State {
   static fromMarkup(doc: MDoc, blockRegistry: BlockRegistry): State {
-    const rootNode = toNodeDoc(doc);
+    const rootNode = new BlockyElement("doc");
     const state = new State(rootNode, blockRegistry);
 
-    traverse<TreeNode>(
+    traverse<BlockyNode>(
       doc,
-      (node: MNode, parent?: MNode, parentNode?: TreeNode) => {
+      (node: MNode, parent?: MNode, parentNode?: BlockyNode) => {
         if (state.idMap.has(node.id)) {
           throw new Error(`duplicated id: ${node.id}`);
         }
 
-        let nextNode: TreeNode;
+        let nextNode: BlockyElement;
 
         switch (node.t) {
           case "doc": {
@@ -41,17 +33,24 @@ class State {
           }
 
           case "block": {
-            const blockNode: TreeNode = createNode(node.id, node.flags, node.data!);
-            appendChild(parentNode!, blockNode);
+            const blockDef = blockRegistry.getBlockDefByName(node.blockName)!;
 
-            const blockDef = blockRegistry.getBlockDefById(node.flags)!;
-            const block = blockDef.onBlockCreated({ model: blockNode });
+            const blockElement = new BlockElement(blockDef.name, node.id);
+
+            if (node.data) {
+              blockElement.contentContainer.appendChild(node.data);
+            }
+
+            const parentElement = parentNode as BlockElement;
+            parentElement.appendChild(blockElement);
+
+            const block = blockDef.onBlockCreated({ blockElement });
             state.newBlockCreated.emit(block);
 
-            state.idMap.set(node.id, blockNode);
+            state.idMap.set(node.id, blockElement);
             state.blocks.set(node.id, block);
 
-            nextNode = blockNode;
+            nextNode = blockElement;
             break;
           }
 
@@ -71,103 +70,59 @@ class State {
     return state;
   }
 
-  public readonly idMap: Map<string, TreeNode> = new Map();
+  public readonly idMap: Map<string, BlockyElement> = new Map();
   public readonly domMap: Map<string, Node> = new Map();
   public readonly blocks: Map<string, Block> = new Map();
-  public readonly newBlockInserted: Slot<TreeNode> = new Slot;
+  public readonly newBlockInserted: Slot<BlockElement> = new Slot;
   public readonly newBlockCreated: Slot<Block> = new Slot;
-  public readonly blockDeleted: Slot<TreeNode> = new Slot;
+  public readonly blockDeleted: Slot<BlockElement> = new Slot;
   public cursorState: CursorState | undefined;
 
-  constructor(public readonly root: TreeRoot, public readonly blockRegistry: BlockRegistry) {
+  constructor(public readonly root: BlockyElement, public readonly blockRegistry: BlockRegistry) {
     validateNode(root);
     makeObservable(this, "cursorState");
   }
 
-  public getParent(id: string): undefined | string {
-    const wrapper = this.idMap.get(id);
-    return wrapper?.parent?.id;
-  }
-
-  public insertBlockAfter(parentId: string, blockName: string, newId: string, data?: IModelElement, afterId?: string) {
-    const node = this.idMap.get(parentId);
-    if (!node) {
-      throw new Error(
-        "can not apply action, parent id not found: " + parentId,
-      );
-    }
-
+  public insertBlockAfter(parentElement: BlockyElement, newElement: BlockElement, afterId?: string) {
     const afterNode = afterId ? this.idMap.get(afterId) : undefined;
 
-    const blockId = this.blockRegistry.getBlockIdByName(blockName);
-    if (typeof blockId !== "number") {
-      throw new Error(`block name '${blockName} not found'`);
+    const blockDef = this.blockRegistry.getBlockDefByName(newElement.blockName);
+    if (!blockDef) {
+      throw new Error("invalid block name: " + newElement.blockName);
     }
+    this.insertElement(newElement);
 
-    const blockDef = this.blockRegistry.getBlockDefById(blockId)!;
-
-    if (!data) {
-      throw new Error("data is empty for new block");
-    }
-    const blockNode = createNode(newId, blockId, data);
-    this.insertNode(blockNode);
-
-    const block = blockDef.onBlockCreated({ model: blockNode });
+    const block = blockDef.onBlockCreated({ blockElement: newElement });
     this.newBlockCreated.emit(block);
 
-    this.blocks.set(newId, block);
+    this.blocks.set(newElement.id, block);
 
-    insertAfter(node, blockNode, afterNode);
+    parentElement.insertAfter(newElement, afterNode);
 
-    this.newBlockInserted.emit(blockNode);
+    this.newBlockInserted.emit(newElement);
   }
 
   public deleteBlock(blockId: string): boolean {
-    const node = this.idMap.get(blockId);
-    if (!node) {
+    const element = this.idMap.get(blockId) as BlockElement | undefined;
+    if (!element) {
       return false;
     }
-    removeNode(node);
+    const parentElement = element.parent! as BlockyElement;
+    parentElement.removeChild(element);
 
     this.idMap.delete(blockId);
     this.domMap.delete(blockId);
 
-    this.blockDeleted.emit(node);
+    this.blockDeleted.emit(element);
     return true;
   }
 
-  private insertNode(node: TreeNode) {
-    if (this.idMap.has(node.id)) {
-      throw new Error(`duplicated id: ${node.id}`);
+  private insertElement(element: BlockElement) {
+    if (this.idMap.has(element.id)) {
+      throw new Error(`duplicated id: ${element.id}`);
     }
-    this.idMap.set(node.id, node);
+    this.idMap.set(element.id, element);
   }
-}
-
-export function serializeJSON(state: State): any {
-  const { root } = state;
-  return serializeTreeNode(root);
-}
-
-function serializeTreeNode(node: TreeNode): any {
-  const { data } = node;
-
-  let children: any[] | undefined;
-
-  children = [];
-  let ptr = node.firstChild;
-  while (ptr) {
-    children.push(serializeTreeNode(ptr));
-
-    ptr = ptr.next;
-  }
-
-  const result: any = { ...data };
-  if (children) {
-    result.children = children;
-  }
-
-  return result;
 }
 
 export default State;

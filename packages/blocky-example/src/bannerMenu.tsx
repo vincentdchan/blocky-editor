@@ -1,11 +1,9 @@
 import { Component, type RefObject, createRef } from "preact";
 import {
   type EditorController,
+  BlockElement,
   TextType,
-  createTextElement,
-  setTextType,
-  ElementModel,
-  type TreeNode,
+  setTextTypeForTextBlock,
 } from "blocky-core";
 import {
   type IDisposable,
@@ -18,7 +16,7 @@ import "./bannerMenu.scss";
 
 export interface BannerProps {
   editorController: EditorController;
-  focusedNode?: TreeNode;
+  focusedNode?: BlockElement;
 }
 
 interface BannerState {
@@ -100,11 +98,10 @@ class BannerMenu extends Component<BannerProps, BannerState> {
     if (!focusedNode) {
       return;
     }
-    const textElement = createTextElement();
-    setTextType(textElement, typeType);
-    editorController.insertBlockAfterId(focusedNode.id, {
+    const textElement = editorController.editor!.createTextElement();
+    setTextTypeForTextBlock(textElement, typeType);
+    editorController.insertBlockAfterId(textElement, focusedNode.id, {
       autoFocus: true,
-      data: textElement,
     });
   };
 
@@ -113,10 +110,10 @@ class BannerMenu extends Component<BannerProps, BannerState> {
     if (!focusedNode) {
       return;
     }
-    editorController.insertBlockAfterId(focusedNode.id, {
+    const newId = editorController.editor!.idGenerator.mkBlockId();
+    const imgElement = new BlockElement(ImageBlockName, newId);
+    editorController.insertBlockAfterId(imgElement, focusedNode.id, {
       autoFocus: true,
-      blockName: ImageBlockName,
-      data: new ElementModel("img"),
     });
   };
 

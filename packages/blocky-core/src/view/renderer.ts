@@ -1,7 +1,7 @@
 import { clearAllChildren, elem, removeNode } from "blocky-common/es/dom";
-import { type TreeNode } from "@pkg/model";
+import { type BlockyElement } from "@pkg/model";
 import type { Editor } from "@pkg/view/editor";
-import { type IBlockDefinition } from "@pkg/block/basic";
+import { type BlockElement, type IBlockDefinition } from "@pkg/block/basic";
 
 function ensureChild<K extends keyof HTMLElementTagNameMap>(
   dom: HTMLElement,
@@ -52,7 +52,6 @@ export class DocRenderer {
     const createNewDocument = () => {
       const newDom = elem("div", `${clsPrefix}-documents ${clsPrefix}-default-fonts`);
       this.renderDocument(state.root, newDom);
-      state.domMap.set(state.root.id, newDom);
       return newDom;
     }
 
@@ -64,7 +63,7 @@ export class DocRenderer {
     }
   }
 
-  protected renderDocument(model: TreeNode, dom: HTMLDivElement) {
+  protected renderDocument(model: BlockyElement, dom: HTMLDivElement) {
     dom._mgNode = model;
 
     const { clsPrefix } = this;
@@ -82,7 +81,7 @@ export class DocRenderer {
 
   private clearDeletedBlock(dom: Node | null): Node | null {
     while (dom?._mgNode) {
-      const treeNode = dom?._mgNode as TreeNode;
+      const treeNode = dom?._mgNode as BlockElement;
       const id = treeNode.id;
       if (!this.editor.state.idMap.has(id)) {
         const next = dom.nextSibling;
@@ -96,7 +95,7 @@ export class DocRenderer {
     return dom;
   }
 
-  protected renderBlocks(blocksContainer: HTMLElement, parentNode: TreeNode) {
+  protected renderBlocks(blocksContainer: HTMLElement, parentNode: BlockyElement) {
     let nodePtr = parentNode.firstChild;
     
     if (!nodePtr) {
@@ -108,12 +107,13 @@ export class DocRenderer {
     let prevPtr: Node | undefined;
 
     while (nodePtr) {
-      const id = nodePtr.id;
-      const blockDef = this.editor.registry.block.getBlockDefById(nodePtr.blockTypeId);
+      const blockElement = nodePtr as BlockElement;
+      const id = blockElement.id;
+      const blockDef = this.editor.registry.block.getBlockDefByName(blockElement.blockName);
       domPtr = this.clearDeletedBlock(domPtr);
 
       if (!blockDef) {
-        throw new Error(`id not found: ${nodePtr.blockTypeId}`);
+        throw new Error(`id not found: ${blockElement.blockName}`);
       }
 
       if (!domPtr || typeof domPtr._mgNode === "undefined" || domPtr._mgNode !== nodePtr) {
@@ -128,14 +128,14 @@ export class DocRenderer {
           const newBlockContainer = this.createBlockContainer();
           blocksContainer.insertBefore(newBlockContainer, prevPtr?.nextSibling ?? null);
           domPtr = newBlockContainer;
-          this.initBlockContainer(newBlockContainer, nodePtr, blockDef);
+          this.initBlockContainer(newBlockContainer, blockElement, blockDef);
         }
       }
 
       const block = this.editor.state.blocks.get(id)!;
       block.render(domPtr as HTMLElement);
 
-      nodePtr = nodePtr.next;
+      nodePtr = nodePtr.nextSibling;
       prevPtr = domPtr;
       domPtr = domPtr.nextSibling;
     }
@@ -150,7 +150,7 @@ export class DocRenderer {
     }
   }
 
-  private initBlockContainer(blockContainer: HTMLElement, blockNode: TreeNode, blockDef: IBlockDefinition) {
+  private initBlockContainer(blockContainer: HTMLElement, blockNode: BlockElement, blockDef: IBlockDefinition) {
     const { editor, clsPrefix } = this;
 
     if (!blockDef.editable) {

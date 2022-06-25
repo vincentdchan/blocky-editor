@@ -9,17 +9,7 @@ import {
 } from "blocky-common/es/disposable";
 import { type Position } from "blocky-common/es/position";
 import { DocRenderer } from "@pkg/view/renderer";
-import {
-  State as DocumentState,
-  type TreeNode,
-  TextModel,
-  type AttributesObject,
-  TextType,
-  IModelElement,
-  getTextType,
-  createTextElement,
-  setTextType,
-} from "@pkg/model";
+import { State as DocumentState, type AttributesObject, TextType, BlockyTextModel, BlockyElement } from "@pkg/model";
 import { CollapsedCursor, OpenCursorState, type CursorState } from "@pkg/model/cursor";
 import {
   IPlugin,
@@ -33,7 +23,8 @@ import { BannerDelegate, type BannerFactory } from "./bannerDelegate";
 import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import type { EditorController } from "./controller";
-import { Block, BlockPasteEvent, TryParsePastedDOMEvent } from "@pkg/block/basic";
+import { Block, BlockElement, BlockPasteEvent, TryParsePastedDOMEvent } from "@pkg/block/basic";
+import { setTextTypeForTextBlock, getTextTypeForTextBlock } from "@pkg/block/textBlock";
 import { isHotkey } from "is-hotkey";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
@@ -247,7 +238,7 @@ export class Editor {
 
     // parent is block
     if (parent instanceof HTMLElement && parent.classList.contains(this.#renderer.blockClassName)) {
-      const node = parent._mgNode as TreeNode | undefined;
+      const node = parent._mgNode as BlockElement | undefined;
       if (!node) {
         return false;
       }
@@ -270,11 +261,11 @@ export class Editor {
     }
   }
 
-  private findBlockNodeContainer(node: Node): TreeNode | undefined {
+  private findBlockNodeContainer(node: Node): BlockElement | undefined {
     let ptr: Node | null = node;
 
     while (ptr) {
-      const node = ptr._mgNode as TreeNode | undefined;
+      const node = ptr._mgNode as BlockElement | undefined;
       if (node) {
         return node;
       }
@@ -285,7 +276,7 @@ export class Editor {
     return;
   }
   
-  private findTextOffsetInBlock(blockNode: TreeNode, focusedNode: Node, offsetInNode: number): number {
+  private findTextOffsetInBlock(blockNode: BlockElement, focusedNode: Node, offsetInNode: number): number {
     const block = this.state.blocks.get(blockNode.id)!;
 
     return block.findTextOffsetInBlock(focusedNode, offsetInNode);
@@ -385,7 +376,7 @@ export class Editor {
     node: Node,
     currentOffset?: number,
   ) {
-    const treeNode = node._mgNode as TreeNode;
+    const treeNode = node._mgNode as BlockElement;
     const targetId = treeNode.id;
     if (!node.parentNode) {
       // dom has been removed
@@ -406,7 +397,7 @@ export class Editor {
    */
   private checkBlockContent(
     node: Node,
-    blockNode: TreeNode,
+    blockNode: BlockElement,
     currentOffset?: number,
   ) {
     const block = this.state.blocks.get(blockNode.id);
@@ -446,7 +437,7 @@ export class Editor {
     this.checkMarkedDom(domNode, currentOffset);
   };
 
-  public placeBannerAt(blockContainer: HTMLElement, node: TreeNode) {
+  public placeBannerAt(blockContainer: HTMLElement, node: BlockElement) {
     const block = this.state.blocks.get(node.id);
     if (!block) {
       return;
@@ -470,7 +461,7 @@ export class Editor {
    */
   public destructBlockNode(node: Node) {
     if (node._mgNode) {
-      const treeNode = node._mgNode as TreeNode;
+      const treeNode = node._mgNode as BlockElement;
 
       const block = this.state.blocks.get(treeNode.id);
       block?.dispose();
@@ -546,23 +537,23 @@ export class Editor {
     e.preventDefault();
   }
 
-  private insertEmptyTextAfterBlock(parentId: string, id: string) {
-    const newTextElement = createTextElement();
-    const newId = this.idGenerator.mkBlockId();
+  public createTextElement(): BlockElement {
+    const result = new BlockElement(TextBlockName, this.idGenerator.mkBlockId());
+    const textModel = new BlockyTextModel();
+    result.contentContainer.appendChild(textModel);
+    return result;
+  }
+
+  private insertEmptyTextAfterBlock(parent: BlockyElement, afterId: string) {
+    const newTextElement = this.createTextElement();
 
     this.update(() => {
-      this.state.insertBlockAfter(
-        parentId,
-        TextBlockName,
-        newId,
-        newTextElement,
-        id,
-      );
+      this.state.insertBlockAfter(parent, newTextElement, afterId);
 
       return () => {
         this.state.cursorState = {
           type: "collapsed",
-          targetId: newId,
+          targetId: newTextElement.id,
           offset: 0,
         };
       };
@@ -580,24 +571,23 @@ export class Editor {
         return;
       }
 
-      const blockData = node.data as IModelElement | undefined;
-      const targetId = node.parent!.id;
-      if (!blockData || blockData.nodeName !== "text") {
+      const blockElement = node as BlockElement;
+      if (blockElement.blockName !== TextBlockName) {
         // default behavior
-        this.insertEmptyTextAfterBlock(targetId, cursorState.targetId);
+        this.insertEmptyTextAfterBlock(blockElement.parent! as BlockyElement, cursorState.targetId);
         return;
       }
-      const textModel = blockData.firstChild! as TextModel;
+      const textModel = blockElement.contentContainer.firstChild! as BlockyTextModel;
 
       const cursorOffset = cursorState.offset;
 
       const slices = textModel.slice(cursorOffset);
 
-      const newTextElement = createTextElement();
-      const newTextModel = newTextElement.firstChild! as TextModel;
-      const textType = getTextType(blockData);
+      const newTextElement = this.createTextElement();
+      const newTextModel = newTextElement.contentContainer.firstChild! as BlockyTextModel;
+      const textType = getTextTypeForTextBlock(blockElement);
       if (this.preservedTextType.has(textType)) {  // preserved data type
-        setTextType(newTextElement, textType);
+        setTextTypeForTextBlock(newTextElement, textType);
       }
 
       let ptr = 0;
@@ -612,11 +602,9 @@ export class Editor {
 
       this.update(() => {
         this.state.insertBlockAfter(
-          targetId,
-          TextBlockName,
-          newId,
+          blockElement.parent! as BlockyElement,
           newTextElement,
-          node.id,
+          blockElement.id,
         );
 
         return () => {
@@ -689,13 +677,13 @@ export class Editor {
       return false;
     }
 
-    const node = this.state.idMap.get(targetId);
+    const node = this.state.idMap.get(targetId) as BlockElement | undefined;
     if (!node) {
       return false;
     }
-    const prevNode = node.prev;
+    const prevNode = node.prevSibling as BlockElement;
 
-    const blockDef = this.registry.block.getBlockDefById(node.blockTypeId)!;
+    const blockDef = this.registry.block.getBlockDefByName(node.blockName)!;
 
     if (blockDef.editable !== false) {
       return false;
@@ -719,19 +707,18 @@ export class Editor {
     return true;
   }
 
-  private focusEndOfNode(treeNode: TreeNode) {
-    const { data } = treeNode;
-    if (data && data instanceof TextModel) {
-      const length = data.length;
+  private focusEndOfNode(node: BlockElement) {
+    if (node.blockName === TextBlockName) {
+      const textModel = node.contentContainer.firstChild! as BlockyTextModel;
       this.state.cursorState = {
         type: "collapsed",
-        targetId: treeNode.id,
-        offset: length,
+        targetId: node.id,
+        offset: textModel.length,
       };
     } else {
       this.state.cursorState = {
         type: "collapsed",
-        targetId: treeNode.id,
+        targetId: node.id,
         offset: 0,
       };
     }
@@ -833,7 +820,7 @@ export class Editor {
     blockDom: HTMLDivElement,
     cursor: CollapsedCursor
   ) {
-    const node = blockDom._mgNode as TreeNode | undefined
+    const node = blockDom._mgNode as BlockElement | undefined
     if (!node) {
       return;
     }
@@ -1005,7 +992,7 @@ export class Editor {
       element instanceof HTMLHeadingElement ||
       element instanceof HTMLLIElement
     ) {  // is a <p> or <h1>
-      const blockDef = blockRegistry.getBlockDefByName("text");
+      const blockDef = blockRegistry.getBlockDefByName(TextBlockName);
       const pasteHandler = blockDef?.onPaste;
       const evt = new BlockPasteEvent({
         after: cursorState,
@@ -1017,7 +1004,7 @@ export class Editor {
         const cursor = pasteHandler.call(blockDef, evt);
         return cursor;
       } else {
-       return this.insertBlockByDefaultAt(cursorState, "text");
+       return this.insertBlockByDefaultAt(cursorState, TextBlockName);
       }
     } else if (element instanceof HTMLUListElement) {
       let childPtr = element.firstElementChild;
@@ -1068,21 +1055,15 @@ export class Editor {
       return;
     }
 
-    const currentNode = this.state.idMap.get(cursorState.targetId)!;
-    const parentId = currentNode.parent!.id;
+    const currentNode = this.state.idMap.get(cursorState.targetId)! as BlockElement;
 
     const newId = this.idGenerator.mkBlockId();
 
-    let data: any;
-    if (blockName === "text") {
-      data = new TextModel;
-    }
+    const textElement = this.createTextElement();
 
     this.state.insertBlockAfter(
-      parentId,
-      blockName,
-      newId,
-      data,
+      currentNode.parent! as BlockyElement,
+      textElement,
       cursorState.targetId,
     );
 
@@ -1115,7 +1096,7 @@ export class Editor {
     }
 
     const afterOffset = cursorState.offset + text.length;
-    const textModel = textElement.firstChild! as TextModel;
+    const textModel = textElement.contentContainer.firstChild! as BlockyTextModel;
     textModel.insert(cursorState.offset, text, attributes);
     return {
       type: "collapsed",
@@ -1124,19 +1105,14 @@ export class Editor {
     };
   }
 
-  getTextElementByBlockId(blockId: string): IModelElement | undefined {
-    const treeNode = this.state.idMap.get(blockId);
+  getTextElementByBlockId(blockId: string): BlockElement | undefined {
+    const treeNode = this.state.idMap.get(blockId) as BlockElement | undefined;
     if (!treeNode) {
       return;
     }
 
-    const treeData = treeNode.data as IModelElement | undefined;
-    if (!treeData) {
-      return;
-    }
-
-    if (treeData.nodeName === "text") {
-      return treeData;
+    if (treeNode.blockName === TextBlockName) {
+      return treeNode;
     }
   }
 

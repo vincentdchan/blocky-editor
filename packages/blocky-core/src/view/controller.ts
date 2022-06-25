@@ -1,17 +1,22 @@
 import { Slot } from "blocky-common/es/events";
 import { observe } from "blocky-common/es/observable";
 import { type Padding } from "blocky-common/es/dom";
-import { AttributesObject, IModelElement, State, TreeNode, IModelText } from "@pkg/model";
+import {
+  AttributesObject,
+  State,
+  BlockyElement,
+  type CursorState,
+  BlockyTextModel,
+} from "@pkg/model";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
 import { MarkupGenerator } from "@pkg/model/markup";
-import { TextBlockName } from "@pkg/block/textBlock";
 import { type BannerFactory } from "@pkg/view/bannerDelegate";
 import { type ToolbarFactory } from "@pkg/view/toolbarDelegate";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { type Editor } from "./editor";
-import { type CursorState } from "@pkg/model/cursor";
+import { type BlockElement } from "@pkg/block/basic";
 
 export interface IEditorControllerOptions {
   pluginRegistry?: PluginRegistry;
@@ -42,14 +47,12 @@ export interface IEditorControllerOptions {
 export interface IInsertOptions {
   autoFocus?: boolean;
   noRender?: boolean;
-  blockName?: string;
-  data?: IModelElement;
 }
 
 export type NextTickFn = () => void;
 
 export class EditorController {
-  #nextTick: NextTickFn [] = [];
+  #nextTick: NextTickFn[] = [];
 
   public editor: Editor | undefined;
   public readonly pluginRegistry: PluginRegistry;
@@ -58,7 +61,7 @@ export class EditorController {
   public readonly idGenerator: IdGenerator;
   public readonly m: MarkupGenerator;
   public readonly state: State;
-  public readonly cursorChanged: Slot<CursorState | undefined> = new Slot;
+  public readonly cursorChanged: Slot<CursorState | undefined> = new Slot();
 
   /**
    * A class to control the behavior in the editor
@@ -85,26 +88,22 @@ export class EditorController {
   public mount(editor: Editor) {
     this.editor = editor;
 
-    observe(this.state, "cursorState", (s: CursorState | undefined) => this.cursorChanged.emit(s));
+    observe(this.state, "cursorState", (s: CursorState | undefined) =>
+      this.cursorChanged.emit(s)
+    );
   }
 
-  public insertBlockAfterId(afterId: string, options?: IInsertOptions): string {
+  public insertBlockAfterId(element: BlockElement, afterId: string, options?: IInsertOptions): string {
     const editor = this.editor!;
 
     const prevNode = this.state.idMap.get(afterId)!;
-    const parentNode = prevNode.parent!;
-
-    const blockName = options?.blockName ?? TextBlockName;
-
-    const newId = editor.idGenerator.mkBlockId();
+    const parentNode = prevNode.parent! as BlockyElement;
 
     const updateState = () => {
       editor.state.insertBlockAfter(
-        parentNode.id,
-        blockName,
-        newId,
-        options?.data,
-        afterId,
+        parentNode,
+        element,
+        afterId
       );
     };
     if (options?.noRender !== true) {
@@ -114,7 +113,7 @@ export class EditorController {
           return () => {
             this.state.cursorState = {
               type: "collapsed",
-              targetId: newId,
+              targetId: element.id,
               offset: 0,
             };
           };
@@ -124,7 +123,7 @@ export class EditorController {
       updateState();
     }
 
-    return newId;
+    return element.id;
   }
 
   emitNextTicks() {
@@ -147,12 +146,17 @@ export class EditorController {
     this.#nextTick.push(fn);
   }
 
-  public formatText(blockId: string, index: number, length: number, attribs?: AttributesObject) {
+  public formatText(
+    blockId: string,
+    index: number,
+    length: number,
+    attribs?: AttributesObject
+  ) {
     if (length === 0) {
       return;
     }
 
-    const blockNode = this.state.idMap.get(blockId) as TreeNode;
+    const blockElement = this.state.idMap.get(blockId) as BlockElement;
 
     const { editor } = this;
     if (!editor) {
@@ -163,21 +167,18 @@ export class EditorController {
     editor.state.cursorState = undefined;
 
     editor.update(() => {
-      const { data } = blockNode;
-      if (!data) {
+      const blockContent = blockElement.contentContainer;
+      if (!blockContent.firstChild) {
         return;
       }
-      if (data.type !== "element" || data.nodeName !== "text") {
-        return;
-      }
-      const textModel = data.firstChild! as IModelText;
+      const textModel = blockContent.firstChild as BlockyTextModel;
       textModel.format(index, length, attribs);
 
       return () => {
         editor.state.cursorState = {
           type: "open",
-          startId: blockNode.id,
-          endId: blockNode.id,
+          startId: blockId,
+          endId: blockId,
           startOffset: index,
           endOffset: index + length,
         };
@@ -185,7 +186,10 @@ export class EditorController {
     });
   }
 
-  public formatTextOnCursor(cursorState: CursorState, attribs?: AttributesObject) {
+  public formatTextOnCursor(
+    cursorState: CursorState,
+    attribs?: AttributesObject
+  ) {
     const editor = this.editor;
     if (!editor) {
       return;
@@ -204,12 +208,7 @@ export class EditorController {
         console.error(`${startId} not found`);
         return;
       }
-      this.formatText(
-        blockNode.id,
-        startOffset,
-        endOffset - startOffset,
-        attribs
-      );
+      this.formatText(startId, startOffset, endOffset - startOffset, attribs);
     }
   }
 
@@ -236,5 +235,4 @@ export class EditorController {
       this.state.deleteBlock(id);
     });
   }
-
 }
