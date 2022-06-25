@@ -2,14 +2,14 @@ import type { IPlugin } from "@pkg/registry/pluginRegistry";
 import { isWhiteSpace } from "blocky-common/es/text";
 import type { Editor } from "@pkg/view/editor";
 import type { Block } from "@pkg/block/basic";
-import { setTextTypeForTextBlock } from "@pkg/block/textBlock";
+import { setTextTypeForTextBlock, TextBlockName } from "@pkg/block/textBlock";
 import { BlockyTextModel, TextType, type TextInsertEvent } from "@pkg/model";
 
 function makeHeadingsPlugin(): IPlugin {
   const handleNewBlockCreated = (editor: Editor) => (block: Block) => {
     const blockElement = block.props;
 
-    if (blockElement.blockName !== "text") {
+    if (blockElement.blockName !== TextBlockName) {
       return;
     }
 
