@@ -546,9 +546,10 @@ export class Editor {
 
   private insertEmptyTextAfterBlock(parent: BlockyElement, afterId: string) {
     const newTextElement = this.createTextElement();
+    const currentBlock = this.state.idMap.get(afterId);
 
     this.update(() => {
-      this.state.insertBlockAfter(parent, newTextElement, afterId);
+      parent.insertAfter(newTextElement, currentBlock);
 
       return () => {
         this.state.cursorState = {
@@ -598,11 +599,8 @@ export class Editor {
       textModel.delete(cursorOffset, textModel.length - cursorOffset);
       
       this.update(() => {
-        this.state.insertBlockAfter(
-          blockElement.parent! as BlockyElement,
-          newTextElement,
-          blockElement.id,
-        );
+        const parentElement = blockElement.parent! as BlockyElement;
+        parentElement.insertAfter(newTextElement, blockElement);
 
         return () => {
           this.state.cursorState = {
@@ -1054,19 +1052,14 @@ export class Editor {
 
     const currentNode = this.state.idMap.get(cursorState.targetId)! as BlockElement;
 
-    const newId = this.idGenerator.mkBlockId();
-
     const textElement = this.createTextElement();
 
-    this.state.insertBlockAfter(
-      currentNode.parent! as BlockyElement,
-      textElement,
-      cursorState.targetId,
-    );
+    const parentElement = currentNode.parent! as BlockyElement;
+    parentElement.insertAfter(textElement, currentNode);
 
     return {
       type: "collapsed",
-      targetId: newId,
+      targetId: textElement.id,
       offset: 0,
     };
   }
