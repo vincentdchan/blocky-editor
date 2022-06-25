@@ -9,6 +9,7 @@
     "build": "tsc --build packages/blocky-preact",
     "build:yjs": "tsc --build packages/blocky-yjs",
     "watch": "tsc --build -w packages/blocky-preact",
+    "watch:yjs": "tsc --build -w packages/blocky-yjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
