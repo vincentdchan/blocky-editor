@@ -100,11 +100,7 @@ export class EditorController {
     const parentNode = prevNode.parent! as BlockyElement;
 
     const updateState = () => {
-      editor.state.insertBlockAfter(
-        parentNode,
-        element,
-        afterId
-      );
+      parentNode.insertAfter(element, prevNode);
     };
     if (options?.noRender !== true) {
       editor.update(() => {

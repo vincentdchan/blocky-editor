@@ -1,6 +1,7 @@
 import { areEqualShallow } from "blocky-common/es/object";
 import { Slot } from "blocky-common/es/events";
 import { type AttributesObject, type BlockyNode } from "./element";
+import type State from "./state";
 
 export interface TextNode {
   prev?: TextNode;
@@ -25,9 +26,10 @@ export class BlockyTextModel implements BlockyNode {
     return "#text";
   }
 
-  public parent: BlockyNode | null = null;
-  public nextSibling: BlockyNode | null = null;
-  public prevSibling: BlockyNode | null = null;
+  state?: State;
+  parent: BlockyNode | null = null;
+  nextSibling: BlockyNode | null = null;
+  prevSibling: BlockyNode | null = null;
 
   get childrenLength(): number {
      return 0;
@@ -354,11 +356,12 @@ export class BlockyTextModel implements BlockyNode {
 const bannedAttributesName: Set<string> = new Set(["nodeName", "type"]);
 
 export class BlockyElement implements BlockyNode {
+  state?: State;
   parent: BlockyNode | null = null;
   nextSibling: BlockyNode | null = null;
   prevSibling: BlockyNode | null = null;
 
-  public childrenLength: number = 0;
+  childrenLength: number = 0;
 
   #firstChild: BlockyNode | null = null;
   #lastChild: BlockyNode | null = null;
@@ -383,6 +386,7 @@ export class BlockyElement implements BlockyNode {
     after?: BlockyNode
   ) {
     node.parent = this;
+    node.state = this.state;
     if (!after) {
       if (this.#firstChild) {
         this.#firstChild.prevSibling = node;
@@ -411,6 +415,7 @@ export class BlockyElement implements BlockyNode {
     }
 
     this.childrenLength++;
+    this.state?.handleNewBlockMounted(this, node);
   }
 
   appendChild(node: BlockyNode) {
@@ -425,8 +430,10 @@ export class BlockyElement implements BlockyNode {
     node.prevSibling = this.#lastChild;
     node.nextSibling = null;
     node.parent = this;
+    node.state = this.state;
     this.#lastChild = node;
     this.childrenLength++;
+    this.state?.handleNewBlockMounted(this, node);
   }
 
   setAttribute(name: string, value: string) {
