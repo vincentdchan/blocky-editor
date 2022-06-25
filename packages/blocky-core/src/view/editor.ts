@@ -566,12 +566,11 @@ export class Editor {
       return;
     }
     if (cursorState.type === "collapsed") {
-      const node = this.state.idMap.get(cursorState.targetId);
-      if (!node) {
+      const blockElement = this.state.idMap.get(cursorState.targetId) as BlockElement | undefined;
+      if (!blockElement) {
         return;
       }
 
-      const blockElement = node as BlockElement;
       if (blockElement.blockName !== TextBlockName) {
         // default behavior
         this.insertEmptyTextAfterBlock(blockElement.parent! as BlockyElement, cursorState.targetId);
@@ -598,8 +597,6 @@ export class Editor {
 
       textModel.delete(cursorOffset, textModel.length - cursorOffset);
       
-      const newId = this.idGenerator.mkBlockId();
-
       this.update(() => {
         this.state.insertBlockAfter(
           blockElement.parent! as BlockyElement,
@@ -610,7 +607,7 @@ export class Editor {
         return () => {
           this.state.cursorState = {
             type: "collapsed",
-            targetId: newId,
+            targetId: newTextElement.id,
             offset: 0,
           };
         };
