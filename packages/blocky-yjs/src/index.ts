@@ -1,5 +1,5 @@
 import * as Y from "yjs";
-import { type IPlugin, type Editor, type TreeNode } from "blocky-core";
+import { type IPlugin, type Editor, type BlockElement } from "blocky-core";
 
 export interface IYjsPluginOptions {
   doc: Y.Doc,
@@ -12,15 +12,15 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
   return {
     name: "yjs",
     onInitialized(editor: Editor) {
-      editor.state.newBlockInserted.on((node: TreeNode) => {
-        const blockDef = editor.registry.block.getBlockDefById(node.blockTypeId);
+      editor.state.newBlockInserted.on((node: BlockElement) => {
+        const blockDef = editor.registry.block.getBlockDefByName(node.blockName);
         if (!blockDef) {
           return;
         }
         const element = new Y.XmlElement(blockDef.name);
         element.setAttribute("id", node.id);
 
-        const prevNode = node.prev;
+        const prevNode = node.prevSibling as BlockElement | null;
         if (prevNode) {
           const prevYNode = nodeToY.get(prevNode.id);
           if (!prevYNode) {
