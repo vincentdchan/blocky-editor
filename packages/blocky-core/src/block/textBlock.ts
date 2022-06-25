@@ -555,11 +555,7 @@ class TextBlockDefinition implements IBlockDefinition {
       return;
     }
 
-    editor.state.insertBlockAfter(
-      parentElement,
-      newTextElement,
-      cursorState.targetId
-    );
+    parentElement.insertAfter(newTextElement, currentElement);
 
     return {
       type: "collapsed",

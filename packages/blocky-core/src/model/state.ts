@@ -16,6 +16,7 @@ class State {
   static fromMarkup(doc: MDoc, blockRegistry: BlockRegistry): State {
     const rootNode = new BlockyElement("doc");
     const state = new State(rootNode, blockRegistry);
+    rootNode.state = state;
 
     traverse<BlockyNode>(
       doc,
@@ -36,6 +37,9 @@ class State {
             const blockDef = blockRegistry.getBlockDefByName(node.blockName)!;
 
             const blockElement = new BlockElement(blockDef.name, node.id);
+            blockElement.state = state;
+            blockElement.contentContainer.state = state;
+            blockElement.childrenContainer.state = state;
 
             if (node.data) {
               blockElement.contentContainer.appendChild(node.data);
@@ -83,23 +87,24 @@ class State {
     makeObservable(this, "cursorState");
   }
 
-  public insertBlockAfter(parentElement: BlockyElement, newElement: BlockElement, afterId?: string) {
-    const afterNode = afterId ? this.idMap.get(afterId) : undefined;
+  public handleNewBlockMounted(parent: BlockyElement, child: BlockyNode) {
+    if (child.nodeName === "block") {
+      const blockElement = child as BlockElement;
 
-    const blockDef = this.blockRegistry.getBlockDefByName(newElement.blockName);
-    if (!blockDef) {
-      throw new Error("invalid block name: " + newElement.blockName);
+      this.insertElement(blockElement);
+
+      const blockDef = this.blockRegistry.getBlockDefByName(blockElement.blockName);
+      if (!blockDef) {
+        throw new Error("invalid block name: " + blockElement.blockName);
+      }
+
+      const block = blockDef.onBlockCreated({ blockElement });
+      this.newBlockCreated.emit(block);
+
+      this.blocks.set(blockElement.id, block);
+
+      this.newBlockInserted.emit(child as BlockElement);
     }
-    this.insertElement(newElement);
-
-    const block = blockDef.onBlockCreated({ blockElement: newElement });
-    this.newBlockCreated.emit(block);
-
-    this.blocks.set(newElement.id, block);
-
-    parentElement.insertAfter(newElement, afterNode);
-
-    this.newBlockInserted.emit(newElement);
   }
 
   public deleteBlock(blockId: string): boolean {
