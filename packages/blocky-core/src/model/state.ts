@@ -1,21 +1,23 @@
 import { makeObservable } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
-import { BlockyElement } from "./tree";
+import { BlockyElement, BlockyTextModel } from "./tree";
 import { type BlockyNode } from "./element";
-import {
-  MDoc,
-  traverse,
-  MNode,
-} from "./markup";
+import { MDoc, traverse, MNode } from "./markup";
+import { TextBlockName } from "@pkg/block/textBlock";
+import { type IdGenerator } from "@pkg/helper/idHelper";
 import { type CursorState } from "@pkg/model/cursor";
 import { Block, BlockElement } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { validate as validateNode } from "./validator";
 
 class State {
-  static fromMarkup(doc: MDoc, blockRegistry: BlockRegistry): State {
+  static fromMarkup(
+    doc: MDoc,
+    blockRegistry: BlockRegistry,
+    idHelper: IdGenerator
+  ): State {
     const rootNode = new BlockyElement("doc");
-    const state = new State(rootNode, blockRegistry);
+    const state = new State(rootNode, blockRegistry, idHelper);
     rootNode.state = state;
 
     traverse<BlockyNode>(
@@ -68,7 +70,7 @@ class State {
         return nextNode;
       },
       undefined,
-      rootNode,
+      rootNode
     );
 
     return state;
@@ -77,14 +79,28 @@ class State {
   public readonly idMap: Map<string, BlockyElement> = new Map();
   public readonly domMap: Map<string, Node> = new Map();
   public readonly blocks: Map<string, Block> = new Map();
-  public readonly newBlockInserted: Slot<BlockElement> = new Slot;
-  public readonly newBlockCreated: Slot<Block> = new Slot;
-  public readonly blockDeleted: Slot<BlockElement> = new Slot;
+  public readonly newBlockInserted: Slot<BlockElement> = new Slot();
+  public readonly newBlockCreated: Slot<Block> = new Slot();
+  public readonly blockDeleted: Slot<BlockElement> = new Slot();
   public cursorState: CursorState | undefined;
 
-  constructor(public readonly root: BlockyElement, public readonly blockRegistry: BlockRegistry) {
+  constructor(
+    public readonly root: BlockyElement,
+    public readonly blockRegistry: BlockRegistry,
+    public readonly idHelper: IdGenerator
+  ) {
     validateNode(root);
     makeObservable(this, "cursorState");
+  }
+
+  public createTextElement(): BlockElement {
+    const result = new BlockElement(
+      TextBlockName,
+      this.idHelper.mkBlockId()
+    );
+    const textModel = new BlockyTextModel();
+    result.contentContainer.appendChild(textModel);
+    return result;
   }
 
   public handleNewBlockMounted(parent: BlockyElement, child: BlockyNode) {
@@ -93,7 +109,9 @@ class State {
 
       this.insertElement(blockElement);
 
-      const blockDef = this.blockRegistry.getBlockDefByName(blockElement.blockName);
+      const blockDef = this.blockRegistry.getBlockDefByName(
+        blockElement.blockName
+      );
       if (!blockDef) {
         throw new Error("invalid block name: " + blockElement.blockName);
       }

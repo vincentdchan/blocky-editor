@@ -12,10 +12,11 @@ function makeDefaultUtils() {
 }
 
 test("tree validator", () => {
-  const { blockRegistry, m } = makeDefaultUtils();
+  const { blockRegistry, m, idGenerator } = makeDefaultUtils();
   State.fromMarkup(
     m.doc([m.textBlock([m.span("Hello World")])]),
-    blockRegistry
+    blockRegistry,
+    idGenerator,
   );
 });
 
@@ -33,10 +34,11 @@ test("tree validator", () => {
 // });
 
 test("serialize", () => {
-  const { blockRegistry, m } = makeDefaultUtils();
+  const { blockRegistry, m, idGenerator } = makeDefaultUtils();
   const state = State.fromMarkup(
     m.doc([m.textBlock([m.span("Hello World")])]),
-    blockRegistry
+    blockRegistry,
+    idGenerator,
   );
   // console.log(serializeJSON(state));
 });
