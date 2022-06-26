@@ -16,7 +16,9 @@
   "dependencies": {
     "blocky-common": "workspace:*",
     "blocky-core": "workspace:*",
-    "blocky-preact": "workspace:*"
+    "blocky-preact": "workspace:*",
+    "blocky-yjs": "workspace:*",
+    "yjs": "^13.5.39"
   },
   "devDependencies": {
     "@babel/core": "^7.18.2",
