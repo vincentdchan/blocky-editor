@@ -1,11 +1,13 @@
 import { Component, JSX } from "preact";
 import { EditorController } from "blocky-core";
+import * as Y from "yjs";
 import {
   BlockyEditor,
   makePreactBanner,
   makePreactToolbar,
   type BannerRenderProps,
 } from "blocky-preact";
+import { makeYjsPlugin } from "blocky-yjs";
 import makeBoldedTextPlugin from "blocky-core/dist/plugins/boldedTextPlugin";
 import makeBulletListPlugin from "blocky-core/dist/plugins/bulletListPlugin";
 import makeHeadingsPlugin from "blocky-core/dist/plugins/headingsPlugin";
@@ -25,7 +27,7 @@ interface AppState {
 /**
  * The controller is used to control the editor.
  */
-function makeController(): EditorController {
+function makeController(doc: Y.Doc): EditorController {
   return new EditorController({
     /**
      * Define the plugins to implement customize features.
@@ -35,6 +37,7 @@ function makeController(): EditorController {
       makeBulletListPlugin(),
       makeHeadingsPlugin(),
       makeImageBlockPlugin(),
+      makeYjsPlugin({ doc }),
     ],
     /**
      * Tell the editor how to render the banner.
@@ -59,11 +62,14 @@ function makeController(): EditorController {
 }
 
 class App extends Component<{}, AppState> {
+  private doc: Y.Doc;
   private editorController: EditorController;
 
   constructor(props: {}) {
     super(props);
-    this.editorController = makeController();
+    this.doc = new Y.Doc();
+
+    this.editorController = makeController(this.doc);
     this.editorController.enqueueNextTick(this.firstTick);
     this.state = {
       headingContent: "Blocky Editor",
