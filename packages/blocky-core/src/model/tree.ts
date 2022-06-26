@@ -413,6 +413,25 @@ export class BlockyTextModel implements BlockyNode {
 
 const bannedAttributesName: Set<string> = new Set(["nodeName", "type"]);
 
+export interface ElementSetAttributeEvent {
+  type: "element-set-attrib",
+  key: string,
+  value: string;
+}
+
+export interface ElementRemoveChildEvent {
+  type: "element-remove-child",
+  child: BlockyNode,
+}
+
+export type ElementChangedEvent =
+  | ElementSetAttributeEvent
+  | ElementRemoveChildEvent
+
+interface InternAttributes {
+  [key: string]: string;
+}
+
 export class BlockyElement implements BlockyNode {
   state?: State;
   parent: BlockyNode | null = null;
@@ -423,7 +442,9 @@ export class BlockyElement implements BlockyNode {
 
   #firstChild: BlockyNode | null = null;
   #lastChild: BlockyNode | null = null;
-  #attributes: Map<string, string> = new Map();
+  #attributes: InternAttributes = Object.create(null);
+
+  public onChanged: Slot<ElementChangedEvent> = new Slot();
 
   constructor(public nodeName: string) {
     if (nodeName === "#text") {
@@ -495,11 +516,21 @@ export class BlockyElement implements BlockyNode {
     if (bannedAttributesName.has(name)) {
       throw new Error(`'${name}' is preserved`);
     }
-    this.#attributes.set(name, value);
+    this.#attributes[name] = value;
+
+    this.onChanged.emit({
+      type: "element-set-attrib",
+      key: name,
+      value,
+    });
   }
 
   getAttribute(name: string): string | undefined {
-    return this.#attributes.get(name);
+    return this.#attributes[name];
+  }
+
+  getAttributes(): InternAttributes {
+    return { ...this.#attributes };
   }
 
   removeChild(node: BlockyNode) {
@@ -529,5 +560,10 @@ export class BlockyElement implements BlockyNode {
     this.childrenLength--;
 
     this.state?.unmountBlock(this, node);
+
+    this.onChanged.emit({
+      type: "element-remove-child",
+      child: node,
+    });
   }
 }
