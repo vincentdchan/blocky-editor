@@ -3,7 +3,7 @@ import { isWhiteSpace } from "blocky-common/es/text";
 import type { Editor } from "@pkg/view/editor";
 import type { Block } from "@pkg/block/basic";
 import { setTextTypeForTextBlock, TextBlockName } from "@pkg/block/textBlock";
-import { BlockyTextModel, TextType, type TextInsertEvent } from "@pkg/model";
+import { BlockyTextModel, TextType, type TextChangedEvent } from "@pkg/model";
 
 function makeHeadingsPlugin(): IPlugin {
   const handleNewBlockCreated = (editor: Editor) => (block: Block) => {
@@ -16,7 +16,10 @@ function makeHeadingsPlugin(): IPlugin {
     const blockContent = blockElement.contentContainer;
     const textModel = blockContent.firstChild as BlockyTextModel;
 
-    textModel.onInsert.on((e: TextInsertEvent) => {
+    textModel.onChanged.on((e: TextChangedEvent) => {
+      if (e.type !== "text-insert") {
+        return;
+      }
       let changed: boolean = false;
       const { index, text } = e;
       if (isWhiteSpace(text)) {

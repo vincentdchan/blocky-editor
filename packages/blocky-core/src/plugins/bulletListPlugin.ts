@@ -3,7 +3,7 @@ import type { IPlugin } from "@pkg/registry/pluginRegistry";
 import type { Editor } from "@pkg/view/editor";
 import type { Block, BlockElement } from "@pkg/block/basic";
 import { setTextTypeForTextBlock, getTextTypeForTextBlock } from "@pkg/block/textBlock";
-import { BlockyTextModel, TextType, type TextInsertEvent } from "@pkg/model";
+import { BlockyTextModel, TextType, type TextChangedEvent } from "@pkg/model";
 
 function makeBulletListPlugin(): IPlugin {
   const turnTextBlockIntoBulletList = (editor: Editor, blockId: string, textElement: BlockElement) => {
@@ -24,7 +24,10 @@ function makeBulletListPlugin(): IPlugin {
       return;
     }
     const textModel = textElement.contentContainer.firstChild! as BlockyTextModel;
-    textModel.onInsert.on((e: TextInsertEvent) => {
+    textModel.onChanged.on((e: TextChangedEvent) => {
+      if (e.type !== "text-insert") {
+        return;
+      }
       if (e.index === 1 && e.text.length === 1 && isWhiteSpace(e.text)) {
         const content = textModel.toString();
         if (content[0] === "-") {
