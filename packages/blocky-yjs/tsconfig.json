@@ -22,8 +22,9 @@
     "declaration": true,
     "declarationDir": "./dist",
     "sourceMap": true,
+    "composite": true,
     "outDir": "./dist",
-    "baseUrl": ".",
+    "rootDir": "src",
     "paths": {
       "@pkg/*": [
         "./src/*"
