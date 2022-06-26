@@ -1,8 +1,17 @@
 import * as Y from "yjs";
-import { type IPlugin, type Editor, type BlockElement } from "blocky-core";
+import {
+  type IPlugin,
+  type Editor,
+  type BlockElement,
+  type BlockyElement,
+} from "blocky-core";
 
 export interface IYjsPluginOptions {
-  doc: Y.Doc,
+  doc: Y.Doc;
+}
+
+function bindElement(blockyElement: BlockyElement, yElement: Y.XmlElement) {
+  /** unimplemented */
 }
 
 export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
@@ -12,15 +21,18 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
   return {
     name: "yjs",
     onInitialized(editor: Editor) {
-      editor.state.newBlockInserted.on((node: BlockElement) => {
-        const blockDef = editor.registry.block.getBlockDefByName(node.blockName);
-        if (!blockDef) {
-          return;
-        }
-        const element = new Y.XmlElement(blockDef.name);
-        element.setAttribute("id", node.id);
+      editor.state.newBlockInserted.on((blockElement: BlockElement) => {
+        const element = new Y.XmlElement("block");
+        element.setAttribute("blockName", blockElement.blockName);
+        element.setAttribute("id", blockElement.id);
 
-        const prevNode = node.prevSibling as BlockElement | null;
+        const contentContainer = new Y.XmlElement("block-content");
+        const childrenContainer = new Y.XmlElement("block-children");
+        element.push([contentContainer, childrenContainer]);
+
+        bindElement(blockElement.contentContainer, contentContainer);
+
+        const prevNode = blockElement.prevSibling as BlockElement | null;
         if (prevNode) {
           const prevYNode = nodeToY.get(prevNode.id);
           if (!prevYNode) {
