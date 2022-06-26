@@ -15,6 +15,7 @@ export {
   type TextDeleteEvent,
   type TextFormatEvent,
   type TextChangedEvent,
+  type ElementChangedEvent,
   type BlockyNode,
   BlockyTextModel,
   BlockyElement,
