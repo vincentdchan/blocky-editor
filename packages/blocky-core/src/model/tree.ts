@@ -11,10 +11,29 @@ export interface TextNode {
 }
 
 export interface TextInsertEvent {
+  type: "text-insert",
   index: number;
   text: string;
   attributes?: AttributesObject;
 }
+
+export interface TextDeleteEvent {
+  type: "text-delete",
+  index: number;
+  length: number;
+}
+
+export interface TextFormatEvent {
+  type: "text-format",
+  index: number;
+  length: number;
+  attributes?: AttributesObject;
+}
+
+export type TextChangedEvent =
+  | TextInsertEvent
+  | TextDeleteEvent
+  | TextFormatEvent
 
 export interface TextSlice {
   content: string;
@@ -77,14 +96,24 @@ export class BlockyTextModel implements BlockyNode {
         } else {
           this.insertNodeBefore({ content: text, attributes }, ptr);
         }
-        this.onInsert.emit({ index, text, attributes });
+        this.onInsert.emit({
+          type: "text-insert",
+          index,
+          text,
+          attributes
+        });
         return;
       } else if (index <= ptr.content.length) {
         if (areEqualShallow(ptr.attributes, attributes)) {
           const before = ptr.content.slice(0, index);
           const after = ptr.content.slice(index);
           ptr.content = before + text + after;
-          this.onInsert.emit({ index, text, attributes });
+          this.onInsert.emit({
+            type: "text-insert",
+            index,
+            text,
+            attributes
+          });
           return;
         }
 
@@ -109,7 +138,12 @@ export class BlockyTextModel implements BlockyNode {
           this.insertNodeBefore(mid, prev.next);
         }
 
-        this.onInsert.emit({ index, text, attributes });
+        this.onInsert.emit({
+          type: "text-insert",
+          index,
+          text,
+          attributes
+        });
         return;
       }
 
@@ -119,7 +153,12 @@ export class BlockyTextModel implements BlockyNode {
 
     this.insertAtLast({ content: text, attributes });
 
-    this.onInsert.emit({ index, text, attributes });
+    this.onInsert.emit({
+      type: "text-insert",
+      index,
+      text,
+      attributes,
+    });
   }
 
   public slice(start: number, end?: number): TextSlice[] {
