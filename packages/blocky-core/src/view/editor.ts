@@ -198,6 +198,7 @@ export class Editor {
 
     for (const block of this.state.blocks.values()) {
       this.state.newBlockCreated.emit(block);
+      this.state.newBlockInserted.emit(block.props);
     }
   }
 

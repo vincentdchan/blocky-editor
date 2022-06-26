@@ -6,10 +6,32 @@ import {
   type BlockyElement,
   type ElementChangedEvent,
   type BlockyTextModel,
+  type TextChangedEvent,
 } from "blocky-core";
 
 export interface IYjsPluginOptions {
   doc: Y.Doc;
+}
+
+function bindTextModel(textModel: BlockyTextModel, yTextModel: Y.XmlText) {
+  textModel.onChanged.on((e: TextChangedEvent) => {
+    switch (e.type) {
+      case "text-insert": {
+        yTextModel.insert(e.index, e.text, e.attributes);
+        break;
+      }
+
+      case "text-format": {
+        yTextModel.format(e.index, e.length, e.attributes!);
+        break;
+      }
+
+      case "text-delete": {
+        yTextModel.delete(e.index, e.length);
+        break;
+      }
+    }
+  });
 }
 
 /**
@@ -33,6 +55,9 @@ function bindContentElement(blockyElement: BlockyElement, yElement: Y.XmlElement
     if (ptr.nodeName === "#text") {
       const textModel = ptr as BlockyTextModel;
       const yText = new Y.XmlText(textModel.toString());
+
+      bindTextModel(textModel, yText);
+
       elements.push(yText);
     }
 
@@ -65,6 +90,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         if (prevNode) {
           const prevYNode = nodeToY.get(prevNode.id);
           if (!prevYNode) {
+            docFragment.push([element]);
             return;
           }
           docFragment.insertAfter(prevYNode, [element]);
