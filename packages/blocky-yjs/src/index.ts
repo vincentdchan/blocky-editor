@@ -4,14 +4,43 @@ import {
   type Editor,
   type BlockElement,
   type BlockyElement,
+  type ElementChangedEvent,
+  type BlockyTextModel,
 } from "blocky-core";
 
 export interface IYjsPluginOptions {
   doc: Y.Doc;
 }
 
-function bindElement(blockyElement: BlockyElement, yElement: Y.XmlElement) {
-  /** unimplemented */
+/**
+ * Connect betweens [[BlockyElement]] and [[Y.XmlElement]]
+ */
+function bindContentElement(blockyElement: BlockyElement, yElement: Y.XmlElement) {
+  const attribs = blockyElement.getAttributes();
+  for (const key in attribs) {
+    yElement.setAttribute(key, attribs[key]);
+  }
+
+  blockyElement.onChanged.on((e: ElementChangedEvent) => {
+    if (e.type === "element-set-attrib") {
+      yElement.setAttribute(e.key, e.value);
+    }
+  });
+
+  let ptr = blockyElement.firstChild;
+  const elements: (Y.XmlElement | Y.XmlText)[] = []
+  while (ptr) {
+    if (ptr.nodeName === "#text") {
+      const textModel = ptr as BlockyTextModel;
+      const yText = new Y.XmlText(textModel.toString());
+      elements.push(yText);
+    }
+
+    ptr = ptr.nextSibling;
+  }
+  if (elements.length > 0) {
+    yElement.push(elements);
+  }
 }
 
 export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
@@ -30,7 +59,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         const childrenContainer = new Y.XmlElement("block-children");
         element.push([contentContainer, childrenContainer]);
 
-        bindElement(blockElement.contentContainer, contentContainer);
+        bindContentElement(blockElement.contentContainer, contentContainer);
 
         const prevNode = blockElement.prevSibling as BlockElement | null;
         if (prevNode) {
