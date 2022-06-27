@@ -63,24 +63,34 @@ function makeController(doc: Y.Doc): EditorController {
 
 class App extends Component<{}, AppState> {
   private doc: Y.Doc;
-  private editorController: EditorController;
+  private editorControllerLeft: EditorController;
+  private editorControllerRight: EditorController;
 
   constructor(props: {}) {
     super(props);
     this.doc = new Y.Doc();
 
-    this.editorController = makeController(this.doc);
-    this.editorController.enqueueNextTick(this.firstTick);
+    this.editorControllerLeft = makeController(this.doc);
+    this.editorControllerLeft.enqueueNextTick(this.firstTick);
+
+    this.editorControllerRight = makeController(this.doc);
+
     this.state = {
       headingContent: "Blocky Editor",
     };
   }
 
   private firstTick = () => {
-    const { editor } = this.editorController;
+    const { editor } = this.editorControllerLeft;
     if (!editor) {
       return;
     }
+    // force reset the paste cursor state
+    editor.state.cursorState = {
+      type: "collapsed",
+      targetId: (editor.state.root.firstChild! as any).id,
+      offset: 0,
+    };
     editor.pasteHTMLAtCursor(ReadMeContent);
   };
 
@@ -114,14 +124,26 @@ class App extends Component<{}, AppState> {
               ></img>
             </a>
           </div>
-          <div className="blocky-example-title-container">
-            <input
-              value={this.state.headingContent}
-              onChange={this.handleHeadingChanged}
-            />
+          <div className="blocky-example-editors" >
+            <div className="blocky-example-editor-container left">
+              <div className="blocky-example-title-container">
+                <input
+                  value={this.state.headingContent}
+                  onChange={this.handleHeadingChanged}
+                />
+              </div>
+              <BlockyEditor controller={this.editorControllerLeft} />
+            </div>
+            <div className="blocky-example-editor-container right">
+              <div className="blocky-example-title-container">
+                <input
+                  value={this.state.headingContent}
+                  onChange={this.handleHeadingChanged}
+                />
+              </div>
+              <BlockyEditor controller={this.editorControllerRight} />
+            </div>
           </div>
-          {/* Pass the controller to the editor */}
-          <BlockyEditor controller={this.editorController} />
         </div>
       </div>
     );

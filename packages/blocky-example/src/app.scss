@@ -10,7 +10,7 @@
 }
 
 .blocky-example-container {
-  width: 960px;
+  width: 1280px;
   height: 100%;
   box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.2);
   overflow-x: hidden;
@@ -25,6 +25,10 @@
   .blocky-example-container {
     width: 100%;
     box-shadow: none;
+  }
+
+  .blocky-example-editor-container.right {
+    display: none;
   }
 }
 
@@ -55,4 +59,12 @@ body {
 :root {
   --main-bg-color: white;
   --danger-color: rgb(201, 56, 56);
+}
+
+.blocky-example-editors {
+  display: flex;
+}
+
+.blocky-example-editor-container {
+  flex: 50%;
 }
