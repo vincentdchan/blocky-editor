@@ -75,6 +75,17 @@ export class BlockyTextModel implements BlockyNode {
       return;
     }
 
+    this.insertData(index, text, attributes);
+
+    this.onChanged.emit({
+      type: "text-insert",
+      index,
+      text,
+      attributes,
+    });
+  }
+
+  private insertData(index: number, text: string, attributes?: AttributesObject) {
     this.#length += text.length;
     if (!this.#nodeBegin) {
       if (index !== 0) {
@@ -96,24 +107,12 @@ export class BlockyTextModel implements BlockyNode {
         } else {
           this.insertNodeBefore({ content: text, attributes }, ptr);
         }
-        this.onChanged.emit({
-          type: "text-insert",
-          index,
-          text,
-          attributes
-        });
         return;
       } else if (index <= ptr.content.length) {
         if (areEqualShallow(ptr.attributes, attributes)) {
           const before = ptr.content.slice(0, index);
           const after = ptr.content.slice(index);
           ptr.content = before + text + after;
-          this.onChanged.emit({
-            type: "text-insert",
-            index,
-            text,
-            attributes
-          });
           return;
         }
 
@@ -138,12 +137,6 @@ export class BlockyTextModel implements BlockyNode {
           this.insertNodeBefore(mid, prev.next);
         }
 
-        this.onChanged.emit({
-          type: "text-insert",
-          index,
-          text,
-          attributes
-        });
         return;
       }
 
@@ -152,13 +145,6 @@ export class BlockyTextModel implements BlockyNode {
     }
 
     this.insertAtLast({ content: text, attributes });
-
-    this.onChanged.emit({
-      type: "text-insert",
-      index,
-      text,
-      attributes,
-    });
   }
 
   public slice(start: number, end?: number): TextSlice[] {
@@ -288,6 +274,7 @@ export class BlockyTextModel implements BlockyNode {
   }
 
   public delete(index: number, length: number) {
+    const originalLen = length;
     const end = index + length;
     if (index > this.#length || index < 0) {
       throw new Error(
@@ -336,7 +323,7 @@ export class BlockyTextModel implements BlockyNode {
     this.onChanged.emit({
       type: "text-delete",
       index,
-      length,
+      length: originalLen,
     });
   }
 
