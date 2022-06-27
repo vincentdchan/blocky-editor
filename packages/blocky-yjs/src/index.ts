@@ -2,15 +2,31 @@ import * as Y from "yjs";
 import {
   type IPlugin,
   type Editor,
-  type BlockElement,
   type BlockyElement,
-  type ElementChangedEvent,
-  type BlockyTextModel,
+  type ElementChangedEvent, BlockyTextModel,
   type TextChangedEvent,
+  BlockElement,
 } from "blocky-core";
 
 export interface IYjsPluginOptions {
   doc: Y.Doc;
+}
+
+function handleDeltaForText(textModel: BlockyTextModel, deltas: any[]) {
+  let ptr = 0;
+  for (const d of deltas) {
+    if (typeof d.retain !== "undefined") {
+      if (typeof d.attributes === "object") {
+        textModel.format(ptr, d.retain, d.attributes);
+      }
+      ptr += d.retain;
+    } else if (typeof d.insert === "string") {
+      textModel.insert(ptr, d.insert, d.attributes);
+      ptr += d.insert.length;
+    } else if (typeof d.delete === "number") {
+      textModel.delete(ptr, d.delete);
+    }
+  }
 }
 
 /**
@@ -26,24 +42,7 @@ function bindTextModel(editor: Editor, textModel: BlockyTextModel, yTextModel: Y
     operating = true;
     try {
       editor.update(() => {
-        let ptr = 0;
-        for (const d of e.delta) {
-          if (typeof d.retain !== "undefined") {
-            if (typeof d.attributes === "object") {
-              textModel.format(ptr, d.retain, d.attributes);
-            }
-            ptr += d.retain;
-            break;
-          }
-          if (typeof d.insert === "string") {
-            textModel.insert(ptr, d.insert);
-            break;
-          }
-          if (typeof d.delete === "number") {
-            textModel.delete(ptr, d.delete);
-            break;
-          }
-        }
+        handleDeltaForText(textModel, e.delta);
       });
     } finally {
       operating = false;
@@ -78,6 +77,22 @@ function bindTextModel(editor: Editor, textModel: BlockyTextModel, yTextModel: Y
   });
 }
 
+function createXmlTextByBlockyText(textModel: BlockyTextModel): Y.XmlText {
+  const result = new Y.XmlText(textModel.toString());
+
+  let index = 0;
+  let ptr = textModel.nodeBegin;
+  while (ptr) {
+    if (ptr.attributes) {
+      result.format(index, ptr.content.length, ptr.attributes);
+    }
+    index += ptr.content.length;
+    ptr = ptr.next;
+  }
+
+  return result;
+}
+
 /**
  * Connect betweens [[BlockyElement]] and [[Y.XmlElement]]
  */
@@ -98,7 +113,7 @@ function bindContentElement(editor: Editor, blockyElement: BlockyElement, yEleme
   while (ptr) {
     if (ptr.nodeName === "#text") {
       const textModel = ptr as BlockyTextModel;
-      const yText = new Y.XmlText(textModel.toString());
+      const yText = createXmlTextByBlockyText(textModel);
 
       bindTextModel(editor, textModel, yText);
 
@@ -120,17 +135,109 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
     name: "yjs",
     onInitialized(editor: Editor) {
       let operating = false;
+      const { state } = editor;
+
+      const createBlockElementByXmlElement = (element: Y.XmlElement): BlockElement | undefined => {
+          const blockName = element.getAttribute("blockName");
+          const id = element.getAttribute("id");
+          if (!id || !blockName) {
+            return;
+          }
+
+          const contentXmlElement = element.firstChild as Y.XmlElement | undefined;
+          if (!contentXmlElement) {
+            return;
+          }
+
+          const createdElement = new BlockElement(blockName, id);
+
+          const attribs = contentXmlElement.getAttributes();
+          for (const key in attribs) {
+            if (key === "id" || key === "blockName") {
+              continue;
+            }
+            const value = attribs[key];
+            createdElement.contentContainer.setAttribute(key, value);
+          }
+
+          let ptr = contentXmlElement.firstChild;
+          while (ptr) {
+            if (ptr instanceof Y.XmlText) {
+              const blockyTextModel = new BlockyTextModel
+              const deltas = ptr.toDelta();
+
+              handleDeltaForText(blockyTextModel, deltas);
+              bindTextModel(editor, blockyTextModel, ptr);
+              createdElement.contentContainer.appendChild(blockyTextModel);
+            }
+
+            ptr = ptr.nextSibling;
+          }
+
+          return createdElement;
+      }
+
+      const handleInsert = (index: number, elements: Y.XmlElement[]) => {
+        let ptr = state.root.firstChild;
+
+        while (ptr && index > 0) {
+          index--;
+          ptr = ptr.nextSibling;
+        }
+
+        for (const element of elements) {
+          const createdElement = createBlockElementByXmlElement(element);
+          if (!createdElement) {
+            continue;
+          }
+
+          if (ptr) {
+            state.root.insertAfter(createdElement, ptr);
+          } else {
+            state.root.appendChild(createdElement);
+          }
+
+          ptr = createdElement;
+        }
+      };
+
+      const handleDelete = (index: number) => {
+        let ptr = state.root.firstChild;
+
+        while (ptr) {
+          if (index === 0) {
+            state.root.removeChild(ptr);
+            break;
+          }
+
+          ptr = ptr.nextSibling;
+          index--;
+        }
+      };
+
       docFragment.observe((e: Y.YXmlEvent, t: Y.Transaction) => {
         if (operating) {
           return;
         }
         operating = true;
+        let ptr = 0;
         try {
+          editor.update(() => {
+            for (const d of e.delta) {
+              if (typeof d.retain === "number") {
+                ptr += d.retain;
+              } else if (typeof d.insert !== "undefined" && Array.isArray(d.insert)) {
+                handleInsert(ptr, d.insert);
+              } else if (typeof d.delete === "number") {
+                handleDelete(d.delete);
+              }
+            }
+          });
         } finally {
           operating = false;
         }
       });
-      editor.state.newBlockInserted.on((blockElement: BlockElement) => {
+      state.newBlockInserted.on((blockElement: BlockElement) => {
         if (operating) {
           return;
         }
@@ -157,6 +264,31 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
           } else {
             docFragment.push([element]);
           }
+        } finally {
+          operating = false;
+        }
+      });
+
+      state.blockDeleted.on((blockElement: BlockElement) => {
+        if (operating) {
+          return;
+        }
+        try {
+          operating = true;
+          let index = 0;
+          const id = blockElement.id;
+          let ptr = docFragment.firstChild;
+          while (ptr) {
+            if (ptr instanceof Y.XmlElement && ptr.nodeName === "block" && ptr.getAttribute("id") === id) {
+              break;
+            }
+            index++;
+            ptr = ptr.nextSibling;
+          }
+          if (!ptr) {
+            return;
+          }
+          docFragment.delete(index, 1);
         } finally {
           operating = false;
         }

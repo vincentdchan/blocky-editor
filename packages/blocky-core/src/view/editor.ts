@@ -267,7 +267,7 @@ export class Editor {
 
     while (ptr) {
       const node = ptr._mgNode as BlockElement | undefined;
-      if (node) {
+      if (node && node.nodeName === "block") {
         return node;
       }
 
@@ -278,7 +278,10 @@ export class Editor {
   }
   
   private findTextOffsetInBlock(blockNode: BlockElement, focusedNode: Node, offsetInNode: number): number {
-    const block = this.state.blocks.get(blockNode.id)!;
+    const block = this.state.blocks.get(blockNode.id);
+    if (!block) {
+      throw new Error("block id not found: " + blockNode.id);
+    }
 
     return block.findTextOffsetInBlock(focusedNode, offsetInNode);
   }
