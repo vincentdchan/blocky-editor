@@ -66,8 +66,32 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         }
 
         blockyElement.onChanged.on((e: ElementChangedEvent) => {
-          if (e.type === "element-set-attrib") {
-            yElement.setAttribute(e.key, e.value);
+          if (operating) {
+            return;
+          }
+          operating = true;
+          try {
+            if (e.type === "element-set-attrib") {
+              yElement.setAttribute(e.key, e.value);
+            }
+          } finally {
+            operating = false;
+          }
+        });
+
+        yElement.observe((e: Y.YXmlEvent) => {
+          if (operating) {
+            return;
+          }
+          operating = true;
+          try {
+            editor.update(() => {
+              e.attributesChanged.forEach(key => {
+                blockyElement.setAttribute(key, yElement.getAttribute(key));
+              });
+            });
+          } finally {
+            operating = false;
           }
         });
 
@@ -136,7 +160,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
 
       const { state } = editor;
 
-      const createBlockElementByXmlElement = (element: Y.XmlElement): BlockElement | undefined => {
+      const createBlockElementByXmlElement = (editor: Editor, element: Y.XmlElement): BlockElement | undefined => {
           const blockName = element.getAttribute("blockName");
           const id = element.getAttribute("id");
           if (!id || !blockName) {
@@ -149,6 +173,8 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
           }
 
           const createdElement = new BlockElement(blockName, id);
+
+          bindContentElement(editor, createdElement.contentContainer, contentXmlElement);
 
           const attribs = contentXmlElement.getAttributes();
           for (const key in attribs) {
@@ -185,7 +211,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         }
 
         for (const element of elements) {
-          const createdElement = createBlockElementByXmlElement(element);
+          const createdElement = createBlockElementByXmlElement(editor, element);
           if (!createdElement) {
             continue;
           }
@@ -251,7 +277,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         operating = true;
         let child = docFragment.firstChild;
         while (child) {
-          const element = createBlockElementByXmlElement(child as any);
+          const element = createBlockElementByXmlElement(editor, child as any);
           if (!element) {
             continue;
           }
