@@ -214,43 +214,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         }
       };
 
-      if (allowInit) {
-        operating = true;
-        let child = docFragment.firstChild;
-        while (child) {
-          const element = createBlockElementByXmlElement(child as any);
-          if (!element) {
-            continue;
-          }
-          state.root.appendChild(element);
-          child = child.nextSibling;
-        }
-        operating = false;
-      }
-
-      docFragment.observe((e: Y.YXmlEvent, t: Y.Transaction) => {
-        if (operating) {
-          return;
-        }
-        operating = true;
-        let ptr = 0;
-        try {
-          editor.update(() => {
-            for (const d of e.delta) {
-              if (typeof d.retain === "number") {
-                ptr += d.retain;
-              } else if (typeof d.insert !== "undefined" && Array.isArray(d.insert)) {
-                handleInsert(ptr, d.insert);
-              } else if (typeof d.delete === "number") {
-                handleDelete(d.delete);
-              }
-            }
-          });
-        } finally {
-          operating = false;
-        }
-      });
-      state.newBlockCreated.on((block: Block) => {
+      const handleNewBlockCreate = (block: Block) => {
         if (operating) {
           return;
         }
@@ -281,7 +245,50 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         } finally {
           operating = false;
         }
+      }
+
+      if (allowInit) {
+        operating = true;
+        let child = docFragment.firstChild;
+        while (child) {
+          const element = createBlockElementByXmlElement(child as any);
+          if (!element) {
+            continue;
+          }
+          state.root.appendChild(element);
+          child = child.nextSibling;
+        }
+        operating = false;
+      } else {
+        for (const block of state.blocks.values()) {
+          handleNewBlockCreate(block);
+        }
+      }
+
+      docFragment.observe((e: Y.YXmlEvent, t: Y.Transaction) => {
+        if (operating) {
+          return;
+        }
+        operating = true;
+        let ptr = 0;
+        try {
+          editor.update(() => {
+            for (const d of e.delta) {
+              if (typeof d.retain === "number") {
+                ptr += d.retain;
+              } else if (typeof d.insert !== "undefined" && Array.isArray(d.insert)) {
+                handleInsert(ptr, d.insert);
+              } else if (typeof d.delete === "number") {
+                handleDelete(d.delete);
+              }
+            }
+          });
+        } finally {
+          operating = false;
+        }
       });
+
+      state.newBlockCreated.on(handleNewBlockCreate);
 
       state.blockDeleted.on((blockElement: BlockElement) => {
         if (operating) {
