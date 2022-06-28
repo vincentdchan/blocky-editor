@@ -93,6 +93,19 @@ class App extends Component<{}, AppState> {
     this.doc1 = new Y.Doc();
     this.doc2 = new Y.Doc();
 
+    this.doc1.on('update', update => {
+      // simulate the network
+      setTimeout(() => {
+        Y.applyUpdate(this.doc2, update)
+      }, 0);
+    });
+    
+    this.doc2.on('update', update => {
+      setTimeout(() => {
+        Y.applyUpdate(this.doc1, update)
+      }, 0);
+    });
+
     this.editorControllerLeft = makeController(this.doc1);
     this.editorControllerLeft.enqueueNextTick(this.firstTick);
 
