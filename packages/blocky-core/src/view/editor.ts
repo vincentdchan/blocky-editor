@@ -99,6 +99,9 @@ export class Editor {
   #renderer: DocRenderer;
   #lastFocusedId: string | undefined;
   #isUpdating: boolean = false;
+
+  public readonly onEveryBlock: Slot<Block> = new Slot();
+
   public readonly bannerDelegate: BannerDelegate;
   public readonly toolbarDelegate: ToolbarDelegate;
   public idGenerator: IdGenerator;
@@ -191,15 +194,16 @@ export class Editor {
 
   private initBlockCreated() {
     this.disposables.push(
-      this.state.newBlockCreated.on((block: Block) => {
+      this.onEveryBlock.on((block: Block) => {
         block.setEditor(this);
       })
     );
 
     for (const block of this.state.blocks.values()) {
-      this.state.newBlockCreated.emit(block);
-      this.state.newBlockInserted.emit(block.props);
+      this.onEveryBlock.emit(block);
     }
+
+    this.state.newBlockCreated.pipe(this.onEveryBlock);
   }
 
   public render(done?: AfterFn) {
