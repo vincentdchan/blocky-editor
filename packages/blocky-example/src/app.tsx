@@ -1,5 +1,5 @@
 import { Component, JSX } from "preact";
-import { EditorController } from "blocky-core";
+import { EditorController, type IPlugin } from "blocky-core";
 import * as Y from "yjs";
 import {
   BlockyEditor,
@@ -24,6 +24,16 @@ interface AppState {
   headingContent: string;
 }
 
+function makeEditorPlugins(doc: Y.Doc, allowInit?: boolean): IPlugin[] {
+  return [
+    makeBoldedTextPlugin(),
+    makeBulletListPlugin(),
+    makeHeadingsPlugin(),
+    makeImageBlockPlugin(),
+    makeYjsPlugin({ doc, allowInit }),
+  ];
+}
+
 /**
  * The controller is used to control the editor.
  */
@@ -32,13 +42,7 @@ function makeController(doc: Y.Doc): EditorController {
     /**
      * Define the plugins to implement customize features.
      */
-    plugins: [
-      makeBoldedTextPlugin(),
-      makeBulletListPlugin(),
-      makeHeadingsPlugin(),
-      makeImageBlockPlugin(),
-      makeYjsPlugin({ doc }),
-    ],
+    plugins: makeEditorPlugins(doc, false),
     /**
      * Tell the editor how to render the banner.
      * We use a banner written in Preact here.
@@ -61,19 +65,38 @@ function makeController(doc: Y.Doc): EditorController {
   });
 }
 
+function makeRightController(doc: Y.Doc): EditorController {
+  return EditorController.emptyState({
+    plugins: makeEditorPlugins(doc, true),
+    bannerFactory: makePreactBanner(
+      ({ editorController, focusedNode }: BannerRenderProps) => (
+        <BannerMenu
+          editorController={editorController}
+          focusedNode={focusedNode}
+        />
+      )
+    ),
+    toolbarFactory: makePreactToolbar((editorController: EditorController) => {
+      return <ToolbarMenu editorController={editorController} />;
+    }),
+  });
+}
+
 class App extends Component<{}, AppState> {
-  private doc: Y.Doc;
+  private doc1: Y.Doc;
+  private doc2: Y.Doc;
   private editorControllerLeft: EditorController;
   private editorControllerRight: EditorController;
 
   constructor(props: {}) {
     super(props);
-    this.doc = new Y.Doc();
+    this.doc1 = new Y.Doc();
+    this.doc2 = new Y.Doc();
 
-    this.editorControllerLeft = makeController(this.doc);
+    this.editorControllerLeft = makeController(this.doc1);
     this.editorControllerLeft.enqueueNextTick(this.firstTick);
 
-    this.editorControllerRight = makeController(this.doc);
+    this.editorControllerRight = makeRightController(this.doc2);
 
     this.state = {
       headingContent: "Blocky Editor",

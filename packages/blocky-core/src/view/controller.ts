@@ -63,6 +63,25 @@ export class EditorController {
   public readonly state: State;
   public readonly cursorChanged: Slot<CursorState | undefined> = new Slot();
 
+  static emptyState(options?: IEditorControllerOptions): EditorController {
+    const blockRegistry = options?.blockRegistry ?? new BlockRegistry();
+    const idGenerator = options?.idGenerator ?? makeDefaultIdGenerator();
+    const m = new MarkupGenerator(idGenerator);
+
+    const state = State.fromMarkup(
+      m.doc([]),
+      blockRegistry,
+      idGenerator,
+    );
+
+    return new EditorController({
+      ...options,
+      blockRegistry,
+      idGenerator,
+      state,
+    });
+  }
+
   /**
    * A class to control the behavior in the editor
    */

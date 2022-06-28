@@ -6,7 +6,7 @@ import { setTextTypeForTextBlock, TextBlockName } from "@pkg/block/textBlock";
 import { BlockyTextModel, TextType, type TextChangedEvent } from "@pkg/model";
 
 function makeHeadingsPlugin(): IPlugin {
-  const handleNewBlockCreated = (editor: Editor) => (block: Block) => {
+  const handleEveryBlock = (editor: Editor) => (block: Block) => {
     const blockElement = block.props;
 
     if (blockElement.blockName !== TextBlockName) {
@@ -54,7 +54,7 @@ function makeHeadingsPlugin(): IPlugin {
   return {
     name: "headings",
     onInitialized(editor: Editor) {
-      editor.state.newBlockCreated.on(handleNewBlockCreated(editor));
+      editor.onEveryBlock.on(handleEveryBlock(editor));
     },
   };
 }
