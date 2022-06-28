@@ -5,11 +5,13 @@ import {
   type BlockyElement,
   type ElementChangedEvent, BlockyTextModel,
   type TextChangedEvent,
+  type Block,
   BlockElement,
 } from "blocky-core";
 
 export interface IYjsPluginOptions {
   doc: Y.Doc;
+  allowInit?: boolean;
 }
 
 function handleDeltaForText(textModel: BlockyTextModel, deltas: any[]) {
@@ -29,54 +31,6 @@ function handleDeltaForText(textModel: BlockyTextModel, deltas: any[]) {
   }
 }
 
-/**
- * TODO: will unobserve hurts performance?
- */
-function bindTextModel(editor: Editor, textModel: BlockyTextModel, yTextModel: Y.XmlText) {
-  let operating = false;
-
-  yTextModel.observe((e: Y.YTextEvent) => {
-    if (operating) {
-      return;
-    }
-    operating = true;
-    try {
-      editor.update(() => {
-        handleDeltaForText(textModel, e.delta);
-      });
-    } finally {
-      operating = false;
-    }
-  });
-
-  textModel.onChanged.on((e: TextChangedEvent) => {
-    if (operating) {
-      return;
-    }
-    operating = true;
-    try {
-      switch (e.type) {
-        case "text-insert": {
-          yTextModel.insert(e.index, e.text, e.attributes);
-          break;
-        }
-
-        case "text-format": {
-          yTextModel.format(e.index, e.length, e.attributes!);
-          break;
-        }
-
-        case "text-delete": {
-          yTextModel.delete(e.index, e.length);
-          break;
-        }
-      }
-    } finally {
-      operating = false;
-    }
-  });
-}
-
 function createXmlTextByBlockyText(textModel: BlockyTextModel): Y.XmlText {
   const result = new Y.XmlText(textModel.toString());
 
@@ -93,48 +47,93 @@ function createXmlTextByBlockyText(textModel: BlockyTextModel): Y.XmlText {
   return result;
 }
 
-/**
- * Connect betweens [[BlockyElement]] and [[Y.XmlElement]]
- */
-function bindContentElement(editor: Editor, blockyElement: BlockyElement, yElement: Y.XmlElement) {
-  const attribs = blockyElement.getAttributes();
-  for (const key in attribs) {
-    yElement.setAttribute(key, attribs[key]);
-  }
-
-  blockyElement.onChanged.on((e: ElementChangedEvent) => {
-    if (e.type === "element-set-attrib") {
-      yElement.setAttribute(e.key, e.value);
-    }
-  });
-
-  let ptr = blockyElement.firstChild;
-  const elements: (Y.XmlElement | Y.XmlText)[] = []
-  while (ptr) {
-    if (ptr.nodeName === "#text") {
-      const textModel = ptr as BlockyTextModel;
-      const yText = createXmlTextByBlockyText(textModel);
-
-      bindTextModel(editor, textModel, yText);
-
-      elements.push(yText);
-    }
-
-    ptr = ptr.nextSibling;
-  }
-  if (elements.length > 0) {
-    yElement.push(elements);
-  }
-}
-
 export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
-  const { doc } = options;
+  const { doc, allowInit } = options;
   const docFragment = doc.getXmlFragment();
   const nodeToY = new Map<string, Y.XmlElement>();
   return {
     name: "yjs",
     onInitialized(editor: Editor) {
       let operating = false;
+
+      /**
+       * Connect betweens [[BlockyElement]] and [[Y.XmlElement]]
+       */
+      function bindContentElement(editor: Editor, blockyElement: BlockyElement, yElement: Y.XmlElement) {
+        const attribs = blockyElement.getAttributes();
+        for (const key in attribs) {
+          yElement.setAttribute(key, attribs[key]);
+        }
+
+        blockyElement.onChanged.on((e: ElementChangedEvent) => {
+          if (e.type === "element-set-attrib") {
+            yElement.setAttribute(e.key, e.value);
+          }
+        });
+
+        let ptr = blockyElement.firstChild;
+        const elements: (Y.XmlElement | Y.XmlText)[] = []
+        while (ptr) {
+          if (ptr.nodeName === "#text") {
+            const textModel = ptr as BlockyTextModel;
+            const yText = createXmlTextByBlockyText(textModel);
+
+            bindTextModel(editor, textModel, yText);
+
+            elements.push(yText);
+          }
+
+          ptr = ptr.nextSibling;
+        }
+        if (elements.length > 0) {
+          yElement.push(elements);
+        }
+      }
+
+      function bindTextModel(editor: Editor, textModel: BlockyTextModel, yTextModel: Y.XmlText) {
+
+        yTextModel.observe((e: Y.YTextEvent) => {
+          if (operating) {
+            return;
+          }
+          operating = true;
+          try {
+            editor.update(() => {
+              handleDeltaForText(textModel, e.delta);
+            });
+          } finally {
+            operating = false;
+          }
+        });
+
+        textModel.onChanged.on((e: TextChangedEvent) => {
+          if (operating) {
+            return;
+          }
+          operating = true;
+          try {
+            switch (e.type) {
+              case "text-insert": {
+                yTextModel.insert(e.index, e.text, e.attributes);
+                break;
+              }
+
+              case "text-format": {
+                yTextModel.format(e.index, e.length, e.attributes!);
+                break;
+              }
+
+              case "text-delete": {
+                yTextModel.delete(e.index, e.length);
+                break;
+              }
+            }
+          } finally {
+            operating = false;
+          }
+        });
+      }
+
       const { state } = editor;
 
       const createBlockElementByXmlElement = (element: Y.XmlElement): BlockElement | undefined => {
@@ -215,6 +214,20 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         }
       };
 
+      if (allowInit) {
+        operating = true;
+        let child = docFragment.firstChild;
+        while (child) {
+          const element = createBlockElementByXmlElement(child as any);
+          if (!element) {
+            continue;
+          }
+          state.root.appendChild(element);
+          child = child.nextSibling;
+        }
+        operating = false;
+      }
+
       docFragment.observe((e: Y.YXmlEvent, t: Y.Transaction) => {
         if (operating) {
           return;
@@ -237,12 +250,13 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
           operating = false;
         }
       });
-      state.newBlockInserted.on((blockElement: BlockElement) => {
+      state.newBlockCreated.on((block: Block) => {
         if (operating) {
           return;
         }
         operating = true;
         try {
+          const blockElement: BlockElement = block.props;
           const element = new Y.XmlElement("block");
           element.setAttribute("blockName", blockElement.blockName);
           element.setAttribute("id", blockElement.id);

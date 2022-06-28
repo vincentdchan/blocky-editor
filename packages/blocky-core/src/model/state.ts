@@ -79,7 +79,6 @@ class State {
   public readonly idMap: Map<string, BlockyElement> = new Map();
   public readonly domMap: Map<string, Node> = new Map();
   public readonly blocks: Map<string, Block> = new Map();
-  public readonly newBlockInserted: Slot<BlockElement> = new Slot();
   public readonly newBlockCreated: Slot<Block> = new Slot();
   public readonly blockDeleted: Slot<BlockElement> = new Slot();
   public cursorState: CursorState | undefined;
@@ -119,11 +118,10 @@ class State {
     }
 
     const block = blockDef.onBlockCreated({ blockElement });
-    this.newBlockCreated.emit(block);
 
     this.blocks.set(blockElement.id, block);
 
-    this.newBlockInserted.emit(child as BlockElement);
+    this.newBlockCreated.emit(block);
   }
 
   /**

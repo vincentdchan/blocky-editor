@@ -18,7 +18,7 @@ function makeBulletListPlugin(): IPlugin {
       };
     });
   };
-  const handleNewBlockCreated = (editor: Editor) => (block: Block) => {
+  const handleEveryBlock = (editor: Editor) => (block: Block) => {
     const textElement = block.props;
     if (textElement.blockName !== "text") {
       return;
@@ -78,7 +78,7 @@ function makeBulletListPlugin(): IPlugin {
   return {
     name: "bullet-list",
     onInitialized(editor: Editor) {
-      editor.state.newBlockCreated.on(handleNewBlockCreated(editor));
+      editor.onEveryBlock.on(handleEveryBlock(editor));
       editor.keyDown.on(handleKeydown(editor));
     },
   };

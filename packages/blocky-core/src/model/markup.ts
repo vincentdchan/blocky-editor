@@ -49,7 +49,7 @@ export class MarkupGenerator {
     };
   }
 
-  textBlock(content: MSpan[] = []): MBlock {
+  textBlock(content: MSpan[] = [], id?: string): MBlock {
     const textModel = new BlockyTextModel;
 
     let ptr = 0;
@@ -60,7 +60,7 @@ export class MarkupGenerator {
 
     return {
       t: "block",
-      id: this.idGen.mkBlockId(),
+      id: id ?? this.idGen.mkBlockId(),
       blockName: "text",
       data: textModel,
     };
