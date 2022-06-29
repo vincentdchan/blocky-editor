@@ -82,6 +82,7 @@ class State {
   public readonly newBlockCreated: Slot<Block> = new Slot();
   public readonly blockDeleted: Slot<BlockElement> = new Slot();
   public cursorState: CursorState | undefined;
+  public silent: boolean = false;
 
   constructor(
     public readonly root: BlockyElement,
