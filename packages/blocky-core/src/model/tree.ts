@@ -3,6 +3,28 @@ import { Slot } from "blocky-common/es/events";
 import { type AttributesObject, type BlockyNode } from "./element";
 import type State from "./state";
 
+export interface WithState {
+  state?: State;
+}
+
+class WithStateSlot<T = any> extends Slot<T> {
+
+  #objWithState: WithState;
+
+  constructor(objWithState: WithState) {
+    super();
+    this.#objWithState = objWithState;
+  }
+
+  public emit(v: T) {
+    if (this.#objWithState.state?.silent) {
+      return;
+    }
+    super.emit(v);
+  }
+
+}
+
 export interface TextNode {
   prev?: TextNode;
   next?: TextNode;
@@ -40,7 +62,7 @@ export interface TextSlice {
   attributes?: AttributesObject;
 }
 
-export class BlockyTextModel implements BlockyNode {
+export class BlockyTextModel implements BlockyNode, WithState {
   get nodeName(): string {
     return "#text";
   }
@@ -66,7 +88,7 @@ export class BlockyTextModel implements BlockyNode {
   #nodeEnd?: TextNode;
   #length = 0;
 
-  public readonly onChanged: Slot<TextChangedEvent> = new Slot();
+  public readonly onChanged: WithStateSlot<TextChangedEvent> = new WithStateSlot(this);
 
   constructor() {}
 
@@ -419,7 +441,7 @@ interface InternAttributes {
   [key: string]: string;
 }
 
-export class BlockyElement implements BlockyNode {
+export class BlockyElement implements BlockyNode, WithState {
   state?: State;
   parent: BlockyNode | null = null;
   nextSibling: BlockyNode | null = null;
@@ -431,7 +453,7 @@ export class BlockyElement implements BlockyNode {
   #lastChild: BlockyNode | null = null;
   #attributes: InternAttributes = Object.create(null);
 
-  public onChanged: Slot<ElementChangedEvent> = new Slot();
+  public onChanged: WithStateSlot<ElementChangedEvent> = new WithStateSlot(this);
 
   constructor(public nodeName: string) {
     if (nodeName === "#text") {
