@@ -162,6 +162,7 @@ class App extends Component<{}, AppState> {
           </div>
           <div className="blocky-example-editors" >
             <div className="blocky-example-editor-container left">
+              <div className="blocky-example-user">User 1</div>
               <div className="blocky-example-title-container">
                 <input
                   value={this.state.headingContent}
@@ -171,6 +172,7 @@ class App extends Component<{}, AppState> {
               <BlockyEditor controller={this.editorControllerLeft} />
             </div>
             <div className="blocky-example-editor-container right">
+              <div className="blocky-example-user">User 2</div>
               <div className="blocky-example-title-container">
                 <input
                   value={this.state.headingContent}
