@@ -20,9 +20,9 @@ Blocky Editor is an editor which supports the concept of blocks. It can help you
   - Gzipped size: ~14kb
 - Preact(![npm](https://img.shields.io/npm/v/blocky-preact)): Wrap the editor in [Preact](https://preactjs.com/). Provide the UI facilities such as
   toolbar and banner.
-- Yjs(WIP): Connect the document with [yjs](https://github.com/yjs/yjs) for collaborating editing.
+- Yjs: Connect the document with [yjs](https://github.com/yjs/yjs) for collaborating editing.
 - [Example](https://blocky-editor.dev/): The example to demonstrate how to use the editor.
-  - Gzipped size: ~27kb (one-time loading)
+  - Gzipped size: ~50kb (one-time loading)
 
 ## Resources
 
