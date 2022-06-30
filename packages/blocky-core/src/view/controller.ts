@@ -16,7 +16,10 @@ import { type BannerFactory } from "@pkg/view/bannerDelegate";
 import { type ToolbarFactory } from "@pkg/view/toolbarDelegate";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { type BlockElement } from "@pkg/block/basic";
-import { CollaborativeCursorManager } from "./collaborativeCursors";
+import {
+  type CollaborativeCursorOptions,
+  CollaborativeCursorManager,
+} from "./collaborativeCursors";
 import { type Editor } from "./editor";
 
 export interface IEditorControllerOptions {
@@ -43,6 +46,8 @@ export interface IEditorControllerOptions {
   padding?: Partial<Padding>;
 
   bannerXOffset?: number;
+
+  collaborativeCursorOptions?: CollaborativeCursorOptions;
 }
 
 export interface IInsertOptions {
@@ -51,6 +56,13 @@ export interface IInsertOptions {
 }
 
 export type NextTickFn = () => void;
+
+export class CursorChangedEvent {
+  constructor(
+    public readonly id: string,
+    public readonly state: CursorState | undefined
+  ) {}
+}
 
 export class EditorController {
   #nextTick: NextTickFn[] = [];
@@ -62,19 +74,15 @@ export class EditorController {
   public readonly idGenerator: IdGenerator;
   public readonly m: MarkupGenerator;
   public readonly state: State;
-  public readonly cursorChanged: Slot<CursorState | undefined> = new Slot();
-  public readonly collaborativeCursorManager: CollaborativeCursorManager = new CollaborativeCursorManager;
+  public readonly cursorChanged: Slot<CursorChangedEvent> = new Slot();
+  public readonly collaborativeCursorManager: CollaborativeCursorManager;
 
   static emptyState(options?: IEditorControllerOptions): EditorController {
     const blockRegistry = options?.blockRegistry ?? new BlockRegistry();
     const idGenerator = options?.idGenerator ?? makeDefaultIdGenerator();
     const m = new MarkupGenerator(idGenerator);
 
-    const state = State.fromMarkup(
-      m.doc([]),
-      blockRegistry,
-      idGenerator,
-    );
+    const state = State.fromMarkup(m.doc([]), blockRegistry, idGenerator);
 
     return new EditorController({
       ...options,
@@ -95,6 +103,10 @@ export class EditorController {
     this.idGenerator = options?.idGenerator ?? makeDefaultIdGenerator();
     this.m = new MarkupGenerator(this.idGenerator);
 
+    this.collaborativeCursorManager = new CollaborativeCursorManager(
+      options?.collaborativeCursorOptions
+    );
+
     if (options?.state) {
       this.state = options.state;
     } else {
@@ -102,20 +114,33 @@ export class EditorController {
       this.state = State.fromMarkup(
         m.doc([m.textBlock([m.span("")])]),
         this.blockRegistry,
-        this.idGenerator,
+        this.idGenerator
       );
     }
+  }
+
+  public applyCursorChangedEvent(evt: CursorChangedEvent) {
+    if (evt.id === this.collaborativeCursorManager.options.id) {
+      return;
+    }
+
   }
 
   public mount(editor: Editor) {
     this.editor = editor;
 
-    observe(this.state, "cursorState", (s: CursorState | undefined) =>
-      this.cursorChanged.emit(s)
-    );
+    observe(this.state, "cursorState", (s: CursorState | undefined) => {
+      const id = this.collaborativeCursorManager.options.id;
+      const evt = new CursorChangedEvent(id, s);
+      this.cursorChanged.emit(evt);
+    });
   }
 
-  public insertBlockAfterId(element: BlockElement, afterId: string, options?: IInsertOptions): string {
+  public insertBlockAfterId(
+    element: BlockElement,
+    afterId: string,
+    options?: IInsertOptions
+  ): string {
     const editor = this.editor!;
 
     const prevNode = this.state.idMap.get(afterId)!;
@@ -257,7 +282,7 @@ export class EditorController {
     if (blockNode.nodeName !== "block") {
       return;
     }
-    
+
     editor.update(() => {
       const parent = blockNode.parent! as BlockyElement;
       parent.removeChild(blockNode);
