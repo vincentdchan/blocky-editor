@@ -9,8 +9,18 @@ import {
 } from "blocky-common/es/disposable";
 import { type Position } from "blocky-common/es/position";
 import { DocRenderer } from "@pkg/view/renderer";
-import { State as DocumentState, type AttributesObject, TextType, BlockyTextModel, BlockyElement } from "@pkg/model";
-import { CollapsedCursor, OpenCursorState, type CursorState } from "@pkg/model/cursor";
+import {
+  State as DocumentState,
+  type AttributesObject,
+  TextType,
+  BlockyTextModel,
+  BlockyElement,
+} from "@pkg/model";
+import {
+  CollapsedCursor,
+  OpenCursorState,
+  type CursorState,
+} from "@pkg/model/cursor";
 import {
   IPlugin,
   PluginRegistry,
@@ -23,8 +33,20 @@ import { BannerDelegate, type BannerFactory } from "./bannerDelegate";
 import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import type { EditorController } from "./controller";
-import { Block, BlockElement, BlockPasteEvent, TryParsePastedDOMEvent } from "@pkg/block/basic";
-import { setTextTypeForTextBlock, getTextTypeForTextBlock } from "@pkg/block/textBlock";
+import {
+  Block,
+  BlockElement,
+  BlockPasteEvent,
+  TryParsePastedDOMEvent,
+} from "@pkg/block/basic";
+import {
+  setTextTypeForTextBlock,
+  getTextTypeForTextBlock,
+} from "@pkg/block/textBlock";
+import {
+  type CollaborativeCursorOptions,
+  CollaborativeCursorManager,
+} from "./collaborativeCursors";
 import { isHotkey } from "is-hotkey";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
@@ -69,9 +91,10 @@ export interface IEditorOptions {
   toolbarFactory?: ToolbarFactory;
   padding?: Partial<Padding>;
   bannerXOffset?: number;
+  collaborativeCursorOptions?: CollaborativeCursorOptions;
 }
 
-enum MineType  {
+enum MineType {
   PlainText = "text/plain",
   Html = "text/html",
 }
@@ -112,7 +135,11 @@ export class Editor {
   public readonly registry: EditorRegistry;
   public readonly keyDown = new Slot<KeyboardEvent>();
 
-  public readonly preservedTextType: Set<TextType> = new Set([TextType.Bulleted]);
+  public readonly preservedTextType: Set<TextType> = new Set([
+    TextType.Bulleted,
+  ]);
+
+  public readonly collaborativeCursorManager: CollaborativeCursorManager;
 
   public readonly padding: Padding;
   private bannerXOffset: number;
@@ -136,6 +163,7 @@ export class Editor {
       toolbarFactory: controller.options?.toolbarFactory,
       padding: controller.options?.padding,
       bannerXOffset: controller.options?.bannerXOffset,
+      collaborativeCursorOptions: controller.options?.collaborativeCursorOptions,
     });
     controller.mount(editor);
     return editor;
@@ -154,6 +182,7 @@ export class Editor {
       toolbarFactory,
       padding,
       bannerXOffset,
+      collaborativeCursorOptions,
     } = options;
     this.state = state;
     this.registry = registry;
@@ -165,6 +194,11 @@ export class Editor {
       ...padding,
     };
     this.bannerXOffset = bannerXOffset ?? 24;
+
+    this.collaborativeCursorManager = new CollaborativeCursorManager(
+      collaborativeCursorOptions
+    );
+    this.collaborativeCursorManager.mount(this.#container);
 
     this.bannerDelegate = new BannerDelegate(controller, bannerFactory);
     this.bannerDelegate.mount(this.#container);
@@ -206,6 +240,21 @@ export class Editor {
     this.state.newBlockCreated.pipe(this.onEveryBlock);
   }
 
+  public drawCollaborativeCursor(
+    id: string,
+    name: string,
+    color: string,
+    state: CursorState | undefined
+  ) {
+    if (!state) {
+      this.collaborativeCursorManager.deleteById(id);
+      return;
+    }
+    const cursor = this.collaborativeCursorManager.getOrInit(id);
+    cursor.color = color;
+    cursor.name = name;
+  }
+
   public render(done?: AfterFn) {
     const newDom = this.#renderer.render(this.#renderedDom);
     if (!this.#renderedDom) {
@@ -242,7 +291,10 @@ export class Editor {
     }
 
     // parent is block
-    if (parent instanceof HTMLElement && parent.classList.contains(this.#renderer.blockClassName)) {
+    if (
+      parent instanceof HTMLElement &&
+      parent.classList.contains(this.#renderer.blockClassName)
+    ) {
       const node = parent._mgNode as BlockElement | undefined;
       if (!node) {
         return false;
@@ -251,7 +303,7 @@ export class Editor {
       this.state.cursorState = {
         type: "collapsed",
         targetId: node.id,
-        offset: 0
+        offset: 0,
       };
 
       return true;
@@ -280,8 +332,12 @@ export class Editor {
 
     return;
   }
-  
-  private findTextOffsetInBlock(blockNode: BlockElement, focusedNode: Node, offsetInNode: number): number {
+
+  private findTextOffsetInBlock(
+    blockNode: BlockElement,
+    focusedNode: Node,
+    offsetInNode: number
+  ): number {
     const block = this.state.blocks.get(blockNode.id);
     if (!block) {
       throw new Error("block id not found: " + blockNode.id);
@@ -314,7 +370,11 @@ export class Editor {
       return;
     }
 
-    const absoluteStartOffset = this.findTextOffsetInBlock(startNode, startContainer, startOffset);
+    const absoluteStartOffset = this.findTextOffsetInBlock(
+      startNode,
+      startContainer,
+      startOffset
+    );
 
     if (range.collapsed) {
       this.state.cursorState = {
@@ -328,7 +388,11 @@ export class Editor {
         this.state.cursorState = undefined;
         return;
       }
-      const absoluteEndOffset = this.findTextOffsetInBlock(endNode, endContainer, endOffset);
+      const absoluteEndOffset = this.findTextOffsetInBlock(
+        endNode,
+        endContainer,
+        endOffset
+      );
       this.state.cursorState = {
         type: "open",
         startId: startNode.id,
@@ -380,10 +444,7 @@ export class Editor {
     return true;
   }
 
-  private checkMarkedDom(
-    node: Node,
-    currentOffset?: number,
-  ) {
+  private checkMarkedDom(node: Node, currentOffset?: number) {
     const treeNode = node._mgNode as BlockElement;
     const targetId = treeNode.id;
     if (!node.parentNode) {
@@ -405,7 +466,7 @@ export class Editor {
   private checkBlockContent(
     node: Node,
     blockNode: BlockElement,
-    currentOffset?: number,
+    currentOffset?: number
   ) {
     const block = this.state.blocks.get(blockNode.id);
 
@@ -567,26 +628,34 @@ export class Editor {
       return;
     }
     if (cursorState.type === "collapsed") {
-      const blockElement = this.state.idMap.get(cursorState.targetId) as BlockElement | undefined;
+      const blockElement = this.state.idMap.get(cursorState.targetId) as
+        | BlockElement
+        | undefined;
       if (!blockElement) {
         return;
       }
 
       if (blockElement.blockName !== TextBlockName) {
         // default behavior
-        this.insertEmptyTextAfterBlock(blockElement.parent! as BlockyElement, cursorState.targetId);
+        this.insertEmptyTextAfterBlock(
+          blockElement.parent! as BlockyElement,
+          cursorState.targetId
+        );
         return;
       }
-      const textModel = blockElement.contentContainer.firstChild! as BlockyTextModel;
+      const textModel = blockElement.contentContainer
+        .firstChild! as BlockyTextModel;
 
       const cursorOffset = cursorState.offset;
 
       const slices = textModel.slice(cursorOffset);
 
       const newTextElement = this.state.createTextElement();
-      const newTextModel = newTextElement.contentContainer.firstChild! as BlockyTextModel;
+      const newTextModel = newTextElement.contentContainer
+        .firstChild! as BlockyTextModel;
       const textType = getTextTypeForTextBlock(blockElement);
-      if (this.preservedTextType.has(textType)) {  // preserved data type
+      if (this.preservedTextType.has(textType)) {
+        // preserved data type
         setTextTypeForTextBlock(newTextElement, textType);
       }
 
@@ -597,7 +666,7 @@ export class Editor {
       }
 
       textModel.delete(cursorOffset, textModel.length - cursorOffset);
-      
+
       this.update(() => {
         const parentElement = blockElement.parent! as BlockyElement;
         parentElement.insertAfter(newTextElement, blockElement);
@@ -642,7 +711,7 @@ export class Editor {
 
   public openExternalLink(link: string) {
     // TODO: handle this in plugin
-    window.open(link, '_blank')?.focus();
+    window.open(link, "_blank")?.focus();
   }
 
   private handleDelete(e: KeyboardEvent) {
@@ -739,7 +808,7 @@ export class Editor {
       if (sel.rangeCount === 0) {
         return;
       }
-      const range = sel.getRangeAt(0)
+      const range = sel.getRangeAt(0);
       const startContainer = range.startContainer;
       if (isContainNode(startContainer, this.#container)) {
         sel.removeAllRanges();
@@ -755,7 +824,10 @@ export class Editor {
     this.focusOnCollapsedCursor(newState, sel);
   };
 
-  private focusOnCollapsedCursor(collapsedCursor: CollapsedCursor, sel: Selection) {
+  private focusOnCollapsedCursor(
+    collapsedCursor: CollapsedCursor,
+    sel: Selection
+  ) {
     const { targetId } = collapsedCursor;
 
     const targetNode = this.state.domMap.get(targetId);
@@ -816,7 +888,7 @@ export class Editor {
     blockDom: HTMLDivElement,
     cursor: CollapsedCursor
   ) {
-    const node = blockDom._mgNode as BlockElement | undefined
+    const node = blockDom._mgNode as BlockElement | undefined;
     if (!node) {
       return;
     }
@@ -852,7 +924,7 @@ export class Editor {
   }
 
   private handlePaste = (e: ClipboardEvent) => {
-    e.preventDefault();  // take over the paste event
+    e.preventDefault(); // take over the paste event
 
     const { clipboardData } = e;
 
@@ -899,7 +971,11 @@ export class Editor {
 
     let index = 0;
     while (ptr) {
-      const cursor = this.pasteNodeAt(afterCursor, ptr as HTMLElement, index === 0);
+      const cursor = this.pasteNodeAt(
+        afterCursor,
+        ptr as HTMLElement,
+        index === 0
+      );
 
       if (cursor) {
         afterCursor = cursor;
@@ -914,7 +990,11 @@ export class Editor {
     });
   }
 
-  private tryPasteDivElementAsBlock(element: HTMLDivElement, cursorState: Cell<CursorState | undefined>, tryMerge: boolean = false): boolean {
+  private tryPasteDivElementAsBlock(
+    element: HTMLDivElement,
+    cursorState: Cell<CursorState | undefined>,
+    tryMerge: boolean = false
+  ): boolean {
     const blockRegistry = this.registry.block;
     const dataType = element.getAttribute("data-type");
     if (!dataType) {
@@ -938,7 +1018,10 @@ export class Editor {
         cursorState.set(newCursor);
       }
     } else {
-      const newCursor = this.insertBlockByDefaultAt(cursorState.get(), dataType);
+      const newCursor = this.insertBlockByDefaultAt(
+        cursorState.get(),
+        dataType
+      );
       if (newCursor) {
         cursorState.set(newCursor);
       }
@@ -948,12 +1031,16 @@ export class Editor {
   }
 
   /**
-   * 
+   *
    * Paste the content of element at the cursor.
-   * 
+   *
    * @param tryMerge Indicate whether the content should be merged to the previous block.
    */
-  private pasteNodeAt(cursorState: CursorState | undefined, element: HTMLElement, tryMerge: boolean = false): CursorState | undefined {
+  private pasteNodeAt(
+    cursorState: CursorState | undefined,
+    element: HTMLElement,
+    tryMerge: boolean = false
+  ): CursorState | undefined {
     const blockRegistry = this.registry.block;
 
     const evt = new TryParsePastedDOMEvent({
@@ -975,7 +1062,11 @@ export class Editor {
         textContent = testContent;
       }
 
-      return this.insertTextAt(cursorState, textContent, Object.keys(attributes).length > 0 ? attributes : undefined);
+      return this.insertTextAt(
+        cursorState,
+        textContent,
+        Object.keys(attributes).length > 0 ? attributes : undefined
+      );
     } else if (element instanceof HTMLDivElement) {
       const cursorCell = new Cell(cursorState);
       if (this.tryPasteDivElementAsBlock(element, cursorCell, tryMerge)) {
@@ -987,7 +1078,8 @@ export class Editor {
       element instanceof HTMLParagraphElement ||
       element instanceof HTMLHeadingElement ||
       element instanceof HTMLLIElement
-    ) {  // is a <p> or <h1>
+    ) {
+      // is a <p> or <h1>
       const blockDef = blockRegistry.getBlockDefByName(TextBlockName);
       const pasteHandler = blockDef?.onPaste;
       const evt = new BlockPasteEvent({
@@ -1000,14 +1092,18 @@ export class Editor {
         const cursor = pasteHandler.call(blockDef, evt);
         return cursor;
       } else {
-       return this.insertBlockByDefaultAt(cursorState, TextBlockName);
+        return this.insertBlockByDefaultAt(cursorState, TextBlockName);
       }
     } else if (element instanceof HTMLUListElement) {
       let childPtr = element.firstElementChild;
       let returnCursor: CursorState | undefined = cursorState;
 
       while (childPtr) {
-        returnCursor = this.pasteNodeAt(returnCursor, childPtr as HTMLElement, false);
+        returnCursor = this.pasteNodeAt(
+          returnCursor,
+          childPtr as HTMLElement,
+          false
+        );
         childPtr = childPtr.nextElementSibling;
       }
 
@@ -1042,7 +1138,10 @@ export class Editor {
     return attributes;
   }
 
-  private insertBlockByDefaultAt(cursorState: CursorState | undefined, blockName: string): CursorState | undefined {
+  private insertBlockByDefaultAt(
+    cursorState: CursorState | undefined,
+    blockName: string
+  ): CursorState | undefined {
     if (!cursorState) {
       return;
     }
@@ -1051,7 +1150,9 @@ export class Editor {
       return;
     }
 
-    const currentNode = this.state.idMap.get(cursorState.targetId)! as BlockElement;
+    const currentNode = this.state.idMap.get(
+      cursorState.targetId
+    )! as BlockElement;
 
     const textElement = this.state.createTextElement();
 
@@ -1072,7 +1173,11 @@ export class Editor {
     });
   }
 
-  private insertTextAt(cursorState: CursorState | undefined, text: string, attributes?: AttributesObject): CursorState | undefined {
+  private insertTextAt(
+    cursorState: CursorState | undefined,
+    text: string,
+    attributes?: AttributesObject
+  ): CursorState | undefined {
     if (!cursorState) {
       return;
     }
@@ -1087,12 +1192,13 @@ export class Editor {
     }
 
     const afterOffset = cursorState.offset + text.length;
-    const textModel = textElement.contentContainer.firstChild! as BlockyTextModel;
+    const textModel = textElement.contentContainer
+      .firstChild! as BlockyTextModel;
     textModel.insert(cursorState.offset, text, attributes);
     return {
       type: "collapsed",
       targetId: cursorState.targetId,
-      offset: afterOffset
+      offset: afterOffset,
     };
   }
 

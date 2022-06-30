@@ -1,16 +1,13 @@
+import { DivContainer } from "blocky-common/es/dom";
 import { mkUserId } from "@pkg/helper/idHelper";
-import type { IDisposable } from "blocky-common/es/disposable";
-import { Slot } from "blocky-common/es/events";
 
-export class CollaborativeCursor implements IDisposable {
+export class CollaborativeCursor extends DivContainer {
 
-  public readonly disposing: Slot = new Slot;
+  public color?: string;
+  public name?: string;
 
-  constructor(public id: string) {}
-
-  dispose() {
-    this.disposing.emit();
-    this.disposing.dispose();
+  constructor(public id: string) {
+    super("blocky-collaborative-cursor");
   }
 
 }
@@ -18,42 +15,60 @@ export class CollaborativeCursor implements IDisposable {
 export interface CollaborativeCursorOptions {
   id: string;
   idToName: (id: string) => string;
+  idToColor: (id: string) => string,
 }
 
 function makeDefaultOptions(): CollaborativeCursorOptions {
   return {
     id: mkUserId(),
     idToName: (id: string) => id,
+    idToColor: (id: string) => "yellow",
   };
 }
 
-export class CollaborativeCursorManager {
+export class CollaborativeCursorManager extends DivContainer {
   #cursors: Map<string, CollaborativeCursor> = new Map;
-
-  public readonly onInserted: Slot<CollaborativeCursor> = new Slot;
-  public readonly onRemoved: Slot<CollaborativeCursor> = new Slot;
 
   public readonly options: CollaborativeCursorOptions;
 
   constructor(options?: Partial<CollaborativeCursor>) {
+    super("blocky-collaborative-cursor-container");
     this.options = {
       ...makeDefaultOptions(),
       ...options,
     };
   }
 
-  insert(cursor: CollaborativeCursor) {
+  private insert(cursor: CollaborativeCursor) {
     const { id } = cursor;
     if (this.#cursors.has(id)) {
       throw new Error("cursor has been inserted");
     }
+    cursor.mount(this.container);
     this.#cursors.set(id, cursor);
+  }
 
-    cursor.disposing.on(() => {
-      this.#cursors.delete(id);
-      this.onRemoved.emit(cursor);
-    });
-    this.onInserted.emit(cursor);
+  getOrInit(id: string): CollaborativeCursor {
+    const test = this.#cursors.get(id);
+    if (test) {
+      return test;
+    }
+
+    const newCursor = new CollaborativeCursor(id);
+
+    this.insert(newCursor);
+
+    return newCursor;
+  }
+
+  deleteById(id: string) {
+    const test = this.#cursors.get(id);
+    if (!test) {
+      return;
+    }
+
+    test.dispose();
+    this.#cursors.delete(id);
   }
 
 }
