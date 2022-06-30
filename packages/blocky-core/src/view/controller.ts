@@ -15,8 +15,9 @@ import { MarkupGenerator } from "@pkg/model/markup";
 import { type BannerFactory } from "@pkg/view/bannerDelegate";
 import { type ToolbarFactory } from "@pkg/view/toolbarDelegate";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
-import { type Editor } from "./editor";
 import { type BlockElement } from "@pkg/block/basic";
+import { CollaborativeCursorManager } from "./collaborativeCursors";
+import { type Editor } from "./editor";
 
 export interface IEditorControllerOptions {
   pluginRegistry?: PluginRegistry;
@@ -62,6 +63,7 @@ export class EditorController {
   public readonly m: MarkupGenerator;
   public readonly state: State;
   public readonly cursorChanged: Slot<CursorState | undefined> = new Slot();
+  public readonly collaborativeCursorManager: CollaborativeCursorManager = new CollaborativeCursorManager;
 
   static emptyState(options?: IEditorControllerOptions): EditorController {
     const blockRegistry = options?.blockRegistry ?? new BlockRegistry();
