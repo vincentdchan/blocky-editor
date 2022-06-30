@@ -16,10 +16,7 @@ import { type BannerFactory } from "@pkg/view/bannerDelegate";
 import { type ToolbarFactory } from "@pkg/view/toolbarDelegate";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { type BlockElement } from "@pkg/block/basic";
-import {
-  type CollaborativeCursorOptions,
-  CollaborativeCursorManager,
-} from "./collaborativeCursors";
+import { type CollaborativeCursorOptions } from "./collaborativeCursors";
 import { type Editor } from "./editor";
 
 export interface IEditorControllerOptions {
@@ -75,7 +72,6 @@ export class EditorController {
   public readonly m: MarkupGenerator;
   public readonly state: State;
   public readonly cursorChanged: Slot<CursorChangedEvent> = new Slot();
-  public readonly collaborativeCursorManager: CollaborativeCursorManager;
 
   static emptyState(options?: IEditorControllerOptions): EditorController {
     const blockRegistry = options?.blockRegistry ?? new BlockRegistry();
@@ -103,10 +99,6 @@ export class EditorController {
     this.idGenerator = options?.idGenerator ?? makeDefaultIdGenerator();
     this.m = new MarkupGenerator(this.idGenerator);
 
-    this.collaborativeCursorManager = new CollaborativeCursorManager(
-      options?.collaborativeCursorOptions
-    );
-
     if (options?.state) {
       this.state = options.state;
     } else {
@@ -120,17 +112,29 @@ export class EditorController {
   }
 
   public applyCursorChangedEvent(evt: CursorChangedEvent) {
-    if (evt.id === this.collaborativeCursorManager.options.id) {
+    const { editor } = this;
+    if (!editor) {
+      return;
+    }
+    const { collaborativeCursorManager } = editor;
+    const { id } = evt;
+    if (id === collaborativeCursorManager.options.id) {
       return;
     }
 
+    const { options } = collaborativeCursorManager;
+    
+    const name = options.idToName(id);
+    const color = options.idToColor(id);
+
+    editor.drawCollaborativeCursor(id, name, color, evt.state);
   }
 
   public mount(editor: Editor) {
     this.editor = editor;
 
     observe(this.state, "cursorState", (s: CursorState | undefined) => {
-      const id = this.collaborativeCursorManager.options.id;
+      const id = editor.collaborativeCursorManager.options.id;
       const evt = new CursorChangedEvent(id, s);
       this.cursorChanged.emit(evt);
     });

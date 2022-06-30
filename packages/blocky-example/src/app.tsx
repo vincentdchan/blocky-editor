@@ -39,6 +39,11 @@ function makeEditorPlugins(doc: Y.Doc, allowInit?: boolean): IPlugin[] {
  */
 function makeController(doc: Y.Doc): EditorController {
   return new EditorController({
+    collaborativeCursorOptions: {
+      id: "User-1",
+      idToName: (id: string) => id,
+      idToColor: () => "orange",
+    },
     /**
      * Define the plugins to implement customize features.
      */
@@ -68,6 +73,11 @@ function makeController(doc: Y.Doc): EditorController {
 function makeRightController(doc: Y.Doc): EditorController {
   return EditorController.emptyState({
     plugins: makeEditorPlugins(doc, true),
+    collaborativeCursorOptions: {
+      id: "User-2",
+      idToName: (id: string) => id,
+      idToColor: () => "red",
+    },
     bannerFactory: makePreactBanner(
       ({ editorController, focusedNode }: BannerRenderProps) => (
         <BannerMenu
@@ -110,6 +120,14 @@ class App extends Component<{}, AppState> {
     this.editorControllerLeft.enqueueNextTick(this.firstTick);
 
     this.editorControllerRight = makeRightController(this.doc2);
+
+    this.editorControllerLeft.cursorChanged.on(evt => {
+      this.editorControllerRight.applyCursorChangedEvent(evt);
+    });
+
+    this.editorControllerRight.cursorChanged.on(evt => {
+      this.editorControllerLeft.applyCursorChangedEvent(evt);
+    });
 
     this.state = {
       headingContent: "Blocky Editor",
