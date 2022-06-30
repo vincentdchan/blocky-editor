@@ -1,5 +1,6 @@
-import type { IDisposable } from "blocky-common/src/disposable";
-import { Slot } from "blocky-common/src/events";
+import { mkUserId } from "@pkg/helper/idHelper";
+import type { IDisposable } from "blocky-common/es/disposable";
+import { Slot } from "blocky-common/es/events";
 
 export class CollaborativeCursor implements IDisposable {
 
@@ -14,11 +15,32 @@ export class CollaborativeCursor implements IDisposable {
 
 }
 
+export interface CollaborativeCursorOptions {
+  id: string;
+  idToName: (id: string) => string;
+}
+
+function makeDefaultOptions(): CollaborativeCursorOptions {
+  return {
+    id: mkUserId(),
+    idToName: (id: string) => id,
+  };
+}
+
 export class CollaborativeCursorManager {
   #cursors: Map<string, CollaborativeCursor> = new Map;
 
   public readonly onInserted: Slot<CollaborativeCursor> = new Slot;
   public readonly onRemoved: Slot<CollaborativeCursor> = new Slot;
+
+  public readonly options: CollaborativeCursorOptions;
+
+  constructor(options?: Partial<CollaborativeCursor>) {
+    this.options = {
+      ...makeDefaultOptions(),
+      ...options,
+    };
+  }
 
   insert(cursor: CollaborativeCursor) {
     const { id } = cursor;
