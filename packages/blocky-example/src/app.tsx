@@ -34,6 +34,9 @@ function makeEditorPlugins(doc: Y.Doc, allowInit?: boolean): IPlugin[] {
   ];
 }
 
+const User1Color = "#dc410a";
+const User2Color = "orange";
+
 /**
  * The controller is used to control the editor.
  */
@@ -42,7 +45,7 @@ function makeController(doc: Y.Doc): EditorController {
     collaborativeCursorOptions: {
       id: "User-1",
       idToName: (id: string) => id,
-      idToColor: () => "orange",
+      idToColor: () => User2Color,
     },
     /**
      * Define the plugins to implement customize features.
@@ -76,7 +79,7 @@ function makeRightController(doc: Y.Doc): EditorController {
     collaborativeCursorOptions: {
       id: "User-2",
       idToName: (id: string) => id,
-      idToColor: () => "red",
+      idToColor: () => User1Color,
     },
     bannerFactory: makePreactBanner(
       ({ editorController, focusedNode }: BannerRenderProps) => (
@@ -180,7 +183,11 @@ class App extends Component<{}, AppState> {
           </div>
           <div className="blocky-example-editors" >
             <div className="blocky-example-editor-container left">
-              <div className="blocky-example-user">User 1</div>
+              <div className="blocky-example-user">
+                <span style={{ backgroundColor: User1Color }}>
+                  User 1
+                </span>
+              </div>
               <div className="blocky-example-title-container">
                 <input
                   value={this.state.headingContent}
@@ -190,7 +197,11 @@ class App extends Component<{}, AppState> {
               <BlockyEditor controller={this.editorControllerLeft} />
             </div>
             <div className="blocky-example-editor-container right">
-              <div className="blocky-example-user">User 2</div>
+              <div className="blocky-example-user">
+                <span style={{ backgroundColor: User2Color }}>
+                  User 2
+                </span>
+              </div>
               <div className="blocky-example-title-container">
                 <input
                   value={this.state.headingContent}
