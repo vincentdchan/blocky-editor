@@ -3,6 +3,7 @@ import { Cell } from "blocky-common/es/cell";
 import { observe, runInAction } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
 import { type Padding } from "blocky-common/es/dom";
+import { areEqualShallow } from "blocky-common/es/object";
 import {
   type IDisposable,
   flattenDisposable,
@@ -51,24 +52,6 @@ import { isHotkey } from "is-hotkey";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
-function areEqualShallow(a: any, b: any) {
-  if (typeof a === "object" && typeof b === "object") {
-    for (let key in a) {
-      if (!(key in b) || a[key] !== b[key]) {
-        return false;
-      }
-    }
-    for (let key in b) {
-      if (!(key in a)) {
-        return false;
-      }
-    }
-    return true;
-  } else {
-    return a === b;
-  }
-}
-
 export interface EditorRegistry {
   span: SpanRegistry;
   plugin: PluginRegistry;
@@ -106,6 +89,18 @@ function makeDefaultPadding(): Padding {
     bottom: 72,
     left: 56,
   };
+}
+
+function debounce(fn: (...args: any[]) => void, delay: number): (...args: any[]) => void {
+  let timer: any;
+  return function (this: any, ...args: any[]) {
+    if (timer) {
+      clearTimeout(timer);
+    }
+    timer = setTimeout(() => {
+      fn.apply(this, args);
+    }, delay);
+  }
 }
 
 /**
@@ -246,14 +241,51 @@ export class Editor {
     color: string,
     state: CursorState | undefined
   ) {
-    if (!state) {
-      this.collaborativeCursorManager.deleteById(id);
-      return;
-    }
-    const cursor = this.collaborativeCursorManager.getOrInit(id);
-    cursor.color = color;
-    cursor.name = name;
-  }
+    setTimeout(() => {
+      if (!state) {
+        this.collaborativeCursorManager.deleteById(id);
+        return;
+      }
+      const cursor = this.collaborativeCursorManager.getOrInit(id);
+      cursor.color = color;
+      cursor.name = name;
+
+      let blockId: string;
+      let offset: number;
+
+      if (state.type === "collapsed") {
+        blockId = state.targetId;
+        offset = state.offset;
+      } else {
+        blockId = state.endId;
+        offset = state.endOffset;
+      }
+
+      const block = this.state.blocks.get(blockId);
+      if (!block) {
+        return;
+      }
+
+      const cursorDom = block.getCursorDomByOffset(offset);
+      if (!cursorDom) {
+        return;
+      }
+
+      const range = document.createRange();
+      range.setStart(cursorDom.node, cursorDom.offset);
+      range.setEnd(cursorDom.node, cursorDom.offset);
+
+      const rects = range.getClientRects();
+      if (rects.length === 0) {
+        return;
+      }
+      const firstRect = rects[0];
+      const containerRect = this.#container.getBoundingClientRect();
+
+      cursor.x = firstRect.x - containerRect.x;
+      cursor.y = firstRect.y - containerRect.y;
+    }, 15);
+  };
 
   public render(done?: AfterFn) {
     const newDom = this.#renderer.render(this.#renderedDom);
@@ -361,6 +393,7 @@ export class Editor {
 
     // not a dom in this editor, ignore it.
     if (!isContainNode(startContainer, this.#container)) {
+      this.state.cursorState = undefined;
       return;
     }
 

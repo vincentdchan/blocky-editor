@@ -3,11 +3,49 @@ import { mkUserId } from "@pkg/helper/idHelper";
 
 export class CollaborativeCursor extends DivContainer {
 
-  public color?: string;
+  #color: string = "";
+  #x: number = 0;
+  #y: number = 0;
   public name?: string;
 
   constructor(public id: string) {
     super("blocky-collaborative-cursor");
+  }
+
+  set color(value: string) {
+    if (value === this.#color) {
+      return;
+    }
+    this.#color = value;
+    this.container.style.backgroundColor = value;
+  }
+
+  get color() {
+    return this.#color;
+  }
+
+  get x() {
+    return this.#x;
+  }
+
+  set x(v: number) {
+    if (v === this.#x) {
+      return;
+    }
+    this.container.style.left = v + "px";
+    this.#x = v;
+  }
+
+  get y() {
+    return this.#y;
+  }
+
+  set y(v: number) {
+    if (v === this.#y) {
+      return;
+    }
+    this.container.style.top = v + "px";
+    this.#y = v;
   }
 
 }
