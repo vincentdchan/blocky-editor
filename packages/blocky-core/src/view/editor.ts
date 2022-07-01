@@ -91,18 +91,6 @@ function makeDefaultPadding(): Padding {
   };
 }
 
-function debounce(fn: (...args: any[]) => void, delay: number): (...args: any[]) => void {
-  let timer: any;
-  return function (this: any, ...args: any[]) {
-    if (timer) {
-      clearTimeout(timer);
-    }
-    timer = setTimeout(() => {
-      fn.apply(this, args);
-    }, delay);
-  }
-}
-
 /**
  * The internal view layer object of the editor.
  * It's not recommended to manipulate this class by the user.
@@ -268,6 +256,7 @@ export class Editor {
 
       const cursorDom = block.getCursorDomByOffset(offset);
       if (!cursorDom) {
+        this.collaborativeCursorManager.deleteById(id);
         return;
       }
 

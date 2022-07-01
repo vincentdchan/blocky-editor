@@ -1,15 +1,46 @@
-import { DivContainer } from "blocky-common/es/dom";
+import { DivContainer, $on } from "blocky-common/es/dom";
 import { mkUserId } from "@pkg/helper/idHelper";
 
-export class CollaborativeCursor extends DivContainer {
+class ContainerWithCoord extends DivContainer {
+  protected _x: number = 0;
+  protected _y: number = 0;
+
+  get x() {
+    return this._x;
+  }
+
+  set x(v: number) {
+    if (v === this._x) {
+      return;
+    }
+    this.container.style.left = v + "px";
+    this._x = v;
+  }
+
+  get y() {
+    return this._y;
+  }
+
+  set y(v: number) {
+    if (v === this._y) {
+      return;
+    }
+    this.container.style.top = v + "px";
+    this._y = v;
+  }
+
+}
+
+class CurosrLabel extends ContainerWithCoord {
+
+  static Height = 12;
 
   #color: string = "";
-  #x: number = 0;
-  #y: number = 0;
-  public name?: string;
 
-  constructor(public id: string) {
-    super("blocky-collaborative-cursor");
+  constructor(content: string) {
+    super("blocky-curosr-label");
+    this.container.textContent = content;
+    this.container.style.height = CurosrLabel.Height + "px";
   }
 
   set color(value: string) {
@@ -24,28 +55,103 @@ export class CollaborativeCursor extends DivContainer {
     return this.#color;
   }
 
-  get x() {
-    return this.#x;
+}
+
+export class CollaborativeCursor extends ContainerWithCoord {
+
+  #color: string = "";
+  #label: CurosrLabel | undefined;
+  public name?: string;
+
+  private initTimeout: any;
+
+  constructor(public id: string) {
+    super("blocky-collaborative-cursor");
+    $on(this.container, "mouseenter", this.handleMouseEnter);
+    $on(this.container, "mouseleave", this.handleMouseLeave);
   }
 
-  set x(v: number) {
-    if (v === this.#x) {
+  mount(parent: HTMLElement): void {
+    super.mount(parent);
+
+    this.showLabel();
+    this.initTimeout = setTimeout(() => {
+      this.hideLabel();
+    }, 3000);
+  }
+
+  private handleMouseEnter = () => {
+    if (this.initTimeout) {
+      clearTimeout(this.initTimeout);
+      this.initTimeout = undefined;
+    }
+    this.showLabel();
+  }
+
+  private handleMouseLeave = () => {
+    this.hideLabel();
+  }
+
+  private showLabel() {
+    if (this.#label) {
       return;
     }
-    this.container.style.left = v + "px";
-    this.#x = v;
+
+    const label = new CurosrLabel(this.name ?? this.id);
+    label.x = this.x;
+    label.y = this.y - CurosrLabel.Height;
+    label.color = this.color;
+
+    this.#label = label;
+
+    if (this.container.parentElement) {
+      label.mount(this.container.parentElement);
+    }
   }
 
-  get y() {
-    return this.#y;
-  }
-
-  set y(v: number) {
-    if (v === this.#y) {
+  private hideLabel() {
+    if (!this.#label) {
       return;
     }
-    this.container.style.top = v + "px";
-    this.#y = v;
+    this.#label.dispose();
+    this.#label = undefined;
+  }
+
+  set color(value: string) {
+    if (value === this.#color) {
+      return;
+    }
+    this.#color = value;
+    this.container.style.backgroundColor = value;
+
+    if (this.#label) {
+      this.#label.color = value;
+    }
+  }
+
+  get color() {
+    return this.#color;
+  }
+
+  dispose(): void {
+    this.#label?.dispose();
+    super.dispose();
+  }
+
+  override set y(v: number) {
+    super.y = v;
+
+    if (this.#label) {
+      this.#label.y = v - CurosrLabel.Height;
+    }
+  }
+
+  override set x(v: number) {
+    super.x = v;
+
+    if (this.#label) {
+      this.#label.x = v;
+    }
   }
 
 }
