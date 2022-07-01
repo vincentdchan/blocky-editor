@@ -199,6 +199,10 @@ export class Block implements IDisposable {
     return;
   }
 
+  getCursorHeight(): number {
+    return 18;
+  }
+
   findTextOffsetInBlock(focusedNode: Node, offsetInNode: number): number {
     return 0;
   }

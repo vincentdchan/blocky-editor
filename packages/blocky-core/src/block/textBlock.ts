@@ -72,6 +72,20 @@ class TextBlock extends Block {
     return parseInt(element.getAttribute("textType") ?? "0", 10);
   }
 
+  override getCursorHeight(): number {
+    const textType = this.getTextType();
+    switch (textType) {
+      case TextType.Heading1:
+        return 34;
+      case TextType.Heading2:
+        return 30;
+      case TextType.Heading3:
+        return 26;
+    }
+    
+    return 18;
+  }
+
   override getBannerOffset(): Position {
     const textType = this.getTextType();
 

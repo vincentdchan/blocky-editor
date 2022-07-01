@@ -251,8 +251,10 @@ export class Editor {
 
       const block = this.state.blocks.get(blockId);
       if (!block) {
+        this.collaborativeCursorManager.deleteById(id);
         return;
       }
+      cursor.height = block.getCursorHeight();
 
       const cursorDom = block.getCursorDomByOffset(offset);
       if (!cursorDom) {
