@@ -61,6 +61,7 @@ export class CollaborativeCursor extends ContainerWithCoord {
 
   #color: string = "";
   #label: CurosrLabel | undefined;
+  #height: number = 0;
   public name?: string;
 
   private initTimeout: any;
@@ -69,6 +70,18 @@ export class CollaborativeCursor extends ContainerWithCoord {
     super("blocky-collaborative-cursor");
     $on(this.container, "mouseenter", this.handleMouseEnter);
     $on(this.container, "mouseleave", this.handleMouseLeave);
+  }
+
+  get height() {
+    return this.#height;
+  }
+
+  set height(v: number) {
+    if (this.#height === v) {
+      return;
+    }
+    this.#height = v;
+    this.container.style.height = this.#height + "px";
   }
 
   mount(parent: HTMLElement): void {
