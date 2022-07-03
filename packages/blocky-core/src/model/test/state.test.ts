@@ -43,11 +43,16 @@ test("serialize", () => {
   );
   const json = serializeState(state);
   expect(json).toEqual({
-    type: "document",
-    blocks: [{
-      type: "block",
+    nodeName: "document",
+    children: [{
+      nodeName: "block",
       blockName: "text",
-      children: [],
+      children: [{
+        nodeName: "block-content",
+        children: ["Hello World"],
+      }, {
+        nodeName: "block-children",
+      }],
     }],
   });
 });

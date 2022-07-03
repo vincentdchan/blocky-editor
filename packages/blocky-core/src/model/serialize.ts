@@ -1,36 +1,21 @@
 import { BlockElement } from "@pkg/block/basic";
 import State from "./state";
-import { BlockyElement, BlockyTextModel } from "./tree";
+import { BlockyElement, BlockyTextModel, TextNode } from "./tree";
 import type { AttributesObject, BlockyNode } from "@pkg/model/element";
 
-export interface JSONDocument {
-  type: "document";
-  blocks?: JSONBlock[];
+export interface JSONNode {
+  nodeName: string;
+  textContent?: string;
+  blockName?: string;
+  attributes?: AttributesObject;
+  children?: JSONChild[];
 }
 
-export interface JSONBlock {
-  type: "block";
-  blockName: string;
-  children?: JSONNode[];
-}
+export type JSONChild = JSONNode | string;
 
-export interface JSONStyledSpan {
-  content: string;
-  attributes: AttributesObject;
-}
-
-export type JSONTextSpan = string | JSONStyledSpan
-
-export interface JSONText {
-  type: "text";
-  content: JSONTextSpan[];
-}
-
-export type JSONNode = JSONText | JSONBlock
-
-export function serializeState(state: State): JSONDocument {
-  const result: JSONDocument = {
-    type: "document",
+export function serializeState(state: State): JSONNode {
+  const result: JSONNode = {
+    nodeName: "document",
   };
 
   let ptr = state.root.firstChild;
@@ -40,7 +25,7 @@ export function serializeState(state: State): JSONDocument {
     return result;
   }
 
-  const children: JSONBlock[] = [];
+  const children: JSONNode[] = [];
 
   while (ptr) {
     if (ptr instanceof BlockElement) {
@@ -48,15 +33,15 @@ export function serializeState(state: State): JSONDocument {
     }
     ptr = ptr.nextSibling;
   }
-  
-  result.blocks = children;
+
+  result.children = children;
   return result;
 }
 
-function serializeBlock(blockElement: BlockElement): JSONBlock {
+function serializeBlock(blockElement: BlockElement): JSONNode {
   const { blockName } = blockElement;
-  const result: JSONBlock = {
-    type: "block",
+  const result: JSONNode = {
+    nodeName: "block",
     blockName,
   };
 
@@ -66,10 +51,15 @@ function serializeBlock(blockElement: BlockElement): JSONBlock {
     return result;
   }
 
-  const children: JSONNode[] = [];
+  const children: JSONChild[] = [];
 
   while (childPtr) {
-    // children.push(serializeNode(childPtr));
+    const child = serializeNode(childPtr);
+    if (Array.isArray(child)) {
+      children.push(...child);
+    } else {
+      children.push(child);
+    }
     childPtr = childPtr.nextSibling;
   }
 
@@ -77,18 +67,74 @@ function serializeBlock(blockElement: BlockElement): JSONBlock {
   return result;
 }
 
-function serializeNode(blockyNode: BlockyNode): JSONNode {
+function serializeNode(blockyNode: BlockyNode): JSONChild | JSONChild[] {
   if (blockyNode instanceof BlockyElement) {
-    return {
-      type: "block",
-      blockName: "unknown",
+    const result: JSONNode = {
+      nodeName: blockyNode.nodeName,
     };
+
+    if (blockyNode instanceof BlockElement) {
+      result.nodeName = blockyNode.blockName;
+    }
+
+    const attributes = blockyNode.getAttributes();
+    if (Object.keys(attributes).length > 0) {
+      result.attributes = blockyNode.getAttributes();
+    }
+
+    let childPtr = blockyNode.firstChild;
+    if (childPtr) {
+      const children: JSONChild[] = [];
+
+      while (childPtr) {
+        const child = serializeNode(childPtr);
+        if (Array.isArray(child)) {
+          children.push(...child);
+        } else {
+          children.push(child);
+        }
+        childPtr = childPtr.nextSibling;
+      }
+
+      result.children = children;
+    }
+
+    return result;
   } else if (blockyNode instanceof BlockyTextModel) {
-    return {
-      type: "text",
-      content: []
-    };
+    return serializeTextModel(blockyNode as BlockyTextModel);
   } else {
     throw new Error("unexpected blocky node");
   }
+}
+
+function serializeTextModel(textModel: BlockyTextModel): JSONChild | JSONChild[] {
+  let ptr = textModel.nodeBegin;
+  if (!ptr) {
+    return [];
+  }
+
+  if (!ptr.next) {
+    return textNodeToChildNode(ptr);
+  }
+
+  const children: JSONChild[] = [];
+
+  while (ptr) {
+    children.push(textNodeToChildNode(ptr));
+    ptr = ptr.next;
+  }
+
+  return children;
+}
+
+function textNodeToChildNode(textNode: TextNode): JSONChild {
+  const { attributes } = textNode;
+  if (!attributes || Object.keys(attributes).length === 0) {
+    return textNode.content;
+  }
+  return {
+    nodeName: "#text",
+    textContent: textNode.content,
+    attributes,
+  };
 }
