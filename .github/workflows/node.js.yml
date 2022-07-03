@@ -29,3 +29,4 @@ jobs:
     - run: pnpm install
     - run: pnpm run build
     - run: cd packages/blocky-core && pnpm run test:prod
+    - run: cd packages/blocky-core && pnpm run lint 
