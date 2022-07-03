@@ -5,6 +5,7 @@ import type { AttributesObject, BlockyNode } from "@pkg/model/element";
 
 export interface JSONNode {
   nodeName: string;
+  id?: string;
   textContent?: string;
   blockName?: string;
   attributes?: AttributesObject;
