@@ -2,7 +2,7 @@ import { makeObservable } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
 import { BlockyElement, BlockyTextModel } from "./tree";
 import { type BlockyNode } from "./element";
-import { MDoc, traverse, MNode } from "./markup";
+import * as S from "./serialize";
 import { TextBlockName } from "@pkg/block/textBlock";
 import { type IdGenerator } from "@pkg/helper/idHelper";
 import { type CursorState } from "@pkg/model/cursor";
@@ -10,9 +10,50 @@ import { Block, BlockElement } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { validate as validateNode } from "./validator";
 
+function jsonNodeToBlock(state: State, node: S.JSONNode): BlockElement {
+  if (typeof node !== "object") {
+    throw new TypeError("string is expected");
+  }
+  const { blockName, id } = node;
+  if (!blockName) {
+    throw new TypeError("blockName is expected");
+  }
+  if (!id) {
+    throw new TypeError("id is expected");
+  }
+  const blockElement = new BlockElement(blockName, id);
+  blockElement.state = state;
+  blockElement.contentContainer.state = state;
+  blockElement.childrenContainer.state = state;
+
+  if (node.children && node.children.length > 0) {
+    const firstChild = node.children[0];
+    if (typeof firstChild === "object" && firstChild.nodeName === "block-content") {
+      firstChildToContent(firstChild, blockElement);
+    }
+  }
+
+  return blockElement;
+}
+
+function firstChildToContent(firstChild: S.JSONNode, blockyElement: BlockElement) {
+  const textModel = new BlockyTextModel();
+  if (!firstChild.children) {
+    return;
+  }
+  let ptr = 0;
+  for (const item of firstChild.children) {
+    if (typeof item === "string") {
+      textModel.insert(ptr, item);
+      ptr += item.length;
+    }
+  }
+  blockyElement.contentContainer.appendChild(textModel);
+}
+
 class State {
   static fromMarkup(
-    doc: MDoc,
+    doc: S.JSONNode,
     blockRegistry: BlockRegistry,
     idHelper: IdGenerator
   ): State {
@@ -20,58 +61,16 @@ class State {
     const state = new State(rootNode, blockRegistry, idHelper);
     rootNode.state = state;
 
-    traverse<BlockyNode>(
-      doc,
-      (node: MNode, parent?: MNode, parentNode?: BlockyNode) => {
-        if (state.idMap.has(node.id)) {
-          throw new Error(`duplicated id: ${node.id}`);
-        }
+    if (doc.nodeName !== "document") {
+      throw new Error("the root nodeName is expected to 'document'");
+    }
 
-        let nextNode: BlockyElement;
-
-        switch (node.t) {
-          case "doc": {
-            nextNode = rootNode;
-            break;
-          }
-
-          case "block": {
-            const blockDef = blockRegistry.getBlockDefByName(node.blockName)!;
-
-            const blockElement = new BlockElement(blockDef.name, node.id);
-            blockElement.state = state;
-            blockElement.contentContainer.state = state;
-            blockElement.childrenContainer.state = state;
-
-            if (node.data) {
-              blockElement.contentContainer.appendChild(node.data);
-            }
-
-            const parentElement = parentNode as BlockElement;
-            parentElement.appendChild(blockElement);
-
-            const block = blockDef.onBlockCreated({ blockElement });
-            state.newBlockCreated.emit(block);
-
-            state.idMap.set(node.id, blockElement);
-            state.blocks.set(node.id, block);
-
-            nextNode = blockElement;
-            break;
-          }
-
-          default: {
-            throw new Error(`unknown node type: ${node}`);
-          }
-        }
-
-        state.idMap.set(node.id, nextNode);
-
-        return nextNode;
-      },
-      undefined,
-      rootNode
-    );
+    doc.children?.forEach(child => {
+      if (typeof child === "object" && child.nodeName === "block") {
+        const block = jsonNodeToBlock(state, child);
+        rootNode.appendChild(block);
+      }
+    });
 
     return state;
   }

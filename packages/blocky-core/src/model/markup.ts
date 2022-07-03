@@ -1,112 +1,54 @@
 import type { IdGenerator } from "@pkg/helper/idHelper";
-import { type AttributesObject, type BlockyNode } from "./element";
-import { BlockyTextModel } from "./tree";
-
-/*
- * Large document tree
- */
-export interface MDoc {
-  t: "doc";
-  id: string;
-  content: MBlock[];
-}
-
-export interface MBlock {
-  t: "block";
-  blockName: string;
-  id: string,
-  attributes?: AttributesObject;
-  data?: BlockyNode,
-  children?: MBlock[];
-}
-
-export interface MSpan {
-  t: "span";
-  id: string;
-  content: string;
-  flags: number;
-}
-
-export type MNode = MDoc | MBlock | MSpan;
+import * as S from "./serialize";
 
 export class MarkupGenerator {
 
   constructor(private idGen: IdGenerator) {}
 
-  doc(content: MBlock[]): MDoc {
+  doc(children: S.JSONNode[]): S.JSONNode {
     return {
-      t: "doc",
+      nodeName: "document",
       id: this.idGen.mkDocId(),
-      content,
+      children,
     };
   }
 
-  block(blockName: string): MBlock {
+  block(blockName: string): S.JSONNode {
     return {
-      t: "block",
+      nodeName: "block",
       blockName,
       id: this.idGen.mkBlockId(),
     };
   }
 
-  textBlock(content: MSpan[] = [], id?: string): MBlock {
-    const textModel = new BlockyTextModel;
-
-    let ptr = 0;
-    for (const span of content) {
-      textModel.insert(ptr, span.content);
-      ptr += span.content.length;
-    }
-
+  textBlock(content: string, id?: string): S.JSONNode {
     return {
-      t: "block",
+      nodeName: "block",
       id: id ?? this.idGen.mkBlockId(),
       blockName: "text",
-      data: textModel,
-    };
-  }
-
-  span(content: string, flags = 0): MSpan {
-    return {
-      t: "span",
-      id: this.idGen.mkSpanId(),
-      content,
-      flags,
+      children: [{
+        nodeName: "block-content",
+        children: [content],
+      }],
     };
   }
 
 }
 
-
-export type Traversor<R> = (node: MNode, parent?: MNode, parentResult?: R) => R;
+export type Traversor<R> = (node: S.JSONChild, parent?: S.JSONNode, parentResult?: R) => R;
 
 export function traverse<R>(
-  node: MNode,
+  node: S.JSONChild,
   traversor: Traversor<R>,
-  parent?: MNode,
+  parent?: S.JSONNode,
   parentResult?: R,
 ): R {
   const result = traversor(node, parent, parentResult);
-  switch (node.t) {
-    case "doc": {
-      for (const childNode of node.content) {
-        traverse(childNode, traversor, node, result);
-      }
-      break;
-    }
 
-    case "block": {
-      if (node.children) {
-        for (const childNode of node.children) {
-          traverse(childNode, traversor, node, result);
-        }
-      }
-      break;
-    }
-
-    default: {
-    }
+  if (typeof node === "object") {
+    node.children?.forEach(child => traverse(child, traversor, node, result));
   }
+  
   return result;
 }
 

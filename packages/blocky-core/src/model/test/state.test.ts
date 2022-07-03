@@ -15,7 +15,7 @@ function makeDefaultUtils() {
 test("tree validator", () => {
   const { blockRegistry, m, idGenerator } = makeDefaultUtils();
   State.fromMarkup(
-    m.doc([m.textBlock([m.span("Hello World")])]),
+    m.doc([m.textBlock("Hello World")]),
     blockRegistry,
     idGenerator,
   );
@@ -37,7 +37,7 @@ test("tree validator", () => {
 test("serialize", () => {
   const { blockRegistry, m, idGenerator } = makeDefaultUtils();
   const state = State.fromMarkup(
-    m.doc([m.textBlock([m.span("Hello World")])]),
+    m.doc([m.textBlock("Hello World")]),
     blockRegistry,
     idGenerator,
   );

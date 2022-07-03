@@ -104,7 +104,7 @@ export class EditorController {
     } else {
       const { m } = this;
       this.state = State.fromMarkup(
-        m.doc([m.textBlock([m.span("")])]),
+        m.doc([m.textBlock("")]),
         this.blockRegistry,
         this.idGenerator
       );
