@@ -20,7 +20,7 @@ function makeHeadingsPlugin(): IPlugin {
       if (e.type !== "text-insert") {
         return;
       }
-      let changed: boolean = false;
+      let changed = false;
       const { index, text } = e;
       if (isWhiteSpace(text)) {
         const content = textModel.toString();

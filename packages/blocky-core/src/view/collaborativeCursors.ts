@@ -2,8 +2,8 @@ import { DivContainer, $on } from "blocky-common/es/dom";
 import { mkUserId } from "@pkg/helper/idHelper";
 
 class ContainerWithCoord extends DivContainer {
-  protected _x: number = 0;
-  protected _y: number = 0;
+  protected _x = 0;
+  protected _y = 0;
 
   get x() {
     return this._x;
@@ -35,7 +35,7 @@ class CurosrLabel extends ContainerWithCoord {
 
   static Height = 12;
 
-  #color: string = "";
+  #color = "";
 
   constructor(content: string) {
     super("blocky-curosr-label");
@@ -59,9 +59,9 @@ class CurosrLabel extends ContainerWithCoord {
 
 export class CollaborativeCursor extends ContainerWithCoord {
 
-  #color: string = "";
+  #color = "";
   #label: CurosrLabel | undefined;
-  #height: number = 0;
+  #height = 0;
   public name?: string;
 
   private initTimeout: any;
