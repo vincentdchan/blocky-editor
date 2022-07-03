@@ -8,10 +8,10 @@ const DebounceDelay = 250;
 
 export class ToolbarDelegate extends UIDelegate {
 
-  #enabled: boolean = false;
+  #enabled = false;
   #debounced: any;
-  #x: number = 0;
-  #y: number = 0;
+  #x = 0;
+  #y = 0;
 
   constructor(private editorController: EditorController, private factory?: ToolbarFactory) {
     super("blocky-editor-toolbar-delegate blocky-cm-noselect");

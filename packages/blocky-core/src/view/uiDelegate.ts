@@ -2,7 +2,7 @@ import { type IDisposable, flattenDisposable } from "blocky-common/es/disposable
 import { DivContainer } from "blocky-common/es/dom";
 
 export class UIDelegate extends DivContainer {
-  protected shown: boolean = false;
+  protected shown = false;
   protected disposables: IDisposable[] = [];
 
   constructor(clsName?: string) {

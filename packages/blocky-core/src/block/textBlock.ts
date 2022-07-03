@@ -46,7 +46,7 @@ function textModelToFormats(textModel: BlockyTextModel): FormattedTextSlice[] {
   const formats: FormattedTextSlice[] = [];
 
   let ptr = textModel.nodeBegin;
-  let index: number = 0;
+  let index = 0;
   while (ptr) {
     formats.push({
       index,
@@ -557,7 +557,7 @@ function clearNodeAttributes(node: Node) {
 
 class TextBlockDefinition implements IBlockDefinition {
   public name: string = TextBlockName;
-  public editable: boolean = true;
+  public editable = true;
 
   onBlockCreated({ blockElement: data }: BlockCreatedEvent): Block {
     return new TextBlock(this, data);
@@ -619,7 +619,7 @@ class TextBlockDefinition implements IBlockDefinition {
       textContentContainer = node;
     }
 
-    let index: number = 0;
+    let index = 0;
     if (textContentContainer) {
       let childPtr = textContentContainer.firstChild;
 

@@ -22,7 +22,7 @@ insertCodeBetween(n0, n9, candidates);
 function randomStr(count: number) {
   let result = "";
   for (let i = 0; i < count; i++) {
-    let rand = (Math.random() * candidates.length) | 0;
+    const rand = (Math.random() * candidates.length) | 0;
     result += candidates[rand];
   }
   return result;

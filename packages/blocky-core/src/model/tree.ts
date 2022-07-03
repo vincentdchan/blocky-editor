@@ -447,7 +447,7 @@ export class BlockyElement implements BlockyNode, WithState {
   nextSibling: BlockyNode | null = null;
   prevSibling: BlockyNode | null = null;
 
-  childrenLength: number = 0;
+  childrenLength = 0;
 
   #firstChild: BlockyNode | null = null;
   #lastChild: BlockyNode | null = null;

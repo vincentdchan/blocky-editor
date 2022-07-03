@@ -104,7 +104,7 @@ export class Editor {
   #renderedDom: HTMLDivElement | undefined;
   #renderer: DocRenderer;
   #lastFocusedId: string | undefined;
-  #isUpdating: boolean = false;
+  #isUpdating = false;
 
   public readonly onEveryBlock: Slot<Block> = new Slot();
 
@@ -127,7 +127,7 @@ export class Editor {
   public readonly padding: Padding;
   private bannerXOffset: number;
 
-  public composing: boolean = false;
+  public composing = false;
   private disposables: IDisposable[] = [];
 
   static fromController(
@@ -276,7 +276,7 @@ export class Editor {
       cursor.x = firstRect.x - containerRect.x;
       cursor.y = firstRect.y - containerRect.y;
     }, 15);
-  };
+  }
 
   public render(done?: AfterFn) {
     const newDom = this.#renderer.render(this.#renderedDom);
@@ -1017,7 +1017,7 @@ export class Editor {
   private tryPasteDivElementAsBlock(
     element: HTMLDivElement,
     cursorState: Cell<CursorState | undefined>,
-    tryMerge: boolean = false
+    tryMerge = false
   ): boolean {
     const blockRegistry = this.registry.block;
     const dataType = element.getAttribute("data-type");
@@ -1063,7 +1063,7 @@ export class Editor {
   private pasteNodeAt(
     cursorState: CursorState | undefined,
     element: HTMLElement,
-    tryMerge: boolean = false
+    tryMerge = false
   ): CursorState | undefined {
     const blockRegistry = this.registry.block;
 

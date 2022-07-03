@@ -66,7 +66,7 @@ export class MarkupGenerator {
     };
   }
 
-  span(content: string, flags: number = 0): MSpan {
+  span(content: string, flags = 0): MSpan {
     return {
       t: "span",
       id: this.idGen.mkSpanId(),
