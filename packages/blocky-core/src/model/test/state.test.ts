@@ -1,7 +1,8 @@
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
-import { test } from "vitest";
+import { expect, test } from "vitest";
 import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { MarkupGenerator } from "@pkg/model/markup";
+import { serializeState } from "@pkg/model/serialize";
 import State from "@pkg/model/state";
 
 function makeDefaultUtils() {
@@ -40,5 +41,13 @@ test("serialize", () => {
     blockRegistry,
     idGenerator,
   );
-  // console.log(serializeJSON(state));
+  const json = serializeState(state);
+  expect(json).toEqual({
+    type: "document",
+    blocks: [{
+      type: "block",
+      blockName: "text",
+      children: [],
+    }],
+  });
 });
