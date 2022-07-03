@@ -142,7 +142,7 @@ export class DocRenderer {
 
     // domPtr is not null
     while (domPtr) {
-      let next = domPtr.nextSibling;
+      const next = domPtr.nextSibling;
 
       this.editor.destructBlockNode(domPtr);
 
