@@ -236,6 +236,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
   }
 
   public format(index: number, length: number, attributes?: AttributesObject) {
+    const originalIndex = index;
     if (index > this.#length || index < 0) {
       throw new Error(`The begin offset ${index} is out of range.`);
     }
@@ -271,7 +272,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
           );
           this.onChanged.emit({
             type: "text-format",
-            index,
+            index: originalIndex,
             length,
             attributes,
           });
@@ -289,7 +290,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
 
     this.onChanged.emit({
       type: "text-format",
-      index,
+      index: originalIndex,
       length,
       attributes,
     });
