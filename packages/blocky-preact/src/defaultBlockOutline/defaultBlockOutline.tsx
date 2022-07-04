@@ -104,13 +104,13 @@ class DefaultBlockOutlineInternal extends Component<
     { showOutline, collaborativeOutlineColor }: InternalState
   ) {
     let style: JSX.CSSProperties | undefined;
-    if (typeof collaborativeOutlineColor === "string") {
-      style = {
-        boxShadow: `0 0 0 1pt ${collaborativeOutlineColor}`,
-      };
-    } else if (showOutline) {
+    if (showOutline) {
       style = {
         boxShadow: `0 0 0 1pt ${userFocusedColor}`,
+      };
+    } else if (typeof collaborativeOutlineColor === "string") {
+      style = {
+        boxShadow: `0 0 0 1pt ${collaborativeOutlineColor}`,
       };
     }
     return (
