@@ -1,4 +1,4 @@
-import { Component } from "preact";
+import { Component, JSX } from "preact";
 import { ReactBlockContext } from "../reactBlock";
 import {
   type IDisposable,
@@ -14,7 +14,11 @@ interface DefaultBlockOutlineInternalProps {
 
 interface InternalState {
   showOutline: boolean;
+  collaborativeOutlineColor?: string;
 }
+
+// default color for the outline
+const userFocusedColor = `rgb(52, 184, 220)`;
 
 class DefaultBlockOutlineInternal extends Component<
   DefaultBlockOutlineInternalProps,
@@ -34,7 +38,38 @@ class DefaultBlockOutlineInternal extends Component<
     this.disposables.push(
       editorController.cursorChanged.on(this.handleNewCursorState)
     );
+    this.disposables.push(
+      editorController.beforeApplyCursorChanged.on(this.handleeApplyCursorChangedEvent)
+    )
   }
+
+  private handleeApplyCursorChangedEvent = (evt: CursorChangedEvent) => {
+    const { state } = evt;
+    const shouldShowOutline =
+      typeof state !== "undefined" &&
+      state.type === "collapsed" &&
+      state.targetId === this.props.blockId;
+      
+    const { editorController } = this.props;
+    const { editor } = editorController;
+    if (!editor) {
+      return;
+    }
+    if (shouldShowOutline) {
+      const { collaborativeCursorManager } = editor;
+
+      const { id } = evt;
+      const color = collaborativeCursorManager.options.idToColor(id);
+
+      this.setState({
+        collaborativeOutlineColor: color,
+      });
+    } else {
+      this.setState({
+        collaborativeOutlineColor: undefined,
+      });
+    }
+  };
 
   private handleNewCursorState = (evt: CursorChangedEvent) => {
     const { state } = evt;
@@ -66,14 +101,20 @@ class DefaultBlockOutlineInternal extends Component<
 
   override render(
     { children }: DefaultBlockOutlineInternalProps,
-    { showOutline }: InternalState
+    { showOutline, collaborativeOutlineColor }: InternalState
   ) {
-    let cls = "blocky-default-block-outline";
-    if (showOutline) {
-      cls += " outline";
+    let style: JSX.CSSProperties | undefined;
+    if (typeof collaborativeOutlineColor === "string") {
+      style = {
+        boxShadow: `0 0 0 1pt ${collaborativeOutlineColor}`,
+      };
+    } else if (showOutline) {
+      style = {
+        boxShadow: `0 0 0 1pt ${userFocusedColor}`,
+      };
     }
     return (
-      <div className={cls} onClick={this.handleContainerClicked}>
+      <div className="blocky-default-block-outline" style={style} onClick={this.handleContainerClicked}>
         {children}
       </div>
     );
