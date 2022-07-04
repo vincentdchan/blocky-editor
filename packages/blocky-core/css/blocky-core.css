@@ -74,10 +74,6 @@
   box-shadow: 0 0 0 1pt rgb(171, 211, 222);
 }
 
-.blocky-default-block-outline.outline {
-  box-shadow: 0 0 0 1pt rgb(52, 184, 220);
-}
-
 .blocky-editor-block {
   margin-bottom: 4px;
   display: flex;
