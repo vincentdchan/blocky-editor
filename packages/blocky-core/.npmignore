@@ -2,3 +2,4 @@
 tsconfig.json
 vite.config.ts
 tsconfig.tsbuildinfo
+.eslintrc.cjs
