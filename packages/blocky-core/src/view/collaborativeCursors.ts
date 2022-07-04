@@ -31,16 +31,16 @@ class ContainerWithCoord extends DivContainer {
 
 }
 
-class CurosrLabel extends ContainerWithCoord {
+class CursorLabel extends ContainerWithCoord {
 
   static Height = 12;
 
   #color = "";
 
   constructor(content: string) {
-    super("blocky-curosr-label");
+    super("blocky-cursor-label");
     this.container.textContent = content;
-    this.container.style.height = CurosrLabel.Height + "px";
+    this.container.style.height = CursorLabel.Height + "px";
   }
 
   set color(value: string) {
@@ -60,7 +60,7 @@ class CurosrLabel extends ContainerWithCoord {
 export class CollaborativeCursor extends ContainerWithCoord {
 
   #color = "";
-  #label: CurosrLabel | undefined;
+  #label: CursorLabel | undefined;
   #height = 0;
   public name?: string;
 
@@ -110,9 +110,9 @@ export class CollaborativeCursor extends ContainerWithCoord {
       return;
     }
 
-    const label = new CurosrLabel(this.name ?? this.id);
+    const label = new CursorLabel(this.name ?? this.id);
     label.x = this.x;
-    label.y = this.y - CurosrLabel.Height;
+    label.y = this.y - CursorLabel.Height;
     label.color = this.color;
 
     this.#label = label;
@@ -155,7 +155,7 @@ export class CollaborativeCursor extends ContainerWithCoord {
     super.y = v;
 
     if (this.#label) {
-      this.#label.y = v - CurosrLabel.Height;
+      this.#label.y = v - CursorLabel.Height;
     }
   }
 
