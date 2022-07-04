@@ -72,6 +72,7 @@ export class EditorController {
   public readonly m: MarkupGenerator;
   public readonly state: State;
   public readonly cursorChanged: Slot<CursorChangedEvent> = new Slot();
+  public readonly beforeApplyCursorChanged: Slot<CursorChangedEvent> = new Slot();
 
   static emptyState(options?: IEditorControllerOptions): EditorController {
     const blockRegistry = options?.blockRegistry ?? new BlockRegistry();
@@ -112,6 +113,7 @@ export class EditorController {
   }
 
   public applyCursorChangedEvent(evt: CursorChangedEvent) {
+    this.beforeApplyCursorChanged.emit(evt);
     const { editor } = this;
     if (!editor) {
       return;
