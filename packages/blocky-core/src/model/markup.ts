@@ -26,9 +26,8 @@ export class MarkupGenerator {
       nodeName: "block",
       id: id ?? this.idGen.mkBlockId(),
       blockName: "text",
-      children: [{
-        nodeName: "block-content",
-        children: [content],
+      textContent: [{
+        insert: content,
       }],
     };
   }
