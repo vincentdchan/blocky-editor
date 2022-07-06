@@ -47,12 +47,7 @@ test("serialize", () => {
     children: [{
       nodeName: "block",
       blockName: "text",
-      children: [{
-        nodeName: "block-content",
-        children: ["Hello World"],
-      }, {
-        nodeName: "block-children",
-      }],
+      textContent: [{ insert: "Hello World" }]
     }],
   });
 });
