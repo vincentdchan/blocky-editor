@@ -26,29 +26,30 @@ function jsonNodeToBlock(state: State, node: S.JSONNode): BlockElement {
   blockElement.contentContainer.state = state;
   blockElement.childrenContainer.state = state;
 
+  if (Array.isArray(node.textContent)) {
+    const textModel = new BlockyTextModel();
+
+    let index = 0;
+    for (const delta of node.textContent) {
+      const d = delta as any;
+      if (typeof d.insert === "string") {
+        textModel.insert(index, d.insert, d.attributes);
+        index += d.insert.length;
+      } else if (typeof d.retain === "number") {
+        index += d.retain;
+      }
+    }
+
+    blockElement.contentContainer.appendChild(textModel);
+  }
+
   if (node.children && node.children.length > 0) {
-    const firstChild = node.children[0];
-    if (typeof firstChild === "object" && firstChild.nodeName === "block-content") {
-      firstChildToContent(firstChild, blockElement);
+    for (const child of node.children) {
+      blockElement.contentContainer.appendChild(jsonNodeToBlock(state, child));
     }
   }
 
   return blockElement;
-}
-
-function firstChildToContent(firstChild: S.JSONNode, blockyElement: BlockElement) {
-  const textModel = new BlockyTextModel();
-  if (!firstChild.children) {
-    return;
-  }
-  let ptr = 0;
-  for (const item of firstChild.children) {
-    if (typeof item === "string") {
-      textModel.insert(ptr, item);
-      ptr += item.length;
-    }
-  }
-  blockyElement.contentContainer.appendChild(textModel);
 }
 
 class State {
