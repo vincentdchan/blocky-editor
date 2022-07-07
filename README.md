@@ -28,6 +28,7 @@ Blocky Editor is an editor which supports the concept of blocks. It can help you
 
 - [Get started](./docs/get-started.md)
 - [How to write a block](./docs/how-to-write-a-block.md)
+- [Data manipulation](./docs/data-manipulation.md)
 
 ## Compatibility
 
