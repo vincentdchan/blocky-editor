@@ -1,26 +1,14 @@
 import { BlockElement } from "@pkg/block/basic";
 import State from "./state";
-import { BlockyElement, BlockyTextModel, TextNode } from "./tree";
+import { BlockyElement, BlockyTextModel } from "./tree";
 import type { AttributesObject, BlockyNode } from "@pkg/model/element";
 
-export interface TextRetain {
-  retain: number;
+export interface TextDelta {
+  retain?: number;
+  insert?: string;
   attributes?: any;
+  delete?: number;
 }
-
-export interface TextInsert {
-  insert: string;
-  attributes?: any;
-}
-
-export interface TextDelete {
-  delete: number;
-}
-
-export type TextDelta =
- | TextRetain
- | TextInsert
- | TextDelete
 
 export interface JSONNode {
   nodeName: string;

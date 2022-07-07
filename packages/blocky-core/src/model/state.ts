@@ -31,7 +31,7 @@ function jsonNodeToBlock(state: State, node: S.JSONNode): BlockElement {
 
     let index = 0;
     for (const delta of node.textContent) {
-      const d = delta as any;
+      const d = delta;
       if (typeof d.insert === "string") {
         textModel.insert(index, d.insert, d.attributes);
         index += d.insert.length;
