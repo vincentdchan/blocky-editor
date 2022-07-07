@@ -23,8 +23,6 @@ function jsonNodeToBlock(state: State, node: S.JSONNode): BlockElement {
   }
   const blockElement = new BlockElement(blockName, id);
   blockElement.state = state;
-  blockElement.contentContainer.state = state;
-  blockElement.childrenContainer.state = state;
 
   if (Array.isArray(node.textContent)) {
     const textModel = new BlockyTextModel();
@@ -40,12 +38,12 @@ function jsonNodeToBlock(state: State, node: S.JSONNode): BlockElement {
       }
     }
 
-    blockElement.contentContainer.appendChild(textModel);
+    blockElement.appendChild(textModel);
   }
 
   if (node.children && node.children.length > 0) {
     for (const child of node.children) {
-      blockElement.contentContainer.appendChild(jsonNodeToBlock(state, child));
+      blockElement.appendChild(jsonNodeToBlock(state, child));
     }
   }
 
@@ -99,7 +97,7 @@ class State {
       this.idHelper.mkBlockId()
     );
     const textModel = new BlockyTextModel();
-    result.contentContainer.appendChild(textModel);
+    result.appendChild(textModel);
     return result;
   }
 

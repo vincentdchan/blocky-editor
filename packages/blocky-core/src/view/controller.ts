@@ -216,11 +216,10 @@ export class EditorController {
     editor.state.cursorState = undefined;
 
     editor.update(() => {
-      const blockContent = blockElement.contentContainer;
-      if (!blockContent.firstChild) {
+      if (!blockElement.firstChild) {
         return;
       }
-      const textModel = blockContent.firstChild as BlockyTextModel;
+      const textModel = blockElement.firstChild as BlockyTextModel;
       textModel.format(index, length, attribs);
 
       return () => {

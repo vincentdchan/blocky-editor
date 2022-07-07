@@ -154,28 +154,21 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
             return;
           }
 
-          const contentXmlElement = element.firstChild as Y.XmlElement | undefined;
-          if (!contentXmlElement) {
-            return;
-          }
-
           const createdElement = new BlockElement(blockName, id);
           createdElement.state = state;
-          createdElement.contentContainer.state = state;
-          createdElement.childrenContainer.state = state;
 
-          bindContentElement(editor, createdElement.contentContainer, contentXmlElement);
+          bindContentElement(editor, createdElement, element);
 
-          const attribs = contentXmlElement.getAttributes();
+          const attribs = element.getAttributes();
           for (const key in attribs) {
             if (key === "id" || key === "blockName") {
               continue;
             }
             const value = attribs[key];
-            createdElement.contentContainer.setAttribute(key, value);
+            createdElement.setAttribute(key, value);
           }
 
-          let ptr = contentXmlElement.firstChild;
+          let ptr = element.firstChild;
           while (ptr) {
             if (ptr instanceof Y.XmlText) {
               const blockyTextModel = new BlockyTextModel
@@ -183,7 +176,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
 
               handleDeltaForText(blockyTextModel, deltas);
               bindTextModel(editor, blockyTextModel, ptr);
-              createdElement.contentContainer.appendChild(blockyTextModel);
+              createdElement.appendChild(blockyTextModel);
             }
 
             ptr = ptr.nextSibling;
@@ -262,11 +255,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
           element.setAttribute("blockName", blockElement.blockName);
           element.setAttribute("id", blockElement.id);
 
-          const contentContainer = new Y.XmlElement("block-content");
-          const childrenContainer = new Y.XmlElement("block-children");
-          element.push([contentContainer, childrenContainer]);
-
-          bindContentElement(editor, blockElement.contentContainer, contentContainer);
+          bindContentElement(editor, blockElement, element);
 
           const prevNode = blockElement.prevSibling as BlockElement | null;
           if (prevNode) {

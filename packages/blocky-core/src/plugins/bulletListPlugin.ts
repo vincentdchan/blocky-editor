@@ -7,7 +7,7 @@ import { BlockyTextModel, TextType, type TextChangedEvent } from "@pkg/model";
 
 function makeBulletListPlugin(): IPlugin {
   const turnTextBlockIntoBulletList = (editor: Editor, blockId: string, textElement: BlockElement) => {
-    const textModel = textElement.contentContainer.firstChild! as BlockyTextModel;
+    const textModel = textElement.firstChild! as BlockyTextModel;
     textModel.delete(0, 2);
     setTextTypeForTextBlock(textElement, TextType.Bulleted);
     editor.render(() => {
@@ -23,7 +23,7 @@ function makeBulletListPlugin(): IPlugin {
     if (textElement.blockName !== "text") {
       return;
     }
-    const textModel = textElement.contentContainer.firstChild! as BlockyTextModel;
+    const textModel = textElement.firstChild! as BlockyTextModel;
     textModel.onChanged.on((e: TextChangedEvent) => {
       if (e.type !== "text-insert") {
         return;
