@@ -133,7 +133,7 @@ export class BlockElement extends BlockyElement {
   // public childrenContainer: BlockyElement;
 
   constructor(blockName: string, id: string) {
-    super("block");
+    super(blockName);
     // this.contentContainer = new BlockyElement("block-content");
     // this.childrenContainer = new BlockyElement("block-children");
     // this.appendChild(this.contentContainer);
@@ -163,10 +163,6 @@ export class BlockElement extends BlockyElement {
     super.setAttribute(name, value);
   }
 
-  get blockName(): string {
-    return this.getAttribute("blockName")!;
-  }
-
   get id(): string {
     return this.getAttribute("id")!;
   }
@@ -175,6 +171,9 @@ export class BlockElement extends BlockyElement {
 
 export class Block implements IDisposable {
   #editor: Editor | undefined;
+
+  public childrenContainerDOM: HTMLDivElement | undefined;
+  public childrenBeginDOM: HTMLDivElement | undefined; 
 
   constructor(public props: BlockElement) {}
 
@@ -199,6 +198,10 @@ export class Block implements IDisposable {
   }
 
   blockDidMount(e: BlockDidMountEvent) {}
+
+  onDedent(e: KeyboardEvent) {}
+
+  onIndent(e: KeyboardEvent) {}
 
   /**
    * Handle the block is focused.

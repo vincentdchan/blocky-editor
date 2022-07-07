@@ -14,7 +14,6 @@ export interface JSONNode {
   nodeName: string;
   id?: string;
   textContent?: TextDelta[];
-  blockName?: string;
   attributes?: AttributesObject;
   children?: JSONChild[];
 }
@@ -36,9 +35,7 @@ export function serializeState(state: State): JSONNode {
   const children: JSONNode[] = [];
 
   while (ptr) {
-    if (ptr instanceof BlockElement) {
-      children.push(serializeNode(ptr));
-    }
+    children.push(serializeNode(ptr));
     ptr = ptr.nextSibling;
   }
 
@@ -53,12 +50,12 @@ function serializeNode(blockyNode: BlockyNode): JSONChild {
     };
 
     if (blockyNode instanceof BlockElement) {
-      const { childrenContainer } = blockyNode;
-      result.blockName = blockyNode.blockName;
-
       const attributes = blockyNode.getAttributes();
       for (const key in attributes) {
         if (key === "nodeName") {
+          continue;
+        }
+        if (key === "blockName") {
           continue;
         }
         if (key === "type") {
@@ -72,15 +69,8 @@ function serializeNode(blockyNode: BlockyNode): JSONChild {
           (result as any)[key] = value;
         }
       }
-      // if (Object.keys(attributes).length > 0) {
-      //   result.attributes = blockyNode.getAttributes();
-      // }
 
-      if (blockyNode.firstChild && blockyNode.firstChild instanceof BlockyTextModel) {
-        result.textContent = serializeTextModel(blockyNode.firstChild);
-      }
-
-      let childPtr = childrenContainer?.firstChild;
+      let childPtr = blockyNode?.firstChild;
       if (childPtr) {
         const children: JSONChild[] = [];
 
@@ -99,6 +89,13 @@ function serializeNode(blockyNode: BlockyNode): JSONChild {
     }
 
     return result;
+
+  } else if (blockyNode instanceof BlockyTextModel) {
+    const textContent = serializeTextModel(blockyNode);
+    return {
+      nodeName: "#text",
+      textContent,
+    }
   } else {
     throw new Error("unexpected blocky node");
   }
@@ -112,9 +109,14 @@ function serializeTextModel(textModel: BlockyTextModel): TextDelta[] {
   }
 
   while (ptr) {
+    const delta: TextDelta = {
+      insert: ptr.content,
+    };
+    if (ptr.attributes) {
+      delta.attributes = ptr.attributes;
+    }
     result.push({
       insert: ptr.content,
-      attributes: ptr.attributes,
     });
     ptr = ptr.next;
   }

@@ -1,3 +1,4 @@
+import { isUpperCase } from "blocky-common/src/character";
 import { makeObservable } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
 import { BlockyElement, BlockyTextModel } from "./tree";
@@ -10,25 +11,19 @@ import { Block, BlockElement } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { validate as validateNode } from "./validator";
 
-function jsonNodeToBlock(state: State, node: S.JSONNode): BlockElement {
+function jsonNodeToBlock(state: State, node: S.JSONNode): BlockyNode {
   if (typeof node !== "object") {
     throw new TypeError("string is expected");
   }
-  const { blockName, id } = node;
-  if (!blockName) {
-    throw new TypeError("blockName is expected");
+  const { nodeName, id } = node;
+  if (isUpperCase(nodeName) && typeof id === "undefined") {
+    throw new TypeError("id is expected for node: " + nodeName);
   }
-  if (!id) {
-    throw new TypeError("id is expected");
-  }
-  const blockElement = new BlockElement(blockName, id);
-  blockElement.state = state;
-
-  if (Array.isArray(node.textContent)) {
+  if (nodeName === "#text") {
     const textModel = new BlockyTextModel();
 
     let index = 0;
-    for (const delta of node.textContent) {
+    for (const delta of node.textContent!) {
       const d = delta;
       if (typeof d.insert === "string") {
         textModel.insert(index, d.insert, d.attributes);
@@ -38,8 +33,11 @@ function jsonNodeToBlock(state: State, node: S.JSONNode): BlockElement {
       }
     }
 
-    blockElement.appendChild(textModel);
+    return textModel;
   }
+
+  const blockElement = new BlockElement(nodeName, id!);
+  blockElement.state = state;
 
   if (node.children && node.children.length > 0) {
     for (const child of node.children) {
@@ -65,7 +63,7 @@ class State {
     }
 
     doc.children?.forEach(child => {
-      if (typeof child === "object" && child.nodeName === "block") {
+      if (typeof child === "object") {
         const block = jsonNodeToBlock(state, child);
         rootNode.appendChild(block);
       }
@@ -102,7 +100,7 @@ class State {
   }
 
   public handleNewBlockMounted(parent: BlockyElement, child: BlockyNode) {
-    if (child.nodeName !== "block") {
+    if (!isUpperCase(child.nodeName)) {
       return;
     }
     const blockElement = child as BlockElement;
@@ -110,10 +108,10 @@ class State {
     this.insertElement(blockElement);
 
     const blockDef = this.blockRegistry.getBlockDefByName(
-      blockElement.blockName
+      blockElement.nodeName
     );
     if (!blockDef) {
-      throw new Error("invalid block name: " + blockElement.blockName);
+      throw new Error("invalid block name: " + blockElement.nodeName);
     }
 
     const block = blockDef.onBlockCreated({ blockElement });
@@ -127,7 +125,7 @@ class State {
    * TODO: recursive unmount block
    */
   public unmountBlock(parent: BlockyElement, child: BlockyNode): boolean {
-    if (child.nodeName !== "block") {
+    if (!isUpperCase(child.nodeName)) {
       return false;
     }
     const blockElement = child as BlockElement;

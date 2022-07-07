@@ -5,7 +5,7 @@ import { PureComponent } from "preact/compat";
 import Button from "@pkg/components/button";
 import "./imageBlock.scss";
 
-export const ImageBlockName = "img";
+export const ImageBlockName = "Image";
 
 interface ImageBlockProps {
   blockElement: BlockElement;
@@ -90,7 +90,7 @@ export function makeImageBlockPlugin(): IPlugin {
             const img = node.querySelector("img");
             if (img && after && after.type === "collapsed") {
               const newId = editor.idGenerator.mkBlockId();
-              const element = new BlockElement("img", newId);
+              const element = new BlockElement(ImageBlockName, newId);
               const src = img.getAttribute("src");
               if (src) {
                 element.setAttribute("src", src);

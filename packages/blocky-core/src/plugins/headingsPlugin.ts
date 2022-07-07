@@ -9,7 +9,7 @@ function makeHeadingsPlugin(): IPlugin {
   const handleEveryBlock = (editor: Editor) => (block: Block) => {
     const blockElement = block.props;
 
-    if (blockElement.blockName !== TextBlockName) {
+    if (blockElement.nodeName !== TextBlockName) {
       return;
     }
 

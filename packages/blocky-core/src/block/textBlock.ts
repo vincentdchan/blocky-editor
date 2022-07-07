@@ -23,7 +23,7 @@ import fastDiff from "fast-diff";
 import { type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";
 
-export const TextBlockName = "text";
+export const TextBlockName = "Text";
 
 const TextContentClass = "blocky-block-text-content";
 
@@ -60,6 +60,10 @@ function textModelToFormats(textModel: BlockyTextModel): FormattedTextSlice[] {
   return formats;
 }
 
+function getTextTypeFromElement(element: BlockyElement): TextType {
+  return parseInt(element.getAttribute("textType") ?? "0", 10);
+}
+
 class TextBlock extends Block {
   #container: HTMLElement | undefined;
 
@@ -68,8 +72,7 @@ class TextBlock extends Block {
   }
 
   private getTextType(): TextType {
-    const element = this.elementData;
-    return parseInt(element.getAttribute("textType") ?? "0", 10);
+    return getTextTypeFromElement(this.elementData);
   }
 
   override getCursorHeight(): number {
@@ -543,6 +546,60 @@ class TextBlock extends Block {
       domPtr = next;
     }
   }
+
+  override onIndent(): void {
+    const prevElement = this.props.prevSibling as BlockyElement | undefined;
+    if (!prevElement) {
+      return;
+    }
+    this.makeThisTextBlockIndent(prevElement);
+  }
+
+  private makeThisTextBlockIndent(prevElement: BlockyElement) {
+    if (prevElement.nodeName !== TextBlockName) {
+      return;
+    }
+
+    const textType = getTextTypeFromElement(prevElement);
+    if (textType !== TextType.Normal && textType !== TextType.Bulleted) {
+      return;
+    }
+
+    this.editor.update(() => {
+      const parentElement = this.props.parent as BlockyElement | undefined;
+      if (!parentElement) {
+        return;
+      }
+
+      const copy = this.props.clone();
+
+      parentElement.removeChild(this.props);
+
+      const prevBlockyElement = prevElement as BlockElement;
+      const childrenContainer = this.insertOrGetChildrenContainer(prevBlockyElement);
+      childrenContainer.appendChild(copy);
+    });
+  }
+
+  private insertOrGetChildrenContainer(element: BlockElement): BlockyElement {
+    let childrenContainer = element.childrenContainer;
+    if (childrenContainer) {
+      return childrenContainer;
+    }
+
+    childrenContainer = new BlockyElement("block-children");
+    element.appendChild(childrenContainer);
+
+    return childrenContainer;
+  }
+
+  override onDedent(): void {
+    const textType = this.getTextType();
+    if (textType === TextType.Bulleted) {
+      console.log("dedent text");
+    }
+  }
+
 }
 
 function clearNodeAttributes(node: Node) {
@@ -578,7 +635,7 @@ class TextBlockDefinition implements IBlockDefinition {
     const newTextElement = this.getTextElementFromDOM(editor, container);
     const newTextModel = newTextElement.firstChild! as BlockyTextModel;
 
-    if (tryMerge && currentElement.blockName === "text") {
+    if (tryMerge && currentElement.nodeName === TextBlockName) {
       const oldTextModel = currentElement.firstChild! as BlockyTextModel;
       oldTextModel.append(newTextModel);
       return;
@@ -601,7 +658,7 @@ class TextBlockDefinition implements IBlockDefinition {
     node: HTMLElement
   ): BlockElement {
     const newId = editor.idGenerator.mkBlockId();
-    const result = new BlockElement("text", newId);
+    const result = new BlockElement(TextBlockName, newId);
 
     const textModel = new BlockyTextModel;
     result.appendChild(textModel);

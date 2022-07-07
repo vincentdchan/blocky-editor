@@ -419,6 +419,21 @@ export class BlockyTextModel implements BlockyNode, WithState {
   get length() {
     return this.#length;
   }
+
+  clone(): BlockyTextModel {
+    const result = new BlockyTextModel();
+
+    let textNode = this.nodeBegin;
+    let index = 0;
+    while (textNode) {
+      result.insert(index, textNode.content, textNode.attributes);
+      index += textNode.content.length;
+      textNode = textNode.next;
+    }
+
+    return result;
+  }
+
 }
 
 const bannedAttributesName: Set<string> = new Set(["nodeName", "type"]);
@@ -576,4 +591,26 @@ export class BlockyElement implements BlockyNode, WithState {
       child: node,
     });
   }
+
+  clone(): BlockyElement {
+    const result = new BlockyElement(this.nodeName);
+
+    const attribs = this.getAttributes();
+    for (const key in attribs) {
+      const value = attribs[key];
+      if (value) {
+        result.setAttribute(key, value);
+      }
+    }
+
+    let childPtr = this.#firstChild;
+
+    while (childPtr) {
+      result.appendChild(childPtr.clone());
+      childPtr = childPtr.nextSibling;
+    }
+
+    return result;
+  }
+
 }

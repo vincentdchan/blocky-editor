@@ -1,9 +1,18 @@
 import type { IdGenerator } from "@pkg/helper/idHelper";
+import type { AttributesObject } from "./element";
 import * as S from "./serialize";
 
 export class MarkupGenerator {
 
   constructor(private idGen: IdGenerator) {}
+
+  elem(nodeName: string, attributes: AttributesObject, children?: AttributesObject) {
+    return {
+      nodeName,
+      attributes,
+      children,
+    }
+  }
 
   doc(children: S.JSONNode[]): S.JSONNode {
     return {
@@ -15,20 +24,27 @@ export class MarkupGenerator {
 
   block(blockName: string): S.JSONNode {
     return {
-      nodeName: "block",
-      blockName,
+      nodeName: blockName,
       id: this.idGen.mkBlockId(),
+    };
+  }
+
+  text(content: string): S.JSONNode {
+    return {
+      nodeName: "#text",
+      textContent: [{
+        insert: content,
+      }],
     };
   }
 
   textBlock(content: string, id?: string): S.JSONNode {
     return {
-      nodeName: "block",
+      nodeName: "Text",
       id: id ?? this.idGen.mkBlockId(),
-      blockName: "text",
-      textContent: [{
-        insert: content,
-      }],
+      children: [
+        this.text(content),
+      ],
     };
   }
 

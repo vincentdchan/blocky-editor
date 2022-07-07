@@ -18,6 +18,7 @@ import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { type BlockElement } from "@pkg/block/basic";
 import { type CollaborativeCursorOptions } from "./collaborativeCursors";
 import { type Editor } from "./editor";
+import { isUpperCase } from "blocky-common/es/character";
 
 export interface IEditorControllerOptions {
   pluginRegistry?: PluginRegistry;
@@ -284,7 +285,7 @@ export class EditorController {
       return;
     }
 
-    if (blockNode.nodeName !== "block") {
+    if (!isUpperCase(blockNode.nodeName)) {
       return;
     }
 
