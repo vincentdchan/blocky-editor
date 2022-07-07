@@ -271,7 +271,6 @@ class TextBlock extends Block {
 
     let textContent = "";
 
-    const blockData = this.props;
     let ptr = contentContainer.firstChild;
     let idx = 0;
     while (ptr) {
@@ -283,9 +282,7 @@ class TextBlock extends Block {
       ptr = ptr.nextSibling;
     }
 
-    const contentModel = this.props.contentContainer;
-
-    const textModel = contentModel.firstChild! as BlockyTextModel;
+    const textModel = this.props.firstChild! as BlockyTextModel;
     const oldContent = textModel.toString();
 
     const diffs = fastDiff(oldContent, textContent, offset);
@@ -348,8 +345,7 @@ class TextBlock extends Block {
   override render(container: HTMLElement) {
     this.#container = container;
 
-    const contentModel = this.props.contentContainer;
-    const textModel = contentModel.firstChild! as BlockyTextModel;
+    const textModel = this.props.firstChild! as BlockyTextModel;
 
     const contentContainer = this.findContentContainer(container);
     this.renderBlockTextContent(contentContainer, textModel);
@@ -580,10 +576,10 @@ class TextBlockDefinition implements IBlockDefinition {
     const currentElement = editor.state.idMap.get(cursorState.targetId)! as BlockElement;
     const parentElement = currentElement.parent! as BlockyElement;
     const newTextElement = this.getTextElementFromDOM(editor, container);
-    const newTextModel = newTextElement.contentContainer.firstChild! as BlockyTextModel;
+    const newTextModel = newTextElement.firstChild! as BlockyTextModel;
 
     if (tryMerge && currentElement.blockName === "text") {
-      const oldTextModel = currentElement.contentContainer.firstChild! as BlockyTextModel;
+      const oldTextModel = currentElement.firstChild! as BlockyTextModel;
       oldTextModel.append(newTextModel);
       return;
     }
@@ -608,7 +604,7 @@ class TextBlockDefinition implements IBlockDefinition {
     const result = new BlockElement("text", newId);
 
     const textModel = new BlockyTextModel;
-    result.contentContainer.appendChild(textModel);
+    result.appendChild(textModel);
 
     // TODO: Maybe using querySelector is slow.
     // Should make a benchmark here
@@ -702,11 +698,9 @@ export function makeTextBlockDefinition(): IBlockDefinition {
 }
 
 export function setTextTypeForTextBlock(blockElement: BlockElement, textType: TextType) {
-  const contentModel = blockElement.contentContainer;
-  contentModel.setAttribute("textType", textType.toString());
+  blockElement.setAttribute("textType", textType.toString());
 }
 
 export function getTextTypeForTextBlock(blockElement: BlockElement): TextType {
-  const contentModel = blockElement.contentContainer;
-  return parseInt(contentModel.getAttribute("textType") || "0", 10);
+  return parseInt(blockElement.getAttribute("textType") || "0", 10);
 }

@@ -22,7 +22,7 @@ class ImageBlock extends PureComponent<ImageBlockProps, ImageBlockState> {
     super(props);
 
     this.state = {
-      data: props.blockElement.contentContainer.getAttribute("src"),
+      data: props.blockElement.getAttribute("src"),
     };
   }
 
@@ -93,7 +93,7 @@ export function makeImageBlockPlugin(): IPlugin {
               const element = new BlockElement("img", newId);
               const src = img.getAttribute("src");
               if (src) {
-                element.contentContainer.setAttribute("src", src);
+                element.setAttribute("src", src);
               }
               editor.controller.insertBlockAfterId(element, after.targetId, {
                 noRender: true,
