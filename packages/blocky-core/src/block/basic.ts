@@ -129,18 +129,38 @@ export interface IBlockDefinition {
 
 export class BlockElement extends BlockyElement {
 
-  public contentContainer: BlockyElement;
-  public childrenContainer: BlockyElement;
+  // public contentContainer: BlockyElement;
+  // public childrenContainer: BlockyElement;
 
   constructor(blockName: string, id: string) {
     super("block");
-    this.contentContainer = new BlockyElement("block-content");
-    this.childrenContainer = new BlockyElement("block-children");
-    this.appendChild(this.contentContainer);
-    this.appendChild(this.childrenContainer);
+    // this.contentContainer = new BlockyElement("block-content");
+    // this.childrenContainer = new BlockyElement("block-children");
+    // this.appendChild(this.contentContainer);
+    // this.appendChild(this.childrenContainer);
 
     this.setAttribute("blockName", blockName);
     this.setAttribute("id", id);
+  }
+
+  get childrenContainer(): BlockyElement | undefined {
+    const { lastChild } = this;
+    if (!lastChild) {
+      return;
+    }
+
+    if (lastChild.nodeName === "block-children") {
+      return lastChild as BlockyElement;
+    }
+
+    return;
+  }
+
+  override setAttribute(name: string, value: string) {
+    if (name === "block-children") {
+      throw new TypeError(`${name} is reserved`);
+    }
+    super.setAttribute(name, value);
   }
 
   get blockName(): string {
@@ -159,7 +179,7 @@ export class Block implements IDisposable {
   constructor(public props: BlockElement) {}
 
   get elementData(): BlockyElement {
-    return this.props.contentContainer;
+    return this.props;
   }
 
   setEditor(editor: Editor) {

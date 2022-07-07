@@ -667,16 +667,14 @@ export class Editor {
         );
         return;
       }
-      const textModel = blockElement.contentContainer
-        .firstChild! as BlockyTextModel;
+      const textModel = blockElement.firstChild! as BlockyTextModel;
 
       const cursorOffset = cursorState.offset;
 
       const slices = textModel.slice(cursorOffset);
 
       const newTextElement = this.state.createTextElement();
-      const newTextModel = newTextElement.contentContainer
-        .firstChild! as BlockyTextModel;
+      const newTextModel = newTextElement.firstChild! as BlockyTextModel;
       const textType = getTextTypeForTextBlock(blockElement);
       if (this.preservedTextType.has(textType)) {
         // preserved data type
@@ -798,7 +796,7 @@ export class Editor {
 
   private focusEndOfNode(node: BlockElement) {
     if (node.blockName === TextBlockName) {
-      const textModel = node.contentContainer.firstChild! as BlockyTextModel;
+      const textModel = node.firstChild! as BlockyTextModel;
       this.state.cursorState = {
         type: "collapsed",
         targetId: node.id,
@@ -1216,8 +1214,7 @@ export class Editor {
     }
 
     const afterOffset = cursorState.offset + text.length;
-    const textModel = textElement.contentContainer
-      .firstChild! as BlockyTextModel;
+    const textModel = textElement.firstChild! as BlockyTextModel;
     textModel.insert(cursorState.offset, text, attributes);
     return {
       type: "collapsed",

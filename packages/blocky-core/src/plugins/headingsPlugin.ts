@@ -13,8 +13,7 @@ function makeHeadingsPlugin(): IPlugin {
       return;
     }
 
-    const blockContent = blockElement.contentContainer;
-    const textModel = blockContent.firstChild as BlockyTextModel;
+    const textModel = blockElement.firstChild as BlockyTextModel;
 
     textModel.onChanged.on((e: TextChangedEvent) => {
       if (e.type !== "text-insert") {

@@ -53,15 +53,31 @@ function serializeNode(blockyNode: BlockyNode): JSONChild {
     };
 
     if (blockyNode instanceof BlockElement) {
-      const { contentContainer, childrenContainer } = blockyNode;
+      const { childrenContainer } = blockyNode;
       result.blockName = blockyNode.blockName;
 
-      const attributes = contentContainer.getAttributes();
-      if (Object.keys(attributes).length > 0) {
-        result.attributes = blockyNode.getAttributes();
+      const attributes = blockyNode.getAttributes();
+      for (const key in attributes) {
+        if (key === "nodeName") {
+          continue;
+        }
+        if (key === "type") {
+          continue;
+        }
+        if (key === "id") {
+          continue;
+        }
+        const value = attributes[key];
+        if (value) {
+          (result as any)[key] = value;
+        }
       }
-      if (contentContainer.firstChild && contentContainer.firstChild instanceof BlockyTextModel) {
-        result.textContent = serializeTextModel(contentContainer.firstChild);
+      // if (Object.keys(attributes).length > 0) {
+      //   result.attributes = blockyNode.getAttributes();
+      // }
+
+      if (blockyNode.firstChild && blockyNode.firstChild instanceof BlockyTextModel) {
+        result.textContent = serializeTextModel(blockyNode.firstChild);
       }
 
       let childPtr = childrenContainer?.firstChild;
