@@ -26,6 +26,7 @@ export const ReadMeContent = `
 <ul>
   <li><a href="https://github.com/vincentdchan/blocky-editor/blob/master/docs/get-started.md">Get started</a></li>
   <li><a href="https://github.com/vincentdchan/blocky-editor/blob/master/docs/how-to-write-a-block.md">How to write a block</a></li>
+  <li><a href="https://github.com/vincentdchan/blocky-editor/blob/master/docs/data-manipulation.md">Data manipulation</a></li>
 </ul>
 <h2>Compatibility</h2>
 <p>Tested on</p>
