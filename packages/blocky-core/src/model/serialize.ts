@@ -50,8 +50,6 @@ function serializeNode(blockyNode: BlockyNode): JSONChild {
     };
 
     if (blockyNode instanceof BlockElement) {
-      result.nodeName = blockyNode.blockName;
-
       const attributes = blockyNode.getAttributes();
       for (const key in attributes) {
         if (key === "nodeName") {

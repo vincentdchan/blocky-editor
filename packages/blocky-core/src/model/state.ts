@@ -100,7 +100,7 @@ class State {
   }
 
   public handleNewBlockMounted(parent: BlockyElement, child: BlockyNode) {
-    if (child.nodeName !== "block") {
+    if (!isUpperCase(child.nodeName)) {
       return;
     }
     const blockElement = child as BlockElement;
@@ -108,10 +108,10 @@ class State {
     this.insertElement(blockElement);
 
     const blockDef = this.blockRegistry.getBlockDefByName(
-      blockElement.blockName
+      blockElement.nodeName
     );
     if (!blockDef) {
-      throw new Error("invalid block name: " + blockElement.blockName);
+      throw new Error("invalid block name: " + blockElement.nodeName);
     }
 
     const block = blockDef.onBlockCreated({ blockElement });
@@ -125,7 +125,7 @@ class State {
    * TODO: recursive unmount block
    */
   public unmountBlock(parent: BlockyElement, child: BlockyNode): boolean {
-    if (child.nodeName !== "block") {
+    if (!isUpperCase(child.nodeName)) {
       return false;
     }
     const blockElement = child as BlockElement;

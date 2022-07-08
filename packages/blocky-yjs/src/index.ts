@@ -10,6 +10,7 @@ import {
   type BlockyNode,
   BlockElement,
 } from "blocky-core";
+import { isUpperCase } from "blocky-common/es/character";
 
 export interface IYjsPluginOptions {
   doc: Y.Doc;
@@ -251,8 +252,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
       const handleNewBlockCreate = (block: Block) => {
         withSilent(state, () => {
           const blockElement: BlockElement = block.props;
-          const element = new Y.XmlElement("block");
-          element.setAttribute("blockName", blockElement.blockName);
+          const element = new Y.XmlElement(blockElement.nodeName);
           element.setAttribute("id", blockElement.id);
 
           bindContentElement(editor, blockElement, element);
@@ -314,7 +314,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
           const id = blockElement.id;
           let ptr = docFragment.firstChild;
           while (ptr) {
-            if (ptr instanceof Y.XmlElement && ptr.nodeName === "block" && ptr.getAttribute("id") === id) {
+            if (ptr instanceof Y.XmlElement && isUpperCase(ptr.nodeName) && ptr.getAttribute("id") === id) {
               break;
             }
             index++;
