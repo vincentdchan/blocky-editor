@@ -1,4 +1,5 @@
 import { $on, isContainNode, removeNode } from "blocky-common/es/dom";
+import { isUpperCase } from "blocky-common/es/character";
 import { Cell } from "blocky-common/es/cell";
 import { observe, runInAction } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
@@ -346,7 +347,7 @@ export class Editor {
 
     while (ptr) {
       const node = ptr._mgNode as BlockElement | undefined;
-      if (node && node.nodeName === "block") {
+      if (node && isUpperCase(node.nodeName)) {
         return node;
       }
 
@@ -676,7 +677,7 @@ export class Editor {
         return;
       }
 
-      if (blockElement.blockName !== TextBlockName) {
+      if (blockElement.nodeName !== TextBlockName) {
         // default behavior
         this.insertEmptyTextAfterBlock(
           blockElement.parent! as BlockyElement,
@@ -786,7 +787,7 @@ export class Editor {
     }
     const prevNode = node.prevSibling as BlockElement;
 
-    const blockDef = this.registry.block.getBlockDefByName(node.blockName)!;
+    const blockDef = this.registry.block.getBlockDefByName(node.nodeName)!;
 
     if (blockDef.editable !== false) {
       return false;
@@ -812,7 +813,7 @@ export class Editor {
   }
 
   private focusEndOfNode(node: BlockElement) {
-    if (node.blockName === TextBlockName) {
+    if (node.nodeName === TextBlockName) {
       const textModel = node.firstChild! as BlockyTextModel;
       this.state.cursorState = {
         type: "collapsed",
@@ -1246,7 +1247,7 @@ export class Editor {
       return;
     }
 
-    if (treeNode.blockName === TextBlockName) {
+    if (treeNode.nodeName === TextBlockName) {
       return treeNode;
     }
   }

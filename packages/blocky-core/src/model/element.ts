@@ -14,4 +14,6 @@ export interface BlockyNode {
   firstChild: BlockyNode | null;
   lastChild: BlockyNode | null;
   childrenLength: number;
+
+  clone(): BlockyNode;
 }

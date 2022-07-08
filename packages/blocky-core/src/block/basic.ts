@@ -133,7 +133,7 @@ export class BlockElement extends BlockyElement {
   // public childrenContainer: BlockyElement;
 
   constructor(blockName: string, id: string) {
-    super("block");
+    super(blockName);
     // this.contentContainer = new BlockyElement("block-content");
     // this.childrenContainer = new BlockyElement("block-children");
     // this.appendChild(this.contentContainer);
@@ -161,10 +161,6 @@ export class BlockElement extends BlockyElement {
       throw new TypeError(`${name} is reserved`);
     }
     super.setAttribute(name, value);
-  }
-
-  get blockName(): string {
-    return this.getAttribute("blockName")!;
   }
 
   get id(): string {

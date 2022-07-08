@@ -109,11 +109,11 @@ export class DocRenderer {
     while (nodePtr) {
       const blockElement = nodePtr as BlockElement;
       const id = blockElement.id;
-      const blockDef = this.editor.registry.block.getBlockDefByName(blockElement.blockName);
+      const blockDef = this.editor.registry.block.getBlockDefByName(blockElement.nodeName);
       domPtr = this.clearDeletedBlock(domPtr);
 
       if (!blockDef) {
-        throw new Error(`id not found: ${blockElement.blockName}`);
+        throw new Error(`id not found: ${blockElement.nodeName}`);
       }
 
       if (!domPtr || typeof domPtr._mgNode === "undefined" || domPtr._mgNode !== nodePtr) {
