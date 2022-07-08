@@ -17,6 +17,7 @@ For example:
 
 ```typescript
 editor.state // get access to the state. 
+controller.state  // get state from the controller
 ```
 
 ### Update the state
@@ -30,6 +31,16 @@ editor.update(() => {
 ```
 
 When the operations are finished, the editor will automatically update the UI.
+
+### Serialization
+
+If you want to dump the document tree to JSON, you can use the utility in `serialize` namespace.
+
+```typescript
+import { serialize } from "blocky-core";
+
+console.log(editor.state);
+```
 
 ## Data representation
 
