@@ -200,6 +200,10 @@ export class Block implements IDisposable {
 
   blockDidMount(e: BlockDidMountEvent) {}
 
+  onDedent(e: KeyboardEvent) {}
+
+  onIndent(e: KeyboardEvent) {}
+
   /**
    * Handle the block is focused.
    * 

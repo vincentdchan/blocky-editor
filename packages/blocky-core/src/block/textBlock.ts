@@ -543,6 +543,21 @@ class TextBlock extends Block {
       domPtr = next;
     }
   }
+
+  override onIndent(): void {
+    const textType = this.getTextType();
+    if (textType === TextType.Bulleted) {
+      console.log("indent text");
+    }
+  }
+
+  override onDedent(): void {
+    const textType = this.getTextType();
+    if (textType === TextType.Bulleted) {
+      console.log("dedent text");
+    }
+  }
+
 }
 
 function clearNodeAttributes(node: Node) {

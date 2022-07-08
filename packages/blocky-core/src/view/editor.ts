@@ -627,6 +627,23 @@ export class Editor {
 
   private handleKeyTab(e: KeyboardEvent) {
     e.preventDefault();
+    const { cursorState } = this.state;
+    if (!cursorState) {
+      return;
+    }
+    if (cursorState.type === "open") {
+      return;
+    }
+    const block = this.state.blocks.get(cursorState.targetId);
+    if (!block) {
+      return;
+    }
+
+    if (e.shiftKey) {
+      block.onDedent(e);
+    } else {
+      block.onIndent(e);
+    }
   }
 
   private insertEmptyTextAfterBlock(parent: BlockyElement, afterId: string) {
