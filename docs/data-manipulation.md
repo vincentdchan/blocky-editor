@@ -39,7 +39,7 @@ If you want to dump the document tree to JSON, you can use the utility in `seria
 ```typescript
 import { serialize } from "blocky-core";
 
-console.log(editor.state);
+console.log(serialize.serializeState(editor.state));
 ```
 
 ## Data representation
