@@ -66,6 +66,8 @@ function getTextTypeFromElement(element: BlockyElement): TextType {
 
 class TextBlock extends Block {
   #container: HTMLElement | undefined;
+  #bodyContainer: HTMLElement | undefined;
+  #contentContainer: HTMLElement | undefined;
 
   constructor(private def: TextBlockDefinition, props: BlockElement) {
     super(props);
@@ -131,16 +133,11 @@ class TextBlock extends Block {
   }
 
   protected findContentContainer(parent: HTMLElement): HTMLElement {
-    let ptr = parent.firstElementChild;
-
-    while (ptr) {
-      if (ptr.classList.contains(TextContentClass)) {
-        return ptr as HTMLElement;
-      }
-      ptr = ptr.nextElementSibling;
+    const e = this.#contentContainer;
+    if (!e) {
+      throw new Error("content not found");
     }
-
-    throw new Error("content not found");
+    return e;
   }
 
   private createContentContainer(): HTMLElement {
@@ -149,9 +146,23 @@ class TextBlock extends Block {
     return e;
   }
 
+  private createTextBodyContainer(): HTMLElement {
+    const e = elem("div", "blocky-text-body");
+    return e;
+  }
+
   override blockDidMount({ element }: BlockDidMountEvent): void {
-    const content = this.createContentContainer();
-    element.appendChild(content);
+    element.classList.add("blocky-flex");
+
+    this.#bodyContainer = this.createTextBodyContainer();
+
+    this.#contentContainer = this.createContentContainer();
+    this.#bodyContainer.append(this.#contentContainer);
+
+    this.childrenContainerDOM = this.#bodyContainer;
+    this.childrenBeginDOM = this.#contentContainer;
+
+    element.appendChild(this.#bodyContainer);
   }
 
   override blockFocused({
@@ -351,7 +362,7 @@ class TextBlock extends Block {
     const textModel = this.props.firstChild! as BlockyTextModel;
 
     const contentContainer = this.findContentContainer(container);
-    this.renderBlockTextContent(contentContainer, textModel);
+    this.renderBlockTextContent(container, contentContainer, textModel);
   }
 
   private createAnchorNode(href: string): HTMLSpanElement {
@@ -410,6 +421,7 @@ class TextBlock extends Block {
   }
 
   private ensureContentContainerStyle(
+    blockContainer: HTMLElement,
     contentContainer: HTMLElement,
     textModel: BlockyTextModel 
   ): HTMLElement {
@@ -424,7 +436,7 @@ class TextBlock extends Block {
       switch (textType) {
         case TextType.Bulleted: {
           const bulletSpan = this.createBulletSpan();
-          parent.insertBefore(bulletSpan, contentContainer);
+          blockContainer.insertBefore(bulletSpan, blockContainer.firstChild);
 
           contentContainer.classList.add("blocky-bulleted");
           break;
@@ -497,10 +509,12 @@ class TextBlock extends Block {
   }
 
   private renderBlockTextContent(
+    blockContainer: HTMLElement,
     contentContainer: HTMLElement,
     textModel: BlockyTextModel,
   ) {
     contentContainer = this.ensureContentContainerStyle(
+      blockContainer,
       contentContainer,
       textModel
     );

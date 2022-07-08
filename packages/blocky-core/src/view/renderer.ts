@@ -72,7 +72,7 @@ export class DocRenderer {
       const { top, right, bottom, left } = padding;
       elem.style.padding = `${top}px ${right}px ${bottom}px ${left}px`;
     });
-    this.renderBlocks(blocksContainer, model);
+    this.renderBlocks(blocksContainer, blocksContainer.firstChild, model);
   }
 
   protected createBlockContainer() {
@@ -95,7 +95,7 @@ export class DocRenderer {
     return dom;
   }
 
-  protected renderBlocks(blocksContainer: HTMLElement, parentNode: BlockyElement) {
+  protected renderBlocks(blocksContainer: HTMLElement, beginChild: ChildNode | null, parentNode: BlockyElement) {
     let nodePtr = parentNode.firstChild;
     
     if (!nodePtr) {
@@ -103,7 +103,7 @@ export class DocRenderer {
       return;
     }
 
-    let domPtr: Node | null = blocksContainer.firstChild;
+    let domPtr: Node | null = beginChild;
     let prevPtr: Node | undefined;
 
     while (nodePtr) {
@@ -138,6 +138,14 @@ export class DocRenderer {
       nodePtr = nodePtr.nextSibling;
       prevPtr = domPtr;
       domPtr = domPtr.nextSibling;
+
+      const { childrenContainer } = blockElement;
+      if (childrenContainer) {
+        const { childrenContainerDOM, childrenBeginDOM } = block;
+        if (childrenContainerDOM) {
+          this.renderBlocks(childrenContainerDOM, childrenBeginDOM, childrenContainer);
+        }
+      }
     }
 
     // domPtr is not null

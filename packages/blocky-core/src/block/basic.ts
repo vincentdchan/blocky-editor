@@ -172,8 +172,8 @@ export class BlockElement extends BlockyElement {
 export class Block implements IDisposable {
   #editor: Editor | undefined;
 
-  public childrenContainerDOM: HTMLDivElement | undefined;
-  public childrenBeginDOM: HTMLDivElement | undefined; 
+  public childrenContainerDOM: HTMLElement | null = null;
+  public childrenBeginDOM: HTMLElement | null = null; 
 
   constructor(public props: BlockElement) {}
 
