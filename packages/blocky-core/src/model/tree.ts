@@ -452,7 +452,6 @@ export interface ElementRemoveChildEvent {
 export interface ElementInsertChildEvent {
   type: "element-insert-child",
   child: BlockyNode,
-  after?: BlockyNode,
   getInsertIndex: () => number,
 }
 
@@ -494,6 +493,9 @@ export class BlockyElement implements BlockyNode, WithState {
   }
 
   insertAfter(node: BlockyNode, after?: BlockyNode) {
+    if (after?.parent !== this) {
+      throw new TypeError("after node is a child of this node");
+    }
     node.parent = this;
     node.state = this.state;
     if (!after) {
@@ -528,10 +530,20 @@ export class BlockyElement implements BlockyNode, WithState {
 
     this.onChanged.emit({
       type: "element-insert-child",
-      after,
       child: node,
       getInsertIndex: () => {
-        throw new Error("not impement")
+        if (!after) {
+          return 0;
+        }
+        let cnt = 0;
+
+        let ptr: BlockyNode | null = after;
+        while (ptr) {
+          cnt++;
+          ptr = ptr.prevSibling;
+        }
+
+        return cnt;
       },
     });
   }
@@ -557,7 +569,6 @@ export class BlockyElement implements BlockyNode, WithState {
 
     this.onChanged.emit({
       type: "element-insert-child",
-      after: this.#lastChild,
       child: node,
       getInsertIndex: () => insertIndex,
     });

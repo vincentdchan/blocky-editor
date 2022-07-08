@@ -115,6 +115,15 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
           withSilent(state, () => {
             switch (e.type) {
               case "element-insert-child": {
+                const { child } = e;
+                const index = e.getInsertIndex();
+                const element = new Y.XmlElement(child.nodeName);
+                yElement.insert(index, [element]);
+
+                if (child instanceof BlockElement) {
+                  bindBlockyElement(editor, child, element);
+                }
+
                 break;
               }
               case "element-set-attrib": {
