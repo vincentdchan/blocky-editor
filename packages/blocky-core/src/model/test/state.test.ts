@@ -45,9 +45,13 @@ test("serialize", () => {
   expect(json).toEqual({
     nodeName: "document",
     children: [{
-      nodeName: "block",
-      blockName: "Text",
-      textContent: [{ insert: "Hello World" }]
+      nodeName: "Text",
+      children: [{
+        nodeName: "#text",
+        textContent: [{
+          insert: "Hello World",
+        }],
+      }]
     }],
   });
 });
