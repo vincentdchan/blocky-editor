@@ -113,8 +113,14 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
 
         blockyElement.onChanged.on((e: ElementChangedEvent) => {
           withSilent(state, () => {
-            if (e.type === "element-set-attrib") {
-              yElement.setAttribute(e.key, e.value);
+            switch (e.type) {
+              case "element-insert-child": {
+                break;
+              }
+              case "element-set-attrib": {
+                yElement.setAttribute(e.key, e.value);
+                break;
+              }
             }
           });
         });
