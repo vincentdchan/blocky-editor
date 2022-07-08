@@ -25,7 +25,7 @@ export class MarkupGenerator {
     return {
       nodeName: "block",
       id: id ?? this.idGen.mkBlockId(),
-      blockName: "text",
+      blockName: "Text",
       textContent: [{
         insert: content,
       }],

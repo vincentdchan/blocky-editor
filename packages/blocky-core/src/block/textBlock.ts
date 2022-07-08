@@ -23,7 +23,7 @@ import fastDiff from "fast-diff";
 import { type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";
 
-export const TextBlockName = "text";
+export const TextBlockName = "Text";
 
 const TextContentClass = "blocky-block-text-content";
 
@@ -578,7 +578,7 @@ class TextBlockDefinition implements IBlockDefinition {
     const newTextElement = this.getTextElementFromDOM(editor, container);
     const newTextModel = newTextElement.firstChild! as BlockyTextModel;
 
-    if (tryMerge && currentElement.blockName === "text") {
+    if (tryMerge && currentElement.blockName === TextBlockName) {
       const oldTextModel = currentElement.firstChild! as BlockyTextModel;
       oldTextModel.append(newTextModel);
       return;
@@ -601,7 +601,7 @@ class TextBlockDefinition implements IBlockDefinition {
     node: HTMLElement
   ): BlockElement {
     const newId = editor.idGenerator.mkBlockId();
-    const result = new BlockElement("text", newId);
+    const result = new BlockElement(TextBlockName, newId);
 
     const textModel = new BlockyTextModel;
     result.appendChild(textModel);

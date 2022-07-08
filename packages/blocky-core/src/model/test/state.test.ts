@@ -46,7 +46,7 @@ test("serialize", () => {
     nodeName: "document",
     children: [{
       nodeName: "block",
-      blockName: "text",
+      blockName: "Text",
       textContent: [{ insert: "Hello World" }]
     }],
   });

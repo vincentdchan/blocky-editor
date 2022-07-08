@@ -24,7 +24,7 @@ importers:
       '@types/node': ^17.0.41
       '@typescript-eslint/eslint-plugin': ^5.30.4
       '@typescript-eslint/parser': ^5.30.4
-      blocky-common: workspace:^1.1.1
+      blocky-common: workspace:>=1.2.0
       eslint: ^8.19.0
       fast-diff: ^1.2.0
       is-hotkey: ^0.2.0

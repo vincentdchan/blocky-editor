@@ -53,7 +53,7 @@ export function makeMyBlockPlugin(): IPlugin {
     onInitialized(editor: Editor) {
       editor.registry.block.register(
         makeReactBlock({
-          name: "plugin-name",
+          name: "BlockName",
           component: () => (
             <DefaultBlockOutline>
               Write the block in Preact

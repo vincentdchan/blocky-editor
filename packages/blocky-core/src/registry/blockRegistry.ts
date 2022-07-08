@@ -1,3 +1,4 @@
+import { isUpperCase } from "blocky-common/es/character"
 import { type IBlockDefinition, type TryParsePastedDOMEvent } from "@pkg/block/basic";
 import { makeTextBlockDefinition, TextBlockName } from "@pkg/block/textBlock";
 
@@ -14,6 +15,10 @@ export class BlockRegistry {
     const { name } = blockType;
     if (this.#nameMap.has(name)) {
       throw new Error(`SpanType '${name}' exists`);
+    }
+
+    if (!isUpperCase(name[0])) {
+      throw new Error("The first char of the block name must be uppercase.");
     }
 
     const id = this.#types.length;
