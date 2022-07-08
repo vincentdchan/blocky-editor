@@ -105,7 +105,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
       /**
        * Connect betweens [[BlockyElement]] and [[Y.XmlElement]]
        */
-      function bindContentElement(editor: Editor, blockyElement: BlockyElement, yElement: Y.XmlElement) {
+      function bindBlockyElement(editor: Editor, blockyElement: BlockyElement, yElement: Y.XmlElement) {
         const attribs = blockyElement.getAttributes();
         for (const key in attribs) {
           yElement.setAttribute(key, attribs[key]);
@@ -149,20 +149,19 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
       }
 
       const createBlockElementByXmlElement = (editor: Editor, element: Y.XmlElement): BlockElement | undefined => {
-          const blockName = element.getAttribute("blockName");
           const id = element.getAttribute("id");
-          if (!id || !blockName) {
+          if (!id) {
             return;
           }
 
-          const createdElement = new BlockElement(blockName, id);
+          const createdElement = new BlockElement(element.nodeName, id);
           createdElement.state = state;
 
-          bindContentElement(editor, createdElement, element);
+          bindBlockyElement(editor, createdElement, element);
 
           const attribs = element.getAttributes();
           for (const key in attribs) {
-            if (key === "id" || key === "blockName") {
+            if (key === "id") {
               continue;
             }
             const value = attribs[key];
@@ -255,7 +254,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
           const element = new Y.XmlElement(blockElement.nodeName);
           element.setAttribute("id", blockElement.id);
 
-          bindContentElement(editor, blockElement, element);
+          bindBlockyElement(editor, blockElement, element);
 
           const prevNode = blockElement.prevSibling as BlockElement | null;
           if (prevNode) {

@@ -30,6 +30,10 @@
                                   supported by Chrome, Edge, Opera and Firefox */
 }
 
+.blocky-block-text-content {
+  margin-bottom: 4px;
+}
+
 .blocky-block-text-content:empty::before {
   content: attr(placeholder);
   color: gray;
@@ -66,6 +70,7 @@
   border-radius: 12px;
   overflow: hidden;
   box-sizing: border-box;
+  margin-bottom: 4px;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
 }
@@ -75,7 +80,6 @@
 }
 
 .blocky-editor-block {
-  margin-bottom: 4px;
   display: flex;
 }
 
@@ -102,4 +106,10 @@
   padding: 4px;
   color: white;
   font-size: 11px;
+}
+
+.blocky-text-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
