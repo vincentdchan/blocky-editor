@@ -449,8 +449,16 @@ export interface ElementRemoveChildEvent {
   child: BlockyNode,
 }
 
+export interface ElementInsertChildEvent {
+  type: "element-insert-child",
+  child: BlockyNode,
+  after?: BlockyNode,
+  getInsertIndex: () => number,
+}
+
 export type ElementChangedEvent =
   | ElementSetAttributeEvent
+  | ElementInsertChildEvent
   | ElementRemoveChildEvent
 
 interface InternAttributes {
@@ -517,6 +525,15 @@ export class BlockyElement implements BlockyNode, WithState {
 
     this.childrenLength++;
     this.state?.handleNewBlockMounted(this, node);
+
+    this.onChanged.emit({
+      type: "element-insert-child",
+      after,
+      child: node,
+      getInsertIndex: () => {
+        throw new Error("not impement")
+      },
+    });
   }
 
   appendChild(node: BlockyNode) {
@@ -528,6 +545,8 @@ export class BlockyElement implements BlockyNode, WithState {
       this.#lastChild.nextSibling = node;
     }
 
+    const insertIndex = this.childrenLength;
+
     node.prevSibling = this.#lastChild;
     node.nextSibling = null;
     node.parent = this;
@@ -535,6 +554,13 @@ export class BlockyElement implements BlockyNode, WithState {
     this.#lastChild = node;
     this.childrenLength++;
     this.state?.handleNewBlockMounted(this, node);
+
+    this.onChanged.emit({
+      type: "element-insert-child",
+      after: this.#lastChild,
+      child: node,
+      getInsertIndex: () => insertIndex,
+    });
   }
 
   setAttribute(name: string, value: string) {
