@@ -493,7 +493,7 @@ export class BlockyElement implements BlockyNode, WithState {
   }
 
   insertAfter(node: BlockyNode, after?: BlockyNode) {
-    if (after?.parent !== this) {
+    if (after && after.parent !== this) {
       throw new TypeError("after node is a child of this node");
     }
     node.parent = this;
@@ -572,6 +572,27 @@ export class BlockyElement implements BlockyNode, WithState {
       child: node,
       getInsertIndex: () => insertIndex,
     });
+  }
+
+  insertChildAt(index: number, node: BlockyNode) {
+    if (index === this.childrenLength) {
+      this.appendChild(node);
+      return;
+    }
+
+    if (index === 0) {
+      this.insertAfter(node);
+      return;
+    }
+
+    let ptr: BlockyNode | null = this.#firstChild;
+
+    while (ptr && index > 1) {
+      index--;
+      ptr = ptr.nextSibling;
+    }
+
+    this.insertAfter(node, ptr ?? undefined);
   }
 
   setAttribute(name: string, value: string) {
