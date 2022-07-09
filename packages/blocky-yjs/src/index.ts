@@ -1,8 +1,7 @@
 import * as Y from "yjs";
 import {
   type IPlugin,
-  type Editor,
-  type BlockyElement,
+  type Editor, BlockyElement,
   type ElementChangedEvent, BlockyTextModel,
   type TextChangedEvent,
   type Block,
@@ -102,66 +101,104 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
     onInitialized(editor: Editor) {
       const { state } = editor;
 
-      /**
-       * Connect betweens [[BlockyElement]] and [[Y.XmlElement]]
-       */
-      function bindBlockyElement(editor: Editor, blockyElement: BlockyElement, yElement: Y.XmlElement) {
-        const attribs = blockyElement.getAttributes();
+      function makeBlockyElementByYElement(yElement: Y.XmlElement): BlockyElement {
+        const result = new BlockyElement(yElement.nodeName);
+        result.state = state;
+
+        const attribs = yElement.getAttributes();
         for (const key in attribs) {
-          yElement.setAttribute(key, attribs[key]);
-        }
-
-        blockyElement.onChanged.on((e: ElementChangedEvent) => {
-          withSilent(state, () => {
-            switch (e.type) {
-              case "element-insert-child": {
-                const { child } = e;
-                const index = e.getInsertIndex();
-                const element = new Y.XmlElement(child.nodeName);
-                yElement.insert(index, [element]);
-
-                if (child instanceof BlockElement) {
-                  bindBlockyElement(editor, child, element);
-                }
-
-                break;
-              }
-              case "element-set-attrib": {
-                yElement.setAttribute(e.key, e.value);
-                break;
-              }
-            }
-          });
-        });
-
-        yElement.observe((e: Y.YXmlEvent) => {
-          withSilent(state, () => {
-            editor.update(() => {
-              e.attributesChanged.forEach(key => {
-                blockyElement.setAttribute(key, yElement.getAttribute(key));
-              });
-            });
-          });
-        });
-
-        let ptr = blockyElement.firstChild;
-        const elements: (Y.XmlElement | Y.XmlText)[] = []
-        while (ptr) {
-          if (ptr.nodeName === "#text") {
-            const textModel = ptr as BlockyTextModel;
-            const yText = createXmlTextByBlockyText(textModel);
-
-            bindTextModel(editor, textModel, yText);
-
-            elements.push(yText);
+          const value = attribs[key];
+          if (value) {
+            result.setAttribute(key, value);
           }
+        }
 
-          ptr = ptr.nextSibling;
-        }
-        if (elements.length > 0) {
-          yElement.push(elements);
-        }
+        // bindBlockyElement(editor, result, yElement);
+
+        return result;
       }
+
+      // /**
+      //  * Connect betweens [[BlockyElement]] and [[Y.XmlElement]]
+      //  */
+      // function bindBlockyElement(editor: Editor, blockyElement: BlockyElement, yElement: Y.XmlElement) {
+      //   // const attribs = blockyElement.getAttributes();
+      //   // for (const key in attribs) {
+      //   //   yElement.setAttribute(key, attribs[key]);
+      //   // }
+
+      //   blockyElement.onChanged.on((e: ElementChangedEvent) => {
+      //     withSilent(state, () => {
+      //       switch (e.type) {
+      //         case "element-insert-child": {
+      //           const { child } = e;
+      //           const index = e.getInsertIndex();
+      //           const element = new Y.XmlElement(child.nodeName);
+      //           yElement.insert(index, [element]);
+
+      //           if (child instanceof BlockElement) {
+      //             bindBlockyElement(editor, child, element);
+      //           }
+
+      //           break;
+      //         }
+      //         case "element-set-attrib": {
+      //           yElement.setAttribute(e.key, e.value);
+      //           break;
+      //         }
+      //       }
+      //     });
+      //   });
+
+      //   yElement.observe((e: Y.YXmlEvent) => {
+      //     withSilent(state, () => {
+      //       editor.update(() => {
+      //         e.attributesChanged.forEach(key => {
+      //           blockyElement.setAttribute(key, yElement.getAttribute(key));
+      //         });
+
+      //         // @ts-ignore
+      //         if (e.childListChanged) {
+      //           console.log(e.delta);
+      //           let index = 0;
+      //           for (const delta of e.delta) {
+      //             if (typeof delta.retain === "number") {
+      //               index += delta.retain;
+      //             } else if (Array.isArray(delta.insert)) {
+      //               for (const xmlElement of delta.insert) {
+      //                 const yXmlElement = xmlElement as Y.XmlElement;
+
+      //                 const createdElement = makeBlockyElementByYElement(yXmlElement);
+
+      //                 blockyElement.insertChildAt(index, createdElement);
+
+      //                 index++;
+      //               }
+      //             }
+      //           }
+      //         }
+      //       });
+      //     });
+      //   });
+
+      //   let ptr = blockyElement.firstChild;
+      //   const elements: (Y.XmlElement | Y.XmlText)[] = []
+      //   while (ptr) {
+      //     if (ptr.nodeName === "#text") {
+      //       const textModel = ptr as BlockyTextModel;
+      //       const yText = createXmlTextByBlockyText(textModel);
+
+      //       bindTextModel(editor, textModel, yText);
+
+      //       elements.push(yText);
+      //     }
+
+      //     ptr = ptr.nextSibling;
+      //   }
+      //   if (elements.length > 0) {
+      //     yElement.push(elements);
+      //   }
+      // }
 
       const createBlockElementByXmlElement = (editor: Editor, element: Y.XmlElement): BlockElement | undefined => {
           const id = element.getAttribute("id");
@@ -172,7 +209,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
           const createdElement = new BlockElement(element.nodeName, id);
           createdElement.state = state;
 
-          bindBlockyElement(editor, createdElement, element);
+          // bindBlockyElement(editor, createdElement, element);
 
           const attribs = element.getAttributes();
           for (const key in attribs) {
@@ -263,27 +300,27 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         return;
       }
 
-      const handleNewBlockCreate = (block: Block) => {
-        withSilent(state, () => {
-          const blockElement: BlockElement = block.props;
-          const element = new Y.XmlElement(blockElement.nodeName);
-          element.setAttribute("id", blockElement.id);
+      // const handleNewBlockCreate = (block: Block) => {
+      //   withSilent(state, () => {
+      //     const blockElement: BlockElement = block.props;
+      //     const element = new Y.XmlElement(blockElement.nodeName);
+      //     element.setAttribute("id", blockElement.id);
 
-          bindBlockyElement(editor, blockElement, element);
+      //     bindBlockyElement(editor, blockElement, element);
 
-          const prevNode = blockElement.prevSibling as BlockElement | null;
-          if (prevNode) {
-            const prevYNode = findNodeById(prevNode.id);
-            if (!prevYNode) {
-              docFragment.push([element]);
-              return;
-            }
-            docFragment.insertAfter(prevYNode, [element]);
-          } else {
-            docFragment.push([element]);
-          }
-        });
-      }
+      //     const prevNode = blockElement.prevSibling as BlockElement | null;
+      //     if (prevNode) {
+      //       const prevYNode = findNodeById(prevNode.id);
+      //       if (!prevYNode) {
+      //         docFragment.push([element]);
+      //         return;
+      //       }
+      //       docFragment.insertAfter(prevYNode, [element]);
+      //     } else {
+      //       docFragment.push([element]);
+      //     }
+      //   });
+      // }
 
       if (allowInit) {
         withSilent(state, () => {
@@ -299,7 +336,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         });
       } else {
         for (const block of state.blocks.values()) {
-          handleNewBlockCreate(block);
+          // handleNewBlockCreate(block);
         }
       }
 
@@ -320,7 +357,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         });
       });
 
-      state.newBlockCreated.on(handleNewBlockCreate);
+      // state.newBlockCreated.on(handleNewBlockCreate);
 
       state.blockDeleted.on((blockElement: BlockElement) => {
         withSilent(state, () => {
