@@ -1,5 +1,4 @@
-import type { IPlugin } from "@pkg/registry/pluginRegistry";
-import type { Editor } from "@pkg/view/editor";
+import type { Editor, IPlugin } from "@pkg/index";
 import { isHotkey } from "is-hotkey";
 
 /**

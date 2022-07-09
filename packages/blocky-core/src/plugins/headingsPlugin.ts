@@ -1,9 +1,14 @@
-import type { IPlugin } from "@pkg/registry/pluginRegistry";
 import { isWhiteSpace } from "blocky-common/es/text";
-import type { Editor } from "@pkg/view/editor";
-import type { Block } from "@pkg/block/basic";
-import { setTextTypeForTextBlock, TextBlockName } from "@pkg/block/textBlock";
-import { BlockyTextModel, TextType, type TextChangedEvent } from "@pkg/model";
+import {
+  BlockyTextModel,
+  TextType,
+  type TextChangedEvent,
+  type Editor,
+  type Block,
+  type IPlugin,
+  setTextTypeForTextBlock,
+  TextBlockName,
+} from "@pkg/index";
 
 function makeHeadingsPlugin(): IPlugin {
   const handleEveryBlock = (editor: Editor) => (block: Block) => {

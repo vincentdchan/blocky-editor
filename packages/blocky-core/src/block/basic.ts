@@ -139,7 +139,6 @@ export class BlockElement extends BlockyElement {
     // this.appendChild(this.contentContainer);
     // this.appendChild(this.childrenContainer);
 
-    this.setAttribute("blockName", blockName);
     this.setAttribute("id", id);
   }
 
