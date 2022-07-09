@@ -23,3 +23,4 @@ export {
   BlockyElement,
   TextType,
 } from "./model";
+export { TextBlockName } from "./block/textBlock"

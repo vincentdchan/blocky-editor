@@ -1,9 +1,13 @@
 import { isWhiteSpace } from "blocky-common/es/text";
-import type { IPlugin } from "@pkg/registry/pluginRegistry";
-import type { Editor } from "@pkg/view/editor";
-import type { Block, BlockElement } from "@pkg/block/basic";
-import { setTextTypeForTextBlock, getTextTypeForTextBlock } from "@pkg/block/textBlock";
-import { BlockyTextModel, TextType, type TextChangedEvent } from "@pkg/model";
+import {
+  BlockyTextModel,
+  TextType, type TextChangedEvent,
+  setTextTypeForTextBlock,
+  getTextTypeForTextBlock,
+  Block, BlockElement,
+  type IPlugin,
+  type Editor,
+} from "@pkg/index";
 
 function makeBulletListPlugin(): IPlugin {
   const turnTextBlockIntoBulletList = (editor: Editor, blockId: string, textElement: BlockElement) => {
