@@ -1,4 +1,5 @@
 import { clearAllChildren, elem, removeNode } from "blocky-common/es/dom";
+import { isUndefined } from "blocky-common/es/object";
 import { type BlockyElement } from "@pkg/model";
 import type { Editor } from "@pkg/view/editor";
 import { type BlockElement, type IBlockDefinition } from "@pkg/block/basic";
@@ -116,7 +117,7 @@ export class DocRenderer {
         throw new Error(`id not found: ${blockElement.nodeName}`);
       }
 
-      if (!domPtr || typeof domPtr._mgNode === "undefined" || domPtr._mgNode !== nodePtr) {
+      if (!domPtr || isUndefined(domPtr._mgNode) || domPtr._mgNode !== nodePtr) {
         const existDom = this.editor.state.domMap.get(id);
         if (existDom) {  // move dom from another place
           // don't need to destruct
