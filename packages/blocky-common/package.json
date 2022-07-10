@@ -7,6 +7,7 @@
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "homepage": "https://github.com/vincentdchan/blocky-editor",
   "keywords": [],
   "author": "Vincent Chan <okcdz@diverse.space>",
   "license": "MIT",
