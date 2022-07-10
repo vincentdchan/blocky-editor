@@ -1,4 +1,4 @@
-import { isUpperCase } from "blocky-common/src/character";
+import { isUpperCase } from "blocky-common/es/character";
 import { makeObservable } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
 import { BlockyElement, BlockyTextModel } from "./tree";
