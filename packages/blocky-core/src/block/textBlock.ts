@@ -64,6 +64,23 @@ function getTextTypeFromElement(element: BlockyElement): TextType {
   return parseInt(element.getAttribute("textType") ?? "0", 10);
 }
 
+function textTypeCanIndent(textType: TextType): boolean {
+  return textType === TextType.Normal || textType === TextType.Bulleted;
+}
+
+
+function insertOrGetChildrenContainer(element: BlockElement): BlockyElement {
+  let childrenContainer = element.childrenContainer;
+  if (childrenContainer) {
+    return childrenContainer;
+  }
+
+  childrenContainer = new BlockyElement("block-children");
+  element.appendChild(childrenContainer);
+
+  return childrenContainer;
+}
+
 class TextBlock extends Block {
   #container: HTMLElement | undefined;
   #bodyContainer: HTMLElement | null = null;
@@ -577,9 +594,12 @@ class TextBlock extends Block {
     }
 
     const textType = getTextTypeFromElement(prevElement);
-    if (textType !== TextType.Normal && textType !== TextType.Bulleted) {
+    if (!textTypeCanIndent(textType)) {
       return;
     }
+
+    const prevCursorState = this.editor.state.cursorState;
+    this.editor.state.cursorState = undefined;
 
     this.editor.update(() => {
       const parentElement = this.props.parent as BlockyElement | undefined;
@@ -592,28 +612,46 @@ class TextBlock extends Block {
       parentElement.removeChild(this.props);
 
       const prevBlockyElement = prevElement as BlockElement;
-      const childrenContainer = this.insertOrGetChildrenContainer(prevBlockyElement);
+      const childrenContainer = insertOrGetChildrenContainer(prevBlockyElement);
       childrenContainer.appendChild(copy);
+
+      return () => {
+        this.editor.state.cursorState = prevCursorState;
+      };
     });
   }
 
-  private insertOrGetChildrenContainer(element: BlockElement): BlockyElement {
-    let childrenContainer = element.childrenContainer;
-    if (childrenContainer) {
-      return childrenContainer;
-    }
+  /**
+   * delete this node, append to the parent
+   */
+  override onDedent(): void {
+    // const textType = this.getTextType();
+    const parentBlockElement = this.findParentBlockElement();
 
-    childrenContainer = new BlockyElement("block-children");
-    element.appendChild(childrenContainer);
+    this.editor.update(() => {
+      const parentElement = this.props.parent! as BlockyElement;
 
-    return childrenContainer;
+      const copy = this.props.clone();
+
+      parentElement.removeChild(this.props);
+
+      const parentOfParentBlockElement = parentBlockElement.parent as BlockyElement;
+      parentOfParentBlockElement.insertAfter(copy, parentBlockElement);
+    });
   }
 
-  override onDedent(): void {
-    const textType = this.getTextType();
-    if (textType === TextType.Bulleted) {
-      console.log("dedent text");
+  private findParentBlockElement(): BlockElement {
+    let result = this.props.parent;
+
+    while (result) {
+      if (result instanceof BlockElement) {
+        return result;
+      }
+
+      result = result.parent;
     }
+
+    throw new Error("parent not found");
   }
 
 }
