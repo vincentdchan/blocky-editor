@@ -169,12 +169,17 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
               case "element-insert-child": {
                 const { child } = e;
                 const index = e.getInsertIndex();
-                const element = new Y.XmlElement(child.nodeName);
-                yElement.insert(index, [element]);
 
-                if (child instanceof BlockElement) {
-                  bindBlockyElement(editor, child, element);
+                let element: Y.XmlElement | Y.XmlText;
+                if (child instanceof BlockyElement) {
+                  element = makeYElementByBlockyElement(child);
+                } else if (child instanceof BlockyTextModel) {
+                  element = createXmlTextByBlockyText(editor, child);
+                } else {
+                  return;
                 }
+
+                yElement.insert(index, [element]);
 
                 break;
               }
