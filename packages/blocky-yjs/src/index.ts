@@ -206,7 +206,6 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
                       const createdElement = makeBlockyElementByYElement(yXmlElement);
 
                       blockyElement.insertChildAt(index, createdElement);
-                      console.log("insert child at:", index, createdElement);
 
                       index++;
                     }
