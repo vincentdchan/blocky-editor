@@ -16,3 +16,7 @@ export function areEqualShallow(a: any, b: any) {
     return a === b;
   }
 }
+
+export function isUndefined(obj: any): obj is undefined {
+  return typeof obj === "undefined";
+}

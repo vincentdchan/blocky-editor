@@ -4,6 +4,7 @@ import {
   type IDisposable,
   flattenDisposable,
 } from "blocky-common/es/disposable";
+import { isUndefined } from "blocky-common/es/object";
 import { type EditorController, type CursorChangedEvent } from "blocky-core";
 
 interface DefaultBlockOutlineInternalProps {
@@ -46,7 +47,7 @@ class DefaultBlockOutlineInternal extends Component<
   private handleeApplyCursorChangedEvent = (evt: CursorChangedEvent) => {
     const { state } = evt;
     const shouldShowOutline =
-      typeof state !== "undefined" &&
+      !isUndefined(state) &&
       state.type === "collapsed" &&
       state.targetId === this.props.blockId;
       
@@ -74,7 +75,7 @@ class DefaultBlockOutlineInternal extends Component<
   private handleNewCursorState = (evt: CursorChangedEvent) => {
     const { state } = evt;
     const shouldShowOutline =
-      typeof state !== "undefined" &&
+      !isUndefined(state) &&
       state.type === "collapsed" &&
       state.targetId === this.props.blockId;
     if (shouldShowOutline === this.state.showOutline) {

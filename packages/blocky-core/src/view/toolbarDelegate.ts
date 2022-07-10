@@ -1,4 +1,5 @@
 import { type IDisposable } from "blocky-common/es/disposable";
+import { isUndefined } from "blocky-common/es/object";
 import type { EditorController } from "@pkg/view/controller";
 import { UIDelegate } from "./uiDelegate";
 
@@ -34,7 +35,7 @@ export class ToolbarDelegate extends UIDelegate {
   }
 
   override hide() {
-    if (typeof this.#debounced !== "undefined") {
+    if (!isUndefined(this.#debounced)) {
       clearTimeout(this.#debounced);
       this.#debounced = undefined;
     }
@@ -45,7 +46,7 @@ export class ToolbarDelegate extends UIDelegate {
     if (this.shown) {
       return;
     }
-    if (typeof this.#debounced !== "undefined") {
+    if (isUndefined(this.#debounced)) {
       clearTimeout(this.#debounced);
     }
 
