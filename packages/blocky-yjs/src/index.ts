@@ -94,6 +94,26 @@ function bindTextModel(editor: Editor, textModel: BlockyTextModel, yTextModel: Y
   });
 }
 
+function createBlockyTextModelByYText(editor: Editor, yText: Y.XmlText): BlockyTextModel {
+  const result = new BlockyTextModel();
+
+  const delta = yText.toDelta();
+
+  let index: number = 0;
+  for (const d of delta) {
+    if (typeof d.retain === "number") {
+      index += d.retain
+    } else if (typeof d.insert === "string") {
+      result.insert(index, d.insert, d.attributes);
+      index += d.insert.length;
+    }
+  }
+
+  bindTextModel(editor, result, yText);
+
+  return result;
+}
+
 export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
   const { doc, allowInit } = options;
   const docFragment = doc.getXmlFragment();
@@ -103,7 +123,14 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
       const { state } = editor;
 
       function makeBlockyElementByYElement(yElement: Y.XmlElement): BlockyElement {
-        const result = new BlockyElement(yElement.nodeName);
+        let result: BlockyElement;
+
+        if (isUpperCase(yElement.nodeName)) {
+          result = new BlockElement(yElement.nodeName, yElement.getAttribute("id"));
+        } else {
+          result = new BlockyElement(yElement.nodeName);
+        }
+
         result.state = state;
 
         const attribs = yElement.getAttributes();
@@ -113,6 +140,21 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
             result.setAttribute(key, value);
           }
         }
+
+        let childPtr = yElement.firstChild;
+        while (childPtr) {
+          if (childPtr instanceof Y.XmlElement) {
+            const child = makeBlockyElementByYElement(childPtr);
+            result.appendChild(child);
+          } else if (childPtr instanceof Y.XmlText) {
+            const textModel = createBlockyTextModelByYText(editor, childPtr);
+            result.appendChild(textModel);
+          }
+
+          childPtr = childPtr.nextSibling;
+        }
+
+        bindBlockyElement(editor, result, yElement);
 
         return result;
       }
@@ -164,6 +206,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
                       const createdElement = makeBlockyElementByYElement(yXmlElement);
 
                       blockyElement.insertChildAt(index, createdElement);
+                      console.log("insert child at:", index, createdElement);
 
                       index++;
                     }
@@ -173,46 +216,6 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
             });
           });
         });
-      }
-
-      const createBlockElementByXmlElement = (editor: Editor, element: Y.XmlElement): BlockElement | undefined => {
-        const id = element.getAttribute("id");
-        if (!id) {
-          return;
-        }
-
-        const createdElement = new BlockElement(element.nodeName, id);
-        createdElement.state = state;
-
-        bindBlockyElement(editor, createdElement, element);
-
-        const attribs = element.getAttributes();
-        for (const key in attribs) {
-          if (key === "id") {
-            continue;
-          }
-          const value = attribs[key];
-          createdElement.setAttribute(key, value);
-        }
-
-        let ptr = element.firstChild;
-        while (ptr) {
-          if (ptr instanceof Y.XmlText) {
-            const blockyTextModel = new BlockyTextModel
-            const deltas = ptr.toDelta();
-
-            handleDeltaForText(blockyTextModel, deltas);
-            bindTextModel(editor, blockyTextModel, ptr);
-            createdElement.appendChild(blockyTextModel);
-          } else if (ptr instanceof Y.XmlElement) {
-            const blockyElement = makeBlockyElementByYElement(ptr);
-            createdElement.appendChild(blockyElement);
-          }
-
-          ptr = ptr.nextSibling;
-        }
-
-        return createdElement;
       }
 
       const handleInsert = (index: number, elements: Y.XmlElement[]) => {
@@ -225,7 +228,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         }
 
         for (const element of elements) {
-          const createdElement = createBlockElementByXmlElement(editor, element);
+          const createdElement = makeBlockyElementByYElement(element);
           if (!createdElement) {
             continue;
           }
@@ -299,7 +302,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         withSilent(state, () => {
           let child = docFragment.firstChild;
           while (child) {
-            const element = createBlockElementByXmlElement(editor, child as any);
+            const element = makeBlockyElementByYElement(child as any);
             if (!element) {
               continue;
             }
