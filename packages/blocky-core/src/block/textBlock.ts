@@ -423,13 +423,11 @@ class TextBlock extends Block {
   private ensureContentContainerStyle(
     blockContainer: HTMLElement,
     contentContainer: HTMLElement,
-    textModel: BlockyTextModel 
   ): HTMLElement {
     const renderedType = contentContainer.getAttribute("data-type");
     const textType = this.getTextType();
 
     const forceRenderContentStyle = (
-      parent: HTMLElement,
       contentContainer: HTMLElement,
       textType: TextType
     ) => {
@@ -455,19 +453,20 @@ class TextBlock extends Block {
       contentContainer.setAttribute("data-type", textType.toString());
     };
 
-    const parent = contentContainer.parentElement!;
     if (!renderedType) {
-      forceRenderContentStyle(parent, contentContainer, textType);
+      forceRenderContentStyle(contentContainer, textType);
       return contentContainer;
     }
 
     const oldDataType = parseInt(renderedType, 10);
     if (oldDataType !== textType) {
-      clearAllChildren(parent);
+      this.#bodyContainer?.removeChild(this.#contentContainer!);
 
       const newContainer = this.createContentContainer();
-      parent.appendChild(newContainer);
-      forceRenderContentStyle(parent, newContainer, textType);
+      this.#bodyContainer?.insertBefore(newContainer, null);
+      this.#contentContainer = newContainer;
+
+      forceRenderContentStyle(newContainer, textType);
 
       return newContainer;
     }
@@ -516,7 +515,6 @@ class TextBlock extends Block {
     contentContainer = this.ensureContentContainerStyle(
       blockContainer,
       contentContainer,
-      textModel
     );
 
     let nodePtr = textModel.nodeBegin;
