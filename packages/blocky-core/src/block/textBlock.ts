@@ -66,8 +66,8 @@ function getTextTypeFromElement(element: BlockyElement): TextType {
 
 class TextBlock extends Block {
   #container: HTMLElement | undefined;
-  #bodyContainer: HTMLElement | undefined;
-  #contentContainer: HTMLElement | undefined;
+  #bodyContainer: HTMLElement | null = null;
+  #contentContainer: HTMLElement | null = null;
 
   constructor(private def: TextBlockDefinition, props: BlockElement) {
     super(props);
@@ -158,9 +158,6 @@ class TextBlock extends Block {
 
     this.#contentContainer = this.createContentContainer();
     this.#bodyContainer.append(this.#contentContainer);
-
-    this.childrenContainerDOM = this.#bodyContainer;
-    this.childrenBeginDOM = this.#contentContainer;
 
     element.appendChild(this.#bodyContainer);
   }
@@ -360,9 +357,12 @@ class TextBlock extends Block {
     this.#container = container;
 
     const textModel = this.props.firstChild! as BlockyTextModel;
+    if (!textModel || !(textModel instanceof BlockyTextModel)) {
+      console.warn("expected text model, got:", textModel);
+      return;
+    }
 
-    const contentContainer = this.findContentContainer(container);
-    this.renderBlockTextContent(container, contentContainer, textModel);
+    this.renderBlockTextContent(container, textModel);
   }
 
   private createAnchorNode(href: string): HTMLSpanElement {
@@ -474,6 +474,14 @@ class TextBlock extends Block {
     return contentContainer;
   }
 
+  override get childrenContainerDOM(): HTMLElement | null {
+    return this.#bodyContainer;
+  }
+
+  override get childrenBeginDOM(): HTMLElement | null {
+    return this.#contentContainer;
+  }
+
   private isNodeMatch(node: TextNode, dom: Node): boolean {
     if (node.attributes) {
       if (typeof node.attributes.href === "string") {
@@ -507,14 +515,10 @@ class TextBlock extends Block {
     return true;
   }
 
-  private renderBlockTextContent(
-    blockContainer: HTMLElement,
-    contentContainer: HTMLElement,
-    textModel: BlockyTextModel,
-  ) {
-    contentContainer = this.ensureContentContainerStyle(
+  private renderBlockTextContent(blockContainer: HTMLElement, textModel: BlockyTextModel) {
+    const contentContainer = this.ensureContentContainerStyle(
       blockContainer,
-      contentContainer,
+      this.#contentContainer!,
     );
 
     let nodePtr = textModel.nodeBegin;

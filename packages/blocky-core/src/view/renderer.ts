@@ -1,4 +1,4 @@
-import { clearAllChildren, elem, removeNode } from "blocky-common/es/dom";
+import { elem, removeNode } from "blocky-common/es/dom";
 import { isUndefined } from "blocky-common/es/object";
 import { type BlockyElement } from "@pkg/model";
 import type { Editor } from "@pkg/view/editor";
@@ -99,8 +99,14 @@ export class DocRenderer {
   protected renderBlocks(blocksContainer: HTMLElement, beginChild: ChildNode | null, parentNode: BlockyElement) {
     let nodePtr = parentNode.firstChild;
     
+    // remove the following node;
     if (!nodePtr) {
-      clearAllChildren(blocksContainer);
+      let next = beginChild?.nextSibling;
+      while (next) {
+        const nextOfnext = next.nextSibling;
+        removeNode(next);
+        next = nextOfnext;
+      }
       return;
     }
 
