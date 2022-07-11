@@ -625,8 +625,10 @@ class TextBlock extends Block {
    * delete this node, append to the parent
    */
   override onDedent(): void {
-    // const textType = this.getTextType();
     const parentBlockElement = this.findParentBlockElement();
+    if (!parentBlockElement) {
+      return;
+    }
 
     const prevCursorState = this.editor.state.cursorState;
     this.editor.state.cursorState = undefined;
@@ -636,7 +638,6 @@ class TextBlock extends Block {
 
       const copy = this.props.clone();
 
-      console.log({ parentElement });
       parentElement.removeChild(this.props);
 
       const parentOfParentBlockElement = parentBlockElement.parent as BlockyElement;
@@ -648,7 +649,7 @@ class TextBlock extends Block {
     }, false);
   }
 
-  private findParentBlockElement(): BlockElement {
+  private findParentBlockElement(): BlockElement | undefined {
     let result = this.props.parent;
 
     while (result) {
@@ -658,8 +659,6 @@ class TextBlock extends Block {
 
       result = result.parent;
     }
-
-    throw new Error("parent not found");
   }
 
 }
