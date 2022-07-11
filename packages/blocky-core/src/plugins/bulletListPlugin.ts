@@ -5,6 +5,7 @@ import {
   setTextTypeForTextBlock,
   getTextTypeForTextBlock,
   Block, BlockElement,
+  TextBlockName,
   type IPlugin,
   type Editor,
 } from "@pkg/index";
@@ -24,7 +25,7 @@ function makeBulletListPlugin(): IPlugin {
   };
   const handleEveryBlock = (editor: Editor) => (block: Block) => {
     const textElement = block.props;
-    if (textElement.nodeName !== "text") {
+    if (textElement.nodeName !== TextBlockName) {
       return;
     }
     const textModel = textElement.firstChild! as BlockyTextModel;
