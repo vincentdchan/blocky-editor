@@ -166,6 +166,30 @@ export class BlockElement extends BlockyElement {
     return this.getAttribute("id")!;
   }
 
+  override clone(): BlockElement {
+    const result = new BlockElement(this.nodeName, this.id);
+
+    const attribs = this.getAttributes();
+    for (const key in attribs) {
+      if (key === "id") {
+        continue;
+      }
+      const value = attribs[key];
+      if (value) {
+        result.setAttribute(key, value);
+      }
+    }
+
+    let childPtr = this.firstChild;
+
+    while (childPtr) {
+      result.appendChild(childPtr.clone());
+      childPtr = childPtr.nextSibling;
+    }
+    
+    return result;
+  }
+
 }
 
 export class Block implements IDisposable {

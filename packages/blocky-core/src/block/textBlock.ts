@@ -618,7 +618,7 @@ class TextBlock extends Block {
       return () => {
         this.editor.state.cursorState = prevCursorState;
       };
-    });
+    }, false);
   }
 
   /**
@@ -628,16 +628,24 @@ class TextBlock extends Block {
     // const textType = this.getTextType();
     const parentBlockElement = this.findParentBlockElement();
 
+    const prevCursorState = this.editor.state.cursorState;
+    this.editor.state.cursorState = undefined;
+
     this.editor.update(() => {
       const parentElement = this.props.parent! as BlockyElement;
 
       const copy = this.props.clone();
 
+      console.log({ parentElement });
       parentElement.removeChild(this.props);
 
       const parentOfParentBlockElement = parentBlockElement.parent as BlockyElement;
       parentOfParentBlockElement.insertAfter(copy, parentBlockElement);
-    });
+
+      return () => {
+        this.editor.state.cursorState = prevCursorState;
+      };
+    }, false);
   }
 
   private findParentBlockElement(): BlockElement {
