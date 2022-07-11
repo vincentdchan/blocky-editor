@@ -187,6 +187,11 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
                 yElement.setAttribute(e.key, e.value);
                 break;
               }
+              case "element-remove-child": {
+                const index = e.getInsertIndex();
+                yElement.delete(index);
+                break;
+              }
             }
           });
         });
@@ -214,6 +219,9 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
 
                       index++;
                     }
+                  } else if (typeof delta.delete === "number") {
+                    const numToDelete = delta.delete;
+                    blockyElement.deleteChildrenAt(index, numToDelete);
                   }
                 }
               }

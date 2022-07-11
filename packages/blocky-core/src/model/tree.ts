@@ -447,6 +447,7 @@ export interface ElementSetAttributeEvent {
 export interface ElementRemoveChildEvent {
   type: "element-remove-child",
   child: BlockyNode,
+  getInsertIndex: () => number,
 }
 
 export interface ElementInsertChildEvent {
@@ -616,10 +617,33 @@ export class BlockyElement implements BlockyNode, WithState {
     return { ...this.#attributes };
   }
 
+  deleteChildrenAt(index: number, count: number) {
+    let ptr = this.#firstChild;
+
+    while (index > 0) {
+      ptr = ptr?.nextSibling ?? null;
+    }
+
+    while (ptr && count > 0) {
+      const next = ptr.nextSibling;
+      this.removeChild(ptr);
+
+      ptr = next;
+      count--;
+    }
+  }
+
   removeChild(node: BlockyNode) {
     const { parent } = node;
     if (parent !== this) {
       throw new TypeError("node is not the child of this element");
+    }
+
+    let ptr = 0;
+    let nodePtr = node.prevSibling;
+    while (nodePtr) {
+      ptr++;
+      nodePtr = nodePtr.nextSibling;
     }
 
     if (node.prevSibling) {
@@ -647,6 +671,9 @@ export class BlockyElement implements BlockyNode, WithState {
     this.onChanged.emit({
       type: "element-remove-child",
       child: node,
+      getInsertIndex: () => {
+        return ptr;
+      },
     });
   }
 
