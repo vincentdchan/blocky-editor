@@ -471,7 +471,6 @@ export class Editor {
 
   private checkMarkedDom(node: Node, currentOffset?: number) {
     const treeNode = node._mgNode as BlockElement;
-    const targetId = treeNode.id;
     if (!node.parentNode) {
       // dom has been removed
 
@@ -729,7 +728,7 @@ export class Editor {
    * fn is called, the render function
    * will be called.
    */
-  public update(fn: () => AfterFn | void) {
+  public update(fn: () => AfterFn | void, ignoreSelection = false) {
     if (this.#isUpdating) {
       throw new Error("is in updating process");
     }
@@ -742,6 +741,9 @@ export class Editor {
       });
       this.render(() => {
         done?.();
+        if (ignoreSelection) {
+          return;
+        }
         this.selectionChanged();
       });
     } finally {

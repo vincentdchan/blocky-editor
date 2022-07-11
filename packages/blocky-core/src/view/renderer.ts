@@ -159,7 +159,7 @@ export class DocRenderer {
     while (domPtr) {
       const next = domPtr.nextSibling;
 
-      this.editor.destructBlockNode(domPtr);
+      removeNode(domPtr);
 
       domPtr = next;
     }
