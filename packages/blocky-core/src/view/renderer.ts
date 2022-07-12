@@ -133,6 +133,7 @@ export class DocRenderer {
           domPtr = existDom;
         } else {
           const newBlockContainer = this.createBlockContainer();
+          newBlockContainer.setAttribute("date-id", blockElement.id);
           blocksContainer.insertBefore(newBlockContainer, prevPtr?.nextSibling ?? null);
           domPtr = newBlockContainer;
           this.initBlockContainer(newBlockContainer, blockElement, blockDef);
@@ -173,7 +174,7 @@ export class DocRenderer {
     }
 
     blockContainer._mgNode = blockNode;
-    editor.state.domMap.set(blockNode.id, blockContainer);
+    editor.state.setDom(blockNode.id, blockContainer);
     blockContainer.setAttribute("data-type", blockDef.name);
     blockContainer.addEventListener("mouseenter", () => {
       editor.placeBannerAt(blockContainer, blockNode);
