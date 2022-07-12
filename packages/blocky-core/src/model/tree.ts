@@ -622,6 +622,7 @@ export class BlockyElement implements BlockyNode, WithState {
 
     while (index > 0) {
       ptr = ptr?.nextSibling ?? null;
+      index--;
     }
 
     while (ptr && count > 0) {
