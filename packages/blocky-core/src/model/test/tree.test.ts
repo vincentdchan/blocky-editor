@@ -73,3 +73,22 @@ test("tree insert at index", () => {
   expect(secondChild.prevSibling).toBe(firstChild);
   expect(secondChild.nextSibling).toBe(thirdChild);
 });
+
+test("tree delete children at index", () => {
+  const parent = new BlockyElement("block");
+  const firstChild = new BlockyElement("first-child");
+  const secondChild = new BlockyElement("second-child");
+  const thirdChild = new BlockyElement("third-child");
+
+  parent.appendChild(firstChild);
+  parent.appendChild(secondChild);
+  parent.appendChild(thirdChild);
+
+  parent.deleteChildrenAt(1, 1);
+  expect(parent.childrenLength).toBe(2);
+  expect(firstChild.nextSibling).toBe(thirdChild);
+  expect(thirdChild.prevSibling).toBe(firstChild);
+
+  expect(secondChild.prevSibling).toBeNull();
+  expect(secondChild.nextSibling).toBeNull();
+})
