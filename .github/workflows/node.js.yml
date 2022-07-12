@@ -30,3 +30,4 @@ jobs:
     - run: pnpm run build
     - run: cd packages/blocky-core && pnpm run test:prod
     - run: cd packages/blocky-core && pnpm run lint 
+    - run: chmod +x ./bundle_size.sh && ./bundle_size.sh
