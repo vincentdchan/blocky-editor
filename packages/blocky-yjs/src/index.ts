@@ -363,34 +363,16 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         });
       });
 
-      // state.newBlockCreated.on(handleNewBlockCreate);
-
       state.root.onChanged.on(e => {
         withSilent(state, () => {
           if (e.type === "element-insert-child") {
             const node = makeYElementByBlockyElement(e.child as any);
             const index = e.getInsertIndex();
             docFragment.insert(index, [node]);
+          } else if (e.type === "element-remove-child") {
+            const index = e.getInsertIndex();
+            docFragment.delete(index);
           }
-        });
-      });
-
-      state.blockDeleted.on((blockElement: BlockElement) => {
-        withSilent(state, () => {
-          let index = 0;
-          const id = blockElement.id;
-          let ptr = docFragment.firstChild;
-          while (ptr) {
-            if (ptr instanceof Y.XmlElement && isUpperCase(ptr.nodeName) && ptr.getAttribute("id") === id) {
-              break;
-            }
-            index++;
-            ptr = ptr.nextSibling;
-          }
-          if (!ptr) {
-            return;
-          }
-          docFragment.delete(index, 1);
         });
       });
     },

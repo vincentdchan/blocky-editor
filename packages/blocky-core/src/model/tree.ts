@@ -643,7 +643,7 @@ export class BlockyElement implements BlockyNode, WithState {
     let nodePtr = node.prevSibling;
     while (nodePtr) {
       ptr++;
-      nodePtr = nodePtr.nextSibling;
+      nodePtr = nodePtr.prevSibling;
     }
 
     if (node.prevSibling) {

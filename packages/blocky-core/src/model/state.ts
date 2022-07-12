@@ -10,6 +10,7 @@ import { type CursorState } from "@pkg/model/cursor";
 import { Block, BlockElement } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { validate as validateNode } from "./validator";
+import { removeNode } from "blocky-common/src/dom";
 
 function jsonNodeToBlock(state: State, node: S.JSONNode): BlockyNode {
   if (typeof node !== "object") {
@@ -131,11 +132,23 @@ class State {
     const blockElement = child as BlockElement;
     const blockId = blockElement.id;
 
+    const dom = this.domMap.get(blockId);
+    if (dom) {
+      removeNode(dom);
+    }
+
     this.idMap.delete(blockId);
     this.domMap.delete(blockId);
 
     this.blockDeleted.emit(blockElement);
     return true;
+  }
+
+  public setDom(blockId: string, dom: HTMLElement) {
+    if (this.domMap.has(blockId)) {
+      throw new Error(`duplicated dom: ${blockId}`);
+    }
+    this.domMap.set(blockId, dom);
   }
 
   private insertElement(element: BlockElement) {
