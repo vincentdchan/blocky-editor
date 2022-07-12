@@ -1,6 +1,6 @@
 {
   "name": "blocky-yjs",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "The plugin for connecting yjs and blocky editor",
   "main": "dist/index.js",
   "scripts": {
