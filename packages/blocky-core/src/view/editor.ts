@@ -776,6 +776,13 @@ export class Editor {
     }
   }
 
+  /**
+   * If the focusing line is textline,
+   * try to merge to previous line.
+   * 
+   * If the previous lins is not a text line,
+   * then focus on it.
+   */
   private tryMergeTextToPreviousLine(): boolean {
     const { cursorState } = this.state;
     if (!cursorState) {
@@ -799,6 +806,53 @@ export class Editor {
     if (node.nodeName !== TextBlockName) {
       return false;
     }
+
+    const prevNode = node.prevSibling as BlockElement | undefined;
+    if (!prevNode) {
+      return true;
+    }
+
+    if (prevNode.nodeName !== TextBlockName) {
+      this.state.cursorState = {
+        type: "collapsed",
+        targetId: prevNode.id,
+        offset: 0,
+      };
+      return true;
+    }
+    const firstChild = prevNode.firstChild;
+    if (!firstChild || !(firstChild instanceof BlockyTextModel)) {
+      return true;
+    }
+    if (!node.firstChild) {
+      return true;
+    }
+
+    const thisTextModel = node.firstChild as BlockyTextModel;
+    const prevTextModel = firstChild as BlockyTextModel;
+    const originalLength = prevTextModel.length;
+
+    this.update(() => {
+      let length = prevTextModel.length;
+
+      let ptr = thisTextModel.nodeBegin;
+
+      while (ptr) {
+        prevTextModel.insert(length, ptr.content, ptr.attributes);
+        length += ptr.content.length;
+        ptr = ptr.next;
+      }
+
+      (node.parent as BlockyElement).removeChild(node);
+
+      return () => {
+        this.state.cursorState = {
+          type: "collapsed",
+          targetId: prevNode.id,
+          offset: originalLength,
+        };
+      }
+    });
 
     return true;
   }
@@ -916,6 +970,9 @@ export class Editor {
       targetNode instanceof HTMLDivElement &&
       targetNode.classList.contains(this.#renderer.blockClassName)
     ) {
+      if (targetNode.nodeName !== TextBlockName) {
+        sel.removeAllRanges();
+      }
       this.focusBlock(sel, targetNode, collapsedCursor);
     } else {
       console.error("unknown element:", targetNode);
