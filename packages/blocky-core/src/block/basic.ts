@@ -1,8 +1,9 @@
 import { type IDisposable } from "blocky-common/es/disposable";
+import { type Position } from "blocky-common/es/position";
 import { CursorState, type CollapsedCursor } from "@pkg/model/cursor";
 import { BlockyElement } from "@pkg/model/tree";
 import { type Editor } from "@pkg/view/editor";
-import { type Position } from "blocky-common/es/position";
+import { DocNodeName } from "@pkg/model/state";
 
 export interface BlockDidMountEvent {
   element: HTMLElement;
@@ -164,6 +165,31 @@ export class BlockElement extends BlockyElement {
 
   get id(): string {
     return this.getAttribute("id")!;
+  }
+
+  /**
+   * Return the level of block,
+   * not the level of [Node].
+   */
+  blockLevel(): number {
+    const parentNode = this.parent;
+    if (!parentNode) {
+      return Number.MAX_SAFE_INTEGER;
+    }
+
+    if (parentNode.nodeName === DocNodeName) {
+      return 0;
+    }
+
+    if (parentNode.nodeName === "block-children") {
+      const parentOfParent = parentNode.parent;
+      if (!parentOfParent || !(parentOfParent instanceof BlockElement)) {
+        return Number.MAX_SAFE_INTEGER;
+      }
+      return parentOfParent.blockLevel() + 1;
+    }
+
+    return Number.MAX_SAFE_INTEGER;
   }
 
   override clone(): BlockElement {

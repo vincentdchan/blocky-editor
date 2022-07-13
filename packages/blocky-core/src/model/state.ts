@@ -49,13 +49,15 @@ function jsonNodeToBlock(state: State, node: S.JSONNode): BlockyNode {
   return blockElement;
 }
 
+export const DocNodeName = "doc";
+
 class State {
   static fromMarkup(
     doc: S.JSONNode,
     blockRegistry: BlockRegistry,
     idHelper: IdGenerator
   ): State {
-    const rootNode = new BlockyElement("doc");
+    const rootNode = new BlockyElement(DocNodeName);
     const state = new State(rootNode, blockRegistry, idHelper);
     rootNode.state = state;
 
