@@ -1,6 +1,6 @@
 // import { Action } from "space/transactions";
 import { test, expect } from "vitest";
-import { BlockyElement } from "../tree";
+import { BlockyElement } from "@pkg/model/tree";
 
 test("tree append", () => {
   const parent = new BlockyElement("block");

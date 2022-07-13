@@ -22,5 +22,6 @@ export {
   BlockyTextModel,
   BlockyElement,
   TextType,
+  DocNodeName,
 } from "./model";
 export { TextBlockName } from "./block/textBlock"
