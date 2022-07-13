@@ -285,11 +285,11 @@ export class Editor {
       this.#container.appendChild(newDom);
       newDom.contentEditable = "true";
 
-      $on(newDom, "input", (e: Event) => {
+      $on(newDom, "input", () => {
         if (this.composing) {
           return;
         }
-        this.handleContentChanged(e);
+        this.handleContentChanged();
       });
       $on(newDom, "compositionstart", this.handleCompositionStart);
       $on(newDom, "compositionend", this.handleCompositionEnd);
@@ -512,21 +512,25 @@ export class Editor {
     this.render();
   }
 
-  private handleContentChanged = (e?: any) => {
+  private handleContentChanged = () => {
     const { cursorState } = this.state;
     if (cursorState === undefined || cursorState.type === "open") {
       this.handleOpenCursorContentChanged();
       return;
     }
 
-    const { targetId: spanId, offset: currentOffset } = cursorState;
+    const { targetId, offset: currentOffset } = cursorState;
 
-    const domNode = this.state.domMap.get(spanId);
+    const domNode = this.state.domMap.get(targetId);
     if (!domNode) {
+      console.warn(`id of block doesn't exist: ${targetId}`);
       return;
     }
 
     this.checkMarkedDom(domNode, currentOffset);
+    // this is essential because the cursor will change
+    // after the user typing.
+    this.selectionChanged();
   };
 
   public placeBannerAt(blockContainer: HTMLElement, node: BlockElement) {
@@ -763,12 +767,16 @@ export class Editor {
   }
 
   private handleBackspace(e: KeyboardEvent) {
+    if (this.tryMergeTextToPreviousLine()) {
+      e.preventDefault();
+      return;
+    }
     if (this.deleteBlockOnFocusedCursor()) {
       e.preventDefault();
     }
   }
 
-  private deleteBlockOnFocusedCursor(): boolean {
+  private tryMergeTextToPreviousLine(): boolean {
     const { cursorState } = this.state;
     if (!cursorState) {
       return false;
@@ -777,13 +785,40 @@ export class Editor {
       return false;
     }
 
-    const { targetId } = cursorState;
+    const { targetId, offset } = cursorState;
 
-    if (!this.idGenerator.isBlockId(targetId)) {
+    if (offset !== 0) {
       return false;
     }
 
     const node = this.state.idMap.get(targetId) as BlockElement | undefined;
+    if (!node) {
+      return false;
+    }
+
+    if (node.nodeName !== TextBlockName) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private getBlockElementAtCollapsedCursor(): BlockElement | undefined {
+    const { cursorState } = this.state;
+    if (!cursorState) {
+      return;
+    }
+    if (cursorState.type === "open") {
+      return;
+    }
+
+    const { targetId } = cursorState;
+
+    return this.state.idMap.get(targetId) as BlockElement | undefined;
+  }
+
+  private deleteBlockOnFocusedCursor(): boolean {
+    const node = this.getBlockElementAtCollapsedCursor();
     if (!node) {
       return false;
     }
