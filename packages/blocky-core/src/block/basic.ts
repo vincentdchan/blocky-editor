@@ -36,7 +36,6 @@ export class BlockEvent {
   get defaultPrevented() {
     return this.#defaultPrevented;
   }
-
 }
 
 export class BlockPasteEvent extends BlockEvent {
@@ -52,7 +51,6 @@ export class BlockPasteEvent extends BlockEvent {
     this.node = node;
     this.tryMerge = tryMerge;
   }
-
 }
 
 export interface TryParsePastedDOMEventProps {
@@ -72,7 +70,6 @@ export class TryParsePastedDOMEvent extends BlockEvent {
     this.editor = editor;
     this.node = node;
   }
-
 }
 
 export interface BlockFocusedEvent {
@@ -100,36 +97,34 @@ export interface IBlockDefinition {
   /**
    * This method is used to handle pasting specific
    * block copy from the blocky editor.
-   * 
+   *
    * If you want to handle the HTML pasted from another
    * source, please implement [[tryParsePastedDOM]].
    */
   onPaste?(e: BlockPasteEvent): CursorState | undefined;
 
   /**
-   * 
+   *
    * If this method is implemented, all the nodes
    * pasted from from the clipboard.
-   * 
+   *
    * The plugin should tell the editor if this dom
    * is handled. If it's handled, the editor will not
    * handle it anymore.
-   * 
+   *
    * Call [[preventDefault()]] if the plugin has handled
    * the node.
-   * 
+   *
    * Otherwise, the editor will pass it to other plugins,
    * or handle it with default handler if no plugins handles.
-   * 
+   *
    */
   tryParsePastedDOM?(e: TryParsePastedDOMEvent): void;
 
   onBlockCreated(e: BlockCreatedEvent): Block;
-
 }
 
 export class BlockElement extends BlockyElement {
-
   // public contentContainer: BlockyElement;
   // public childrenContainer: BlockyElement;
 
@@ -212,21 +207,20 @@ export class BlockElement extends BlockyElement {
       result.appendChild(childPtr.clone());
       childPtr = childPtr.nextSibling;
     }
-    
+
     return result;
   }
-
 }
 
 export class Block implements IDisposable {
   #editor: Editor | undefined;
 
   get childrenContainerDOM(): HTMLElement | null {
-    return null
+    return null;
   }
 
   get childrenBeginDOM(): HTMLElement | null {
-    return null
+    return null;
   }
 
   constructor(public props: BlockElement) {}
@@ -259,10 +253,10 @@ export class Block implements IDisposable {
 
   /**
    * Handle the block is focused.
-   * 
+   *
    * This hook will only be triggered when the focused id is
    * equal to the block'id. The children is out of situation.
-   * 
+   *
    */
   blockFocused(e: BlockFocusedEvent): void {}
 
@@ -287,5 +281,4 @@ export class Block implements IDisposable {
   dispose(): void {
     this.#editor = undefined;
   }
-
 }

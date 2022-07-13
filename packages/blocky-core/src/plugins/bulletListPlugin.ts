@@ -1,17 +1,23 @@
 import { isWhiteSpace } from "blocky-common/es/text";
 import {
   BlockyTextModel,
-  TextType, type TextChangedEvent,
+  TextType,
+  type TextChangedEvent,
   setTextTypeForTextBlock,
   getTextTypeForTextBlock,
-  Block, BlockElement,
+  Block,
+  BlockElement,
   TextBlockName,
   type IPlugin,
   type Editor,
 } from "@pkg/index";
 
 function makeBulletListPlugin(): IPlugin {
-  const turnTextBlockIntoBulletList = (editor: Editor, blockId: string, textElement: BlockElement) => {
+  const turnTextBlockIntoBulletList = (
+    editor: Editor,
+    blockId: string,
+    textElement: BlockElement
+  ) => {
     const textModel = textElement.firstChild! as BlockyTextModel;
     textModel.delete(0, 2);
     setTextTypeForTextBlock(textElement, TextType.Bulleted);
@@ -41,11 +47,57 @@ function makeBulletListPlugin(): IPlugin {
       }
     });
   };
+  const handleEnter = (editor: Editor, e: KeyboardEvent) => {
+    const { cursorState } = editor.state;
+    if (!cursorState) {
+      return;
+    }
+    if (cursorState.type === "open") {
+      return;
+    }
+
+    const { targetId, offset } = cursorState;
+    if (offset !== 0) {
+      return;
+    }
+
+    const textElement = editor.getTextElementByBlockId(targetId);
+    if (!textElement || textElement.nodeName !== TextBlockName) {
+      return;
+    }
+
+    const textType = getTextTypeForTextBlock(textElement);
+    if (textType !== TextType.Bulleted) {
+      return;
+    }
+    const textModel = textElement.firstChild as BlockyTextModel | undefined;
+    if (!textModel) {
+      return;
+    }
+    if (textModel.length === 0) {
+      e.preventDefault();
+      editor.state.cursorState = undefined;
+      editor.update(() => {
+        setTextTypeForTextBlock(textElement, TextType.Normal);
+        return () => {
+          editor.state.cursorState = {
+            type: "collapsed",
+            targetId,
+            offset: 0,
+          };
+        };
+      });
+    }
+  };
   /**
    * If the user presses a Backspace on the start of a bullet list,
    * turn it back to a normal text.
    */
   const handleKeydown = (editor: Editor) => (e: KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleEnter(editor, e);
+      return;
+    }
     if (e.key !== "Backspace") {
       return;
     }
