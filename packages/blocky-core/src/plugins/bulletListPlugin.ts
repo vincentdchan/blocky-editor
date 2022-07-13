@@ -70,12 +70,15 @@ function makeBulletListPlugin(): IPlugin {
     const textType = getTextTypeForTextBlock(textElement);
     if (textType === TextType.Bulleted) {
       e.preventDefault();
-      setTextTypeForTextBlock(textElement, TextType.Normal);
-      editor.render(() => {
-        editor.state.cursorState = {
-          type: "collapsed",
-          targetId,
-          offset: 0,
+      editor.state.cursorState = undefined;
+      editor.update(() => {
+        setTextTypeForTextBlock(textElement, TextType.Normal);
+        return () => {
+          editor.state.cursorState = {
+            type: "collapsed",
+            targetId,
+            offset: 0,
+          };
         };
       });
     }
