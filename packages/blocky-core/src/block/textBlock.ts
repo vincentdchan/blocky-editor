@@ -1,4 +1,4 @@
-import { clearAllChildren, elem } from "blocky-common/es/dom";
+import { elem, removeNode } from "blocky-common/es/dom";
 import {
   type IBlockDefinition,
   type BlockCreatedEvent,
@@ -85,6 +85,7 @@ class TextBlock extends Block {
   #container: HTMLElement | undefined;
   #bodyContainer: HTMLElement | null = null;
   #contentContainer: HTMLElement | null = null;
+  #bulletSpan: HTMLSpanElement | null = null;
 
   constructor(private def: TextBlockDefinition, props: BlockElement) {
     super(props);
@@ -448,26 +449,31 @@ class TextBlock extends Block {
       contentContainer: HTMLElement,
       textType: TextType
     ) => {
+      contentContainer.setAttribute("data-type", textType.toString());
       switch (textType) {
         case TextType.Bulleted: {
-          const bulletSpan = this.createBulletSpan();
-          blockContainer.insertBefore(bulletSpan, blockContainer.firstChild);
+          this.#bulletSpan = this.createBulletSpan();
+          blockContainer.insertBefore(this.#bulletSpan, blockContainer.firstChild);
 
           contentContainer.classList.add("blocky-bulleted");
-          break;
+          return;
         }
 
         case TextType.Heading1:
         case TextType.Heading2:
-        case TextType.Heading3:
+        case TextType.Heading3: {
           contentContainer.classList.add(`blocky-heading${textType}`);
           break;
+        }
 
         default: {
         }
       }
 
-      contentContainer.setAttribute("data-type", textType.toString());
+      if (this.#bulletSpan) {
+        removeNode(this.#bulletSpan);
+        this.#bulletSpan = null;
+      }
     };
 
     if (!renderedType) {
