@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import * as path from 'path';
+import * as path from "path";
 
 export const projectRootDir = process.cwd();
 
@@ -10,7 +10,10 @@ export const resolveByProjectRootDir = (...pathSegments: string[]) => {
 export default defineConfig(() => {
   return {
     alias: {
-      '@pkg': resolveByProjectRootDir("src"),
+      "@pkg": resolveByProjectRootDir("src"),
+    },
+    test: {
+      environment: "jsdom",
     },
   };
 });
