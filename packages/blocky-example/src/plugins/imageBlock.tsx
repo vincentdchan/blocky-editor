@@ -1,4 +1,9 @@
-import { type TryParsePastedDOMEvent, type Editor, type IPlugin, BlockElement } from "blocky-core";
+import {
+  type TryParsePastedDOMEvent,
+  type Editor,
+  type IPlugin,
+  BlockElement,
+} from "blocky-core";
 import { makeReactBlock, DefaultBlockOutline } from "blocky-preact";
 import { type RefObject, createRef } from "preact";
 import { PureComponent } from "preact/compat";
@@ -28,7 +33,7 @@ class ImageBlock extends PureComponent<ImageBlockProps, ImageBlockState> {
 
   private handleUpload = () => {
     this.#selectorRef.current!.click();
-  }
+  };
 
   private handleSelectedFileChanged = () => {
     const files = this.#selectorRef.current!.files;
@@ -40,9 +45,9 @@ class ImageBlock extends PureComponent<ImageBlockProps, ImageBlockState> {
       this.setState({
         data: fr.result as string,
       });
-    }
+    };
     fr.readAsDataURL(files[0]);
-  }
+  };
 
   renderBlockContent() {
     const { data } = this.state;
@@ -61,17 +66,13 @@ class ImageBlock extends PureComponent<ImageBlockProps, ImageBlockState> {
       );
     }
 
-    return (
-      <img src={data} alt="" />
-    );
+    return <img src={data} alt="" />;
   }
 
   render() {
     return (
       <DefaultBlockOutline>
-        <div className="blocky-image-block">
-          {this.renderBlockContent()}
-        </div>
+        <div className="blocky-image-block">{this.renderBlockContent()}</div>
       </DefaultBlockOutline>
     );
   }
@@ -105,7 +106,7 @@ export function makeImageBlockPlugin(): IPlugin {
                 offset: 0,
               };
             }
-          }
+          },
         })
       );
     },

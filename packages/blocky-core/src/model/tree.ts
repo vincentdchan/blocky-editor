@@ -1,3 +1,4 @@
+import { isUndefined } from "lodash-es";
 import { areEqualShallow } from "blocky-common/es/object";
 import { Slot } from "blocky-common/es/events";
 import { type AttributesObject, type BlockyNode } from "./element";
@@ -8,7 +9,6 @@ export interface WithState {
 }
 
 class WithStateSlot<T = any> extends Slot<T> {
-
   #objWithState: WithState;
 
   constructor(objWithState: WithState) {
@@ -22,7 +22,6 @@ class WithStateSlot<T = any> extends Slot<T> {
     }
     super.emit(v);
   }
-
 }
 
 export interface TextNode {
@@ -33,20 +32,20 @@ export interface TextNode {
 }
 
 export interface TextInsertEvent {
-  type: "text-insert",
+  type: "text-insert";
   index: number;
   text: string;
   attributes?: AttributesObject;
 }
 
 export interface TextDeleteEvent {
-  type: "text-delete",
+  type: "text-delete";
   index: number;
   length: number;
 }
 
 export interface TextFormatEvent {
-  type: "text-format",
+  type: "text-format";
   index: number;
   length: number;
   attributes?: AttributesObject;
@@ -55,7 +54,7 @@ export interface TextFormatEvent {
 export type TextChangedEvent =
   | TextInsertEvent
   | TextDeleteEvent
-  | TextFormatEvent
+  | TextFormatEvent;
 
 export interface TextSlice {
   content: string;
@@ -88,7 +87,8 @@ export class BlockyTextModel implements BlockyNode, WithState {
   #nodeEnd?: TextNode;
   #length = 0;
 
-  public readonly onChanged: WithStateSlot<TextChangedEvent> = new WithStateSlot(this);
+  public readonly onChanged: WithStateSlot<TextChangedEvent> =
+    new WithStateSlot(this);
 
   constructor() {}
 
@@ -107,7 +107,11 @@ export class BlockyTextModel implements BlockyNode, WithState {
     });
   }
 
-  private insertData(index: number, text: string, attributes?: AttributesObject) {
+  private insertData(
+    index: number,
+    text: string,
+    attributes?: AttributesObject
+  ) {
     this.#length += text.length;
     if (!this.#nodeBegin) {
       if (index !== 0) {
@@ -172,7 +176,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
   public slice(start: number, end?: number): TextSlice[] {
     const result: TextSlice[] = [];
 
-    if (typeof end === "undefined") {
+    if (isUndefined(end)) {
       end = this.length;
     }
 
@@ -433,33 +437,32 @@ export class BlockyTextModel implements BlockyNode, WithState {
 
     return result;
   }
-
 }
 
 const bannedAttributesName: Set<string> = new Set(["nodeName", "type"]);
 
 export interface ElementSetAttributeEvent {
-  type: "element-set-attrib",
-  key: string,
+  type: "element-set-attrib";
+  key: string;
   value: string;
 }
 
 export interface ElementRemoveChildEvent {
-  type: "element-remove-child",
-  child: BlockyNode,
-  getInsertIndex: () => number,
+  type: "element-remove-child";
+  child: BlockyNode;
+  getInsertIndex: () => number;
 }
 
 export interface ElementInsertChildEvent {
-  type: "element-insert-child",
-  child: BlockyNode,
-  getInsertIndex: () => number,
+  type: "element-insert-child";
+  child: BlockyNode;
+  getInsertIndex: () => number;
 }
 
 export type ElementChangedEvent =
   | ElementSetAttributeEvent
   | ElementInsertChildEvent
-  | ElementRemoveChildEvent
+  | ElementRemoveChildEvent;
 
 interface InternAttributes {
   [key: string]: string;
@@ -477,7 +480,9 @@ export class BlockyElement implements BlockyNode, WithState {
   #lastChild: BlockyNode | null = null;
   #attributes: InternAttributes = Object.create(null);
 
-  public onChanged: WithStateSlot<ElementChangedEvent> = new WithStateSlot(this);
+  public onChanged: WithStateSlot<ElementChangedEvent> = new WithStateSlot(
+    this
+  );
 
   constructor(public nodeName: string) {
     if (nodeName === "#text") {
@@ -698,5 +703,4 @@ export class BlockyElement implements BlockyNode, WithState {
 
     return result;
   }
-
 }

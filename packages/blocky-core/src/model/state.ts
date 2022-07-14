@@ -1,3 +1,4 @@
+import { isObject, isUndefined, isString, isNumber } from "lodash-es";
 import { isUpperCase } from "blocky-common/es/character";
 import { makeObservable } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
@@ -13,11 +14,11 @@ import { validate as validateNode } from "./validator";
 import { removeNode } from "blocky-common/src/dom";
 
 function jsonNodeToBlock(state: State, node: S.JSONNode): BlockyNode {
-  if (typeof node !== "object") {
-    throw new TypeError("string is expected");
+  if (!isObject(node)) {
+    throw new TypeError("object is expected");
   }
   const { nodeName, id } = node;
-  if (isUpperCase(nodeName) && typeof id === "undefined") {
+  if (isUpperCase(nodeName) && isUndefined(id)) {
     throw new TypeError("id is expected for node: " + nodeName);
   }
   if (nodeName === "#text") {
@@ -26,10 +27,10 @@ function jsonNodeToBlock(state: State, node: S.JSONNode): BlockyNode {
     let index = 0;
     for (const delta of node.textContent!) {
       const d = delta;
-      if (typeof d.insert === "string") {
+      if (isString(d.insert)) {
         textModel.insert(index, d.insert, d.attributes);
         index += d.insert.length;
-      } else if (typeof d.retain === "number") {
+      } else if (isNumber(d.retain)) {
         index += d.retain;
       }
     }
@@ -65,8 +66,8 @@ class State {
       throw new Error("the root nodeName is expected to 'document'");
     }
 
-    doc.children?.forEach(child => {
-      if (typeof child === "object") {
+    doc.children?.forEach((child) => {
+      if (isObject(child)) {
         const block = jsonNodeToBlock(state, child);
         rootNode.appendChild(block);
       }
@@ -93,10 +94,7 @@ class State {
   }
 
   public createTextElement(): BlockElement {
-    const result = new BlockElement(
-      TextBlockName,
-      this.idHelper.mkBlockId()
-    );
+    const result = new BlockElement(TextBlockName, this.idHelper.mkBlockId());
     const textModel = new BlockyTextModel();
     result.appendChild(textModel);
     return result;
