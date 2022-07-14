@@ -8,7 +8,7 @@ function createTextElement(id: string, content: string): BlockElement {
   const textModel = new BlockyTextModel();
   textModel.insert(0, content);
   const result = new BlockElement(TextBlockName, id);
-  result.appendChild(result);
+  result.appendChild(textModel);
   return result;
 }
 
@@ -24,7 +24,7 @@ function isContainerElement(node: Node): node is HTMLElement {
   return node instanceof HTMLUListElement || node instanceof HTMLDivElement;
 }
 
-export type ElementHandler = (node: Node) => BlockElement | undefined | boolean;
+export type ElementHandler = (node: Node) => BlockElement | void | boolean;
 
 export interface HTMLConverterOptions {
   idGenerator: IdGenerator;

@@ -1,6 +1,5 @@
 import { $on, isContainNode, removeNode } from "blocky-common/es/dom";
 import { isUpperCase } from "blocky-common/es/character";
-import { Cell } from "blocky-common/es/cell";
 import { observe, runInAction } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
 import { type Padding } from "blocky-common/es/dom";
@@ -35,12 +34,7 @@ import { BannerDelegate, type BannerFactory } from "./bannerDelegate";
 import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import type { EditorController } from "./controller";
-import {
-  Block,
-  BlockElement,
-  BlockPasteEvent,
-  TryParsePastedDOMEvent,
-} from "@pkg/block/basic";
+import { Block, BlockElement, BlockPasteEvent } from "@pkg/block/basic";
 import {
   setTextTypeForTextBlock,
   getTextTypeForTextBlock,
@@ -49,6 +43,7 @@ import {
   type CollaborativeCursorOptions,
   CollaborativeCursorManager,
 } from "./collaborativeCursors";
+import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { isHotkey } from "is-hotkey";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
@@ -101,6 +96,7 @@ function makeDefaultPadding(): Padding {
  * used by the plugins to do something internally.
  */
 export class Editor {
+  #htmlConverter: HTMLConverter;
   #container: HTMLDivElement;
   #renderedDom: HTMLDivElement | undefined;
   #renderer: DocRenderer;
@@ -174,6 +170,12 @@ export class Editor {
     this.#container = container;
     this.idGenerator = idGenerator ?? makeDefaultIdGenerator();
 
+    this.#htmlConverter = new HTMLConverter({
+      idGenerator: this.idGenerator,
+      leafHandler: this.#leafHandler,
+      divHandler: this.#divHandler,
+    });
+
     this.padding = {
       ...makeDefaultPadding(),
       ...padding,
@@ -193,13 +195,13 @@ export class Editor {
     this.toolbarDelegate.mount(this.#container);
     this.disposables.push(this.toolbarDelegate);
 
-    document.addEventListener("selectionchange", this.selectionChanged);
+    document.addEventListener("selectionchange", this.#selectionChanged);
 
     this.disposables.push(
       observe(state, "cursorState", this.handleCursorStateChanged)
     );
 
-    this.disposables.push($on(container, "mouseleave", this.hideBanner));
+    this.disposables.push($on(container, "mouseleave", this.#hideBanner));
 
     this.registry.plugin.emitInitPlugins(this);
 
@@ -208,10 +210,45 @@ export class Editor {
       editor: this,
     });
 
-    this.initBlockCreated();
+    this.#initBlockCreated();
   }
 
-  private initBlockCreated() {
+  #leafHandler = (node: Node): BlockElement | void => {
+    const blockRegistry = this.registry.block;
+    const blockDef = blockRegistry.getBlockDefByName(TextBlockName);
+    const pasteHandler = blockDef?.onPaste;
+    const evt = new BlockPasteEvent({
+      node: node as HTMLElement,
+      editor: this,
+    });
+    if (pasteHandler) {
+      return pasteHandler.call(blockDef, evt);
+    }
+  };
+
+  #divHandler = (node: Node): BlockElement | void => {
+    const element = node as HTMLElement;
+    const blockRegistry = this.registry.block;
+    const dataType = element.getAttribute("data-type");
+    if (!dataType) {
+      return;
+    }
+    const blockDef = blockRegistry.getBlockDefByName(dataType);
+    if (!blockDef) {
+      return;
+    }
+
+    const pasteHandler = blockDef?.onPaste;
+    if (pasteHandler) {
+      const evt = new BlockPasteEvent({
+        editor: this,
+        node: element,
+      });
+      return pasteHandler.call(blockDef, evt);
+    }
+  };
+
+  #initBlockCreated() {
     this.disposables.push(
       this.onEveryBlock.on((block: Block) => {
         block.setEditor(this);
@@ -240,43 +277,72 @@ export class Editor {
       cursor.color = color;
       cursor.name = name;
 
-      let blockId: string;
-      let offset: number;
-
+      const containerRect = this.#container.getBoundingClientRect();
       if (state.type === "collapsed") {
-        blockId = state.targetId;
-        offset = state.offset;
-      } else {
-        blockId = state.endId;
-        offset = state.endOffset;
+        const blockId = state.targetId;
+        const offset = state.offset;
+
+        const block = this.state.blocks.get(blockId);
+        if (!block) {
+          this.collaborativeCursorManager.deleteById(id);
+          return;
+        }
+        cursor.height = block.getCursorHeight();
+
+        const cursorDom = block.getCursorDomByOffset?.(offset);
+        if (!cursorDom) {
+          this.collaborativeCursorManager.deleteById(id);
+          return;
+        }
+        const range = document.createRange();
+        range.setStart(cursorDom.node, cursorDom.offset);
+        range.setEnd(cursorDom.node, cursorDom.offset);
+
+        const rects = range.getClientRects();
+        if (rects.length === 0) {
+          return;
+        }
+
+        const firstRect = rects[0];
+
+        cursor.drawCollapsedRect(
+          firstRect.x - containerRect.x,
+          firstRect.y - containerRect.y
+        );
+        return;
       }
 
-      const block = this.state.blocks.get(blockId);
+      if (state.startId != state.endId) {
+        return;
+      }
+
+      const block = this.state.blocks.get(state.startId);
       if (!block) {
         this.collaborativeCursorManager.deleteById(id);
         return;
       }
+
       cursor.height = block.getCursorHeight();
 
-      const cursorDom = block.getCursorDomByOffset(offset);
-      if (!cursorDom) {
+      const startCursorDom = block.getCursorDomByOffset?.(state.startOffset);
+      const endCursorDom = block.getCursorDomByOffset?.(state.endOffset);
+      if (!startCursorDom || !endCursorDom) {
         this.collaborativeCursorManager.deleteById(id);
         return;
       }
-
       const range = document.createRange();
-      range.setStart(cursorDom.node, cursorDom.offset);
-      range.setEnd(cursorDom.node, cursorDom.offset);
+      range.setStart(startCursorDom.node, startCursorDom.offset);
+      range.setEnd(endCursorDom.node, endCursorDom.offset);
 
-      const rects = range.getClientRects();
-      if (rects.length === 0) {
-        return;
-      }
-      const firstRect = rects[0];
-      const containerRect = this.#container.getBoundingClientRect();
-
-      cursor.x = firstRect.x - containerRect.x;
-      cursor.y = firstRect.y - containerRect.y;
+      const rects = [...range.getClientRects()].map((rect) => {
+        return new DOMRect(
+          rect.x - containerRect.x,
+          rect.y - containerRect.y,
+          rect.width,
+          rect.height
+        );
+      });
+      cursor.drawRects(rects);
     }, 15);
   }
 
@@ -290,12 +356,12 @@ export class Editor {
         if (this.composing) {
           return;
         }
-        this.handleContentChanged();
+        this.#handleContentChanged();
       });
-      $on(newDom, "compositionstart", this.handleCompositionStart);
-      $on(newDom, "compositionend", this.handleCompositionEnd);
-      $on(newDom, "keydown", this.handleKeyDown);
-      $on(newDom, "paste", this.handlePaste);
+      $on(newDom, "compositionstart", this.#handleCompositionStart);
+      $on(newDom, "compositionend", this.#handleCompositionEnd);
+      $on(newDom, "keydown", this.#handleKeyDown);
+      $on(newDom, "paste", this.#handlePaste);
 
       this.#renderedDom = newDom;
     }
@@ -303,13 +369,13 @@ export class Editor {
     if (done) {
       done();
     } else {
-      this.selectionChanged();
+      this.#selectionChanged();
     }
 
     this.controller.emitNextTicks();
   }
 
-  private trySelectOnParent(startContainer: Node): boolean {
+  #trySelectOnParent(startContainer: Node): boolean {
     const parent = startContainer.parentNode;
     if (!parent) {
       return false;
@@ -337,13 +403,13 @@ export class Editor {
     return false;
   }
 
-  private handleTreeNodeNotFound(startContainer: Node) {
-    if (!this.trySelectOnParent(startContainer)) {
+  #handleTreeNodeNotFound(startContainer: Node) {
+    if (!this.#trySelectOnParent(startContainer)) {
       this.state.cursorState = undefined;
     }
   }
 
-  private findBlockNodeContainer(node: Node): BlockElement | undefined {
+  #findBlockNodeContainer(node: Node): BlockElement | undefined {
     let ptr: Node | null = node;
 
     while (ptr) {
@@ -358,7 +424,7 @@ export class Editor {
     return;
   }
 
-  private findTextOffsetInBlock(
+  #findTextOffsetInBlock(
     blockNode: BlockElement,
     focusedNode: Node,
     offsetInNode: number
@@ -368,10 +434,10 @@ export class Editor {
       throw new Error("block id not found: " + blockNode.id);
     }
 
-    return block.findTextOffsetInBlock(focusedNode, offsetInNode);
+    return block.findTextOffsetInBlock?.(focusedNode, offsetInNode) ?? 0;
   }
 
-  private selectionChanged = () => {
+  #selectionChanged = () => {
     const sel = window.getSelection();
     if (!sel) {
       return;
@@ -390,13 +456,13 @@ export class Editor {
       return;
     }
 
-    const startNode = this.findBlockNodeContainer(startContainer);
+    const startNode = this.#findBlockNodeContainer(startContainer);
     if (!startNode) {
-      this.handleTreeNodeNotFound(startContainer);
+      this.#handleTreeNodeNotFound(startContainer);
       return;
     }
 
-    const absoluteStartOffset = this.findTextOffsetInBlock(
+    const absoluteStartOffset = this.#findTextOffsetInBlock(
       startNode,
       startContainer,
       startOffset
@@ -409,12 +475,12 @@ export class Editor {
         offset: absoluteStartOffset,
       };
     } else {
-      const endNode = this.findBlockNodeContainer(endContainer);
+      const endNode = this.#findBlockNodeContainer(endContainer);
       if (!endNode) {
         this.state.cursorState = undefined;
         return;
       }
-      const absoluteEndOffset = this.findTextOffsetInBlock(
+      const absoluteEndOffset = this.#findTextOffsetInBlock(
         endNode,
         endContainer,
         endOffset
@@ -431,7 +497,7 @@ export class Editor {
     const { toolbarDelegate } = this;
 
     if (toolbarDelegate.enabled) {
-      if (this.tryPlaceToolbar(range)) {
+      if (this.#tryPlaceToolbar(range)) {
         toolbarDelegate.show();
       } else {
         toolbarDelegate.hide();
@@ -439,7 +505,7 @@ export class Editor {
     }
   };
 
-  private tryPlaceToolbar(range: Range): boolean {
+  #tryPlaceToolbar(range: Range): boolean {
     const { cursorState } = this.state;
     if (!cursorState) {
       return false;
@@ -470,7 +536,7 @@ export class Editor {
     return true;
   }
 
-  private checkMarkedDom(node: Node, currentOffset?: number) {
+  #checkMarkedDom(node: Node, currentOffset?: number) {
     const treeNode = node._mgNode as BlockElement;
     if (!node.parentNode) {
       // dom has been removed
@@ -482,41 +548,41 @@ export class Editor {
       return;
     }
 
-    this.checkBlockContent(node, treeNode, currentOffset);
+    this.#checkBlockContent(node, treeNode, currentOffset);
   }
 
   /**
    * Check if there is new span created by the browser
    */
-  private checkBlockContent(
+  #checkBlockContent(
     node: Node,
     blockNode: BlockElement,
     currentOffset?: number
   ) {
     const block = this.state.blocks.get(blockNode.id);
 
-    block?.blockContentChanged({
+    block?.blockContentChanged?.({
       node: node as HTMLDivElement,
       offset: currentOffset,
     });
   }
 
-  private checkNodesChanged() {
+  #checkNodesChanged() {
     const doms = this.state.domMap.values();
     for (const dom of doms) {
-      this.checkMarkedDom(dom, undefined);
+      this.#checkMarkedDom(dom, undefined);
     }
   }
 
-  private handleOpenCursorContentChanged() {
-    this.checkNodesChanged();
+  #handleOpenCursorContentChanged() {
+    this.#checkNodesChanged();
     this.render();
   }
 
-  private handleContentChanged = () => {
+  #handleContentChanged = () => {
     const { cursorState } = this.state;
     if (cursorState === undefined || cursorState.type === "open") {
-      this.handleOpenCursorContentChanged();
+      this.#handleOpenCursorContentChanged();
       return;
     }
 
@@ -528,10 +594,10 @@ export class Editor {
       return;
     }
 
-    this.checkMarkedDom(domNode, currentOffset);
+    this.#checkMarkedDom(domNode, currentOffset);
     // this is essential because the cursor will change
     // after the user typing.
-    this.selectionChanged();
+    this.#selectionChanged();
   };
 
   public placeBannerAt(blockContainer: HTMLElement, node: BlockElement) {
@@ -540,7 +606,7 @@ export class Editor {
       return;
     }
 
-    let { x, y } = this.getRelativeOffsetByDom(blockContainer);
+    let { x, y } = this.#getRelativeOffsetByDom(blockContainer);
 
     x = this.bannerXOffset;
 
@@ -574,7 +640,7 @@ export class Editor {
   /**
    * Get the element's relative position to the container of the editor.
    */
-  private getRelativeOffsetByDom(element: HTMLElement): Position {
+  #getRelativeOffsetByDom(element: HTMLElement): Position {
     const containerRect = this.#container.getBoundingClientRect();
     const blockRect = element.getBoundingClientRect();
     return {
@@ -583,27 +649,27 @@ export class Editor {
     };
   }
 
-  private hideBanner = () => {
+  #hideBanner = () => {
     this.bannerDelegate.hide();
   };
 
-  private handleCompositionStart = (e: CompositionEvent) => {
+  #handleCompositionStart = () => {
     this.composing = true;
   };
 
-  private handleCompositionEnd = (e: CompositionEvent) => {
+  #handleCompositionEnd = () => {
     this.composing = false;
-    this.handleContentChanged();
+    this.#handleContentChanged();
   };
 
-  private handleKeyDown = (e: KeyboardEvent) => {
+  #handleKeyDown = (e: KeyboardEvent) => {
     this.keyDown.emit(e);
     if (e.defaultPrevented) {
       return;
     }
 
     if (e.key === "Tab") {
-      this.handleKeyTab(e);
+      this.#handleKeyTab(e);
       return;
     }
 
@@ -618,19 +684,19 @@ export class Editor {
     if (e.key === "Enter") {
       if (!e.defaultPrevented) {
         e.preventDefault();
-        this.commitNewLine();
+        this.#commitNewLine();
       }
     } else if (e.key === "Backspace") {
-      this.handleBackspace(e);
+      this.#handleBackspace(e);
     } else if (e.key === "Delete") {
-      this.handleDelete(e);
+      this.#handleDelete(e);
     } else if (isHotkey("mod+z", e)) {
       // temporary disable undo
       e.preventDefault();
     }
   };
 
-  private handleKeyTab(e: KeyboardEvent) {
+  #handleKeyTab(e: KeyboardEvent) {
     e.preventDefault();
     const { cursorState } = this.state;
     if (!cursorState) {
@@ -645,13 +711,13 @@ export class Editor {
     }
 
     if (e.shiftKey) {
-      block.onDedent(e);
+      block.onDedent?.(e);
     } else {
-      block.onIndent(e);
+      block.onIndent?.(e);
     }
   }
 
-  private insertEmptyTextAfterBlock(parent: BlockyElement, afterId: string) {
+  #insertEmptyTextAfterBlock(parent: BlockyElement, afterId: string) {
     const newTextElement = this.state.createTextElement();
     const currentBlock = this.state.idMap.get(afterId);
 
@@ -668,7 +734,7 @@ export class Editor {
     });
   }
 
-  private commitNewLine() {
+  #commitNewLine() {
     const { cursorState } = this.state;
     if (!cursorState) {
       return;
@@ -683,7 +749,7 @@ export class Editor {
 
       if (blockElement.nodeName !== TextBlockName) {
         // default behavior
-        this.insertEmptyTextAfterBlock(
+        this.#insertEmptyTextAfterBlock(
           blockElement.parent! as BlockyElement,
           cursorState.targetId
         );
@@ -749,7 +815,7 @@ export class Editor {
         if (ignoreSelection) {
           return;
         }
-        this.selectionChanged();
+        this.#selectionChanged();
       });
     } finally {
       this.#isUpdating = false;
@@ -761,30 +827,30 @@ export class Editor {
     window.open(link, "_blank")?.focus();
   }
 
-  private handleDelete(e: KeyboardEvent) {
-    if (this.deleteBlockOnFocusedCursor()) {
+  #handleDelete(e: KeyboardEvent) {
+    if (this.#deleteBlockOnFocusedCursor()) {
       e.preventDefault();
     }
   }
 
-  private handleBackspace(e: KeyboardEvent) {
-    if (this.tryMergeTextToPreviousLine()) {
+  #handleBackspace(e: KeyboardEvent) {
+    if (this.#tryMergeTextToPreviousLine()) {
       e.preventDefault();
       return;
     }
-    if (this.deleteBlockOnFocusedCursor()) {
+    if (this.#deleteBlockOnFocusedCursor()) {
       e.preventDefault();
     }
   }
 
   /**
-   * If the focusing line is textline,
+   * If the focusing line is TextLine,
    * try to merge to previous line.
    *
    * If the previous lins is not a text line,
    * then focus on it.
    */
-  private tryMergeTextToPreviousLine(): boolean {
+  #tryMergeTextToPreviousLine(): boolean {
     const { cursorState } = this.state;
     if (!cursorState) {
       return false;
@@ -858,7 +924,7 @@ export class Editor {
     return true;
   }
 
-  private getBlockElementAtCollapsedCursor(): BlockElement | undefined {
+  #getBlockElementAtCollapsedCursor(): BlockElement | undefined {
     const { cursorState } = this.state;
     if (!cursorState) {
       return;
@@ -872,8 +938,8 @@ export class Editor {
     return this.state.idMap.get(targetId) as BlockElement | undefined;
   }
 
-  private deleteBlockOnFocusedCursor(): boolean {
-    const node = this.getBlockElementAtCollapsedCursor();
+  #deleteBlockOnFocusedCursor(): boolean {
+    const node = this.#getBlockElementAtCollapsedCursor();
     if (!node) {
       return false;
     }
@@ -895,7 +961,7 @@ export class Editor {
             targetId: prevNode.id,
             offset: 0,
           };
-          this.focusEndOfNode(prevNode);
+          this.#focusEndOfNode(prevNode);
         } else {
           this.state.cursorState = undefined;
         }
@@ -904,7 +970,7 @@ export class Editor {
     return true;
   }
 
-  private focusEndOfNode(node: BlockElement) {
+  #focusEndOfNode(node: BlockElement) {
     if (node.nodeName === TextBlockName) {
       const textModel = node.firstChild! as BlockyTextModel;
       this.state.cursorState = {
@@ -949,17 +1015,14 @@ export class Editor {
     }
 
     if (newState.type === "open") {
-      this.focusOnOpenCursor(newState, sel);
+      this.#focusOnOpenCursor(newState, sel);
       return;
     }
 
-    this.focusOnCollapsedCursor(newState, sel);
+    this.#focusOnCollapsedCursor(newState, sel);
   };
 
-  private focusOnCollapsedCursor(
-    collapsedCursor: CollapsedCursor,
-    sel: Selection
-  ) {
+  #focusOnCollapsedCursor(collapsedCursor: CollapsedCursor, sel: Selection) {
     const { targetId } = collapsedCursor;
 
     const targetNode = this.state.domMap.get(targetId);
@@ -974,13 +1037,13 @@ export class Editor {
       if (targetNode.nodeName !== TextBlockName) {
         sel.removeAllRanges();
       }
-      this.focusBlock(sel, targetNode, collapsedCursor);
+      this.#focusBlock(sel, targetNode, collapsedCursor);
     } else {
       console.error("unknown element:", targetNode);
     }
   }
 
-  private focusOnOpenCursor(openCursor: OpenCursorState, sel: Selection) {
+  #focusOnOpenCursor(openCursor: OpenCursorState, sel: Selection) {
     const { startId, startOffset, endId, endOffset } = openCursor;
 
     const startBlock = this.state.blocks.get(startId);
@@ -993,13 +1056,13 @@ export class Editor {
       return;
     }
 
-    const startCursorDom = startBlock.getCursorDomByOffset(startOffset);
+    const startCursorDom = startBlock.getCursorDomByOffset?.(startOffset);
 
     if (!startCursorDom) {
       return;
     }
 
-    const endCursorDom = endBlock.getCursorDomByOffset(endOffset);
+    const endCursorDom = endBlock.getCursorDomByOffset?.(endOffset);
 
     if (!endCursorDom) {
       return;
@@ -1018,7 +1081,7 @@ export class Editor {
    * If it's a text block try to focus on the text.
    * Otherwise, focus on the outline?
    */
-  private focusBlock(
+  #focusBlock(
     sel: Selection,
     blockDom: HTMLDivElement,
     cursor: CollapsedCursor
@@ -1028,14 +1091,14 @@ export class Editor {
       return;
     }
 
-    this.blurBlock();
+    this.#blurBlock();
 
     this.#lastFocusedId = node.id;
     const block = this.state.blocks.get(node.id)!;
-    block.blockFocused({ node: blockDom, cursor, selection: sel });
+    block.blockFocused?.({ node: blockDom, cursor, selection: sel });
   }
 
-  private blurBlock() {
+  #blurBlock() {
     if (!this.#lastFocusedId) {
       return;
     }
@@ -1048,7 +1111,7 @@ export class Editor {
     const dom = this.state.domMap.get(this.#lastFocusedId);
     const sel = window.getSelection()!;
     if (dom) {
-      block.blockBlur({
+      block.blockBlur?.({
         node: dom as HTMLDivElement,
         cursor: this.state.cursorState,
         selection: sel,
@@ -1058,7 +1121,7 @@ export class Editor {
     this.#lastFocusedId = undefined;
   }
 
-  private handlePaste = (e: ClipboardEvent) => {
+  #handlePaste = (e: ClipboardEvent) => {
     e.preventDefault(); // take over the paste event
 
     const { clipboardData } = e;
@@ -1080,7 +1143,7 @@ export class Editor {
 
     const plainText = clipboardData.getData(MineType.PlainText);
     if (plainText) {
-      this.pastePlainTextOnCursor(plainText);
+      this.#pastePlainTextOnCursor(plainText);
       return;
     }
   };
@@ -1090,168 +1153,177 @@ export class Editor {
    * Maybe use an external library is better for unit tests. But it will increase
    * the size of the bundles.
    */
-  public pasteHTMLAtCursor(html: string) {
+  pasteHTMLAtCursor(html: string) {
     try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, MineType.Html);
-      this.pasteHTMLBodyOnCursor(doc.body);
+      const blocks = this.#htmlConverter.parseFromString(html);
+      this.#pasteElementsAtCursor(blocks);
+      // const parser = new DOMParser();
+      // const doc = parser.parseFromString(html, MineType.Html);
+      // this.#pasteHTMLBodyOnCursor(doc.body);
     } catch (e) {
       console.error(e);
     }
   }
 
-  private pasteHTMLBodyOnCursor(body: HTMLElement) {
-    let ptr = body.firstElementChild;
-    let afterCursor: CursorState | undefined = this.state.cursorState;
-
-    let index = 0;
-    while (ptr) {
-      const cursor = this.pasteNodeAt(
-        afterCursor,
-        ptr as HTMLElement,
-        index === 0
-      );
-
-      if (cursor) {
-        afterCursor = cursor;
-      }
-
-      index++;
-      ptr = ptr.nextElementSibling;
+  #pasteElementsAtCursor(elements: BlockElement[]) {
+    if (elements.length === 0) {
+      return;
     }
+    const currentBlockElement = this.#getBlockElementAtCollapsedCursor();
+    if (!currentBlockElement) {
+      return;
+    }
+    const parent = currentBlockElement.parent! as BlockyElement;
+    let prev = currentBlockElement;
 
-    this.render(() => {
-      this.state.cursorState = afterCursor;
+    this.update(() => {
+      for (const element of elements) {
+        parent.insertAfter(element, prev);
+        prev = element;
+      }
     });
   }
 
-  private tryPasteDivElementAsBlock(
-    element: HTMLDivElement,
-    cursorState: Cell<CursorState | undefined>,
-    tryMerge = false
-  ): boolean {
-    const blockRegistry = this.registry.block;
-    const dataType = element.getAttribute("data-type");
-    if (!dataType) {
-      return false;
-    }
-    const blockDef = blockRegistry.getBlockDefByName(dataType);
-    if (!blockDef) {
-      return false;
-    }
+  // #pasteHTMLBodyOnCursor(body: HTMLElement) {
+  //   let ptr = body.firstElementChild;
+  //   let afterCursor: CursorState | undefined = this.state.cursorState;
 
-    const pasteHandler = blockDef?.onPaste;
-    if (pasteHandler) {
-      const evt = new BlockPasteEvent({
-        after: cursorState.get(),
-        editor: this,
-        node: element,
-        tryMerge,
-      });
-      const newCursor = pasteHandler.call(blockDef, evt);
-      if (newCursor) {
-        cursorState.set(newCursor);
-      }
-    } else {
-      const newCursor = this.insertBlockByDefaultAt(
-        cursorState.get(),
-        dataType
-      );
-      if (newCursor) {
-        cursorState.set(newCursor);
-      }
-    }
+  //   let index = 0;
+  //   while (ptr) {
+  //     const cursor = this.#pasteNodeAt(
+  //       afterCursor,
+  //       ptr as HTMLElement,
+  //       index === 0
+  //     );
 
-    return true;
-  }
+  //     if (cursor) {
+  //       afterCursor = cursor;
+  //     }
 
-  /**
-   *
-   * Paste the content of element at the cursor.
-   * There is two cases:
-   *
-   * - Paste the content copied from the editor
-   * - Paste the HTML copied from other websites
-   *
-   * @param tryMerge Indicate whether the content should be merged to the previous block.
-   */
-  private pasteNodeAt(
-    cursorState: CursorState | undefined,
-    element: HTMLElement,
-    tryMerge = false
-  ): CursorState | undefined {
-    const blockRegistry = this.registry.block;
+  //     index++;
+  //     ptr = ptr.nextElementSibling;
+  //   }
 
-    const evt = new TryParsePastedDOMEvent({
-      after: cursorState,
-      editor: this,
-      node: element,
-    });
-    blockRegistry.handlePasteElement(evt);
-    if (evt.defaultPrevented) {
-      return evt.after;
-    }
+  //   this.render(() => {
+  //     this.state.cursorState = afterCursor;
+  //   });
+  // }
 
-    if (element instanceof HTMLSpanElement) {
-      const attributes: AttributesObject = this.getAttributesBySpan(element);
-      let textContent = "";
+  // #tryPasteDivElementAsBlock(
+  //   element: HTMLDivElement,
+  //   cursorState: Cell<CursorState | undefined>
+  // ): BlockElement | void {
+  //   const blockRegistry = this.registry.block;
+  //   const dataType = element.getAttribute("data-type");
+  //   if (!dataType) {
+  //     return;
+  //   }
+  //   const blockDef = blockRegistry.getBlockDefByName(dataType);
+  //   if (!blockDef) {
+  //     return;
+  //   }
 
-      const testContent = element.textContent;
-      if (testContent) {
-        textContent = testContent;
-      }
+  //   const pasteHandler = blockDef?.onPaste;
+  //   if (pasteHandler) {
+  //     const evt = new BlockPasteEvent({
+  //       editor: this,
+  //       node: element,
+  //     });
+  //     return pasteHandler.call(blockDef, evt);
+  //   } else {
+  //     const newCursor = this.#insertBlockByDefaultAt(cursorState.get());
+  //     if (newCursor) {
+  //       cursorState.set(newCursor);
+  //     }
+  //   }
+  // }
 
-      return this.insertTextAt(
-        cursorState,
-        textContent,
-        Object.keys(attributes).length > 0 ? attributes : undefined
-      );
-    } else if (element instanceof HTMLDivElement) {
-      const cursorCell = new Cell(cursorState);
-      if (this.tryPasteDivElementAsBlock(element, cursorCell, tryMerge)) {
-        return cursorCell.get();
-      } else {
-        console.warn("unknown dom:", element);
-      }
-    } else if (
-      element instanceof HTMLParagraphElement ||
-      element instanceof HTMLHeadingElement ||
-      element instanceof HTMLLIElement
-    ) {
-      // is a <p> or <h1>
-      const blockDef = blockRegistry.getBlockDefByName(TextBlockName);
-      const pasteHandler = blockDef?.onPaste;
-      const evt = new BlockPasteEvent({
-        after: cursorState,
-        editor: this,
-        node: element,
-        tryMerge,
-      });
-      if (pasteHandler) {
-        const cursor = pasteHandler.call(blockDef, evt);
-        return cursor;
-      } else {
-        return this.insertBlockByDefaultAt(cursorState, TextBlockName);
-      }
-    } else if (element instanceof HTMLUListElement) {
-      let childPtr = element.firstElementChild;
-      let returnCursor: CursorState | undefined = cursorState;
+  // /**
+  //  *
+  //  * Paste the content of element at the cursor.
+  //  * There is two cases:
+  //  *
+  //  * - Paste the content copied from the editor
+  //  * - Paste the HTML copied from other websites
+  //  *
+  //  * @param tryMerge Indicate whether the content should be merged to the previous block.
+  //  */
+  // #pasteNodeAt(
+  //   cursorState: CursorState | undefined,
+  //   element: HTMLElement,
+  //   tryMerge = false
+  // ): CursorState | undefined {
+  //   const blockRegistry = this.registry.block;
 
-      while (childPtr) {
-        returnCursor = this.pasteNodeAt(
-          returnCursor,
-          childPtr as HTMLElement,
-          false
-        );
-        childPtr = childPtr.nextElementSibling;
-      }
+  //   const evt = new TryParsePastedDOMEvent({
+  //     after: cursorState,
+  //     editor: this,
+  //     node: element,
+  //   });
+  //   blockRegistry.handlePasteElement(evt);
+  //   if (evt.defaultPrevented) {
+  //     return evt.after;
+  //   }
 
-      return returnCursor;
-    } else {
-      console.warn("unknown dom:", element);
-    }
-    return;
-  }
+  //   if (element instanceof HTMLSpanElement) {
+  //     const attributes: AttributesObject = this.getAttributesBySpan(element);
+  //     let textContent = "";
+
+  //     const testContent = element.textContent;
+  //     if (testContent) {
+  //       textContent = testContent;
+  //     }
+
+  //     return this.#insertTextAt(
+  //       cursorState,
+  //       textContent,
+  //       Object.keys(attributes).length > 0 ? attributes : undefined
+  //     );
+  //   } else if (element instanceof HTMLDivElement) {
+  //     const cursorCell = new Cell(cursorState);
+  //     if (this.#tryPasteDivElementAsBlock(element, cursorCell)) {
+  //       return cursorCell.get();
+  //     } else {
+  //       console.warn("unknown dom:", element);
+  //     }
+  //   } else if (
+  //     element instanceof HTMLParagraphElement ||
+  //     element instanceof HTMLHeadingElement ||
+  //     element instanceof HTMLLIElement
+  //   ) {
+  //     // is a <p> or <h1>
+  //     const blockDef = blockRegistry.getBlockDefByName(TextBlockName);
+  //     const pasteHandler = blockDef?.onPaste;
+  //     const evt = new BlockPasteEvent({
+  //       editor: this,
+  //       node: element,
+  //       tryMerge,
+  //     });
+  //     if (pasteHandler) {
+  //       const cursor = pasteHandler.call(blockDef, evt);
+  //       return cursor;
+  //     } else {
+  //       return this.#insertBlockByDefaultAt(cursorState);
+  //     }
+  //   } else if (element instanceof HTMLUListElement) {
+  //     let childPtr = element.firstElementChild;
+  //     let returnCursor: CursorState | undefined = cursorState;
+
+  //     while (childPtr) {
+  //       returnCursor = this.#pasteNodeAt(
+  //         returnCursor,
+  //         childPtr as HTMLElement,
+  //         false
+  //       );
+  //       childPtr = childPtr.nextElementSibling;
+  //     }
+
+  //     return returnCursor;
+  //   } else {
+  //     console.warn("unknown dom:", element);
+  //   }
+  //   return;
+  // }
 
   /**
    * Calculate the attributes from the dom.
@@ -1277,42 +1349,41 @@ export class Editor {
     return attributes;
   }
 
-  private insertBlockByDefaultAt(
-    cursorState: CursorState | undefined,
-    blockName: string
-  ): CursorState | undefined {
-    if (!cursorState) {
-      return;
-    }
+  // #insertBlockByDefaultAt(
+  //   cursorState: CursorState | undefined
+  // ): CursorState | undefined {
+  //   if (!cursorState) {
+  //     return;
+  //   }
 
-    if (cursorState.type === "open") {
-      return;
-    }
+  //   if (cursorState.type === "open") {
+  //     return;
+  //   }
 
-    const currentNode = this.state.idMap.get(
-      cursorState.targetId
-    )! as BlockElement;
+  //   const currentNode = this.state.idMap.get(
+  //     cursorState.targetId
+  //   )! as BlockElement;
 
-    const textElement = this.state.createTextElement();
+  //   const textElement = this.state.createTextElement();
 
-    const parentElement = currentNode.parent! as BlockyElement;
-    parentElement.insertAfter(textElement, currentNode);
+  //   const parentElement = currentNode.parent! as BlockyElement;
+  //   parentElement.insertAfter(textElement, currentNode);
 
-    return {
-      type: "collapsed",
-      targetId: textElement.id,
-      offset: 0,
-    };
-  }
+  //   return {
+  //     type: "collapsed",
+  //     targetId: textElement.id,
+  //     offset: 0,
+  //   };
+  // }
 
-  private pastePlainTextOnCursor(text: string) {
-    const cursor = this.insertTextAt(this.state.cursorState, text);
+  #pastePlainTextOnCursor(text: string) {
+    const cursor = this.#insertTextAt(this.state.cursorState, text);
     this.render(() => {
       this.state.cursorState = cursor;
     });
   }
 
-  private insertTextAt(
+  #insertTextAt(
     cursorState: CursorState | undefined,
     text: string,
     attributes?: AttributesObject
@@ -1352,7 +1423,7 @@ export class Editor {
   }
 
   dispose() {
-    document.removeEventListener("selectionchange", this.selectionChanged);
+    document.removeEventListener("selectionchange", this.#selectionChanged);
     flattenDisposable(this.disposables).dispose();
   }
 }

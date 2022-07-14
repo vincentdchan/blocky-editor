@@ -1,3 +1,4 @@
+import { isString } from "lodash-es";
 import { elem, removeNode } from "blocky-common/es/dom";
 import {
   type IBlockDefinition,
@@ -68,7 +69,6 @@ function textTypeCanIndent(textType: TextType): boolean {
   return textType === TextType.Normal || textType === TextType.Bulleted;
 }
 
-
 function insertOrGetChildrenContainer(element: BlockElement): BlockyElement {
   let childrenContainer = element.childrenContainer;
   if (childrenContainer) {
@@ -81,6 +81,10 @@ function insertOrGetChildrenContainer(element: BlockElement): BlockyElement {
   return childrenContainer;
 }
 
+/**
+ * TextBlock is a very special block in the editor.
+ * It's handling all the editable element.
+ */
 class TextBlock extends Block {
   #container: HTMLElement | undefined;
   #bodyContainer: HTMLElement | null = null;
@@ -105,7 +109,7 @@ class TextBlock extends Block {
       case TextType.Heading3:
         return 26;
     }
-    
+
     return 18;
   }
 
@@ -127,10 +131,7 @@ class TextBlock extends Block {
     focusedNode: Node,
     offsetInNode: number
   ): number {
-    const blockContainer = this.#container!;
-    const contentContainer = this.findContentContainer!(
-      blockContainer as HTMLElement
-    );
+    const contentContainer = this.findContentContainer();
     let counter = 0;
     let ptr = contentContainer.firstChild;
 
@@ -150,7 +151,7 @@ class TextBlock extends Block {
     return counter + offsetInNode;
   }
 
-  protected findContentContainer(parent: HTMLElement): HTMLElement {
+  protected findContentContainer(): HTMLElement {
     const e = this.#contentContainer;
     if (!e) {
       throw new Error("content not found");
@@ -185,7 +186,7 @@ class TextBlock extends Block {
     selection,
     cursor,
   }: BlockFocusedEvent): void {
-    const contentContainer = this.findContentContainer(blockDom);
+    const contentContainer = this.findContentContainer();
 
     contentContainer.setAttribute("placeholder", "Empty content");
 
@@ -220,8 +221,8 @@ class TextBlock extends Block {
     return this.findFocusPosition(this.#container, offset);
   }
 
-  override blockBlur({ node: blockDom }: BlockFocusedEvent): void {
-    const contentContainer = this.findContentContainer(blockDom);
+  override blockBlur(): void {
+    const contentContainer = this.findContentContainer();
     const zeroSpaceEmptyChar = String.fromCharCode(160);
     contentContainer.setAttribute("placeholder", zeroSpaceEmptyChar);
   }
@@ -230,7 +231,7 @@ class TextBlock extends Block {
     blockDom: HTMLElement,
     absoluteOffset: number
   ): TextPosition | undefined {
-    const contentContainer = this.findContentContainer(blockDom);
+    const contentContainer = this.findContentContainer();
     let ptr = contentContainer.firstChild;
 
     while (ptr) {
@@ -265,7 +266,7 @@ class TextBlock extends Block {
     }
 
     const dataRef = element.getAttribute(DataRefKey);
-    if (typeof dataRef === "string") {
+    if (isString(dataRef)) {
       attributes.href = dataRef;
     }
 
@@ -291,11 +292,8 @@ class TextBlock extends Block {
     }
   }
 
-  override blockContentChanged({
-    node,
-    offset,
-  }: BlockContentChangedEvent): void {
-    const contentContainer = this.findContentContainer(node);
+  override blockContentChanged({ offset }: BlockContentChangedEvent): void {
+    const contentContainer = this.findContentContainer();
     const formats: FormattedTextSlice[] = [];
 
     let textContent = "";
@@ -402,7 +400,7 @@ class TextBlock extends Block {
 
       const { href, ...restAttr } = node.attributes;
 
-      if (typeof href === "string") {
+      if (isString(href)) {
         d = this.createAnchorNode(href);
       } else {
         d = elem("span");
@@ -440,7 +438,7 @@ class TextBlock extends Block {
 
   private ensureContentContainerStyle(
     blockContainer: HTMLElement,
-    contentContainer: HTMLElement,
+    contentContainer: HTMLElement
   ): HTMLElement {
     const renderedType = contentContainer.getAttribute("data-type");
     const textType = this.getTextType();
@@ -453,7 +451,10 @@ class TextBlock extends Block {
       switch (textType) {
         case TextType.Bulleted: {
           this.#bulletSpan = this.createBulletSpan();
-          blockContainer.insertBefore(this.#bulletSpan, blockContainer.firstChild);
+          blockContainer.insertBefore(
+            this.#bulletSpan,
+            blockContainer.firstChild
+          );
 
           contentContainer.classList.add("blocky-bulleted");
           return;
@@ -464,9 +465,6 @@ class TextBlock extends Block {
         case TextType.Heading3: {
           contentContainer.classList.add(`blocky-heading${textType}`);
           break;
-        }
-
-        default: {
         }
       }
 
@@ -507,10 +505,9 @@ class TextBlock extends Block {
 
   private isNodeMatch(node: TextNode, dom: Node): boolean {
     if (node.attributes) {
-      if (typeof node.attributes.href === "string") {
+      if (isString(node.attributes.href)) {
         return (
-          dom instanceof HTMLElement &&
-          typeof dom.getAttribute(DataRefKey) === "string"
+          dom instanceof HTMLElement && isString(dom.getAttribute(DataRefKey))
         );
       }
       const testSpan = dom instanceof HTMLSpanElement;
@@ -525,7 +522,10 @@ class TextBlock extends Block {
   }
 
   // TODO: optimize this method
-  private isAttributesMatch(span: HTMLSpanElement, attributes: AttributesObject): boolean {
+  private isAttributesMatch(
+    span: HTMLSpanElement,
+    attributes: AttributesObject
+  ): boolean {
     for (const key of Object.keys(attributes)) {
       if (key === "href") {
         continue;
@@ -538,10 +538,13 @@ class TextBlock extends Block {
     return true;
   }
 
-  private renderBlockTextContent(blockContainer: HTMLElement, textModel: BlockyTextModel) {
+  private renderBlockTextContent(
+    blockContainer: HTMLElement,
+    textModel: BlockyTextModel
+  ) {
     const contentContainer = this.ensureContentContainerStyle(
       blockContainer,
-      this.#contentContainer!,
+      this.#contentContainer!
     );
 
     let nodePtr = textModel.nodeBegin;
@@ -646,7 +649,8 @@ class TextBlock extends Block {
 
       parentElement.removeChild(this.props);
 
-      const parentOfParentBlockElement = parentBlockElement.parent as BlockyElement;
+      const parentOfParentBlockElement =
+        parentBlockElement.parent as BlockyElement;
       parentOfParentBlockElement.insertAfter(copy, parentBlockElement);
 
       return () => {
@@ -666,7 +670,6 @@ class TextBlock extends Block {
       result = result.parent;
     }
   }
-
 }
 
 function clearNodeAttributes(node: Node) {
@@ -684,37 +687,11 @@ class TextBlockDefinition implements IBlockDefinition {
   }
 
   onPaste({
-    after: cursorState,
-    node: container,
     editor,
-    tryMerge,
-  }: BlockPasteEvent): CursorState | undefined {
-    if (!cursorState) {
-      return;
-    }
-
-    if (cursorState.type === "open") {
-      return;
-    }
-
-    const currentElement = editor.state.idMap.get(cursorState.targetId)! as BlockElement;
-    const parentElement = currentElement.parent! as BlockyElement;
+    node: container,
+  }: BlockPasteEvent): BlockElement | undefined {
     const newTextElement = this.getTextElementFromDOM(editor, container);
-    const newTextModel = newTextElement.firstChild! as BlockyTextModel;
-
-    if (tryMerge && currentElement.nodeName === TextBlockName) {
-      const oldTextModel = currentElement.firstChild! as BlockyTextModel;
-      oldTextModel.append(newTextModel);
-      return;
-    }
-
-    parentElement.insertAfter(newTextElement, currentElement);
-
-    return {
-      type: "collapsed",
-      targetId: newTextElement.id,
-      offset: 0,
-    };
+    return newTextElement;
   }
 
   /**
@@ -727,7 +704,7 @@ class TextBlockDefinition implements IBlockDefinition {
     const newId = editor.idGenerator.mkBlockId();
     const result = new BlockElement(TextBlockName, newId);
 
-    const textModel = new BlockyTextModel;
+    const textModel = new BlockyTextModel();
     result.appendChild(textModel);
 
     // TODO: Maybe using querySelector is slow.
@@ -821,7 +798,10 @@ export function makeTextBlockDefinition(): IBlockDefinition {
   return new TextBlockDefinition();
 }
 
-export function setTextTypeForTextBlock(blockElement: BlockElement, textType: TextType) {
+export function setTextTypeForTextBlock(
+  blockElement: BlockElement,
+  textType: TextType
+) {
   blockElement.setAttribute("textType", textType.toString());
 }
 

@@ -94,9 +94,9 @@
   content: "•";
 }
 
-.blocky-collaborative-cursor {
+.blocky-collaborative-cursor-rect {
   position: absolute;
-  width: 2px;
+  z-index: -1;
 }
 
 .blocky-cursor-label {

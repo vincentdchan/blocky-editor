@@ -1,3 +1,4 @@
+import { isFunction } from "lodash-es";
 import type { Editor } from "@pkg/view/editor";
 
 export type AfterFn = () => void;
@@ -5,17 +6,14 @@ export type AfterFn = () => void;
 const hookOnInitialized = "onInitialized";
 const hookBeforeApply = "beforeApply";
 
-const allowHookName: string[] = [
-  hookOnInitialized,
-  hookBeforeApply,
-];
+const allowHookName: string[] = [hookOnInitialized, hookBeforeApply];
 
 interface HookMethods {
-  [index: string]: IPlugin[],
+  [index: string]: IPlugin[];
 }
 
 export interface IPlugin {
-  name: string,
+  name: string;
 
   /**
    * Will be triggered when the editor is initialized.
@@ -24,7 +22,6 @@ export interface IPlugin {
 }
 
 export class PluginRegistry {
-
   #hook: HookMethods = Object.create(null);
   #markedPlugin: Set<string> = new Set();
 
@@ -34,7 +31,7 @@ export class PluginRegistry {
     }
 
     if (plugins) {
-      plugins.forEach(plugin => this.register(plugin));
+      plugins.forEach((plugin) => this.register(plugin));
     }
   }
 
@@ -47,24 +44,24 @@ export class PluginRegistry {
 
     for (const name of allowHookName) {
       // @ts-ignore
-      if (typeof plugin[name] === "function") {
+      if (isFunction(plugin[name])) {
         this.#hook[name].push(plugin);
       }
     }
   }
-  
-  private genEmit = (hookName: string) => (((...args: any[]) => {
-    const plugins = this.#hook[hookName]!;
-    for (const plugin of plugins) {
-      try {
-        // @ts-ignore
-        plugin[hookName]!(...args);
-      } catch (e) {
-        console.error(e);
+
+  private genEmit = (hookName: string) =>
+    ((...args: any[]) => {
+      const plugins = this.#hook[hookName]!;
+      for (const plugin of plugins) {
+        try {
+          // @ts-ignore
+          plugin[hookName]!(...args);
+        } catch (e) {
+          console.error(e);
+        }
       }
-    }
-  }) as any)
+    }) as any;
 
   emitInitPlugins: (editor: Editor) => void = this.genEmit(hookOnInitialized);
-
 }

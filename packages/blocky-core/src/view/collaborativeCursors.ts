@@ -1,4 +1,5 @@
-import { DivContainer, $on } from "blocky-common/es/dom";
+import { DivContainer } from "blocky-common/es/dom";
+import { Slot } from "blocky-common/es/events";
 import { mkUserId } from "@pkg/helper/idHelper";
 
 class ContainerWithCoord extends DivContainer {
@@ -28,11 +29,9 @@ class ContainerWithCoord extends DivContainer {
     this.container.style.top = v + "px";
     this._y = v;
   }
-
 }
 
 class CursorLabel extends ContainerWithCoord {
-
   static Height = 12;
 
   #color = "";
@@ -54,23 +53,45 @@ class CursorLabel extends ContainerWithCoord {
   get color() {
     return this.#color;
   }
-
 }
 
-export class CollaborativeCursor extends ContainerWithCoord {
+const minWidthOfCursor = 2;
 
+class CollaborativeCursorRect extends ContainerWithCoord {
+  public readonly mouseEnter: Slot<MouseEvent>;
+  public readonly mouseLeave: Slot<MouseEvent>;
+  constructor() {
+    super("blocky-collaborative-cursor-rect");
+    this.mouseEnter = Slot.fromEvent(this.container, "mouseenter");
+    this.mouseLeave = Slot.fromEvent(this.container, "mouseleave");
+  }
+  setColor(color: string) {
+    this.container.style.backgroundColor = color;
+  }
+  setHeight(v: number) {
+    this.container.style.height = v + "px";
+  }
+  setWidth(v: number) {
+    this.container.style.width = v + "px";
+  }
+}
+
+/**
+ * The drawer of the collaborative cursor.
+ * This class will draw the rectangles and the label.
+ */
+export class CollaborativeCursor {
   #color = "";
   #label: CursorLabel | undefined;
   #height = 0;
+  #rects: CollaborativeCursorRect[] = [];
+  #x = 0;
+  #y = 0;
   public name?: string;
 
   private initTimeout: any;
 
-  constructor(public id: string) {
-    super("blocky-collaborative-cursor");
-    $on(this.container, "mouseenter", this.handleMouseEnter);
-    $on(this.container, "mouseleave", this.handleMouseLeave);
-  }
+  constructor(public id: string, private parent: HTMLElement) {}
 
   get height() {
     return this.#height;
@@ -81,29 +102,19 @@ export class CollaborativeCursor extends ContainerWithCoord {
       return;
     }
     this.#height = v;
-    this.container.style.height = this.#height + "px";
-  }
 
-  mount(parent: HTMLElement): void {
-    super.mount(parent);
-
-    this.showLabel();
-    this.initTimeout = setTimeout(() => {
-      this.hideLabel();
-    }, 3000);
+    for (const rect of this.#rects) {
+      rect.container.style.height = this.#height + "px";
+    }
   }
 
   private handleMouseEnter = () => {
-    if (this.initTimeout) {
-      clearTimeout(this.initTimeout);
-      this.initTimeout = undefined;
-    }
-    this.showLabel();
-  }
+    this.#debouncedShowLabel();
+  };
 
   private handleMouseLeave = () => {
     this.hideLabel();
-  }
+  };
 
   private showLabel() {
     if (this.#label) {
@@ -111,14 +122,14 @@ export class CollaborativeCursor extends ContainerWithCoord {
     }
 
     const label = new CursorLabel(this.name ?? this.id);
-    label.x = this.x;
-    label.y = this.y - CursorLabel.Height;
+    label.x = this.#x;
+    label.y = this.#y - CursorLabel.Height * 1.5;
     label.color = this.color;
 
     this.#label = label;
 
-    if (this.container.parentElement) {
-      label.mount(this.container.parentElement);
+    if (this.parent) {
+      label.mount(this.parent);
     }
   }
 
@@ -135,7 +146,10 @@ export class CollaborativeCursor extends ContainerWithCoord {
       return;
     }
     this.#color = value;
-    this.container.style.backgroundColor = value;
+
+    for (const rect of this.#rects) {
+      rect.container.style.backgroundColor = value;
+    }
 
     if (this.#label) {
       this.#label.color = value;
@@ -146,45 +160,103 @@ export class CollaborativeCursor extends ContainerWithCoord {
     return this.#color;
   }
 
+  drawCollapsedRect(x: number, y: number) {
+    let cursorRect: CollaborativeCursorRect;
+    this.#x = x;
+    this.#y = y;
+
+    if (this.#rects.length !== 1) {
+      this.#clearAllRects();
+      cursorRect = this.#createCursorRectWithCoord();
+      this.#rects.push(cursorRect);
+    } else {
+      cursorRect = this.#rects[0];
+    }
+    cursorRect.x = x;
+    cursorRect.y = y;
+    cursorRect.setWidth(minWidthOfCursor);
+
+    if (this.#label) {
+      this.#label.x = x;
+      this.#label.y = y - CursorLabel.Height * 1.5;
+    }
+
+    this.#debouncedShowLabel();
+  }
+
+  drawRects(rects: DOMRect[]) {
+    this.#clearAllRects();
+    if (rects.length === 0) {
+      return;
+    }
+
+    for (const rect of rects) {
+      const cursorRect = this.#createCursorRectWithCoord();
+      cursorRect.x = rect.x;
+      cursorRect.y = rect.y;
+      cursorRect.setWidth(Math.max(minWidthOfCursor, rect.width));
+      this.#rects.push(cursorRect);
+    }
+
+    if (this.#label) {
+      const firstRect = rects[0];
+      this.#label.x = firstRect.x;
+      this.#label.y = firstRect.y - CursorLabel.Height * 1.5;
+    }
+
+    this.#debouncedShowLabel();
+  }
+
+  #createCursorRectWithCoord(): CollaborativeCursorRect {
+    const cursorRect = new CollaborativeCursorRect();
+    cursorRect.mouseEnter.on(this.handleMouseEnter);
+    cursorRect.mouseLeave.on(this.handleMouseLeave);
+    cursorRect.setColor(this.#color);
+    cursorRect.setHeight(this.#height);
+    cursorRect.mount(this.parent);
+    return cursorRect;
+  }
+
+  #debouncedShowLabel() {
+    if (this.initTimeout) {
+      clearTimeout(this.initTimeout);
+    }
+    this.showLabel();
+    this.initTimeout = setTimeout(() => {
+      this.hideLabel();
+      this.initTimeout = undefined;
+    }, 3000);
+  }
+
+  #clearAllRects() {
+    this.#rects.forEach((rect) => rect.dispose());
+  }
+
   dispose(): void {
     this.#label?.dispose();
-    super.dispose();
-  }
-
-  override set y(v: number) {
-    super.y = v;
-
-    if (this.#label) {
-      this.#label.y = v - CursorLabel.Height;
+    for (const rect of this.#rects) {
+      rect.dispose();
     }
+    this.#rects.length = 0;
   }
-
-  override set x(v: number) {
-    super.x = v;
-
-    if (this.#label) {
-      this.#label.x = v;
-    }
-  }
-
 }
 
 export interface CollaborativeCursorOptions {
   id: string;
   idToName: (id: string) => string;
-  idToColor: (id: string) => string,
+  idToColor: (id: string) => string;
 }
 
 function makeDefaultOptions(): CollaborativeCursorOptions {
   return {
     id: mkUserId(),
     idToName: (id: string) => id,
-    idToColor: (id: string) => "yellow",
+    idToColor: () => "yellow",
   };
 }
 
 export class CollaborativeCursorManager extends DivContainer {
-  #cursors: Map<string, CollaborativeCursor> = new Map;
+  #cursors: Map<string, CollaborativeCursor> = new Map();
 
   public readonly options: CollaborativeCursorOptions;
 
@@ -201,7 +273,6 @@ export class CollaborativeCursorManager extends DivContainer {
     if (this.#cursors.has(id)) {
       throw new Error("cursor has been inserted");
     }
-    cursor.mount(this.container);
     this.#cursors.set(id, cursor);
   }
 
@@ -211,7 +282,7 @@ export class CollaborativeCursorManager extends DivContainer {
       return test;
     }
 
-    const newCursor = new CollaborativeCursor(id);
+    const newCursor = new CollaborativeCursor(id, this.container);
 
     this.insert(newCursor);
 
@@ -227,5 +298,4 @@ export class CollaborativeCursorManager extends DivContainer {
     test.dispose();
     this.#cursors.delete(id);
   }
-
 }

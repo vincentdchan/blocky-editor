@@ -164,7 +164,7 @@ export class DocRenderer {
       }
 
       const block = this.editor.state.blocks.get(id)!;
-      block.render(domPtr as HTMLElement);
+      block.render?.(domPtr as HTMLElement);
 
       nodePtr = nodePtr.nextSibling;
       prevPtr = domPtr;
@@ -212,7 +212,7 @@ export class DocRenderer {
     });
 
     const block = editor.state.blocks.get(blockNode.id)!;
-    block.blockDidMount({
+    block.blockDidMount?.({
       element: blockContainer,
       clsPrefix,
     });
