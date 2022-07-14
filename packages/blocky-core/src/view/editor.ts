@@ -1,6 +1,5 @@
 import { $on, isContainNode, removeNode } from "blocky-common/es/dom";
 import { isUpperCase } from "blocky-common/es/character";
-import { Cell } from "blocky-common/es/cell";
 import { observe, runInAction } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
 import { type Padding } from "blocky-common/es/dom";
@@ -35,12 +34,7 @@ import { BannerDelegate, type BannerFactory } from "./bannerDelegate";
 import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import type { EditorController } from "./controller";
-import {
-  Block,
-  BlockElement,
-  BlockPasteEvent,
-  TryParsePastedDOMEvent,
-} from "@pkg/block/basic";
+import { Block, BlockElement, BlockPasteEvent } from "@pkg/block/basic";
 import {
   setTextTypeForTextBlock,
   getTextTypeForTextBlock,
@@ -49,6 +43,7 @@ import {
   type CollaborativeCursorOptions,
   CollaborativeCursorManager,
 } from "./collaborativeCursors";
+import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { isHotkey } from "is-hotkey";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
@@ -101,6 +96,7 @@ function makeDefaultPadding(): Padding {
  * used by the plugins to do something internally.
  */
 export class Editor {
+  #htmlConverter: HTMLConverter;
   #container: HTMLDivElement;
   #renderedDom: HTMLDivElement | undefined;
   #renderer: DocRenderer;
@@ -174,6 +170,12 @@ export class Editor {
     this.#container = container;
     this.idGenerator = idGenerator ?? makeDefaultIdGenerator();
 
+    this.#htmlConverter = new HTMLConverter({
+      idGenerator: this.idGenerator,
+      leafHandler: this.#leafHandler,
+      divHandler: this.#divHandler,
+    });
+
     this.padding = {
       ...makeDefaultPadding(),
       ...padding,
@@ -210,6 +212,41 @@ export class Editor {
 
     this.#initBlockCreated();
   }
+
+  #leafHandler = (node: Node): BlockElement | void => {
+    const blockRegistry = this.registry.block;
+    const blockDef = blockRegistry.getBlockDefByName(TextBlockName);
+    const pasteHandler = blockDef?.onPaste;
+    const evt = new BlockPasteEvent({
+      node: node as HTMLElement,
+      editor: this,
+    });
+    if (pasteHandler) {
+      return pasteHandler.call(blockDef, evt);
+    }
+  };
+
+  #divHandler = (node: Node): BlockElement | void => {
+    const element = node as HTMLElement;
+    const blockRegistry = this.registry.block;
+    const dataType = element.getAttribute("data-type");
+    if (!dataType) {
+      return;
+    }
+    const blockDef = blockRegistry.getBlockDefByName(dataType);
+    if (!blockDef) {
+      return;
+    }
+
+    const pasteHandler = blockDef?.onPaste;
+    if (pasteHandler) {
+      const evt = new BlockPasteEvent({
+        editor: this,
+        node: element,
+      });
+      return pasteHandler.call(blockDef, evt);
+    }
+  };
 
   #initBlockCreated() {
     this.disposables.push(
@@ -1116,165 +1153,177 @@ export class Editor {
    * Maybe use an external library is better for unit tests. But it will increase
    * the size of the bundles.
    */
-  public pasteHTMLAtCursor(html: string) {
+  pasteHTMLAtCursor(html: string) {
     try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, MineType.Html);
-      this.#pasteHTMLBodyOnCursor(doc.body);
+      const blocks = this.#htmlConverter.parseFromString(html);
+      this.#pasteElementsAtCursor(blocks);
+      // const parser = new DOMParser();
+      // const doc = parser.parseFromString(html, MineType.Html);
+      // this.#pasteHTMLBodyOnCursor(doc.body);
     } catch (e) {
       console.error(e);
     }
   }
 
-  #pasteHTMLBodyOnCursor(body: HTMLElement) {
-    let ptr = body.firstElementChild;
-    let afterCursor: CursorState | undefined = this.state.cursorState;
-
-    let index = 0;
-    while (ptr) {
-      const cursor = this.#pasteNodeAt(
-        afterCursor,
-        ptr as HTMLElement,
-        index === 0
-      );
-
-      if (cursor) {
-        afterCursor = cursor;
-      }
-
-      index++;
-      ptr = ptr.nextElementSibling;
+  #pasteElementsAtCursor(elements: BlockElement[]) {
+    if (elements.length === 0) {
+      return;
     }
+    const currentBlockElement = this.#getBlockElementAtCollapsedCursor();
+    if (!currentBlockElement) {
+      return;
+    }
+    const parent = currentBlockElement.parent! as BlockyElement;
+    let prev = currentBlockElement;
 
-    this.render(() => {
-      this.state.cursorState = afterCursor;
+    this.update(() => {
+      for (const element of elements) {
+        parent.insertAfter(element, prev);
+        prev = element;
+      }
     });
   }
 
-  #tryPasteDivElementAsBlock(
-    element: HTMLDivElement,
-    cursorState: Cell<CursorState | undefined>,
-    tryMerge = false
-  ): boolean {
-    const blockRegistry = this.registry.block;
-    const dataType = element.getAttribute("data-type");
-    if (!dataType) {
-      return false;
-    }
-    const blockDef = blockRegistry.getBlockDefByName(dataType);
-    if (!blockDef) {
-      return false;
-    }
+  // #pasteHTMLBodyOnCursor(body: HTMLElement) {
+  //   let ptr = body.firstElementChild;
+  //   let afterCursor: CursorState | undefined = this.state.cursorState;
 
-    const pasteHandler = blockDef?.onPaste;
-    if (pasteHandler) {
-      const evt = new BlockPasteEvent({
-        after: cursorState.get(),
-        editor: this,
-        node: element,
-        tryMerge,
-      });
-      const newCursor = pasteHandler.call(blockDef, evt);
-      if (newCursor) {
-        cursorState.set(newCursor);
-      }
-    } else {
-      const newCursor = this.#insertBlockByDefaultAt(cursorState.get());
-      if (newCursor) {
-        cursorState.set(newCursor);
-      }
-    }
+  //   let index = 0;
+  //   while (ptr) {
+  //     const cursor = this.#pasteNodeAt(
+  //       afterCursor,
+  //       ptr as HTMLElement,
+  //       index === 0
+  //     );
 
-    return true;
-  }
+  //     if (cursor) {
+  //       afterCursor = cursor;
+  //     }
 
-  /**
-   *
-   * Paste the content of element at the cursor.
-   * There is two cases:
-   *
-   * - Paste the content copied from the editor
-   * - Paste the HTML copied from other websites
-   *
-   * @param tryMerge Indicate whether the content should be merged to the previous block.
-   */
-  #pasteNodeAt(
-    cursorState: CursorState | undefined,
-    element: HTMLElement,
-    tryMerge = false
-  ): CursorState | undefined {
-    const blockRegistry = this.registry.block;
+  //     index++;
+  //     ptr = ptr.nextElementSibling;
+  //   }
 
-    const evt = new TryParsePastedDOMEvent({
-      after: cursorState,
-      editor: this,
-      node: element,
-    });
-    blockRegistry.handlePasteElement(evt);
-    if (evt.defaultPrevented) {
-      return evt.after;
-    }
+  //   this.render(() => {
+  //     this.state.cursorState = afterCursor;
+  //   });
+  // }
 
-    if (element instanceof HTMLSpanElement) {
-      const attributes: AttributesObject = this.getAttributesBySpan(element);
-      let textContent = "";
+  // #tryPasteDivElementAsBlock(
+  //   element: HTMLDivElement,
+  //   cursorState: Cell<CursorState | undefined>
+  // ): BlockElement | void {
+  //   const blockRegistry = this.registry.block;
+  //   const dataType = element.getAttribute("data-type");
+  //   if (!dataType) {
+  //     return;
+  //   }
+  //   const blockDef = blockRegistry.getBlockDefByName(dataType);
+  //   if (!blockDef) {
+  //     return;
+  //   }
 
-      const testContent = element.textContent;
-      if (testContent) {
-        textContent = testContent;
-      }
+  //   const pasteHandler = blockDef?.onPaste;
+  //   if (pasteHandler) {
+  //     const evt = new BlockPasteEvent({
+  //       editor: this,
+  //       node: element,
+  //     });
+  //     return pasteHandler.call(blockDef, evt);
+  //   } else {
+  //     const newCursor = this.#insertBlockByDefaultAt(cursorState.get());
+  //     if (newCursor) {
+  //       cursorState.set(newCursor);
+  //     }
+  //   }
+  // }
 
-      return this.#insertTextAt(
-        cursorState,
-        textContent,
-        Object.keys(attributes).length > 0 ? attributes : undefined
-      );
-    } else if (element instanceof HTMLDivElement) {
-      const cursorCell = new Cell(cursorState);
-      if (this.#tryPasteDivElementAsBlock(element, cursorCell, tryMerge)) {
-        return cursorCell.get();
-      } else {
-        console.warn("unknown dom:", element);
-      }
-    } else if (
-      element instanceof HTMLParagraphElement ||
-      element instanceof HTMLHeadingElement ||
-      element instanceof HTMLLIElement
-    ) {
-      // is a <p> or <h1>
-      const blockDef = blockRegistry.getBlockDefByName(TextBlockName);
-      const pasteHandler = blockDef?.onPaste;
-      const evt = new BlockPasteEvent({
-        after: cursorState,
-        editor: this,
-        node: element,
-        tryMerge,
-      });
-      if (pasteHandler) {
-        const cursor = pasteHandler.call(blockDef, evt);
-        return cursor;
-      } else {
-        return this.#insertBlockByDefaultAt(cursorState);
-      }
-    } else if (element instanceof HTMLUListElement) {
-      let childPtr = element.firstElementChild;
-      let returnCursor: CursorState | undefined = cursorState;
+  // /**
+  //  *
+  //  * Paste the content of element at the cursor.
+  //  * There is two cases:
+  //  *
+  //  * - Paste the content copied from the editor
+  //  * - Paste the HTML copied from other websites
+  //  *
+  //  * @param tryMerge Indicate whether the content should be merged to the previous block.
+  //  */
+  // #pasteNodeAt(
+  //   cursorState: CursorState | undefined,
+  //   element: HTMLElement,
+  //   tryMerge = false
+  // ): CursorState | undefined {
+  //   const blockRegistry = this.registry.block;
 
-      while (childPtr) {
-        returnCursor = this.#pasteNodeAt(
-          returnCursor,
-          childPtr as HTMLElement,
-          false
-        );
-        childPtr = childPtr.nextElementSibling;
-      }
+  //   const evt = new TryParsePastedDOMEvent({
+  //     after: cursorState,
+  //     editor: this,
+  //     node: element,
+  //   });
+  //   blockRegistry.handlePasteElement(evt);
+  //   if (evt.defaultPrevented) {
+  //     return evt.after;
+  //   }
 
-      return returnCursor;
-    } else {
-      console.warn("unknown dom:", element);
-    }
-    return;
-  }
+  //   if (element instanceof HTMLSpanElement) {
+  //     const attributes: AttributesObject = this.getAttributesBySpan(element);
+  //     let textContent = "";
+
+  //     const testContent = element.textContent;
+  //     if (testContent) {
+  //       textContent = testContent;
+  //     }
+
+  //     return this.#insertTextAt(
+  //       cursorState,
+  //       textContent,
+  //       Object.keys(attributes).length > 0 ? attributes : undefined
+  //     );
+  //   } else if (element instanceof HTMLDivElement) {
+  //     const cursorCell = new Cell(cursorState);
+  //     if (this.#tryPasteDivElementAsBlock(element, cursorCell)) {
+  //       return cursorCell.get();
+  //     } else {
+  //       console.warn("unknown dom:", element);
+  //     }
+  //   } else if (
+  //     element instanceof HTMLParagraphElement ||
+  //     element instanceof HTMLHeadingElement ||
+  //     element instanceof HTMLLIElement
+  //   ) {
+  //     // is a <p> or <h1>
+  //     const blockDef = blockRegistry.getBlockDefByName(TextBlockName);
+  //     const pasteHandler = blockDef?.onPaste;
+  //     const evt = new BlockPasteEvent({
+  //       editor: this,
+  //       node: element,
+  //       tryMerge,
+  //     });
+  //     if (pasteHandler) {
+  //       const cursor = pasteHandler.call(blockDef, evt);
+  //       return cursor;
+  //     } else {
+  //       return this.#insertBlockByDefaultAt(cursorState);
+  //     }
+  //   } else if (element instanceof HTMLUListElement) {
+  //     let childPtr = element.firstElementChild;
+  //     let returnCursor: CursorState | undefined = cursorState;
+
+  //     while (childPtr) {
+  //       returnCursor = this.#pasteNodeAt(
+  //         returnCursor,
+  //         childPtr as HTMLElement,
+  //         false
+  //       );
+  //       childPtr = childPtr.nextElementSibling;
+  //     }
+
+  //     return returnCursor;
+  //   } else {
+  //     console.warn("unknown dom:", element);
+  //   }
+  //   return;
+  // }
 
   /**
    * Calculate the attributes from the dom.
@@ -1300,32 +1349,32 @@ export class Editor {
     return attributes;
   }
 
-  #insertBlockByDefaultAt(
-    cursorState: CursorState | undefined
-  ): CursorState | undefined {
-    if (!cursorState) {
-      return;
-    }
+  // #insertBlockByDefaultAt(
+  //   cursorState: CursorState | undefined
+  // ): CursorState | undefined {
+  //   if (!cursorState) {
+  //     return;
+  //   }
 
-    if (cursorState.type === "open") {
-      return;
-    }
+  //   if (cursorState.type === "open") {
+  //     return;
+  //   }
 
-    const currentNode = this.state.idMap.get(
-      cursorState.targetId
-    )! as BlockElement;
+  //   const currentNode = this.state.idMap.get(
+  //     cursorState.targetId
+  //   )! as BlockElement;
 
-    const textElement = this.state.createTextElement();
+  //   const textElement = this.state.createTextElement();
 
-    const parentElement = currentNode.parent! as BlockyElement;
-    parentElement.insertAfter(textElement, currentNode);
+  //   const parentElement = currentNode.parent! as BlockyElement;
+  //   parentElement.insertAfter(textElement, currentNode);
 
-    return {
-      type: "collapsed",
-      targetId: textElement.id,
-      offset: 0,
-    };
-  }
+  //   return {
+  //     type: "collapsed",
+  //     targetId: textElement.id,
+  //     offset: 0,
+  //   };
+  // }
 
   #pastePlainTextOnCursor(text: string) {
     const cursor = this.#insertTextAt(this.state.cursorState, text);
