@@ -687,39 +687,11 @@ class TextBlockDefinition implements IBlockDefinition {
   }
 
   onPaste({
-    after: cursorState,
-    node: container,
     editor,
-    tryMerge,
-  }: BlockPasteEvent): CursorState | undefined {
-    if (!cursorState) {
-      return;
-    }
-
-    if (cursorState.type === "open") {
-      return;
-    }
-
-    const currentElement = editor.state.idMap.get(
-      cursorState.targetId
-    )! as BlockElement;
-    const parentElement = currentElement.parent! as BlockyElement;
+    node: container,
+  }: BlockPasteEvent): BlockElement | undefined {
     const newTextElement = this.getTextElementFromDOM(editor, container);
-    const newTextModel = newTextElement.firstChild! as BlockyTextModel;
-
-    if (tryMerge && currentElement.nodeName === TextBlockName) {
-      const oldTextModel = currentElement.firstChild! as BlockyTextModel;
-      oldTextModel.append(newTextModel);
-      return;
-    }
-
-    parentElement.insertAfter(newTextElement, currentElement);
-
-    return {
-      type: "collapsed",
-      targetId: newTextElement.id,
-      offset: 0,
-    };
+    return newTextElement;
   }
 
   /**

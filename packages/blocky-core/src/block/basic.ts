@@ -20,10 +20,8 @@ export interface CursorDomResult {
 }
 
 export interface BlockPasteEventProps {
-  after: CursorState | undefined;
   editor: Editor;
   node: HTMLElement;
-  tryMerge: boolean;
 }
 
 export class BlockEvent {
@@ -39,17 +37,13 @@ export class BlockEvent {
 }
 
 export class BlockPasteEvent extends BlockEvent {
-  after: CursorState | undefined;
   editor: Editor;
   node: HTMLElement;
-  tryMerge: boolean;
 
-  constructor({ after, editor, node, tryMerge }: BlockPasteEventProps) {
+  constructor({ editor, node }: BlockPasteEventProps) {
     super();
-    this.after = after;
     this.editor = editor;
     this.node = node;
-    this.tryMerge = tryMerge;
   }
 }
 
@@ -59,18 +53,18 @@ export interface TryParsePastedDOMEventProps {
   node: HTMLElement;
 }
 
-export class TryParsePastedDOMEvent extends BlockEvent {
-  after: CursorState | undefined;
-  editor: Editor;
-  node: HTMLElement;
+// export class TryParsePastedDOMEvent extends BlockEvent {
+//   after: CursorState | undefined;
+//   editor: Editor;
+//   node: HTMLElement;
 
-  constructor({ after, editor, node }: TryParsePastedDOMEventProps) {
-    super();
-    this.after = after;
-    this.editor = editor;
-    this.node = node;
-  }
-}
+//   constructor({ after, editor, node }: TryParsePastedDOMEventProps) {
+//     super();
+//     this.after = after;
+//     this.editor = editor;
+//     this.node = node;
+//   }
+// }
 
 export interface BlockFocusedEvent {
   selection: Selection;
@@ -106,7 +100,7 @@ export interface IBlockDefinition {
    * If you want to handle the HTML pasted from another
    * source, please implement [[tryParsePastedDOM]].
    */
-  onPaste?(e: BlockPasteEvent): CursorState | undefined;
+  onPaste?(e: BlockPasteEvent): BlockElement | undefined;
 
   /**
    *
