@@ -8,19 +8,26 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "homepage": "https://github.com/vincentdchan/blocky-editor",
-  "keywords": ["editor", "preact"],
+  "keywords": [
+    "editor",
+    "preact"
+  ],
   "author": "Vincent Chan <okcdz@diverse.space>",
   "license": "MIT",
   "devDependencies": {
+    "@types/lodash-es": "^4.17.6",
     "@types/node": "^17.0.41",
-    "typescript": "^4.7.3",
     "blocky-common": "workspace:*",
     "blocky-core": "workspace:*",
-    "preact": "^10.7.3"
+    "preact": "^10.7.3",
+    "typescript": "^4.7.3"
   },
   "peerDependencies": {
     "blocky-common": "workspace:^1.1.0",
     "blocky-core": "workspace:^1.5.1",
     "preact": "*"
+  },
+  "dependencies": {
+    "lodash-es": "*"
   }
 }

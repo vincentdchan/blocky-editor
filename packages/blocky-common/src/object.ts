@@ -1,4 +1,3 @@
-
 export function areEqualShallow(a: any, b: any) {
   if (typeof a === "object" && typeof b === "object") {
     for (let key in a) {
@@ -15,8 +14,4 @@ export function areEqualShallow(a: any, b: any) {
   } else {
     return a === b;
   }
-}
-
-export function isUndefined(obj: any): obj is undefined {
-  return typeof obj === "undefined";
 }

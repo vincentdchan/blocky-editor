@@ -1,20 +1,25 @@
 import { type IDisposable } from "blocky-common/es/disposable";
-import { isUndefined } from "blocky-common/es/object";
+import { isUndefined } from "lodash-es";
 import type { EditorController } from "@pkg/view/controller";
 import { UIDelegate } from "./uiDelegate";
 
-export type ToolbarFactory = (dom: HTMLDivElement, editorController: EditorController) => IDisposable | undefined
+export type ToolbarFactory = (
+  dom: HTMLDivElement,
+  editorController: EditorController
+) => IDisposable | undefined;
 
 const DebounceDelay = 250;
 
 export class ToolbarDelegate extends UIDelegate {
-
   #enabled = false;
   #debounced: any;
   #x = 0;
   #y = 0;
 
-  constructor(private editorController: EditorController, private factory?: ToolbarFactory) {
+  constructor(
+    private editorController: EditorController,
+    private factory?: ToolbarFactory
+  ) {
     super("blocky-editor-toolbar-delegate blocky-cm-noselect");
   }
 
@@ -70,5 +75,4 @@ export class ToolbarDelegate extends UIDelegate {
     this.#x = x;
     this.#y = y;
   }
-
 }
