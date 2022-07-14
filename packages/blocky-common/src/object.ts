@@ -1,3 +1,4 @@
+// Reference: https://github.com/lodash/lodash/issues/2340
 export function areEqualShallow(a: any, b: any) {
   if (typeof a === "object" && typeof b === "object") {
     for (let key in a) {
