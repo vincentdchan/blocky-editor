@@ -147,7 +147,8 @@ export class Editor {
       toolbarFactory: controller.options?.toolbarFactory,
       padding: controller.options?.padding,
       bannerXOffset: controller.options?.bannerXOffset,
-      collaborativeCursorOptions: controller.options?.collaborativeCursorOptions,
+      collaborativeCursorOptions:
+        controller.options?.collaborativeCursorOptions,
     });
     controller.mount(editor);
     return editor;
@@ -779,7 +780,7 @@ export class Editor {
   /**
    * If the focusing line is textline,
    * try to merge to previous line.
-   * 
+   *
    * If the previous lins is not a text line,
    * then focus on it.
    */
@@ -851,7 +852,7 @@ export class Editor {
           targetId: prevNode.id,
           offset: originalLength,
         };
-      }
+      };
     });
 
     return true;
@@ -1167,6 +1168,10 @@ export class Editor {
   /**
    *
    * Paste the content of element at the cursor.
+   * There is two cases:
+   *
+   * - Paste the content copied from the editor
+   * - Paste the HTML copied from other websites
    *
    * @param tryMerge Indicate whether the content should be merged to the previous block.
    */

@@ -1,6 +1,9 @@
+import { isUndefined } from "lodash-es";
 import { isUpperCase } from "blocky-common/es/character";
-import { isUndefined } from "blocky-common/es/object";
-import { type IBlockDefinition, type TryParsePastedDOMEvent } from "@pkg/block/basic";
+import {
+  type IBlockDefinition,
+  type TryParsePastedDOMEvent,
+} from "@pkg/block/basic";
 import { makeTextBlockDefinition, TextBlockName } from "@pkg/block/textBlock";
 
 export class BlockRegistry {
@@ -52,5 +55,4 @@ export class BlockRegistry {
       }
     }
   }
-
 }

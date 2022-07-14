@@ -1,10 +1,10 @@
 import { Component, JSX } from "preact";
+import { isUndefined } from "lodash-es";
 import { ReactBlockContext } from "../reactBlock";
 import {
   type IDisposable,
   flattenDisposable,
 } from "blocky-common/es/disposable";
-import { isUndefined } from "blocky-common/es/object";
 import { type EditorController, type CursorChangedEvent } from "blocky-core";
 
 interface DefaultBlockOutlineInternalProps {
@@ -40,8 +40,10 @@ class DefaultBlockOutlineInternal extends Component<
       editorController.cursorChanged.on(this.handleNewCursorState)
     );
     this.disposables.push(
-      editorController.beforeApplyCursorChanged.on(this.handleeApplyCursorChangedEvent)
-    )
+      editorController.beforeApplyCursorChanged.on(
+        this.handleeApplyCursorChangedEvent
+      )
+    );
   }
 
   private handleeApplyCursorChangedEvent = (evt: CursorChangedEvent) => {
@@ -50,7 +52,7 @@ class DefaultBlockOutlineInternal extends Component<
       !isUndefined(state) &&
       state.type === "collapsed" &&
       state.targetId === this.props.blockId;
-      
+
     const { editorController } = this.props;
     const { editor } = editorController;
     if (!editor) {
@@ -115,7 +117,11 @@ class DefaultBlockOutlineInternal extends Component<
       };
     }
     return (
-      <div className="blocky-default-block-outline" style={style} onClick={this.handleContainerClicked}>
+      <div
+        className="blocky-default-block-outline"
+        style={style}
+        onClick={this.handleContainerClicked}
+      >
         {children}
       </div>
     );

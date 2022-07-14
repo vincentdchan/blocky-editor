@@ -19,6 +19,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/is-hotkey": "^0.1.7",
+    "@types/lodash-es": "^4.17.6",
     "@types/node": "^17.0.41",
     "@typescript-eslint/eslint-plugin": "^5.30.4",
     "@typescript-eslint/parser": "^5.30.4",
@@ -33,6 +34,7 @@
   "dependencies": {
     "blocky-common": "workspace:>=1.7.0",
     "fast-diff": "^1.2.0",
-    "is-hotkey": "^0.2.0"
+    "is-hotkey": "^0.2.0",
+    "lodash-es": "^4.17.21"
   }
 }

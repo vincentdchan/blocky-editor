@@ -1,5 +1,5 @@
 import { elem, removeNode } from "blocky-common/es/dom";
-import { isUndefined } from "blocky-common/es/object";
+import { isUndefined } from "lodash-es";
 import { type BlockyElement } from "@pkg/model";
 import type { Editor } from "@pkg/view/editor";
 import { type BlockElement, type IBlockDefinition } from "@pkg/block/basic";
@@ -9,7 +9,7 @@ function ensureChild<K extends keyof HTMLElementTagNameMap>(
   index: number,
   tag: K,
   cls?: string,
-  creator?: (element: HTMLElement) => void,
+  creator?: (element: HTMLElement) => void
 ): HTMLElement {
   const item = dom.children.item(index);
   if (
@@ -51,10 +51,13 @@ export class DocRenderer {
     const { editor, clsPrefix } = this;
     const { state } = editor;
     const createNewDocument = () => {
-      const newDom = elem("div", `${clsPrefix}-documents ${clsPrefix}-default-fonts`);
+      const newDom = elem(
+        "div",
+        `${clsPrefix}-documents ${clsPrefix}-default-fonts`
+      );
       this.renderDocument(state.root, newDom);
       return newDom;
-    }
+    };
 
     if (oldDom && oldDom instanceof HTMLDivElement) {
       this.renderDocument(state.root, oldDom);
@@ -68,11 +71,17 @@ export class DocRenderer {
     dom._mgNode = model;
 
     const { clsPrefix } = this;
-    const blocksContainer = ensureChild(dom, 0, "div", `${clsPrefix}-editor-blocks-container`, (elem: HTMLElement) => {
-      const { padding } = this.editor;
-      const { top, right, bottom, left } = padding;
-      elem.style.padding = `${top}px ${right}px ${bottom}px ${left}px`;
-    });
+    const blocksContainer = ensureChild(
+      dom,
+      0,
+      "div",
+      `${clsPrefix}-editor-blocks-container`,
+      (elem: HTMLElement) => {
+        const { padding } = this.editor;
+        const { top, right, bottom, left } = padding;
+        elem.style.padding = `${top}px ${right}px ${bottom}px ${left}px`;
+      }
+    );
     this.renderBlocks(blocksContainer, blocksContainer.firstChild, model);
   }
 
@@ -96,9 +105,13 @@ export class DocRenderer {
     return dom;
   }
 
-  protected renderBlocks(blocksContainer: HTMLElement, beginChild: ChildNode | null, parentNode: BlockyElement) {
+  protected renderBlocks(
+    blocksContainer: HTMLElement,
+    beginChild: ChildNode | null,
+    parentNode: BlockyElement
+  ) {
     let nodePtr = parentNode.firstChild;
-    
+
     // remove the following node;
     if (!nodePtr) {
       let next = beginChild?.nextSibling;
@@ -116,16 +129,23 @@ export class DocRenderer {
     while (nodePtr) {
       const blockElement = nodePtr as BlockElement;
       const id = blockElement.id;
-      const blockDef = this.editor.registry.block.getBlockDefByName(blockElement.nodeName);
+      const blockDef = this.editor.registry.block.getBlockDefByName(
+        blockElement.nodeName
+      );
       domPtr = this.clearDeletedBlock(domPtr);
 
       if (!blockDef) {
         throw new Error(`id not found: ${blockElement.nodeName}`);
       }
 
-      if (!domPtr || isUndefined(domPtr._mgNode) || domPtr._mgNode !== nodePtr) {
+      if (
+        !domPtr ||
+        isUndefined(domPtr._mgNode) ||
+        domPtr._mgNode !== nodePtr
+      ) {
         const existDom = this.editor.state.domMap.get(id);
-        if (existDom) {  // move dom from another place
+        if (existDom) {
+          // move dom from another place
           // don't need to destruct
           // maybe used later
           removeNode(existDom);
@@ -134,7 +154,10 @@ export class DocRenderer {
         } else {
           const newBlockContainer = this.createBlockContainer();
           newBlockContainer.setAttribute("date-id", blockElement.id);
-          blocksContainer.insertBefore(newBlockContainer, prevPtr?.nextSibling ?? null);
+          blocksContainer.insertBefore(
+            newBlockContainer,
+            prevPtr?.nextSibling ?? null
+          );
           domPtr = newBlockContainer;
           this.initBlockContainer(newBlockContainer, blockElement, blockDef);
         }
@@ -151,7 +174,11 @@ export class DocRenderer {
       if (childrenContainer) {
         const { childrenContainerDOM, childrenBeginDOM } = block;
         if (childrenContainerDOM) {
-          this.renderBlocks(childrenContainerDOM, childrenBeginDOM, childrenContainer);
+          this.renderBlocks(
+            childrenContainerDOM,
+            childrenBeginDOM,
+            childrenContainer
+          );
         }
       }
     }
@@ -166,7 +193,11 @@ export class DocRenderer {
     }
   }
 
-  private initBlockContainer(blockContainer: HTMLElement, blockNode: BlockElement, blockDef: IBlockDefinition) {
+  private initBlockContainer(
+    blockContainer: HTMLElement,
+    blockNode: BlockElement,
+    blockDef: IBlockDefinition
+  ) {
     const { editor, clsPrefix } = this;
 
     if (!blockDef.editable) {
@@ -197,5 +228,4 @@ export class DocRenderer {
     }
     return undefined;
   }
-
 }
