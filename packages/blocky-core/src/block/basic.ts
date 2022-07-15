@@ -89,6 +89,11 @@ export interface BlockContentChangedEvent {
   offset?: number;
 }
 
+/**
+ * This class is used to define a block.
+ * Tell the editor the name of the block.
+ * Handle the paste event.
+ */
 export interface IBlockDefinition {
   name: string;
 
@@ -124,17 +129,16 @@ export interface IBlockDefinition {
   onBlockCreated(e: BlockCreatedEvent): Block;
 }
 
+/**
+ * This is a data layer of a block.
+ * ID is used to locate a block in the document tree.
+ *
+ * A BlockElement can contain a <children-container>
+ * at the end of the block to store the children.
+ */
 export class BlockElement extends BlockyElement {
-  // public contentContainer: BlockyElement;
-  // public childrenContainer: BlockyElement;
-
   constructor(blockName: string, id: string) {
     super(blockName);
-    // this.contentContainer = new BlockyElement("block-content");
-    // this.childrenContainer = new BlockyElement("block-children");
-    // this.appendChild(this.contentContainer);
-    // this.appendChild(this.childrenContainer);
-
     this.setAttribute("id", id);
   }
 
@@ -212,6 +216,9 @@ export class BlockElement extends BlockyElement {
   }
 }
 
+/**
+ * Base class for all the blocks in the editor.
+ */
 export class Block implements IDisposable {
   #editor: Editor | undefined;
 
@@ -245,11 +252,11 @@ export class Block implements IDisposable {
     return { x: 0, y: 0 };
   }
 
-  blockDidMount(e: BlockDidMountEvent) {}
+  blockDidMount?(e: BlockDidMountEvent): void;
 
-  onDedent(e: KeyboardEvent) {}
+  onDedent?(e: KeyboardEvent): void;
 
-  onIndent(e: KeyboardEvent) {}
+  onIndent?(e: KeyboardEvent): void;
 
   /**
    * Handle the block is focused.
@@ -258,25 +265,21 @@ export class Block implements IDisposable {
    * equal to the block'id. The children is out of situation.
    *
    */
-  blockFocused(e: BlockFocusedEvent): void {}
+  blockFocused?(e: BlockFocusedEvent): void;
 
-  blockBlur(e: BlockBlurEvent): void {}
+  blockBlur?(e: BlockBlurEvent): void;
 
-  blockContentChanged(e: BlockContentChangedEvent): void {}
+  blockContentChanged?(e: BlockContentChangedEvent): void;
 
-  render(container: HTMLElement) {}
+  render?(container: HTMLElement): void;
 
-  getCursorDomByOffset(offset: number): CursorDomResult | undefined {
-    return;
-  }
+  getCursorDomByOffset?(offset: number): CursorDomResult | undefined;
 
   getCursorHeight(): number {
     return 18;
   }
 
-  findTextOffsetInBlock(focusedNode: Node, offsetInNode: number): number {
-    return 0;
-  }
+  findTextOffsetInBlock?(focusedNode: Node, offsetInNode: number): number;
 
   dispose(): void {
     this.#editor = undefined;

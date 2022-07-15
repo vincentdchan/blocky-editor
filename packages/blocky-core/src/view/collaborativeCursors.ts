@@ -251,7 +251,7 @@ function makeDefaultOptions(): CollaborativeCursorOptions {
   return {
     id: mkUserId(),
     idToName: (id: string) => id,
-    idToColor: (id: string) => "yellow",
+    idToColor: () => "yellow",
   };
 }
 
