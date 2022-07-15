@@ -34,8 +34,8 @@ function makeEditorPlugins(doc: Y.Doc, allowInit?: boolean): IPlugin[] {
   ];
 }
 
-const User1Color = "#dc410a";
-const User2Color = "orange";
+const User1Color = "rgb(235 100 52)";
+const User2Color = "rgb(246 187 80)";
 
 /**
  * The controller is used to control the editor.
@@ -106,16 +106,16 @@ class App extends Component<{}, AppState> {
     this.doc1 = new Y.Doc();
     this.doc2 = new Y.Doc();
 
-    this.doc1.on('update', update => {
+    this.doc1.on("update", (update) => {
       // simulate the network
       setTimeout(() => {
-        Y.applyUpdate(this.doc2, update)
+        Y.applyUpdate(this.doc2, update);
       }, 0);
     });
-    
-    this.doc2.on('update', update => {
+
+    this.doc2.on("update", (update) => {
       setTimeout(() => {
-        Y.applyUpdate(this.doc1, update)
+        Y.applyUpdate(this.doc1, update);
       }, 0);
     });
 
@@ -124,11 +124,11 @@ class App extends Component<{}, AppState> {
 
     this.editorControllerRight = makeRightController(this.doc2);
 
-    this.editorControllerLeft.cursorChanged.on(evt => {
+    this.editorControllerLeft.cursorChanged.on((evt) => {
       this.editorControllerRight.applyCursorChangedEvent(evt);
     });
 
-    this.editorControllerRight.cursorChanged.on(evt => {
+    this.editorControllerRight.cursorChanged.on((evt) => {
       this.editorControllerLeft.applyCursorChangedEvent(evt);
     });
 
@@ -181,12 +181,10 @@ class App extends Component<{}, AppState> {
               ></img>
             </a>
           </div>
-          <div className="blocky-example-editors" >
+          <div className="blocky-example-editors">
             <div className="blocky-example-editor-container left">
               <div className="blocky-example-user">
-                <span style={{ backgroundColor: User1Color }}>
-                  User 1
-                </span>
+                <span style={{ backgroundColor: User1Color }}>User 1</span>
               </div>
               <div className="blocky-example-title-container">
                 <input
@@ -198,9 +196,7 @@ class App extends Component<{}, AppState> {
             </div>
             <div className="blocky-example-editor-container right">
               <div className="blocky-example-user">
-                <span style={{ backgroundColor: User2Color }}>
-                  User 2
-                </span>
+                <span style={{ backgroundColor: User2Color }}>User 2</span>
               </div>
               <div className="blocky-example-title-container">
                 <input
