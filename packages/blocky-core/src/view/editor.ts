@@ -252,7 +252,7 @@ export class Editor {
         }
         cursor.height = block.getCursorHeight();
 
-        const cursorDom = block.getCursorDomByOffset(offset);
+        const cursorDom = block.getCursorDomByOffset?.(offset);
         if (!cursorDom) {
           this.collaborativeCursorManager.deleteById(id);
           return;
@@ -287,8 +287,8 @@ export class Editor {
 
       cursor.height = block.getCursorHeight();
 
-      const startCursorDom = block.getCursorDomByOffset(state.startOffset);
-      const endCursorDom = block.getCursorDomByOffset(state.endOffset);
+      const startCursorDom = block.getCursorDomByOffset?.(state.startOffset);
+      const endCursorDom = block.getCursorDomByOffset?.(state.endOffset);
       if (!startCursorDom || !endCursorDom) {
         this.collaborativeCursorManager.deleteById(id);
         return;
@@ -397,7 +397,7 @@ export class Editor {
       throw new Error("block id not found: " + blockNode.id);
     }
 
-    return block.findTextOffsetInBlock(focusedNode, offsetInNode);
+    return block.findTextOffsetInBlock?.(focusedNode, offsetInNode) ?? 0;
   }
 
   #selectionChanged = () => {
@@ -524,7 +524,7 @@ export class Editor {
   ) {
     const block = this.state.blocks.get(blockNode.id);
 
-    block?.blockContentChanged({
+    block?.blockContentChanged?.({
       node: node as HTMLDivElement,
       offset: currentOffset,
     });
@@ -616,11 +616,11 @@ export class Editor {
     this.bannerDelegate.hide();
   };
 
-  #handleCompositionStart = (e: CompositionEvent) => {
+  #handleCompositionStart = () => {
     this.composing = true;
   };
 
-  #handleCompositionEnd = (e: CompositionEvent) => {
+  #handleCompositionEnd = () => {
     this.composing = false;
     this.#handleContentChanged();
   };
@@ -674,9 +674,9 @@ export class Editor {
     }
 
     if (e.shiftKey) {
-      block.onDedent(e);
+      block.onDedent?.(e);
     } else {
-      block.onIndent(e);
+      block.onIndent?.(e);
     }
   }
 
@@ -1019,13 +1019,13 @@ export class Editor {
       return;
     }
 
-    const startCursorDom = startBlock.getCursorDomByOffset(startOffset);
+    const startCursorDom = startBlock.getCursorDomByOffset?.(startOffset);
 
     if (!startCursorDom) {
       return;
     }
 
-    const endCursorDom = endBlock.getCursorDomByOffset(endOffset);
+    const endCursorDom = endBlock.getCursorDomByOffset?.(endOffset);
 
     if (!endCursorDom) {
       return;
@@ -1058,7 +1058,7 @@ export class Editor {
 
     this.#lastFocusedId = node.id;
     const block = this.state.blocks.get(node.id)!;
-    block.blockFocused({ node: blockDom, cursor, selection: sel });
+    block.blockFocused?.({ node: blockDom, cursor, selection: sel });
   }
 
   #blurBlock() {
@@ -1074,7 +1074,7 @@ export class Editor {
     const dom = this.state.domMap.get(this.#lastFocusedId);
     const sel = window.getSelection()!;
     if (dom) {
-      block.blockBlur({
+      block.blockBlur?.({
         node: dom as HTMLDivElement,
         cursor: this.state.cursorState,
         selection: sel,
@@ -1179,10 +1179,7 @@ export class Editor {
         cursorState.set(newCursor);
       }
     } else {
-      const newCursor = this.#insertBlockByDefaultAt(
-        cursorState.get(),
-        dataType
-      );
+      const newCursor = this.#insertBlockByDefaultAt(cursorState.get());
       if (newCursor) {
         cursorState.set(newCursor);
       }
@@ -1257,7 +1254,7 @@ export class Editor {
         const cursor = pasteHandler.call(blockDef, evt);
         return cursor;
       } else {
-        return this.#insertBlockByDefaultAt(cursorState, TextBlockName);
+        return this.#insertBlockByDefaultAt(cursorState);
       }
     } else if (element instanceof HTMLUListElement) {
       let childPtr = element.firstElementChild;
@@ -1304,8 +1301,7 @@ export class Editor {
   }
 
   #insertBlockByDefaultAt(
-    cursorState: CursorState | undefined,
-    blockName: string
+    cursorState: CursorState | undefined
   ): CursorState | undefined {
     if (!cursorState) {
       return;

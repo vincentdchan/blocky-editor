@@ -81,6 +81,10 @@ function insertOrGetChildrenContainer(element: BlockElement): BlockyElement {
   return childrenContainer;
 }
 
+/**
+ * TextBlock is a very special block in the editor.
+ * It's handling all the editable element.
+ */
 class TextBlock extends Block {
   #container: HTMLElement | undefined;
   #bodyContainer: HTMLElement | null = null;
@@ -127,10 +131,7 @@ class TextBlock extends Block {
     focusedNode: Node,
     offsetInNode: number
   ): number {
-    const blockContainer = this.#container!;
-    const contentContainer = this.findContentContainer!(
-      blockContainer as HTMLElement
-    );
+    const contentContainer = this.findContentContainer();
     let counter = 0;
     let ptr = contentContainer.firstChild;
 
@@ -150,7 +151,7 @@ class TextBlock extends Block {
     return counter + offsetInNode;
   }
 
-  protected findContentContainer(parent: HTMLElement): HTMLElement {
+  protected findContentContainer(): HTMLElement {
     const e = this.#contentContainer;
     if (!e) {
       throw new Error("content not found");
@@ -185,7 +186,7 @@ class TextBlock extends Block {
     selection,
     cursor,
   }: BlockFocusedEvent): void {
-    const contentContainer = this.findContentContainer(blockDom);
+    const contentContainer = this.findContentContainer();
 
     contentContainer.setAttribute("placeholder", "Empty content");
 
@@ -220,8 +221,8 @@ class TextBlock extends Block {
     return this.findFocusPosition(this.#container, offset);
   }
 
-  override blockBlur({ node: blockDom }: BlockFocusedEvent): void {
-    const contentContainer = this.findContentContainer(blockDom);
+  override blockBlur(): void {
+    const contentContainer = this.findContentContainer();
     const zeroSpaceEmptyChar = String.fromCharCode(160);
     contentContainer.setAttribute("placeholder", zeroSpaceEmptyChar);
   }
@@ -230,7 +231,7 @@ class TextBlock extends Block {
     blockDom: HTMLElement,
     absoluteOffset: number
   ): TextPosition | undefined {
-    const contentContainer = this.findContentContainer(blockDom);
+    const contentContainer = this.findContentContainer();
     let ptr = contentContainer.firstChild;
 
     while (ptr) {
@@ -291,11 +292,8 @@ class TextBlock extends Block {
     }
   }
 
-  override blockContentChanged({
-    node,
-    offset,
-  }: BlockContentChangedEvent): void {
-    const contentContainer = this.findContentContainer(node);
+  override blockContentChanged({ offset }: BlockContentChangedEvent): void {
+    const contentContainer = this.findContentContainer();
     const formats: FormattedTextSlice[] = [];
 
     let textContent = "";
@@ -467,9 +465,6 @@ class TextBlock extends Block {
         case TextType.Heading3: {
           contentContainer.classList.add(`blocky-heading${textType}`);
           break;
-        }
-
-        default: {
         }
       }
 

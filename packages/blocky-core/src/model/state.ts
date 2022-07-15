@@ -52,6 +52,15 @@ function jsonNodeToBlock(state: State, node: S.JSONNode): BlockyNode {
 
 export const DocNodeName = "doc";
 
+/**
+ * This class is used to store all the states
+ * used to render the editor. Including:
+ *
+ * - Document tree
+ * - Cursor
+ * - Instances of blocks
+ *
+ */
 class State {
   static fromMarkup(
     doc: S.JSONNode,

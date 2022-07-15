@@ -1,11 +1,9 @@
 import { type BlockyNode } from "./element";
 
 export class ValidateError extends Error {
-
   constructor(msg: string) {
     super(`[ValidateError] ${msg}`);
   }
-
 }
 
 export function validate(node: BlockyNode) {
@@ -18,6 +16,7 @@ export function validate(node: BlockyNode) {
   }
 }
 
-function validateBlock(blockNode: BlockyNode) {
+/* eslint-disable */
+function validateBlock(_blockNode: BlockyNode) {
   // TODO: validate block
 }
