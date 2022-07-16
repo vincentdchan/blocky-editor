@@ -444,16 +444,19 @@ export interface ElementSetAttributeEvent {
   type: "element-set-attrib";
   key: string;
   value: string;
+  oldValue?: string;
 }
 
 export interface ElementRemoveChildEvent {
   type: "element-remove-child";
+  parent: BlockyNode;
   child: BlockyNode;
   getInsertIndex: () => number;
 }
 
 export interface ElementInsertChildEvent {
   type: "element-insert-child";
+  parent: BlockyNode;
   child: BlockyNode;
   getInsertIndex: () => number;
 }
@@ -533,6 +536,7 @@ export class BlockyElement implements BlockyNode, WithState {
 
     this.onChanged.emit({
       type: "element-insert-child",
+      parent: this,
       child: node,
       getInsertIndex: () => {
         if (!after) {
@@ -574,6 +578,7 @@ export class BlockyElement implements BlockyNode, WithState {
 
     this.onChanged.emit({
       type: "element-insert-child",
+      parent: this,
       child: node,
       getInsertIndex: () => insertIndex,
     });
@@ -621,12 +626,14 @@ export class BlockyElement implements BlockyNode, WithState {
     if (bannedAttributesName.has(name)) {
       throw new Error(`'${name}' is preserved`);
     }
+    const oldValue = this.#attributes[name];
     this.#attributes[name] = value;
 
     this.onChanged.emit({
       type: "element-set-attrib",
       key: name,
       value,
+      oldValue,
     });
   }
 
@@ -692,6 +699,7 @@ export class BlockyElement implements BlockyNode, WithState {
 
     this.onChanged.emit({
       type: "element-remove-child",
+      parent: this,
       child: node,
       getInsertIndex: () => {
         return ptr;
