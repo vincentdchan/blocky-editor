@@ -16,7 +16,7 @@ class WithStateSlot<T = any> extends Slot<T> {
     this.#objWithState = objWithState;
   }
 
-  public emit(v: T) {
+  emit(v: T) {
     if (this.#objWithState.state?.silent) {
       return;
     }
@@ -87,12 +87,12 @@ export class BlockyTextModel implements BlockyNode, WithState {
   #nodeEnd?: TextNode;
   #length = 0;
 
-  public readonly onChanged: WithStateSlot<TextChangedEvent> =
+  readonly onChanged: WithStateSlot<TextChangedEvent> =
     new WithStateSlot(this);
 
   constructor() {}
 
-  public insert(index: number, text: string, attributes?: AttributesObject) {
+  insert(index: number, text: string, attributes?: AttributesObject) {
     if (text.length === 0) {
       return;
     }
@@ -173,7 +173,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
     this.insertAtLast({ content: text, attributes });
   }
 
-  public slice(start: number, end?: number): TextSlice[] {
+  slice(start: number, end?: number): TextSlice[] {
     const result: TextSlice[] = [];
 
     if (isUndefined(end)) {
@@ -239,7 +239,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
     next.prev = node;
   }
 
-  public format(index: number, length: number, attributes?: AttributesObject) {
+  format(index: number, length: number, attributes?: AttributesObject) {
     const originalIndex = index;
     if (index > this.#length || index < 0) {
       throw new Error(`The begin offset ${index} is out of range.`);
@@ -300,7 +300,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
     });
   }
 
-  public delete(index: number, length: number) {
+  delete(index: number, length: number) {
     const originalLen = length;
     const end = index + length;
     if (index > this.#length || index < 0) {
@@ -390,7 +390,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
     node.next = undefined;
   }
 
-  public toString(): string {
+  toString(): string {
     let result = "";
     let ptr: TextNode | undefined = this.#nodeBegin;
 
@@ -402,7 +402,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
     return result;
   }
 
-  public append(that: BlockyTextModel) {
+  append(that: BlockyTextModel) {
     let ptr = that.nodeBegin;
     let index = this.#length;
     while (ptr) {
@@ -480,7 +480,7 @@ export class BlockyElement implements BlockyNode, WithState {
   #lastChild: BlockyNode | null = null;
   #attributes: InternAttributes = Object.create(null);
 
-  public onChanged: WithStateSlot<ElementChangedEvent> = new WithStateSlot(
+  onChanged: WithStateSlot<ElementChangedEvent> = new WithStateSlot(
     this
   );
 

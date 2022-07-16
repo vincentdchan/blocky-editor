@@ -58,8 +58,8 @@ class CursorLabel extends ContainerWithCoord {
 const minWidthOfCursor = 2;
 
 class CollaborativeCursorRect extends ContainerWithCoord {
-  public readonly mouseEnter: Slot<MouseEvent>;
-  public readonly mouseLeave: Slot<MouseEvent>;
+  readonly mouseEnter: Slot<MouseEvent>;
+  readonly mouseLeave: Slot<MouseEvent>;
   constructor() {
     super("blocky-collaborative-cursor-rect");
     this.mouseEnter = Slot.fromEvent(this.container, "mouseenter");
@@ -87,7 +87,7 @@ export class CollaborativeCursor {
   #rects: CollaborativeCursorRect[] = [];
   #x = 0;
   #y = 0;
-  public name?: string;
+  name?: string;
 
   private initTimeout: any;
 
@@ -258,7 +258,7 @@ function makeDefaultOptions(): CollaborativeCursorOptions {
 export class CollaborativeCursorManager extends DivContainer {
   #cursors: Map<string, CollaborativeCursor> = new Map();
 
-  public readonly options: CollaborativeCursorOptions;
+  readonly options: CollaborativeCursorOptions;
 
   constructor(options?: Partial<CollaborativeCursor>) {
     super("blocky-collaborative-cursor-container");
