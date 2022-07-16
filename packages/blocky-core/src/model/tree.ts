@@ -502,6 +502,7 @@ export class BlockyElement implements BlockyNode, WithState {
     if (after && after.parent !== this) {
       throw new TypeError("after node is a child of this node");
     }
+    this.#validateChild(node);
     node.parent = this;
     node.state = this.state;
     if (!after) {
@@ -557,7 +558,18 @@ export class BlockyElement implements BlockyNode, WithState {
     this.#handleInsertChildren(node);
   }
 
+  #validateChild(node: BlockyNode) {
+    let ptr: BlockyElement | null = this;
+    while (ptr) {
+      if (ptr === node) {
+        throw new Error("Can not add ancesters of a node as child");
+      }
+      ptr = ptr.parent as BlockyElement | null;
+    }
+  }
+
   appendChild(node: BlockyNode) {
+    this.#validateChild(node);
     if (!this.#firstChild) {
       this.#firstChild = node;
     }
