@@ -34,7 +34,12 @@ import { BannerDelegate, type BannerFactory } from "./bannerDelegate";
 import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import type { EditorController } from "./controller";
-import { Block, BlockElement, BlockPasteEvent } from "@pkg/block/basic";
+import {
+  Block,
+  BlockElement,
+  BlockPasteEvent,
+  TryParsePastedDOMEvent,
+} from "@pkg/block/basic";
 import {
   setTextTypeForTextBlock,
   getTextTypeForTextBlock,
@@ -215,6 +220,16 @@ export class Editor {
 
   #leafHandler = (node: Node): BlockElement | void => {
     const blockRegistry = this.registry.block;
+
+    const tryEvt = new TryParsePastedDOMEvent({
+      editor: this,
+      node: node as HTMLElement,
+    });
+    const testElement = blockRegistry.handlePasteElement(tryEvt);
+    if (testElement) {
+      return testElement;
+    }
+
     const blockDef = blockRegistry.getBlockDefByName(TextBlockName);
     const pasteHandler = blockDef?.onPaste;
     const evt = new BlockPasteEvent({

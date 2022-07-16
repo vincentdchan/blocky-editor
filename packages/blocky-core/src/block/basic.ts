@@ -48,23 +48,20 @@ export class BlockPasteEvent extends BlockEvent {
 }
 
 export interface TryParsePastedDOMEventProps {
-  after: CursorState | undefined;
   editor: Editor;
   node: HTMLElement;
 }
 
-// export class TryParsePastedDOMEvent extends BlockEvent {
-//   after: CursorState | undefined;
-//   editor: Editor;
-//   node: HTMLElement;
+export class TryParsePastedDOMEvent extends BlockEvent {
+  editor: Editor;
+  node: HTMLElement;
 
-//   constructor({ after, editor, node }: TryParsePastedDOMEventProps) {
-//     super();
-//     this.after = after;
-//     this.editor = editor;
-//     this.node = node;
-//   }
-// }
+  constructor({ editor, node }: TryParsePastedDOMEventProps) {
+    super();
+    this.editor = editor;
+    this.node = node;
+  }
+}
 
 export interface BlockFocusedEvent {
   selection: Selection;
@@ -118,7 +115,7 @@ export interface IBlockDefinition {
    * or handle it with default handler if no plugins handles.
    *
    */
-  tryParsePastedDOM?(e: TryParsePastedDOMEvent): void;
+  tryParsePastedDOM?(e: TryParsePastedDOMEvent): BlockElement | void;
 
   onBlockCreated(e: BlockCreatedEvent): Block;
 }
