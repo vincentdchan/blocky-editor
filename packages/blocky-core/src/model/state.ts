@@ -1,6 +1,7 @@
 import { isObject, isUndefined, isString, isNumber } from "lodash-es";
 import { isUpperCase } from "blocky-common/es/character";
 import { makeObservable } from "blocky-common/es/observable";
+import { removeNode } from "blocky-common/es/dom";
 import { Slot } from "blocky-common/es/events";
 import { BlockyElement, BlockyTextModel } from "./tree";
 import { type BlockyNode } from "./element";
@@ -11,7 +12,6 @@ import { type CursorState } from "@pkg/model/cursor";
 import { Block, BlockElement } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { validate as validateNode } from "./validator";
-import { removeNode } from "blocky-common/src/dom";
 
 function jsonNodeToBlock(state: State, node: S.JSONNode): BlockyNode {
   if (!isObject(node)) {
