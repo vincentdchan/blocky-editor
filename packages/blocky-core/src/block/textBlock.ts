@@ -679,8 +679,8 @@ function clearNodeAttributes(node: Node) {
 }
 
 class TextBlockDefinition implements IBlockDefinition {
-  public name: string = TextBlockName;
-  public editable = true;
+  name: string = TextBlockName;
+  editable = true;
 
   onBlockCreated({ blockElement: data }: BlockCreatedEvent): Block {
     return new TextBlock(this, data);

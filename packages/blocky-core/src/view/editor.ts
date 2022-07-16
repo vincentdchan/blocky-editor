@@ -108,28 +108,28 @@ export class Editor {
   #lastFocusedId: string | undefined;
   #isUpdating = false;
 
-  public readonly onEveryBlock: Slot<Block> = new Slot();
+  readonly onEveryBlock: Slot<Block> = new Slot();
 
-  public readonly bannerDelegate: BannerDelegate;
-  public readonly toolbarDelegate: ToolbarDelegate;
-  public idGenerator: IdGenerator;
+  readonly bannerDelegate: BannerDelegate;
+  readonly toolbarDelegate: ToolbarDelegate;
+  idGenerator: IdGenerator;
 
-  public readonly anchorSpanClass: string = "blocky-text-anchor";
+  readonly anchorSpanClass: string = "blocky-text-anchor";
 
-  public readonly state: DocumentState;
-  public readonly registry: EditorRegistry;
-  public readonly keyDown = new Slot<KeyboardEvent>();
+  readonly state: DocumentState;
+  readonly registry: EditorRegistry;
+  readonly keyDown = new Slot<KeyboardEvent>();
 
-  public readonly preservedTextType: Set<TextType> = new Set([
+  readonly preservedTextType: Set<TextType> = new Set([
     TextType.Bulleted,
   ]);
 
-  public readonly collaborativeCursorManager: CollaborativeCursorManager;
+  readonly collaborativeCursorManager: CollaborativeCursorManager;
 
-  public readonly padding: Padding;
+  readonly padding: Padding;
   private bannerXOffset: number;
 
-  public composing = false;
+  composing = false;
   private disposables: IDisposable[] = [];
 
   static fromController(
@@ -156,7 +156,7 @@ export class Editor {
   }
 
   constructor(
-    public readonly controller: EditorController,
+    readonly controller: EditorController,
     options: IEditorOptions
   ) {
     const {
@@ -1004,7 +1004,7 @@ export class Editor {
     }
   }
 
-  public handleCursorStateChanged = (
+  handleCursorStateChanged = (
     newState: CursorState | undefined,
     oldState: CursorState | undefined
   ) => {
@@ -1220,7 +1220,7 @@ export class Editor {
    * Calculate the attributes from the dom.
    * It's used for pasting text, and to recognize the dom created by the browser.
    */
-  public getAttributesBySpan(span: HTMLElement): AttributesObject {
+  getAttributesBySpan(span: HTMLElement): AttributesObject {
     const spanRegistry = this.registry.span;
     const attributes: AttributesObject = {};
     const href = span.getAttribute("data-href");

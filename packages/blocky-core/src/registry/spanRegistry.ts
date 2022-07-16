@@ -11,8 +11,8 @@ export interface SpanStyle {
 // 0 for normal item
 export class SpanRegistry {
 
-  public readonly styles: Map<string, SpanStyle> = new Map();
-  public readonly classnames: Map<string, SpanStyle> = new Map();
+  readonly styles: Map<string, SpanStyle> = new Map();
+  readonly classnames: Map<string, SpanStyle> = new Map();
 
   register(style: SpanStyle) {
     this.styles.set(style.name, style);

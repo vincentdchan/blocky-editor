@@ -16,6 +16,9 @@ module.exports = {
     "@typescript-eslint/no-empty-function": 0,
     "@typescript-eslint/ban-ts-comment": 1,
     "@typescript-eslint/no-unused-vars": 2,
+    "@typescript-eslint/explicit-member-accessibility": [2, {
+      accessibility: "no-public"
+    }],
     "no-empty": 1
   },
 };
