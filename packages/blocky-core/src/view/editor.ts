@@ -108,17 +108,22 @@ export class Editor {
   #lastFocusedId: string | undefined;
   #isUpdating = false;
 
-  public readonly onEveryBlock: Slot<Block> = new Slot();
+  readonly onEveryBlock: Slot<Block> = new Slot();
 
-  public readonly bannerDelegate: BannerDelegate;
-  public readonly toolbarDelegate: ToolbarDelegate;
-  public idGenerator: IdGenerator;
+  readonly bannerDelegate: BannerDelegate;
+  readonly toolbarDelegate: ToolbarDelegate;
+  idGenerator: IdGenerator;
 
-  public readonly anchorSpanClass: string = "blocky-text-anchor";
+  readonly anchorSpanClass: string = "blocky-text-anchor";
 
-  public readonly state: DocumentState;
-  public readonly registry: EditorRegistry;
-  public readonly keyDown = new Slot<KeyboardEvent>();
+  readonly state: DocumentState;
+  readonly registry: EditorRegistry;
+  readonly keyDown = new Slot<KeyboardEvent>();
+  /**
+   * Will be emitted when Ctrl+Z is pressed
+   */
+  readonly undo = new Slot<KeyboardEvent>();
+  readonly redo = new Slot<KeyboardEvent>();
 
   public readonly preservedTextType: Set<TextType> = new Set([
     TextType.Bulleted,
@@ -708,8 +713,11 @@ export class Editor {
     } else if (e.key === "Delete") {
       this.#handleDelete(e);
     } else if (isHotkey("mod+z", e)) {
-      // temporary disable undo
       e.preventDefault();
+      this.undo.emit(e);
+    } else if (isHotkey("mod+shift+z", e)) {
+      e.preventDefault();
+      this.redo.emit(e);
     }
   };
 

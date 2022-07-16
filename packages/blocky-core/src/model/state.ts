@@ -102,6 +102,12 @@ class State {
     makeObservable(this, "cursorState");
   }
 
+  popCursorState(): CursorState | undefined {
+    const currentState = this.cursorState;
+    this.cursorState = undefined;
+    return currentState;
+  }
+
   createTextElement(): BlockElement {
     const result = new BlockElement(TextBlockName, this.idHelper.mkBlockId());
     const textModel = new BlockyTextModel();

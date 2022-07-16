@@ -607,9 +607,7 @@ class TextBlock extends Block {
       return;
     }
 
-    const prevCursorState = this.editor.state.cursorState;
-    this.editor.state.cursorState = undefined;
-
+    const prevCursorState = this.editor.state.popCursorState();
     this.editor.update(() => {
       const parentElement = this.props.parent as BlockyElement | undefined;
       if (!parentElement) {
