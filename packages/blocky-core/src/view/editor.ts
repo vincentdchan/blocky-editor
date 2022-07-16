@@ -1171,7 +1171,6 @@ export class Editor {
   pasteHTMLAtCursor(html: string) {
     try {
       const blocks = this.#htmlConverter.parseFromString(html);
-      // TODO: try to merge
       this.#pasteElementsAtCursor(blocks);
     } catch (e) {
       console.error(e);
@@ -1190,7 +1189,25 @@ export class Editor {
     let prev = currentBlockElement;
 
     this.update(() => {
-      for (const element of elements) {
+      for (let i = 0, len = elements.length; i < len; i++) {
+        const element = elements[i];
+
+        if (
+          i === 0 &&
+          currentBlockElement.nodeName === TextBlockName &&
+          element.nodeName === TextBlockName
+        ) {
+          const prevTextModel =
+            currentBlockElement.firstChild! as BlockyTextModel;
+          const firstTextModel = element.firstChild! as BlockyTextModel;
+          if (!prevTextModel || !firstTextModel) {
+            continue;
+          }
+          prevTextModel.append(firstTextModel);
+          // first item, try to merget ext
+          continue;
+        }
+
         parent.insertAfter(element, prev);
         prev = element;
       }
