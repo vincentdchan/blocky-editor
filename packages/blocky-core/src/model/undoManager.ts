@@ -10,7 +10,7 @@ export function createStackItem(): StackItem {
   };
 }
 
-export class UndoManager {
+export class FixedSizeStack {
   #begin: StackItem | null = null;
   #end: StackItem | null = null;
   #length = 0;
@@ -41,11 +41,16 @@ export class UndoManager {
     return first;
   }
 
-  undo() {}
-
-  redo() {}
-
   get length() {
     return this.#length;
   }
+}
+
+export class UndoManager {
+  readonly undoStack = new FixedSizeStack();
+  readonly redoStack = new FixedSizeStack();
+
+  undo() {}
+
+  redo() {}
 }
