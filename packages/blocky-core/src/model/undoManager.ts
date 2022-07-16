@@ -3,6 +3,13 @@ export interface StackItem {
   nextSibling: StackItem | null;
 }
 
+export function createStackItem(): StackItem {
+  return {
+    prevSibling: null,
+    nextSibling: null,
+  };
+}
+
 export class UndoManager {
   #begin: StackItem | null = null;
   #end: StackItem | null = null;
@@ -33,6 +40,10 @@ export class UndoManager {
     this.#length--;
     return first;
   }
+
+  undo() {}
+
+  redo() {}
 
   get length() {
     return this.#length;
