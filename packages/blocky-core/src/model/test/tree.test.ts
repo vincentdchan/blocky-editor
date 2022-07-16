@@ -10,7 +10,7 @@ test("tree append", () => {
   parent.appendChild(firstChild);
 
   let callbackIsCalled = false;
-  parent.onChanged.on(e => {
+  parent.onChanged.on((e) => {
     if (e.type === "element-insert-child") {
       callbackIsCalled = true;
       expect(e.getInsertIndex()).toEqual(1);
@@ -30,7 +30,7 @@ test("tree insert at first", () => {
   parent.appendChild(firstChild);
 
   let callbackIsCalled = false;
-  parent.onChanged.on(e => {
+  parent.onChanged.on((e) => {
     if (e.type === "element-insert-child") {
       callbackIsCalled = true;
       expect(e.getInsertIndex()).toEqual(0);
@@ -46,7 +46,7 @@ test("tree set attribute", () => {
   const node = new BlockyElement("block");
 
   let callbackIsCalled = false;
-  node.onChanged.on(e => {
+  node.onChanged.on((e) => {
     if (e.type === "element-set-attrib") {
       callbackIsCalled = true;
       expect(e.key).toEqual("key");
@@ -91,4 +91,16 @@ test("tree delete children at index", () => {
 
   expect(secondChild.prevSibling).toBeNull();
   expect(secondChild.nextSibling).toBeNull();
-})
+});
+
+test("child validation", () => {
+  const element = new BlockyElement("name");
+  expect(() => {
+    element.appendChild(element);
+  }).toThrowError("Can not add ancesters of a node as child");
+  const firstChild = new BlockyElement("child");
+  element.appendChild(firstChild);
+  expect(() => {
+    element.insertAfter(element, firstChild);
+  }).toThrowError("Can not add ancesters of a node as child");
+});
