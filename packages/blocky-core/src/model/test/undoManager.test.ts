@@ -1,13 +1,13 @@
 import { test, expect } from "vitest";
-import { UndoManager, createStackItem } from "../undoManager";
+import { FixedSizeStack, createStackItem } from "../undoManager";
 
-test("undoManager", () => {
-  const undoManager = new UndoManager();
-  expect(undoManager.length).toBe(0);
+test("FixedSizeStack", () => {
+  const fixedSizeStack = new FixedSizeStack();
+  expect(fixedSizeStack.length).toBe(0);
   const first = createStackItem();
-  undoManager.push(first);
-  expect(undoManager.length).toBe(1);
-  const poped = undoManager.pop();
+  fixedSizeStack.push(first);
+  expect(fixedSizeStack.length).toBe(1);
+  const poped = fixedSizeStack.pop();
   expect(poped).toBe(first);
-  expect(undoManager.pop()).toBeUndefined();
+  expect(fixedSizeStack.pop()).toBeUndefined();
 });
