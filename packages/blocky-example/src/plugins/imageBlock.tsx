@@ -87,24 +87,16 @@ export function makeImageBlockPlugin(): IPlugin {
           name: ImageBlockName,
           component: (data: BlockElement) => <ImageBlock blockElement={data} />,
           tryParsePastedDOM(e: TryParsePastedDOMEvent) {
-            const { node, editor, after } = e;
+            const { node, editor } = e;
             const img = node.querySelector("img");
-            if (img && after && after.type === "collapsed") {
+            if (img) {
               const newId = editor.idGenerator.mkBlockId();
               const element = new BlockElement(ImageBlockName, newId);
               const src = img.getAttribute("src");
               if (src) {
                 element.setAttribute("src", src);
               }
-              editor.controller.insertBlockAfterId(element, after.targetId, {
-                noRender: true,
-              });
-              e.preventDefault();
-              e.after = {
-                type: "collapsed",
-                targetId: newId,
-                offset: 0,
-              };
+              return element;
             }
           },
         })

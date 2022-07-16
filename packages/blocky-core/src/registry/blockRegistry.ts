@@ -1,8 +1,9 @@
 import { isUndefined } from "lodash-es";
 import { isUpperCase } from "blocky-common/es/character";
-import {
-  type IBlockDefinition,
-  type TryParsePastedDOMEvent,
+import type {
+  BlockElement,
+  IBlockDefinition,
+  TryParsePastedDOMEvent,
 } from "@pkg/block/basic";
 import { makeTextBlockDefinition, TextBlockName } from "@pkg/block/textBlock";
 
@@ -47,11 +48,11 @@ export class BlockRegistry {
     return this.#nameMap.get(name);
   }
 
-  handlePasteElement(e: TryParsePastedDOMEvent): void {
+  handlePasteElement(e: TryParsePastedDOMEvent): BlockElement | void {
     for (const def of this.#types) {
-      def.tryParsePastedDOM?.(e);
-      if (e.defaultPrevented) {
-        return;
+      const test = def.tryParsePastedDOM?.(e);
+      if (test) {
+        return test;
       }
     }
   }
