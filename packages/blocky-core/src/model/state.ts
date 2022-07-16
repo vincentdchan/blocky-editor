@@ -9,6 +9,7 @@ import * as S from "./serialize";
 import { TextBlockName } from "@pkg/block/textBlock";
 import { type IdGenerator } from "@pkg/helper/idHelper";
 import { type CursorState } from "@pkg/model/cursor";
+import { UndoManager } from "@pkg/model/undoManager";
 import { Block, BlockElement } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { validate as validateNode } from "./validator";
@@ -85,13 +86,14 @@ class State {
     return state;
   }
 
-  public readonly idMap: Map<string, BlockyElement> = new Map();
-  public readonly domMap: Map<string, Node> = new Map();
-  public readonly blocks: Map<string, Block> = new Map();
-  public readonly newBlockCreated: Slot<Block> = new Slot();
-  public readonly blockDeleted: Slot<BlockElement> = new Slot();
-  public cursorState: CursorState | undefined;
-  public silent = false;
+  readonly idMap: Map<string, BlockyElement> = new Map();
+  readonly domMap: Map<string, Node> = new Map();
+  readonly blocks: Map<string, Block> = new Map();
+  readonly newBlockCreated: Slot<Block> = new Slot();
+  readonly blockDeleted: Slot<BlockElement> = new Slot();
+  readonly undoManager: UndoManager = new UndoManager();
+  cursorState: CursorState | undefined;
+  silent = false;
 
   constructor(
     public readonly root: BlockyElement,
