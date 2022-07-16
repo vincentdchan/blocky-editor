@@ -235,6 +235,7 @@ export class Editor {
     const evt = new BlockPasteEvent({
       node: node as HTMLElement,
       editor: this,
+      converter: this.#htmlConverter,
     });
     if (pasteHandler) {
       return pasteHandler.call(blockDef, evt);
@@ -258,6 +259,7 @@ export class Editor {
       const evt = new BlockPasteEvent({
         editor: this,
         node: element,
+        converter: this.#htmlConverter,
       });
       return pasteHandler.call(blockDef, evt);
     }

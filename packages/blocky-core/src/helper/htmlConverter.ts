@@ -20,10 +20,6 @@ function isLeafElement(node: Node): node is HTMLElement {
   );
 }
 
-function isContainerElement(node: Node): node is HTMLElement {
-  return node instanceof HTMLUListElement || node instanceof HTMLDivElement;
-}
-
 export type ElementHandler = (node: Node) => BlockElement | void | boolean;
 
 export interface HTMLConverterOptions {
@@ -46,6 +42,10 @@ export class HTMLConverter {
     this.#idGenerator = idGenerator;
     this.#leafHandler = leafHandler;
     this.#divHandler = divHandler;
+  }
+
+  isContainerElement(node: Node): boolean {
+    return node instanceof HTMLUListElement || node instanceof HTMLDivElement;
   }
 
   parseFromString(content: string): BlockElement[] {
@@ -89,7 +89,7 @@ export class HTMLConverter {
           createTextElement(this.#idGenerator.mkBlockId(), textContent)
         );
       }
-    } else if (isContainerElement(node)) {
+    } else if (this.isContainerElement(node)) {
       if (node instanceof HTMLDivElement) {
         const blockElement = this.#divHandler?.(node);
         if (isObject(blockElement)) {
@@ -99,19 +99,18 @@ export class HTMLConverter {
           return;
         }
       }
-      return this.tryParseContainerElement(node, result);
+      const tmp = this.parseContainerElement(node as HTMLElement);
+      result.push(...tmp);
     }
   }
 
-  private tryParseContainerElement(
-    container: HTMLElement,
-    result: BlockElement[]
-  ): BlockElement | void {
+  parseContainerElement(container: HTMLElement): BlockElement[] {
+    const result: BlockElement[] = [];
     let ptr = container.firstChild;
-
     while (ptr) {
       this.tryParseNode(ptr, result);
       ptr = ptr.nextSibling;
     }
+    return result;
   }
 }

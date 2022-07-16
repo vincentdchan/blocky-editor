@@ -532,7 +532,7 @@ export class BlockyElement implements BlockyNode, WithState {
     }
 
     this.childrenLength++;
-    this.state?.handleNewBlockMounted(this, node);
+    this.state?.handleNewBlockMounted(node);
 
     this.onChanged.emit({
       type: "element-insert-child",
@@ -552,6 +552,8 @@ export class BlockyElement implements BlockyNode, WithState {
         return cnt;
       },
     });
+
+    this.#handleInsertChildren(node);
   }
 
   appendChild(node: BlockyNode) {
@@ -571,13 +573,30 @@ export class BlockyElement implements BlockyNode, WithState {
     node.state = this.state;
     this.#lastChild = node;
     this.childrenLength++;
-    this.state?.handleNewBlockMounted(this, node);
+    this.state?.handleNewBlockMounted(node);
 
     this.onChanged.emit({
       type: "element-insert-child",
       child: node,
       getInsertIndex: () => insertIndex,
     });
+
+    this.#handleInsertChildren(node);
+  }
+
+  #handleInsertChildren(node: BlockyNode) {
+    const lastNode = node.lastChild;
+    if (!lastNode || lastNode.nodeName !== "block-children") {
+      return;
+    }
+    let ptr = lastNode.firstChild;
+    while (ptr) {
+      if (!ptr.state) {
+        ptr.state = this.state;
+        this.state?.handleNewBlockMounted(ptr);
+      }
+      ptr = ptr.nextSibling;
+    }
   }
 
   insertChildAt(index: number, node: BlockyNode) {
