@@ -12,7 +12,6 @@ import { type CursorState } from "@pkg/model/cursor";
 import { UndoManager } from "@pkg/model/undoManager";
 import { Block, BlockElement } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
-import { validate as validateNode } from "./validator";
 
 function jsonNodeToBlock(state: State, node: S.JSONNode): BlockyNode {
   if (!isObject(node)) {
@@ -100,7 +99,6 @@ class State {
     readonly blockRegistry: BlockRegistry,
     readonly idHelper: IdGenerator
   ) {
-    validateNode(root);
     makeObservable(this, "cursorState");
   }
 
