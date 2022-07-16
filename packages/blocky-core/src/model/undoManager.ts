@@ -6,7 +6,7 @@ export interface StackItem {
 export class UndoManager {
   #begin: StackItem | null = null;
   #end: StackItem | null = null;
-  #length: number = 0;
+  #length = 0;
 
   push(item: StackItem) {
     if (!this.#begin) {

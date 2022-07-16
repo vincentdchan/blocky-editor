@@ -38,7 +38,7 @@ export class DocRenderer {
   private clsPrefix: string;
   private editor: Editor;
 
-  public readonly blockClassName: string;
+  readonly blockClassName: string;
 
   constructor({ clsPrefix, editor }: IRendererOptions) {
     this.clsPrefix = clsPrefix;
@@ -47,7 +47,7 @@ export class DocRenderer {
     this.blockClassName = `${clsPrefix}-editor-block`;
   }
 
-  public render(oldDom?: Node) {
+  render(oldDom?: Node) {
     const { editor, clsPrefix } = this;
     const { state } = editor;
     const createNewDocument = () => {

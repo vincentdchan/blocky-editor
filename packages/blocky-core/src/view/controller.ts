@@ -57,23 +57,23 @@ export type NextTickFn = () => void;
 
 export class CursorChangedEvent {
   constructor(
-    public readonly id: string,
-    public readonly state: CursorState | undefined
+    readonly id: string,
+    readonly state: CursorState | undefined
   ) {}
 }
 
 export class EditorController {
   #nextTick: NextTickFn[] = [];
 
-  public editor: Editor | undefined;
-  public readonly pluginRegistry: PluginRegistry;
-  public readonly spanRegistry: SpanRegistry;
-  public readonly blockRegistry: BlockRegistry;
-  public readonly idGenerator: IdGenerator;
-  public readonly m: MarkupGenerator;
-  public readonly state: State;
-  public readonly cursorChanged: Slot<CursorChangedEvent> = new Slot();
-  public readonly beforeApplyCursorChanged: Slot<CursorChangedEvent> = new Slot();
+  editor: Editor | undefined;
+  readonly pluginRegistry: PluginRegistry;
+  readonly spanRegistry: SpanRegistry;
+  readonly blockRegistry: BlockRegistry;
+  readonly idGenerator: IdGenerator;
+  readonly m: MarkupGenerator;
+  readonly state: State;
+  readonly cursorChanged: Slot<CursorChangedEvent> = new Slot();
+  readonly beforeApplyCursorChanged: Slot<CursorChangedEvent> = new Slot();
 
   static emptyState(options?: IEditorControllerOptions): EditorController {
     const blockRegistry = options?.blockRegistry ?? new BlockRegistry();
@@ -113,7 +113,7 @@ export class EditorController {
     }
   }
 
-  public applyCursorChangedEvent(evt: CursorChangedEvent) {
+  applyCursorChangedEvent(evt: CursorChangedEvent) {
     this.beforeApplyCursorChanged.emit(evt);
     const { editor } = this;
     if (!editor) {
@@ -133,7 +133,7 @@ export class EditorController {
     editor.drawCollaborativeCursor(id, name, color, evt.state);
   }
 
-  public mount(editor: Editor) {
+  mount(editor: Editor) {
     this.editor = editor;
 
     observe(this.state, "cursorState", (s: CursorState | undefined) => {
@@ -143,7 +143,7 @@ export class EditorController {
     });
   }
 
-  public insertBlockAfterId(
+  insertBlockAfterId(
     element: BlockElement,
     afterId: string,
     options?: IInsertOptions
@@ -192,11 +192,11 @@ export class EditorController {
     this.#nextTick = [];
   }
 
-  public enqueueNextTick(fn: NextTickFn) {
+  enqueueNextTick(fn: NextTickFn) {
     this.#nextTick.push(fn);
   }
 
-  public formatText(
+  formatText(
     blockId: string,
     index: number,
     length: number,
@@ -235,7 +235,7 @@ export class EditorController {
     });
   }
 
-  public formatTextOnCursor(
+  formatTextOnCursor(
     cursorState: CursorState,
     attribs?: AttributesObject
   ) {
@@ -261,7 +261,7 @@ export class EditorController {
     }
   }
 
-  public formatTextOnSelectedText(attribs?: AttributesObject) {
+  formatTextOnSelectedText(attribs?: AttributesObject) {
     const editor = this.editor;
     if (!editor) {
       return;
@@ -273,7 +273,7 @@ export class EditorController {
     this.formatTextOnCursor(cursorState, attribs);
   }
 
-  public deleteBlock(id: string) {
+  deleteBlock(id: string) {
     const { editor } = this;
     if (!editor) {
       return;

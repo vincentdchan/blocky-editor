@@ -96,9 +96,9 @@ class State {
   silent = false;
 
   constructor(
-    public readonly root: BlockyElement,
-    public readonly blockRegistry: BlockRegistry,
-    public readonly idHelper: IdGenerator
+    readonly root: BlockyElement,
+    readonly blockRegistry: BlockRegistry,
+    readonly idHelper: IdGenerator
   ) {
     validateNode(root);
     makeObservable(this, "cursorState");
