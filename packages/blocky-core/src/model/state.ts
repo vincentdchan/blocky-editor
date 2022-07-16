@@ -133,10 +133,7 @@ class State {
     this.newBlockCreated.emit(block);
   }
 
-  /**
-   * TODO: recursive unmount block
-   */
-  unmountBlock(parent: BlockyElement, child: BlockyNode): boolean {
+  unmountBlock(child: BlockyNode): boolean {
     if (!isUpperCase(child.nodeName)) {
       return false;
     }

@@ -87,8 +87,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
   #nodeEnd?: TextNode;
   #length = 0;
 
-  readonly onChanged: WithStateSlot<TextChangedEvent> =
-    new WithStateSlot(this);
+  readonly onChanged: WithStateSlot<TextChangedEvent> = new WithStateSlot(this);
 
   constructor() {}
 
@@ -480,9 +479,7 @@ export class BlockyElement implements BlockyNode, WithState {
   #lastChild: BlockyNode | null = null;
   #attributes: InternAttributes = Object.create(null);
 
-  onChanged: WithStateSlot<ElementChangedEvent> = new WithStateSlot(
-    this
-  );
+  onChanged: WithStateSlot<ElementChangedEvent> = new WithStateSlot(this);
 
   constructor(public nodeName: string) {
     if (nodeName === "#text") {
@@ -691,7 +688,7 @@ export class BlockyElement implements BlockyNode, WithState {
     node.nextSibling = null;
     this.childrenLength--;
 
-    this.state?.unmountBlock(this, node);
+    this.state?.unmountBlock(node);
 
     this.onChanged.emit({
       type: "element-remove-child",
@@ -700,6 +697,23 @@ export class BlockyElement implements BlockyNode, WithState {
         return ptr;
       },
     });
+
+    this.#handleRemoveChildren(node);
+  }
+
+  #handleRemoveChildren(node: BlockyNode) {
+    const lastNode = node.lastChild;
+    if (!lastNode || lastNode.nodeName !== "block-children") {
+      return;
+    }
+    let ptr = lastNode.firstChild;
+    while (ptr) {
+      if (!ptr.state) {
+        ptr.state = this.state;
+        this.state?.unmountBlock(ptr);
+      }
+      ptr = ptr.nextSibling;
+    }
   }
 
   clone(): BlockyElement {
