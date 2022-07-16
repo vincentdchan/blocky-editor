@@ -13,11 +13,10 @@ import {
 } from "./basic";
 import {
   TextType,
-  CursorState,
   BlockyTextModel,
+  BlockyElement,
   type AttributesObject,
   type TextNode,
-  BlockyElement,
 } from "@pkg/model";
 import { areEqualShallow } from "blocky-common/es/object";
 import fastDiff from "fast-diff";
