@@ -1171,10 +1171,8 @@ export class Editor {
   pasteHTMLAtCursor(html: string) {
     try {
       const blocks = this.#htmlConverter.parseFromString(html);
+      // TODO: try to merge
       this.#pasteElementsAtCursor(blocks);
-      // const parser = new DOMParser();
-      // const doc = parser.parseFromString(html, MineType.Html);
-      // this.#pasteHTMLBodyOnCursor(doc.body);
     } catch (e) {
       console.error(e);
     }
@@ -1199,147 +1197,6 @@ export class Editor {
     });
   }
 
-  // #pasteHTMLBodyOnCursor(body: HTMLElement) {
-  //   let ptr = body.firstElementChild;
-  //   let afterCursor: CursorState | undefined = this.state.cursorState;
-
-  //   let index = 0;
-  //   while (ptr) {
-  //     const cursor = this.#pasteNodeAt(
-  //       afterCursor,
-  //       ptr as HTMLElement,
-  //       index === 0
-  //     );
-
-  //     if (cursor) {
-  //       afterCursor = cursor;
-  //     }
-
-  //     index++;
-  //     ptr = ptr.nextElementSibling;
-  //   }
-
-  //   this.render(() => {
-  //     this.state.cursorState = afterCursor;
-  //   });
-  // }
-
-  // #tryPasteDivElementAsBlock(
-  //   element: HTMLDivElement,
-  //   cursorState: Cell<CursorState | undefined>
-  // ): BlockElement | void {
-  //   const blockRegistry = this.registry.block;
-  //   const dataType = element.getAttribute("data-type");
-  //   if (!dataType) {
-  //     return;
-  //   }
-  //   const blockDef = blockRegistry.getBlockDefByName(dataType);
-  //   if (!blockDef) {
-  //     return;
-  //   }
-
-  //   const pasteHandler = blockDef?.onPaste;
-  //   if (pasteHandler) {
-  //     const evt = new BlockPasteEvent({
-  //       editor: this,
-  //       node: element,
-  //     });
-  //     return pasteHandler.call(blockDef, evt);
-  //   } else {
-  //     const newCursor = this.#insertBlockByDefaultAt(cursorState.get());
-  //     if (newCursor) {
-  //       cursorState.set(newCursor);
-  //     }
-  //   }
-  // }
-
-  // /**
-  //  *
-  //  * Paste the content of element at the cursor.
-  //  * There is two cases:
-  //  *
-  //  * - Paste the content copied from the editor
-  //  * - Paste the HTML copied from other websites
-  //  *
-  //  * @param tryMerge Indicate whether the content should be merged to the previous block.
-  //  */
-  // #pasteNodeAt(
-  //   cursorState: CursorState | undefined,
-  //   element: HTMLElement,
-  //   tryMerge = false
-  // ): CursorState | undefined {
-  //   const blockRegistry = this.registry.block;
-
-  //   const evt = new TryParsePastedDOMEvent({
-  //     after: cursorState,
-  //     editor: this,
-  //     node: element,
-  //   });
-  //   blockRegistry.handlePasteElement(evt);
-  //   if (evt.defaultPrevented) {
-  //     return evt.after;
-  //   }
-
-  //   if (element instanceof HTMLSpanElement) {
-  //     const attributes: AttributesObject = this.getAttributesBySpan(element);
-  //     let textContent = "";
-
-  //     const testContent = element.textContent;
-  //     if (testContent) {
-  //       textContent = testContent;
-  //     }
-
-  //     return this.#insertTextAt(
-  //       cursorState,
-  //       textContent,
-  //       Object.keys(attributes).length > 0 ? attributes : undefined
-  //     );
-  //   } else if (element instanceof HTMLDivElement) {
-  //     const cursorCell = new Cell(cursorState);
-  //     if (this.#tryPasteDivElementAsBlock(element, cursorCell)) {
-  //       return cursorCell.get();
-  //     } else {
-  //       console.warn("unknown dom:", element);
-  //     }
-  //   } else if (
-  //     element instanceof HTMLParagraphElement ||
-  //     element instanceof HTMLHeadingElement ||
-  //     element instanceof HTMLLIElement
-  //   ) {
-  //     // is a <p> or <h1>
-  //     const blockDef = blockRegistry.getBlockDefByName(TextBlockName);
-  //     const pasteHandler = blockDef?.onPaste;
-  //     const evt = new BlockPasteEvent({
-  //       editor: this,
-  //       node: element,
-  //       tryMerge,
-  //     });
-  //     if (pasteHandler) {
-  //       const cursor = pasteHandler.call(blockDef, evt);
-  //       return cursor;
-  //     } else {
-  //       return this.#insertBlockByDefaultAt(cursorState);
-  //     }
-  //   } else if (element instanceof HTMLUListElement) {
-  //     let childPtr = element.firstElementChild;
-  //     let returnCursor: CursorState | undefined = cursorState;
-
-  //     while (childPtr) {
-  //       returnCursor = this.#pasteNodeAt(
-  //         returnCursor,
-  //         childPtr as HTMLElement,
-  //         false
-  //       );
-  //       childPtr = childPtr.nextElementSibling;
-  //     }
-
-  //     return returnCursor;
-  //   } else {
-  //     console.warn("unknown dom:", element);
-  //   }
-  //   return;
-  // }
-
   /**
    * Calculate the attributes from the dom.
    * It's used for pasting text, and to recognize the dom created by the browser.
@@ -1363,33 +1220,6 @@ export class Editor {
 
     return attributes;
   }
-
-  // #insertBlockByDefaultAt(
-  //   cursorState: CursorState | undefined
-  // ): CursorState | undefined {
-  //   if (!cursorState) {
-  //     return;
-  //   }
-
-  //   if (cursorState.type === "open") {
-  //     return;
-  //   }
-
-  //   const currentNode = this.state.idMap.get(
-  //     cursorState.targetId
-  //   )! as BlockElement;
-
-  //   const textElement = this.state.createTextElement();
-
-  //   const parentElement = currentNode.parent! as BlockyElement;
-  //   parentElement.insertAfter(textElement, currentNode);
-
-  //   return {
-  //     type: "collapsed",
-  //     targetId: textElement.id,
-  //     offset: 0,
-  //   };
-  // }
 
   #pastePlainTextOnCursor(text: string) {
     const cursor = this.#insertTextAt(this.state.cursorState, text);
