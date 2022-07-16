@@ -1,13 +1,11 @@
-export interface StackItem {
-  prevSibling: StackItem | null;
-  nextSibling: StackItem | null;
-}
+export class StackItem {
+  prevSibling: StackItem | null = null;
+  nextSibling: StackItem | null = null;
+  sealed = false;
 
-export function createStackItem(): StackItem {
-  return {
-    prevSibling: null,
-    nextSibling: null,
-  };
+  seal() {
+    this.sealed = true;
+  }
 }
 
 export class FixedSizeStack {
@@ -25,6 +23,10 @@ export class FixedSizeStack {
       this.#begin = item;
     }
     this.#length++;
+  }
+
+  peek(): StackItem | null {
+    return this.#begin;
   }
 
   pop(): StackItem | void {
@@ -49,6 +51,16 @@ export class FixedSizeStack {
 export class UndoManager {
   readonly undoStack = new FixedSizeStack();
   readonly redoStack = new FixedSizeStack();
+
+  getAUndoItem(): StackItem {
+    const peek = this.undoStack.peek();
+    if (peek) {
+      return peek;
+    }
+    const newItem = new StackItem();
+    this.undoStack.push(newItem);
+    return newItem;
+  }
 
   undo() {}
 
