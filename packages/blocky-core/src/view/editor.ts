@@ -120,9 +120,7 @@ export class Editor {
   readonly registry: EditorRegistry;
   readonly keyDown = new Slot<KeyboardEvent>();
 
-  readonly preservedTextType: Set<TextType> = new Set([
-    TextType.Bulleted,
-  ]);
+  readonly preservedTextType: Set<TextType> = new Set([TextType.Bulleted]);
 
   readonly collaborativeCursorManager: CollaborativeCursorManager;
 
@@ -155,10 +153,7 @@ export class Editor {
     return editor;
   }
 
-  constructor(
-    readonly controller: EditorController,
-    options: IEditorOptions
-  ) {
+  constructor(readonly controller: EditorController, options: IEditorOptions) {
     const {
       container,
       state,
@@ -708,8 +703,11 @@ export class Editor {
     } else if (e.key === "Delete") {
       this.#handleDelete(e);
     } else if (isHotkey("mod+z", e)) {
-      // temporary disable undo
       e.preventDefault();
+      this.state.undoManager.redo();
+    } else if (isHotkey("mod+shift+z", e)) {
+      e.preventDefault();
+      this.state.undoManager.undo();
     }
   };
 
