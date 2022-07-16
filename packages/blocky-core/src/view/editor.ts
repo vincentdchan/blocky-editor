@@ -277,7 +277,7 @@ export class Editor {
     this.state.newBlockCreated.pipe(this.onEveryBlock);
   }
 
-  public drawCollaborativeCursor(
+  drawCollaborativeCursor(
     id: string,
     name: string,
     color: string,
@@ -361,7 +361,7 @@ export class Editor {
     }, 15);
   }
 
-  public render(done?: AfterFn) {
+  render(done?: AfterFn) {
     const newDom = this.#renderer.render(this.#renderedDom);
     if (!this.#renderedDom) {
       this.#container.appendChild(newDom);
@@ -615,7 +615,7 @@ export class Editor {
     this.#selectionChanged();
   };
 
-  public placeBannerAt(blockContainer: HTMLElement, node: BlockElement) {
+  placeBannerAt(blockContainer: HTMLElement, node: BlockElement) {
     const block = this.state.blocks.get(node.id);
     if (!block) {
       return;
@@ -637,7 +637,7 @@ export class Editor {
   /**
    * Remove node and call the destructor
    */
-  public destructBlockNode(node: Node) {
+  destructBlockNode(node: Node) {
     if (node._mgNode) {
       const treeNode = node._mgNode as BlockElement;
 
@@ -814,7 +814,7 @@ export class Editor {
    * fn is called, the render function
    * will be called.
    */
-  public update(fn: () => AfterFn | void, ignoreSelection = false) {
+  update(fn: () => AfterFn | void, ignoreSelection = false) {
     if (this.#isUpdating) {
       throw new Error("is in updating process");
     }
@@ -837,7 +837,7 @@ export class Editor {
     }
   }
 
-  public openExternalLink(link: string) {
+  openExternalLink(link: string) {
     // TODO: handle this in plugin
     window.open(link, "_blank")?.focus();
   }
