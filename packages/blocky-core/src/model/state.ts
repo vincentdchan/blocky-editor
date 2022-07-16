@@ -102,20 +102,20 @@ class State {
     makeObservable(this, "cursorState");
   }
 
-  public createTextElement(): BlockElement {
+  createTextElement(): BlockElement {
     const result = new BlockElement(TextBlockName, this.idHelper.mkBlockId());
     const textModel = new BlockyTextModel();
     result.appendChild(textModel);
     return result;
   }
 
-  public handleNewBlockMounted(parent: BlockyElement, child: BlockyNode) {
+  handleNewBlockMounted(child: BlockyNode) {
     if (!isUpperCase(child.nodeName)) {
       return;
     }
     const blockElement = child as BlockElement;
 
-    this.insertElement(blockElement);
+    this.#insertElement(blockElement);
 
     const blockDef = this.blockRegistry.getBlockDefByName(
       blockElement.nodeName
@@ -134,7 +134,7 @@ class State {
   /**
    * TODO: recursive unmount block
    */
-  public unmountBlock(parent: BlockyElement, child: BlockyNode): boolean {
+  unmountBlock(parent: BlockyElement, child: BlockyNode): boolean {
     if (!isUpperCase(child.nodeName)) {
       return false;
     }
@@ -153,14 +153,14 @@ class State {
     return true;
   }
 
-  public setDom(blockId: string, dom: HTMLElement) {
+  setDom(blockId: string, dom: HTMLElement) {
     if (this.domMap.has(blockId)) {
       throw new Error(`duplicated dom: ${blockId}`);
     }
     this.domMap.set(blockId, dom);
   }
 
-  private insertElement(element: BlockElement) {
+  #insertElement(element: BlockElement) {
     if (this.idMap.has(element.id)) {
       throw new Error(`duplicated id: ${element.id}`);
     }

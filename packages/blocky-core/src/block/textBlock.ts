@@ -22,6 +22,7 @@ import { areEqualShallow } from "blocky-common/es/object";
 import fastDiff from "fast-diff";
 import { type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";
+import { HTMLConverter } from "@pkg/helper/htmlConverter";
 
 export const TextBlockName = "Text";
 
@@ -688,17 +689,18 @@ class TextBlockDefinition implements IBlockDefinition {
   onPaste({
     editor,
     node: container,
+    converter,
   }: BlockPasteEvent): BlockElement | undefined {
-    const newTextElement = this.getTextElementFromDOM(editor, container);
-    return newTextElement;
+    return this.#getTextElementFromDOM(editor, container, converter);
   }
 
   /**
    * Rebuild the data structure from the pasted html.
    */
-  private getTextElementFromDOM(
+  #getTextElementFromDOM(
     editor: Editor,
-    node: HTMLElement
+    node: HTMLElement,
+    converter: HTMLConverter
   ): BlockElement {
     const newId = editor.idGenerator.mkBlockId();
     const result = new BlockElement(TextBlockName, newId);
@@ -729,10 +731,20 @@ class TextBlockDefinition implements IBlockDefinition {
           textModel.insert(index, content);
           index += content.length;
         } else if (childPtr instanceof HTMLElement) {
-          const content = childPtr.textContent ?? "";
-          const attributes = editor.getAttributesBySpan(childPtr);
-          textModel.insert(index, content, attributes);
-          index += content.length;
+          if (converter.isContainerElement(childPtr)) {
+            const childElements = converter.parseContainerElement(childPtr);
+            if (childElements.length > 0) {
+              const childrenContainer = insertOrGetChildrenContainer(result);
+              for (const element of childElements) {
+                childrenContainer.appendChild(element);
+              }
+            }
+          } else {
+            const content = childPtr.textContent ?? "";
+            const attributes = editor.getAttributesBySpan(childPtr);
+            textModel.insert(index, content, attributes);
+            index += content.length;
+          }
         }
 
         childPtr = childPtr.nextSibling;
