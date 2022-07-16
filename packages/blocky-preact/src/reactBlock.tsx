@@ -16,7 +16,7 @@ import { unmountComponentAtNode } from "preact/compat";
 export interface ReactBlockOptions {
   name: string;
   component: (data: BlockElement) => ComponentChild;
-  tryParsePastedDOM?(e: TryParsePastedDOMEvent): void;
+  tryParsePastedDOM?(e: TryParsePastedDOMEvent): BlockElement | void;
 }
 
 export interface IReactBlockContext {
@@ -29,7 +29,6 @@ export const ReactBlockContext = createContext<IReactBlockContext | undefined>(
 );
 
 class ReactBlock extends Block {
-
   #rendered: HTMLElement | undefined;
 
   constructor(props: BlockElement, private options: ReactBlockOptions) {
@@ -41,7 +40,9 @@ class ReactBlock extends Block {
     this.#rendered = container;
     const editorController = this.editor.controller;
     reactRender(
-      <ReactBlockContext.Provider value={{ editorController, blockId: this.props.id }}>
+      <ReactBlockContext.Provider
+        value={{ editorController, blockId: this.props.id }}
+      >
         {component(this.props)}
       </ReactBlockContext.Provider>,
       container
@@ -51,11 +52,10 @@ class ReactBlock extends Block {
   dispose() {
     if (this.#rendered) {
       unmountComponentAtNode(this.#rendered);
-      this.#rendered = undefined;;
+      this.#rendered = undefined;
     }
     super.dispose();
   }
-
 }
 
 /**
