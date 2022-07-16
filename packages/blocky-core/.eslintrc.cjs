@@ -14,6 +14,7 @@ module.exports = {
     "@typescript-eslint/no-explicit-any": 0,
     "@typescript-eslint/no-non-null-assertion": 0,
     "@typescript-eslint/no-empty-function": 0,
+    "@typescript-eslint/no-this-alias": 0,
     "@typescript-eslint/ban-ts-comment": 1,
     "@typescript-eslint/no-unused-vars": 2,
     "@typescript-eslint/explicit-member-accessibility": [2, {
