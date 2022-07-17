@@ -1,5 +1,16 @@
 import { TreeEvent } from "@pkg/model/events";
 
+/**
+ * A stack item is used to store
+ * a lot of operations commited by the user.
+ *
+ * The data stored in the object is used
+ * to restore when the user trigger undo.
+ *
+ * A stack item has a property named `sealed`.
+ * When a StackItem is sealed, it can't be
+ * changed anymore.
+ */
 export class StackItem {
   prevSibling: StackItem | null = null;
   nextSibling: StackItem | null = null;
@@ -11,6 +22,9 @@ export class StackItem {
   }
 
   push(evt: TreeEvent) {
+    if (this.sealed) {
+      throw new Error("StackItem is sealed.");
+    }
     this.events.push(evt);
   }
 }
@@ -20,7 +34,12 @@ export class FixedSizeStack {
   #end: StackItem | null = null;
   #length = 0;
 
+  constructor(private maxSize: number) {}
+
   push(item: StackItem) {
+    if (this.length >= this.maxSize) {
+      this.pop();
+    }
     if (!this.#begin) {
       this.#begin = item;
       this.#end = item;
@@ -56,8 +75,13 @@ export class FixedSizeStack {
 }
 
 export class UndoManager {
-  readonly undoStack = new FixedSizeStack();
-  readonly redoStack = new FixedSizeStack();
+  readonly undoStack: FixedSizeStack;
+  readonly redoStack: FixedSizeStack;
+
+  constructor(stackSize: number = 20) {
+    this.undoStack = new FixedSizeStack(stackSize);
+    this.redoStack = new FixedSizeStack(stackSize);
+  }
 
   getAUndoItem(): StackItem {
     const peek = this.undoStack.peek();
