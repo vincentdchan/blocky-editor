@@ -2,7 +2,7 @@ import { IDisposable, flattenDisposable } from "./disposable";
 
 export class Slot<T = void> implements IDisposable {
 
-  private emitting: boolean = false;
+  private emitting = false;
   private callbacks: ((v: T) => any)[] = [];
   private disposables: IDisposable[] = [];
 
@@ -20,7 +20,7 @@ export class Slot<T = void> implements IDisposable {
     return slot;
   }
 
-  public on(callback: (v: T) => any): IDisposable {
+  on(callback: (v: T) => any): IDisposable {
     if (this.emitting) {
       const newCallback = [...this.callbacks, callback];
       this.callbacks = newCallback;
@@ -41,7 +41,7 @@ export class Slot<T = void> implements IDisposable {
     };
   }
 
-  public unshift(callback: (v: T) => any): IDisposable {
+  unshift(callback: (v: T) => any): IDisposable {
     if (this.emitting) {
       const newCallback = [callback, ...this.callbacks];
       this.callbacks = newCallback;
@@ -62,8 +62,8 @@ export class Slot<T = void> implements IDisposable {
     };
   }
 
-  public emit(v: T) {
-    let prevEmitting = this.emitting;
+  emit(v: T) {
+    const prevEmitting = this.emitting;
     this.emitting = true;
     this.callbacks.forEach(f => {
       try {
@@ -75,17 +75,17 @@ export class Slot<T = void> implements IDisposable {
     this.emitting = prevEmitting;
   }
 
-  public pipe(that: Slot<T>): Slot<T> {
+  pipe(that: Slot<T>): Slot<T> {
     this.callbacks.push(v => that.emit(v));
     return this;
   }
 
-  public dispose() {
+  dispose() {
     flattenDisposable(this.disposables).dispose();
     this.callbacks.length = 0;
   }
 
-  public toDispose(disposables: IDisposable[]): Slot<T> {
+  toDispose(disposables: IDisposable[]): Slot<T> {
     disposables.push(this);
     return this;
   }

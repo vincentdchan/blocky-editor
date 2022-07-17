@@ -16,8 +16,14 @@ importers:
 
   packages/blocky-common:
     specifiers:
+      '@typescript-eslint/eslint-plugin': ^5.30.4
+      '@typescript-eslint/parser': ^5.30.4
+      eslint: ^8.19.0
       typescript: ^4.7.3
     devDependencies:
+      '@typescript-eslint/eslint-plugin': 5.30.6_ca2dkzy3u2ze64lng5f53xzl5u
+      '@typescript-eslint/parser': 5.30.6_zi6vhgfvjwwpz4aow2huzz5d74
+      eslint: 8.19.0
       typescript: 4.7.3
 
   packages/blocky-core:

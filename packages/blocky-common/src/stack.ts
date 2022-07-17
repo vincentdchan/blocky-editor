@@ -8,7 +8,7 @@ interface Node<T> {
 export class FixedSizeStack<T> {
   #head: Node<T> | undefined
   #tail: Node<T> | undefined
-  #length: number = 0
+  #length = 0
   #maxLength: number
 
   constructor(maxLength: number) {
