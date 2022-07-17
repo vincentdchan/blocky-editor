@@ -1,8 +1,10 @@
 import * as Y from "yjs";
 import {
   type IPlugin,
-  type Editor, BlockyElement,
-  type ElementChangedEvent, BlockyTextModel,
+  type Editor,
+  BlockyElement,
+  type ElementChangedEvent,
+  BlockyTextModel,
   type TextChangedEvent,
   type DocumentState,
   type BlockyNode,
@@ -32,17 +34,20 @@ function handleDeltaForText(textModel: BlockyTextModel, deltas: any[]) {
   }
 }
 
-function createXmlTextByBlockyText(editor: Editor, textModel: BlockyTextModel): Y.XmlText {
+function createXmlTextByBlockyText(
+  editor: Editor,
+  textModel: BlockyTextModel
+): Y.XmlText {
   const result = new Y.XmlText(textModel.toString());
 
   let index = 0;
-  let ptr = textModel.nodeBegin;
+  let ptr = textModel.textBegin;
   while (ptr) {
     if (ptr.attributes) {
       result.format(index, ptr.content.length, ptr.attributes);
     }
     index += ptr.content.length;
-    ptr = ptr.next;
+    ptr = ptr.nextSibling;
   }
 
   bindTextModel(editor, textModel, result);
@@ -62,7 +67,11 @@ function withSilent(state: DocumentState, fn: () => void) {
   }
 }
 
-function bindTextModel(editor: Editor, textModel: BlockyTextModel, yTextModel: Y.XmlText) {
+function bindTextModel(
+  editor: Editor,
+  textModel: BlockyTextModel,
+  yTextModel: Y.XmlText
+) {
   const { state } = editor;
   yTextModel.observe((e: Y.YTextEvent) => {
     withSilent(state, () => {
@@ -94,7 +103,10 @@ function bindTextModel(editor: Editor, textModel: BlockyTextModel, yTextModel: Y
   });
 }
 
-function createBlockyTextModelByYText(editor: Editor, yText: Y.XmlText): BlockyTextModel {
+function createBlockyTextModelByYText(
+  editor: Editor,
+  yText: Y.XmlText
+): BlockyTextModel {
   const result = new BlockyTextModel();
 
   const delta = yText.toDelta();
@@ -102,7 +114,7 @@ function createBlockyTextModelByYText(editor: Editor, yText: Y.XmlText): BlockyT
   let index: number = 0;
   for (const d of delta) {
     if (typeof d.retain === "number") {
-      index += d.retain
+      index += d.retain;
     } else if (typeof d.insert === "string") {
       result.insert(index, d.insert, d.attributes);
       index += d.insert.length;
@@ -122,11 +134,16 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
     onInitialized(editor: Editor) {
       const { state } = editor;
 
-      function makeBlockyElementByYElement(yElement: Y.XmlElement): BlockyElement {
+      function makeBlockyElementByYElement(
+        yElement: Y.XmlElement
+      ): BlockyElement {
         let result: BlockyElement;
 
         if (isUpperCase(yElement.nodeName)) {
-          result = new BlockElement(yElement.nodeName, yElement.getAttribute("id"));
+          result = new BlockElement(
+            yElement.nodeName,
+            yElement.getAttribute("id")
+          );
         } else {
           result = new BlockyElement(yElement.nodeName);
         }
@@ -162,7 +179,11 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
       /**
        * Connect betweens [[BlockyElement]] and [[Y.XmlElement]]
        */
-      function bindBlockyElement(editor: Editor, blockyElement: BlockyElement, yElement: Y.XmlElement) {
+      function bindBlockyElement(
+        editor: Editor,
+        blockyElement: BlockyElement,
+        yElement: Y.XmlElement
+      ) {
         blockyElement.onChanged.on((e: ElementChangedEvent) => {
           withSilent(state, () => {
             switch (e.type) {
@@ -199,7 +220,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         yElement.observe((e: Y.YXmlEvent) => {
           withSilent(state, () => {
             editor.update(() => {
-              e.attributesChanged.forEach(key => {
+              e.attributesChanged.forEach((key) => {
                 blockyElement.setAttribute(key, yElement.getAttribute(key));
               });
 
@@ -213,7 +234,8 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
                     for (const xmlElement of delta.insert) {
                       const yXmlElement = xmlElement as Y.XmlElement;
 
-                      const createdElement = makeBlockyElementByYElement(yXmlElement);
+                      const createdElement =
+                        makeBlockyElementByYElement(yXmlElement);
 
                       blockyElement.insertChildAt(index, createdElement);
 
@@ -266,7 +288,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
           ptr = ptr.nextSibling;
           index--;
         }
-        
+
         if (!ptr) {
           return;
         }
@@ -279,7 +301,9 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         }
       };
 
-      function makeYElementByBlockyElement(blockyElement: BlockyElement): Y.XmlElement {
+      function makeYElementByBlockyElement(
+        blockyElement: BlockyElement
+      ): Y.XmlElement {
         const yElement = new Y.XmlElement(blockyElement.nodeName);
 
         const attributes = blockyElement.getAttributes();
@@ -353,7 +377,10 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
             for (const d of e.delta) {
               if (typeof d.retain === "number") {
                 ptr += d.retain;
-              } else if (typeof d.insert !== "undefined" && Array.isArray(d.insert)) {
+              } else if (
+                typeof d.insert !== "undefined" &&
+                Array.isArray(d.insert)
+              ) {
                 handleInsert(ptr, d.insert);
               } else if (typeof d.delete === "number") {
                 handleDelete(ptr, d.delete);
@@ -363,7 +390,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         });
       });
 
-      state.root.onChanged.on(e => {
+      state.root.onChanged.on((e) => {
         withSilent(state, () => {
           if (e.type === "element-insert-child") {
             const node = makeYElementByBlockyElement(e.child as any);
