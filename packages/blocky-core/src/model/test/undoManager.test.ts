@@ -36,3 +36,17 @@ describe("FixedSizeStack", () => {
     expect(fixedSizeStack.length).toBe(0);
   });
 });
+
+test("maxSize of stack", () => {
+  const fixedSizeStack = new FixedSizeStack(2);
+  const first = new StackItem();
+  fixedSizeStack.push(first);
+  expect(fixedSizeStack.length).toBe(1);
+  const second = new StackItem();
+  fixedSizeStack.push(second);
+  expect(fixedSizeStack.length).toBe(2);
+  const third = new StackItem();
+  fixedSizeStack.push(third);
+  expect(fixedSizeStack.length).toBe(2);
+  expect(fixedSizeStack.peek()).toBe(third);
+});
