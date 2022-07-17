@@ -111,7 +111,7 @@ function createBlockyTextModelByYText(
 
   const delta = yText.toDelta();
 
-  let index: number = 0;
+  let index = 0;
   for (const d of delta) {
     if (typeof d.retain === "number") {
       index += d.retain;
@@ -370,7 +370,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         });
       }
 
-      docFragment.observe((e: Y.YXmlEvent, t: Y.Transaction) => {
+      docFragment.observe((e: Y.YXmlEvent) => {
         withSilent(state, () => {
           editor.update(() => {
             let ptr = 0;

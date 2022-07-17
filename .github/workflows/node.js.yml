@@ -27,7 +27,6 @@ jobs:
       - run: npm install -g pnpm
       - run: pnpm install
       - run: pnpm run build
+      - run: pnpm run lint
       - run: cd packages/blocky-core && pnpm run test:prod
-      - run: cd packages/blocky-common && pnpm run lint
-      - run: cd packages/blocky-core && pnpm run lint
       - run: chmod +x ./bundle_size.sh && ./bundle_size.sh
