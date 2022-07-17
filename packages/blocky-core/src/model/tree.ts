@@ -12,8 +12,8 @@ import type { TextChangedEvent, ElementChangedEvent } from "./events";
 import type { State } from "./state";
 
 export interface TextNode {
-  prev?: TextNode;
-  next?: TextNode;
+  prevSibling?: TextNode;
+  nextSibling?: TextNode;
   content: string;
   attributes?: AttributesObject;
 }
@@ -45,8 +45,8 @@ export class BlockyTextModel implements BlockyNode, WithState {
     return null;
   }
 
-  #nodeBegin?: TextNode;
-  #nodeEnd?: TextNode;
+  #textBegin?: TextNode;
+  #textEnd?: TextNode;
   #length = 0;
 
   readonly onChanged: WithStateSlot<TextChangedEvent> = new WithStateSlot(this);
@@ -74,19 +74,19 @@ export class BlockyTextModel implements BlockyNode, WithState {
     attributes?: AttributesObject
   ) {
     this.#length += text.length;
-    if (!this.#nodeBegin) {
+    if (!this.#textBegin) {
       if (index !== 0) {
         throw new Error(`The begin offset ${index} is out of range.`);
       }
-      this.#nodeBegin = {
+      this.#textBegin = {
         content: text,
         attributes,
       };
-      this.#nodeEnd = this.#nodeBegin;
+      this.#textEnd = this.#textBegin;
       return;
     }
 
-    let ptr: TextNode | undefined = this.#nodeBegin;
+    let ptr: TextNode | undefined = this.#textBegin;
     while (ptr) {
       if (index === 0) {
         if (areEqualShallow(ptr.attributes, attributes)) {
@@ -115,20 +115,20 @@ export class BlockyTextModel implements BlockyNode, WithState {
         };
 
         if (after.length > 0) {
-          this.insertNodeBefore(mid, prev.next);
+          this.insertNodeBefore(mid, prev.nextSibling);
           this.insertNodeBefore(
             { content: after, attributes: prev.attributes },
-            mid.next
+            mid.nextSibling
           );
         } else {
-          this.insertNodeBefore(mid, prev.next);
+          this.insertNodeBefore(mid, prev.nextSibling);
         }
 
         return;
       }
 
       index -= ptr.content.length;
-      ptr = ptr.next;
+      ptr = ptr.nextSibling;
     }
 
     this.insertAtLast({ content: text, attributes });
@@ -141,7 +141,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
       end = this.length;
     }
 
-    let ptr = this.nodeBegin;
+    let ptr = this.textBegin;
 
     while (ptr) {
       const { content, attributes } = ptr;
@@ -165,21 +165,21 @@ export class BlockyTextModel implements BlockyNode, WithState {
       start -= content.length;
       end -= content.length;
 
-      ptr = ptr.next;
+      ptr = ptr.nextSibling;
     }
 
     return result;
   }
 
   private insertAtLast(node: TextNode) {
-    node.prev = this.#nodeEnd;
-    node.next = undefined;
+    node.prevSibling = this.#textEnd;
+    node.nextSibling = undefined;
 
-    if (this.#nodeEnd) {
-      this.#nodeEnd.next = node;
+    if (this.#textEnd) {
+      this.#textEnd.nextSibling = node;
     }
 
-    this.#nodeEnd = node;
+    this.#textEnd = node;
   }
 
   private insertNodeBefore(node: TextNode, next?: TextNode) {
@@ -188,16 +188,16 @@ export class BlockyTextModel implements BlockyNode, WithState {
       return;
     }
 
-    if (next.prev) {
-      next.prev.next = node;
+    if (next.prevSibling) {
+      next.prevSibling.nextSibling = node;
     } else {
-      this.#nodeBegin = node;
+      this.#textBegin = node;
     }
 
-    node.prev = next.prev;
-    node.next = next;
+    node.prevSibling = next.prevSibling;
+    node.nextSibling = next;
 
-    next.prev = node;
+    next.prevSibling = node;
   }
 
   format(index: number, length: number, attributes?: AttributesObject) {
@@ -206,13 +206,13 @@ export class BlockyTextModel implements BlockyNode, WithState {
       throw new Error(`The begin offset ${index} is out of range.`);
     }
 
-    let ptr: TextNode | undefined = this.#nodeBegin;
+    let ptr: TextNode | undefined = this.#textBegin;
 
     while (ptr) {
       if (index < ptr.content.length) {
         const before = ptr.content.slice(0, index);
         const lenFormatted = ptr.content.length - index;
-        const next = ptr.next;
+        const next = ptr.nextSibling;
 
         if (length >= lenFormatted) {
           const after = ptr.content.slice(index);
@@ -250,7 +250,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
       }
 
       index -= ptr.content.length;
-      ptr = ptr.next;
+      ptr = ptr.nextSibling;
     }
 
     this.onChanged.emit({
@@ -274,7 +274,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
     this.#length -= length;
 
     let prev: TextNode | undefined;
-    let ptr: TextNode | undefined = this.#nodeBegin;
+    let ptr: TextNode | undefined = this.#textBegin;
     while (ptr) {
       if (index < ptr.content.length) {
         const before = ptr.content.slice(0, index);
@@ -296,10 +296,10 @@ export class BlockyTextModel implements BlockyNode, WithState {
       const tmp = ptr;
       index -= ptr.content.length;
       prev = ptr;
-      ptr = ptr.next;
+      ptr = ptr.nextSibling;
 
       if (tmp.content.length === 0) {
-        prev = tmp.prev;
+        prev = tmp.prevSibling;
         this.#eraseNode(tmp);
       }
     }
@@ -316,7 +316,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
   }
 
   #tryMergeNode(node: TextNode) {
-    const { next } = node;
+    const { nextSibling: next } = node;
     if (!next) {
       return;
     }
@@ -331,54 +331,54 @@ export class BlockyTextModel implements BlockyNode, WithState {
   }
 
   #eraseNode(node: TextNode) {
-    if (this.#nodeBegin === node) {
-      this.#nodeBegin = node.next;
+    if (this.#textBegin === node) {
+      this.#textBegin = node.nextSibling;
     }
 
-    if (this.#nodeEnd === node) {
-      this.#nodeEnd = node.prev;
+    if (this.#textEnd === node) {
+      this.#textEnd = node.prevSibling;
     }
 
-    if (node.prev) {
-      node.prev.next = node.next;
+    if (node.prevSibling) {
+      node.prevSibling.nextSibling = node.nextSibling;
     }
 
-    if (node.next) {
-      node.next.prev = node.prev;
+    if (node.nextSibling) {
+      node.nextSibling.prevSibling = node.prevSibling;
     }
 
-    node.prev = undefined;
-    node.next = undefined;
+    node.prevSibling = undefined;
+    node.nextSibling = undefined;
   }
 
   toString(): string {
     let result = "";
-    let ptr: TextNode | undefined = this.#nodeBegin;
+    let ptr: TextNode | undefined = this.#textBegin;
 
     while (ptr) {
       result += ptr.content;
-      ptr = ptr.next;
+      ptr = ptr.nextSibling;
     }
 
     return result;
   }
 
   append(that: BlockyTextModel) {
-    let ptr = that.nodeBegin;
+    let ptr = that.textBegin;
     let index = this.#length;
     while (ptr) {
       this.insert(index, ptr.content, ptr.attributes);
       index += ptr.content.length;
-      ptr = ptr.next;
+      ptr = ptr.nextSibling;
     }
   }
 
-  get nodeBegin() {
-    return this.#nodeBegin;
+  get textBegin() {
+    return this.#textBegin;
   }
 
-  get nodeEnd() {
-    return this.#nodeEnd;
+  get textEnd() {
+    return this.#textEnd;
   }
 
   get length() {
@@ -388,12 +388,12 @@ export class BlockyTextModel implements BlockyNode, WithState {
   clone(): BlockyTextModel {
     const result = new BlockyTextModel();
 
-    let textNode = this.nodeBegin;
+    let textNode = this.textBegin;
     let index = 0;
     while (textNode) {
       result.insert(index, textNode.content, textNode.attributes);
       index += textNode.content.length;
-      textNode = textNode.next;
+      textNode = textNode.nextSibling;
     }
 
     return result;
@@ -409,7 +409,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
 
   #serializeContent(): TextDelta[] {
     const result: TextDelta[] = [];
-    let ptr = this.#nodeBegin;
+    let ptr = this.#textBegin;
     if (!ptr) {
       return result;
     }
@@ -424,7 +424,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
       result.push({
         insert: ptr.content,
       });
-      ptr = ptr.next;
+      ptr = ptr.nextSibling;
     }
 
     return result;

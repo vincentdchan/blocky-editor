@@ -917,12 +917,12 @@ export class Editor {
     this.update(() => {
       let length = prevTextModel.length;
 
-      let ptr = thisTextModel.nodeBegin;
+      let ptr = thisTextModel.textBegin;
 
       while (ptr) {
         prevTextModel.insert(length, ptr.content, ptr.attributes);
         length += ptr.content.length;
-        ptr = ptr.next;
+        ptr = ptr.nextSibling;
       }
 
       (node.parent as BlockyElement).removeChild(node);

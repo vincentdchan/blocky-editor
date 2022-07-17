@@ -46,7 +46,7 @@ interface FormattedTextSlice {
 function textModelToFormats(textModel: BlockyTextModel): FormattedTextSlice[] {
   const formats: FormattedTextSlice[] = [];
 
-  let ptr = textModel.nodeBegin;
+  let ptr = textModel.textBegin;
   let index = 0;
   while (ptr) {
     formats.push({
@@ -55,7 +55,7 @@ function textModelToFormats(textModel: BlockyTextModel): FormattedTextSlice[] {
       attributes: ptr.attributes,
     });
     index += ptr.content.length;
-    ptr = ptr.next;
+    ptr = ptr.nextSibling;
   }
 
   return formats;
@@ -547,7 +547,7 @@ class TextBlock extends Block {
       this.#contentContainer!
     );
 
-    let nodePtr = textModel.nodeBegin;
+    let nodePtr = textModel.textBegin;
     let domPtr: Node | null = contentContainer.firstChild;
     let prevDom: Node | null = null;
 
@@ -561,7 +561,7 @@ class TextBlock extends Block {
           const oldDom = domPtr;
           const newNode = this.createDomByNode(nodePtr, this.editor);
 
-          nodePtr = nodePtr.next;
+          nodePtr = nodePtr.nextSibling;
           prevDom = domPtr;
           domPtr = domPtr.nextSibling;
 
@@ -575,7 +575,7 @@ class TextBlock extends Block {
         }
       }
 
-      nodePtr = nodePtr.next;
+      nodePtr = nodePtr.nextSibling;
       prevDom = domPtr;
       domPtr = domPtr.nextSibling;
     }

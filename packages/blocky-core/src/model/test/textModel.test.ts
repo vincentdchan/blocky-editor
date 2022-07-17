@@ -4,10 +4,10 @@ import { test, expect } from "vitest";
 function modelToSpans(model: BlockyTextModel): string[] {
   const textSpans: string[] = [];
 
-  let ptr = model.nodeBegin;
+  let ptr = model.textBegin;
   while (ptr) {
     textSpans.push(ptr.content);
-    ptr = ptr.next;
+    ptr = ptr.nextSibling;
   }
 
   return textSpans;
@@ -16,10 +16,10 @@ function modelToSpans(model: BlockyTextModel): string[] {
 function modelToStyles(model: BlockyTextModel): any[] {
   const textSpans: any[] = [];
 
-  let ptr = model.nodeBegin;
+  let ptr = model.textBegin;
   while (ptr) {
     textSpans.push(ptr.attributes);
-    ptr = ptr.next;
+    ptr = ptr.nextSibling;
   }
 
   return textSpans;
@@ -56,11 +56,7 @@ test("textModel format #1", () => {
   expect(styles[0]).toBeUndefined();
   expect(styles[2]).toBeUndefined();
 
-  expect(textSpans).toEqual([
-    "This is ",
-    "bolded",
-    " text",
-  ]);
+  expect(textSpans).toEqual(["This is ", "bolded", " text"]);
 });
 
 test("textModel format #2", () => {
@@ -88,11 +84,7 @@ test("textModel delete node #1", () => {
 
   const textSpans: string[] = modelToSpans(text);
 
-  expect(textSpans).toEqual([
-    "This is ",
-    "ed",
-    " text",
-  ]);
+  expect(textSpans).toEqual(["This is ", "ed", " text"]);
 });
 
 test("textModel delete node #2", () => {
@@ -106,11 +98,7 @@ test("textModel delete node #2", () => {
 
   const textSpans: string[] = modelToSpans(text);
 
-  expect(textSpans).toEqual([
-    "This is ",
-    "bold",
-    "ext",
-  ]);
+  expect(textSpans).toEqual(["This is ", "bold", "ext"]);
 });
 
 test("textModel delete node #3", () => {
@@ -125,9 +113,7 @@ test("textModel delete node #3", () => {
   const textSpans: string[] = modelToSpans(text);
   const styles: any[] = modelToStyles(text);
 
-  expect(textSpans).toEqual([
-    "This is text",
-  ]);
+  expect(textSpans).toEqual(["This is text"]);
   expect(styles[0]).toBeUndefined();
 });
 
@@ -139,16 +125,16 @@ test("textModel slice", () => {
   });
   const slices = text.slice(5);
   expect(slices).toEqual([
-    { content: "is ", attributes: undefined, },
-    { content: "bolded", attributes: { bold: true }, },
+    { content: "is ", attributes: undefined },
+    { content: "bolded", attributes: { bold: true } },
     { content: " text", attributes: undefined },
   ]);
 });
 
 test("textModel insert #1", () => {
   const slices: TextSlice[] = [
-    { content: "is ", attributes: undefined, },
-    { content: "bolded", attributes: { bold: true }, },
+    { content: "is ", attributes: undefined },
+    { content: "bolded", attributes: { bold: true } },
     { content: " text", attributes: undefined },
   ];
 
@@ -165,8 +151,8 @@ test("textModel insert #1", () => {
 
 test("textModel insert #2", () => {
   const slices: TextSlice[] = [
-    { content: "is ", attributes: undefined, },
-    { content: "bolded", attributes: { bold: true }, },
+    { content: "is ", attributes: undefined },
+    { content: "bolded", attributes: { bold: true } },
     { content: " text", attributes: undefined },
   ];
 
@@ -187,8 +173,8 @@ test("textModel insert #2", () => {
 
 test("textModel insert #3", () => {
   const slices: TextSlice[] = [
-    { content: "is ", attributes: undefined, },
-    { content: "bolded", attributes: { bold: true }, },
+    { content: "is ", attributes: undefined },
+    { content: "bolded", attributes: { bold: true } },
     { content: " text", attributes: undefined },
   ];
 
