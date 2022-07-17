@@ -431,7 +431,11 @@ export class BlockyTextModel implements BlockyNode, WithState {
   }
 }
 
-const bannedAttributesName: Set<string> = new Set(["nodeName", "type"]);
+const bannedAttributesName: Set<string> = new Set([
+  "nodeName",
+  "type",
+  "children",
+]);
 
 interface InternAttributes {
   [key: string]: string;

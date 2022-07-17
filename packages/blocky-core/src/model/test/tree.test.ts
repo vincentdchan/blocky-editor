@@ -1,5 +1,4 @@
-// import { Action } from "space/transactions";
-import { test, expect } from "vitest";
+import { test, expect, describe } from "vitest";
 import { BlockyElement } from "@pkg/model/tree";
 
 test("tree append", () => {
@@ -103,4 +102,31 @@ test("child validation", () => {
   expect(() => {
     element.insertAfter(element, firstChild);
   }).toThrowError("Can not add ancesters of a node as child");
+});
+
+describe("toJSON()", () => {
+  test("basic", () => {
+    const element = new BlockyElement("node");
+    const json = element.toJSON();
+    expect(json).toEqual({ nodeName: "node" });
+  });
+
+  test("attribute", () => {
+    const element = new BlockyElement("node");
+    element.setAttribute("id", "123");
+    const json = element.toJSON();
+    expect(json).toEqual({
+      id: "123",
+      nodeName: "node",
+    });
+  });
+  test("preserved attributes", () => {
+    const element = new BlockyElement("node");
+    expect(() => {
+      element.setAttribute("children", "123");
+    }).toThrow("'children' is preserved");
+    expect(() => {
+      element.setAttribute("nodeName", "123");
+    }).toThrow("'nodeName' is preserved");
+  });
 });
