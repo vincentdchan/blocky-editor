@@ -3,7 +3,7 @@ import { IDisposable } from "./disposable";
 
 export class Cell<T> implements IDisposable {
 
-  public readonly changed = new Slot<T>();
+  readonly changed = new Slot<T>();
 
   #value: T
 

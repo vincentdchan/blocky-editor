@@ -7,7 +7,10 @@ export interface Padding {
   left: number;
 }
 
-export function elem<K extends keyof HTMLElementTagNameMap>(tagName: K, className?: string): HTMLElementTagNameMap[K] {
+export function elem<K extends keyof HTMLElementTagNameMap>(
+  tagName: K,
+  className?: string
+): HTMLElementTagNameMap[K] {
   const result = document.createElement(tagName);
   if (className) {
     result.className = className;
@@ -47,14 +50,16 @@ export function isContainNode(node: Node, parent: HTMLElement) {
 }
 
 export class DomBuilder<T extends HTMLElement> {
+  readonly value: T;
 
-  public readonly value: T;
-
-  static create<K extends keyof HTMLElementTagNameMap>(tagName: K, className?: string): DomBuilder<HTMLElementTagNameMap[K]> {
+  static create<K extends keyof HTMLElementTagNameMap>(
+    tagName: K,
+    className?: string
+  ): DomBuilder<HTMLElementTagNameMap[K]> {
     return new DomBuilder(elem(tagName, className));
   }
 
-  public to(f: (t: T) => void): DomBuilder<T> {
+  to(f: (t: T) => void): DomBuilder<T> {
     f(this.value);
     return this;
   }
@@ -63,12 +68,12 @@ export class DomBuilder<T extends HTMLElement> {
     this.value = v;
   }
 
-  public setInnerText(content: string): DomBuilder<T> {
+  setInnerText(content: string): DomBuilder<T> {
     this.value.innerText = content;
     return this;
   }
 
-  public mount(parent: HTMLElement | DomBuilder<T>): DomBuilder<T> {
+  mount(parent: HTMLElement | DomBuilder<T>): DomBuilder<T> {
     if (parent instanceof HTMLElement) {
       parent.appendChild(this.value);
     }
@@ -78,14 +83,20 @@ export class DomBuilder<T extends HTMLElement> {
     return this;
   }
 
-  public on<K extends keyof HTMLElementEventMap>(eventName:K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): DomBuilder<T> {
+  on<K extends keyof HTMLElementEventMap>(
+    eventName: K,
+    listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any,
+    options?: boolean | AddEventListenerOptions
+  ): DomBuilder<T> {
     this.value.addEventListener(eventName, listener, options);
     return this;
-  } 
-
+  }
 }
 
-export function listenWindow<K extends keyof WindowEventMap>(eventName: K, listener: (this: Window, ev: WindowEventMap[K]) => any, options?: boolean | AddEventListenerOptions): IDisposable {
+export function listenWindow<K extends keyof WindowEventMap>(
+  eventName: K,
+  listener: (this: Window, ev: WindowEventMap[K]) => any
+): IDisposable {
   window.addEventListener(eventName, listener);
   return {
     dispose: () => {
@@ -94,7 +105,11 @@ export function listenWindow<K extends keyof WindowEventMap>(eventName: K, liste
   };
 }
 
-export function $on<T extends HTMLElement, K extends keyof HTMLElementEventMap>(element: T, eventName:K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): IDisposable {
+export function $on<T extends HTMLElement, K extends keyof HTMLElementEventMap>(
+  element: T,
+  eventName: K,
+  listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any
+): IDisposable {
   element.addEventListener(eventName, listener);
   return {
     dispose: () => {
@@ -104,8 +119,7 @@ export function $on<T extends HTMLElement, K extends keyof HTMLElementEventMap>(
 }
 
 export class DivContainer implements IDisposable {
-
-  public readonly container: HTMLDivElement;
+  readonly container: HTMLDivElement;
 
   constructor(clsName?: string) {
     this.container = elem("div", clsName);
@@ -118,12 +132,10 @@ export class DivContainer implements IDisposable {
   dispose(): void {
     removeElement(this.container);
   }
-
 }
 
 export class SpanContainer implements IDisposable {
-
-  public readonly container: HTMLSpanElement;
+  readonly container: HTMLSpanElement;
 
   constructor(clsName?: string) {
     this.container = elem("span", clsName);
@@ -136,10 +148,13 @@ export class SpanContainer implements IDisposable {
   dispose(): void {
     removeElement(this.container);
   }
-
 }
 
-export function observeMutation(element: Node, options: MutationObserverInit | undefined, callback: MutationCallback): IDisposable {
+export function observeMutation(
+  element: Node,
+  options: MutationObserverInit | undefined,
+  callback: MutationCallback
+): IDisposable {
   const observer = new MutationObserver(callback);
 
   observer.observe(element, options);
@@ -147,6 +162,6 @@ export function observeMutation(element: Node, options: MutationObserverInit | u
   return {
     dispose() {
       observer.disconnect();
-    }
-  }
+    },
+  };
 }
