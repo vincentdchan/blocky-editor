@@ -1,7 +1,6 @@
 import { isObject } from "lodash-es";
 import type { IdGenerator } from "@pkg/helper/idHelper";
-import type { AttributesObject } from "./element";
-import * as S from "./serialize";
+import type { AttributesObject, JSONNode, JSONChild } from "./element";
 
 export class MarkupGenerator {
   constructor(private idGen: IdGenerator) {}
@@ -18,7 +17,7 @@ export class MarkupGenerator {
     };
   }
 
-  doc(children: S.JSONNode[]): S.JSONNode {
+  doc(children: JSONNode[]): JSONNode {
     return {
       nodeName: "document",
       id: this.idGen.mkDocId(),
@@ -26,14 +25,14 @@ export class MarkupGenerator {
     };
   }
 
-  block(blockName: string): S.JSONNode {
+  block(blockName: string): JSONNode {
     return {
       nodeName: blockName,
       id: this.idGen.mkBlockId(),
     };
   }
 
-  text(content: string): S.JSONNode {
+  text(content: string): JSONNode {
     return {
       nodeName: "#text",
       textContent: [
@@ -44,7 +43,7 @@ export class MarkupGenerator {
     };
   }
 
-  textBlock(content: string, id?: string): S.JSONNode {
+  textBlock(content: string, id?: string): JSONNode {
     return {
       nodeName: "Text",
       id: id ?? this.idGen.mkBlockId(),
@@ -54,15 +53,15 @@ export class MarkupGenerator {
 }
 
 export type Traversor<R> = (
-  node: S.JSONChild,
-  parent?: S.JSONNode,
+  node: JSONChild,
+  parent?: JSONNode,
   parentResult?: R
 ) => R;
 
 export function traverse<R>(
-  node: S.JSONChild,
+  node: JSONChild,
   traversor: Traversor<R>,
-  parent?: S.JSONNode,
+  parent?: JSONNode,
   parentResult?: R
 ): R {
   const result = traversor(node, parent, parentResult);

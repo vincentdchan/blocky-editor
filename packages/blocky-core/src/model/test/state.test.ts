@@ -2,14 +2,24 @@ import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { expect, test } from "vitest";
 import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { MarkupGenerator } from "@pkg/model/markup";
-import { serializeState } from "@pkg/model/serialize";
-import State from "@pkg/model/state";
+import { State } from "@pkg/model/state";
+import { JSONNode } from "../element";
 
 function makeDefaultUtils() {
   const blockRegistry = new BlockRegistry();
   const idGenerator = makeDefaultIdGenerator();
   const m = new MarkupGenerator(idGenerator);
   return { blockRegistry, m, idGenerator };
+}
+
+function removeId(node: JSONNode) {
+  if (node.id) {
+    delete node.id;
+  }
+
+  if (node.children) {
+    node.children.map(removeId);
+  }
 }
 
 test("tree validator", () => {
@@ -28,7 +38,8 @@ test("serialize", () => {
     blockRegistry,
     idGenerator
   );
-  const json = serializeState(state);
+  const json = state.toJSON();
+  removeId(json);
   expect(json).toEqual({
     nodeName: "document",
     children: [

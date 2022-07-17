@@ -4,8 +4,7 @@ import { makeObservable } from "blocky-common/es/observable";
 import { removeNode } from "blocky-common/es/dom";
 import { Slot } from "blocky-common/es/events";
 import { BlockyElement, BlockyTextModel } from "./tree";
-import { type BlockyNode } from "./element";
-import * as S from "./serialize";
+import type { BlockyNode, JSONNode } from "./element";
 import { TextBlockName } from "@pkg/block/textBlock";
 import { type IdGenerator } from "@pkg/helper/idHelper";
 import { type CursorState } from "@pkg/model/cursor";
@@ -13,7 +12,7 @@ import { UndoManager } from "@pkg/model/undoManager";
 import { Block, BlockElement } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 
-function jsonNodeToBlock(state: State, node: S.JSONNode): BlockyNode {
+function jsonNodeToBlock(state: State, node: JSONNode): BlockyNode {
   if (!isObject(node)) {
     throw new TypeError("object is expected");
   }
@@ -61,9 +60,9 @@ export const DocNodeName = "doc";
  * - Instances of blocks
  *
  */
-class State {
+export class State {
   static fromMarkup(
-    doc: S.JSONNode,
+    doc: JSONNode,
     blockRegistry: BlockRegistry,
     idHelper: IdGenerator
   ): State {
@@ -163,6 +162,27 @@ class State {
     }
     this.idMap.set(element.id, element);
   }
-}
 
-export default State;
+  toJSON() {
+    const result: JSONNode = {
+      nodeName: "document",
+    };
+
+    let ptr = this.root.firstChild;
+
+    // empty
+    if (!ptr) {
+      return result;
+    }
+
+    const children: JSONNode[] = [];
+
+    while (ptr) {
+      children.push(ptr.toJSON());
+      ptr = ptr.nextSibling;
+    }
+
+    result.children = children;
+    return result;
+  }
+}

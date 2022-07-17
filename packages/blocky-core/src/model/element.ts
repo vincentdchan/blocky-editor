@@ -1,8 +1,25 @@
-import type State from "./state";
+import type { State } from "./state";
 
 export interface AttributesObject {
   [key: string]: any;
 }
+
+export interface TextDelta {
+  retain?: number;
+  insert?: string;
+  attributes?: any;
+  delete?: number;
+}
+
+export interface JSONNode {
+  nodeName: string;
+  id?: string;
+  textContent?: TextDelta[];
+  attributes?: AttributesObject;
+  children?: JSONChild[];
+}
+
+export type JSONChild = JSONNode;
 
 export interface BlockyNode {
   state?: State;
@@ -16,4 +33,5 @@ export interface BlockyNode {
   childrenLength: number;
 
   clone(): BlockyNode;
+  toJSON(): JSONNode;
 }
