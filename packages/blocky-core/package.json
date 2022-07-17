@@ -6,9 +6,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
     "test": "vitest",
-    "test:prod": "vitest --run",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "test:prod": "vitest --run"
   },
   "homepage": "https://github.com/vincentdchan/blocky-editor",
   "keywords": [
@@ -21,9 +19,6 @@
     "@types/is-hotkey": "^0.1.7",
     "@types/lodash-es": "^4.17.6",
     "@types/node": "^17.0.41",
-    "@typescript-eslint/eslint-plugin": "^5.30.4",
-    "@typescript-eslint/parser": "^5.30.4",
-    "eslint": "^8.19.0",
     "jsdom": "^20.0.0",
     "tsc-alias": "^1.6.9",
     "tslib": "^2.4.0",

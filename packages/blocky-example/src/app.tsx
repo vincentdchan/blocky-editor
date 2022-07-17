@@ -95,13 +95,13 @@ function makeRightController(doc: Y.Doc): EditorController {
   });
 }
 
-class App extends Component<{}, AppState> {
+class App extends Component<unknown, AppState> {
   private doc1: Y.Doc;
   private doc2: Y.Doc;
   private editorControllerLeft: EditorController;
   private editorControllerRight: EditorController;
 
-  constructor(props: {}) {
+  constructor(props: unknown) {
     super(props);
     this.doc1 = new Y.Doc();
     this.doc2 = new Y.Doc();
