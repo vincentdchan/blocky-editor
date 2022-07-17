@@ -2,6 +2,7 @@ import { isUndefined } from "lodash-es";
 import { areEqualShallow } from "blocky-common/es/object";
 import { Slot } from "blocky-common/es/events";
 import { type AttributesObject, type BlockyNode } from "./element";
+import type { TextChangedEvent, ElementChangedEvent } from "./events";
 import type State from "./state";
 
 export interface WithState {
@@ -30,31 +31,6 @@ export interface TextNode {
   content: string;
   attributes?: AttributesObject;
 }
-
-export interface TextInsertEvent {
-  type: "text-insert";
-  index: number;
-  text: string;
-  attributes?: AttributesObject;
-}
-
-export interface TextDeleteEvent {
-  type: "text-delete";
-  index: number;
-  length: number;
-}
-
-export interface TextFormatEvent {
-  type: "text-format";
-  index: number;
-  length: number;
-  attributes?: AttributesObject;
-}
-
-export type TextChangedEvent =
-  | TextInsertEvent
-  | TextDeleteEvent
-  | TextFormatEvent;
 
 export interface TextSlice {
   content: string;
@@ -326,7 +302,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
 
       if (length <= 0) {
         if (ptr.content.length === 0) {
-          this.eraseNode(ptr);
+          this.#eraseNode(ptr);
         }
         break;
       }
@@ -338,12 +314,12 @@ export class BlockyTextModel implements BlockyNode, WithState {
 
       if (tmp.content.length === 0) {
         prev = tmp.prev;
-        this.eraseNode(tmp);
+        this.#eraseNode(tmp);
       }
     }
 
     if (prev) {
-      this.tryMergeNode(prev);
+      this.#tryMergeNode(prev);
     }
 
     this.onChanged.emit({
@@ -353,7 +329,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
     });
   }
 
-  private tryMergeNode(node: TextNode) {
+  #tryMergeNode(node: TextNode) {
     const { next } = node;
     if (!next) {
       return;
@@ -365,10 +341,10 @@ export class BlockyTextModel implements BlockyNode, WithState {
 
     node.content += next.content;
 
-    this.eraseNode(next);
+    this.#eraseNode(next);
   }
 
-  private eraseNode(node: TextNode) {
+  #eraseNode(node: TextNode) {
     if (this.#nodeBegin === node) {
       this.#nodeBegin = node.next;
     }
@@ -439,32 +415,6 @@ export class BlockyTextModel implements BlockyNode, WithState {
 }
 
 const bannedAttributesName: Set<string> = new Set(["nodeName", "type"]);
-
-export interface ElementSetAttributeEvent {
-  type: "element-set-attrib";
-  key: string;
-  value: string;
-  oldValue?: string;
-}
-
-export interface ElementRemoveChildEvent {
-  type: "element-remove-child";
-  parent: BlockyNode;
-  child: BlockyNode;
-  getInsertIndex: () => number;
-}
-
-export interface ElementInsertChildEvent {
-  type: "element-insert-child";
-  parent: BlockyNode;
-  child: BlockyNode;
-  getInsertIndex: () => number;
-}
-
-export type ElementChangedEvent =
-  | ElementSetAttributeEvent
-  | ElementInsertChildEvent
-  | ElementRemoveChildEvent;
 
 interface InternAttributes {
   [key: string]: string;
