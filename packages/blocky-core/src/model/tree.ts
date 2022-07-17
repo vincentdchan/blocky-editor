@@ -1,29 +1,15 @@
 import { isUndefined } from "lodash-es";
 import { areEqualShallow } from "blocky-common/es/object";
-import { Slot } from "blocky-common/es/events";
-import { type AttributesObject, type BlockyNode } from "./element";
+import { type WithState, WithStateSlot } from "@pkg/helper/withStateSlot";
+import type {
+  JSONNode,
+  JSONChild,
+  AttributesObject,
+  BlockyNode,
+  TextDelta,
+} from "./element";
 import type { TextChangedEvent, ElementChangedEvent } from "./events";
-import type State from "./state";
-
-export interface WithState {
-  state?: State;
-}
-
-class WithStateSlot<T = any> extends Slot<T> {
-  #objWithState: WithState;
-
-  constructor(objWithState: WithState) {
-    super();
-    this.#objWithState = objWithState;
-  }
-
-  emit(v: T) {
-    if (this.#objWithState.state?.silent) {
-      return;
-    }
-    super.emit(v);
-  }
-}
+import type { State } from "./state";
 
 export interface TextNode {
   prev?: TextNode;
@@ -412,6 +398,37 @@ export class BlockyTextModel implements BlockyNode, WithState {
 
     return result;
   }
+
+  toJSON(): JSONNode {
+    const content = this.#serializeContent();
+    return {
+      nodeName: "#text",
+      textContent: content,
+    };
+  }
+
+  #serializeContent(): TextDelta[] {
+    const result: TextDelta[] = [];
+    let ptr = this.#nodeBegin;
+    if (!ptr) {
+      return result;
+    }
+
+    while (ptr) {
+      const delta: TextDelta = {
+        insert: ptr.content,
+      };
+      if (ptr.attributes) {
+        delta.attributes = ptr.attributes;
+      }
+      result.push({
+        insert: ptr.content,
+      });
+      ptr = ptr.next;
+    }
+
+    return result;
+  }
 }
 
 const bannedAttributesName: Set<string> = new Set(["nodeName", "type"]);
@@ -702,6 +719,45 @@ export class BlockyElement implements BlockyNode, WithState {
     while (childPtr) {
       result.appendChild(childPtr.clone());
       childPtr = childPtr.nextSibling;
+    }
+
+    return result;
+  }
+
+  toJSON(): JSONNode {
+    const result: JSONNode = {
+      nodeName: this.nodeName,
+    };
+
+    const attributes = this.getAttributes();
+    for (const key in attributes) {
+      if (key === "nodeName") {
+        continue;
+      }
+      if (key === "type") {
+        continue;
+      }
+      const value = attributes[key];
+      if (value) {
+        (result as any)[key] = value;
+      }
+    }
+
+    let childPtr = this.#firstChild;
+    if (childPtr) {
+      const children: JSONChild[] = [];
+
+      while (childPtr) {
+        const child = childPtr.toJSON();
+        if (Array.isArray(child)) {
+          children.push(...child);
+        } else {
+          children.push(child);
+        }
+        childPtr = childPtr.nextSibling;
+      }
+
+      result.children = children;
     }
 
     return result;
