@@ -1,10 +1,17 @@
+import { TreeEvent } from "@pkg/model/events";
+
 export class StackItem {
   prevSibling: StackItem | null = null;
   nextSibling: StackItem | null = null;
   sealed = false;
+  readonly events: TreeEvent[] = [];
 
   seal() {
     this.sealed = true;
+  }
+
+  push(evt: TreeEvent) {
+    this.events.push(evt);
   }
 }
 
@@ -54,7 +61,7 @@ export class UndoManager {
 
   getAUndoItem(): StackItem {
     const peek = this.undoStack.peek();
-    if (peek) {
+    if (peek && !peek.sealed) {
       return peek;
     }
     const newItem = new StackItem();

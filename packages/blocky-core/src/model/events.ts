@@ -50,3 +50,5 @@ export type ElementChangedEvent =
   | ElementSetAttributeEvent
   | ElementInsertChildEvent
   | ElementRemoveChildEvent;
+
+export type TreeEvent = TextChangedEvent | ElementChangedEvent;
