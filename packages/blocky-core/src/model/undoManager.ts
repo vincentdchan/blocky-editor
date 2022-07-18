@@ -167,7 +167,7 @@ export class UndoManager {
   readonly undoStack: FixedSizeStack;
   readonly redoStack: FixedSizeStack;
 
-  constructor(readonly state: State, stackSize: number = 20) {
+  constructor(readonly state: State, stackSize = 20) {
     this.undoStack = new FixedSizeStack(stackSize);
     this.redoStack = new FixedSizeStack(stackSize);
 
