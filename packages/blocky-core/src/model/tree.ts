@@ -610,7 +610,6 @@ export class BlockyElement implements BlockyNode, WithState {
 
     this.changed.emit({
       type: "element-set-attrib",
-      node: this,
       key: name,
       value,
       oldValue,
