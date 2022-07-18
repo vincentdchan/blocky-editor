@@ -627,7 +627,7 @@ class TextBlock extends Block {
       return () => {
         this.editor.state.cursorState = prevCursorState;
       };
-    }, false);
+    });
   }
 
   /**
@@ -656,7 +656,7 @@ class TextBlock extends Block {
       return () => {
         this.editor.state.cursorState = prevCursorState;
       };
-    }, false);
+    });
   }
 
   private findParentBlockElement(): BlockElement | undefined {

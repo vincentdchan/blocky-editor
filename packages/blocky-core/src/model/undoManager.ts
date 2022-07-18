@@ -1,7 +1,7 @@
-import type { TreeEvent } from "./events";
+import type { ElementChangedEvent, TextChangedEvent } from "./events";
 import type { JSONNode, AttributesObject, BlockyNode } from "./element";
 import type { State } from "./state";
-import { BlockyElement } from "./tree";
+import { BlockyElement, BlockyTextModel } from "./tree";
 import { BlockElement } from "..";
 
 interface NodeLocation {
@@ -9,31 +9,50 @@ interface NodeLocation {
   path: number[];
 }
 
-export interface InsertOperation {
-  type: "insert-operation";
+export interface InsertNodeOperation {
+  type: "op-insert-node";
   parentLoc?: NodeLocation;
   index: number;
 }
 
-export interface DeleteOperation {
-  type: "delete-operation";
+export interface DeleteNodeOperation {
+  type: "op-delete-node";
   parentLoc: NodeLocation;
   index: number;
   snapshot: JSONNode;
 }
 
-export interface UpdateAttributeOperation {
-  type: "update-attribute-operation";
-  id?: string;
-  path: number[];
+export interface UpdateNodeOperation {
+  type: "op-update-attributes";
+  location: NodeLocation;
   newAttributes: AttributesObject;
   oldAttributes: AttributesObject;
 }
 
+export interface TextInsertOperation {
+  type: "op-text-insert";
+  location: NodeLocation;
+  text: string;
+  attributes?: AttributesObject;
+}
+
+export interface TextFormatOperation {
+  type: "op-text-format";
+  location: NodeLocation;
+}
+
+export interface TextDeleteOperation {
+  type: "op-text-delete";
+  location: NodeLocation;
+}
+
 export type Operation =
-  | InsertOperation
-  | UpdateAttributeOperation
-  | DeleteOperation;
+  | InsertNodeOperation
+  | DeleteNodeOperation
+  | UpdateNodeOperation
+  | TextInsertOperation
+  | TextFormatOperation
+  | TextDeleteOperation;
 
 /**
  * A stack item is used to store
@@ -140,6 +159,11 @@ function findNodeLocation(root: BlockyElement, node: BlockyNode): NodeLocation {
 }
 
 export class UndoManager {
+  /**
+   * Indicates whether the [UndoManager] is working
+   */
+  recording = true;
+
   readonly undoStack: FixedSizeStack;
   readonly redoStack: FixedSizeStack;
 
@@ -155,41 +179,77 @@ export class UndoManager {
   }
 
   #bindBlockyNode(element: BlockyElement) {
-    element.changed.on((evt: TreeEvent) => {
+    element.changed.on((evt: ElementChangedEvent) => {
+      if (!this.recording) {
+        return;
+      }
+
       const stackItem = this.getAUndoItem();
 
       if (evt.type === "element-insert-child") {
         const { child, parent, index } = evt;
         const parentLoc = findNodeLocation(this.state.root, parent);
         stackItem.push({
-          type: "insert-operation",
+          type: "op-insert-node",
           parentLoc,
           index,
         });
         if (child instanceof BlockyElement) {
           this.#bindBlockyNode(child);
+        } else if (child instanceof BlockyTextModel) {
+          this.#bindBlockyTextModel(child);
         }
       } else if (evt.type === "element-set-attrib") {
-        const { id, path } = findNodeLocation(this.state.root, evt.node);
+        const location = findNodeLocation(this.state.root, element);
         stackItem.push({
-          type: "update-attribute-operation",
+          type: "op-update-attributes",
+          location,
           newAttributes: {
             [evt.key]: evt.value,
           },
           oldAttributes: {
             [evt.key]: evt.oldValue,
           },
-          id,
-          path,
         });
       } else if (evt.type === "element-remove-child") {
         const parentLoc = findNodeLocation(this.state.root, evt.parent);
         const snapshot = evt.child.toJSON();
         stackItem.push({
-          type: "delete-operation",
+          type: "op-delete-node",
           parentLoc,
           index: evt.index,
           snapshot,
+        });
+      }
+    });
+  }
+
+  #bindBlockyTextModel(blockyText: BlockyTextModel) {
+    blockyText.changed.on((evt: TextChangedEvent) => {
+      if (!this.recording) {
+        return;
+      }
+
+      const stackItem = this.getAUndoItem();
+
+      if (evt.type === "text-insert") {
+        const location = findNodeLocation(this.state.root, blockyText);
+        stackItem.push({
+          type: "op-text-insert",
+          location,
+          text: evt.text,
+        });
+      } else if (evt.type === "text-format") {
+        const location = findNodeLocation(this.state.root, blockyText);
+        stackItem.push({
+          type: "op-text-format",
+          location,
+        });
+      } else if (evt.type === "text-delete") {
+        const location = findNodeLocation(this.state.root, blockyText);
+        stackItem.push({
+          type: "op-text-delete",
+          location,
         });
       }
     });
@@ -203,6 +263,13 @@ export class UndoManager {
     const newItem = new StackItem();
     this.undoStack.push(newItem);
     return newItem;
+  }
+
+  seal() {
+    const peek = this.undoStack.peek();
+    if (peek) {
+      peek.seal();
+    }
   }
 
   undo() {
