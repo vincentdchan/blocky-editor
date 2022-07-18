@@ -2,7 +2,6 @@ import { isWhiteSpace } from "blocky-common/es/text";
 import {
   BlockyTextModel,
   TextType,
-  type TextChangedEvent,
   type Editor,
   type Block,
   type IPlugin,
@@ -18,42 +17,43 @@ function makeHeadingsPlugin(): IPlugin {
       return;
     }
 
-    const textModel = blockElement.firstChild as BlockyTextModel;
+    // add hook of text input
+    // const textModel = blockElement.firstChild as BlockyTextModel;
 
-    textModel.changed.on((e: TextChangedEvent) => {
-      if (e.type !== "text-insert") {
-        return;
-      }
-      let changed = false;
-      const { index, text } = e;
-      if (isWhiteSpace(text)) {
-        const content = textModel.toString();
-        const before = content.slice(0, index);
-        if (before === "#") {
-          textModel.delete(0, 2);
-          changed = true;
-          setTextTypeForTextBlock(blockElement, TextType.Heading1);
-        } else if (before === "##") {
-          textModel.delete(0, 3);
-          changed = true;
-          setTextTypeForTextBlock(blockElement, TextType.Heading2);
-        } else if (before === "###") {
-          textModel.delete(0, 4);
-          changed = true;
-          setTextTypeForTextBlock(blockElement, TextType.Heading3);
-        }
-      }
+    //   textModel.changed.on((e: TextChangedEvent) => {
+    //     if (e.type !== "text-insert") {
+    //       return;
+    //     }
+    //     let changed = false;
+    //     const { index, text } = e;
+    //     if (isWhiteSpace(text)) {
+    //       const content = textModel.toString();
+    //       const before = content.slice(0, index);
+    //       if (before === "#") {
+    //         textModel.delete(0, 2);
+    //         changed = true;
+    //         setTextTypeForTextBlock(blockElement, TextType.Heading1);
+    //       } else if (before === "##") {
+    //         textModel.delete(0, 3);
+    //         changed = true;
+    //         setTextTypeForTextBlock(blockElement, TextType.Heading2);
+    //       } else if (before === "###") {
+    //         textModel.delete(0, 4);
+    //         changed = true;
+    //         setTextTypeForTextBlock(blockElement, TextType.Heading3);
+    //       }
+    //     }
 
-      if (changed) {
-        editor.render(() => {
-          editor.state.cursorState = {
-            type: "collapsed",
-            targetId: block.props.id,
-            offset: 0,
-          };
-        });
-      }
-    });
+    //     if (changed) {
+    //       editor.render(() => {
+    //         editor.state.cursorState = {
+    //           type: "collapsed",
+    //           targetId: block.props.id,
+    //           offset: 0,
+    //         };
+    //       });
+    //     }
+    //   });
   };
   return {
     name: "headings",

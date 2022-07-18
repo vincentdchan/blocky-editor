@@ -1,29 +1,4 @@
-import type { AttributesObject, BlockyNode } from "./element";
-
-export interface TextInsertEvent {
-  type: "text-insert";
-  index: number;
-  text: string;
-  attributes?: AttributesObject;
-}
-
-export interface TextDeleteEvent {
-  type: "text-delete";
-  index: number;
-  length: number;
-}
-
-export interface TextFormatEvent {
-  type: "text-format";
-  index: number;
-  length: number;
-  attributes?: AttributesObject;
-}
-
-export type TextChangedEvent =
-  | TextInsertEvent
-  | TextDeleteEvent
-  | TextFormatEvent;
+import type { BlockyNode } from "./element";
 
 export interface ElementSetAttributeEvent {
   type: "element-set-attrib";
@@ -50,5 +25,3 @@ export type ElementChangedEvent =
   | ElementSetAttributeEvent
   | ElementInsertChildEvent
   | ElementRemoveChildEvent;
-
-export type TreeEvent = TextChangedEvent | ElementChangedEvent;

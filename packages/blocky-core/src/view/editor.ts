@@ -10,6 +10,7 @@ import {
 } from "blocky-common/es/disposable";
 import { type Position } from "blocky-common/es/position";
 import { debounce } from "lodash-es";
+import Delta from "quill-delta";
 import { DocRenderer } from "@pkg/view/renderer";
 import {
   State as DocumentState,
@@ -780,7 +781,7 @@ export class Editor {
 
       const cursorOffset = cursorState.offset;
 
-      const slices = textModel.slice(cursorOffset);
+      const slices = textModel.delta.slice(cursorOffset);
 
       const newTextElement = this.state.createTextElement();
       const newTextModel = newTextElement.firstChild! as BlockyTextModel;
@@ -790,15 +791,15 @@ export class Editor {
         setTextTypeForTextBlock(newTextElement, textType);
       }
 
-      let ptr = 0;
-      for (const slice of slices) {
-        newTextModel.insert(ptr, slice.content, slice.attributes);
-        ptr += slice.content.length;
-      }
-
-      textModel.delete(cursorOffset, textModel.length - cursorOffset);
-
       this.update(() => {
+        newTextModel.concat(slices);
+
+        textModel.compose(
+          new Delta()
+            .retain(cursorOffset)
+            .delete(textModel.length - cursorOffset)
+        );
+
         const parentElement = blockElement.parent! as BlockyElement;
         parentElement.insertAfter(newTextElement, blockElement);
 
@@ -932,15 +933,7 @@ export class Editor {
     const originalLength = prevTextModel.length;
 
     this.update(() => {
-      let length = prevTextModel.length;
-
-      let ptr = thisTextModel.textBegin;
-
-      while (ptr) {
-        prevTextModel.insert(length, ptr.content, ptr.attributes);
-        length += ptr.content.length;
-        ptr = ptr.nextSibling;
-      }
+      prevTextModel.concat(thisTextModel.delta);
 
       (node.parent as BlockyElement).removeChild(node);
 
@@ -1220,7 +1213,7 @@ export class Editor {
           if (!prevTextModel || !firstTextModel) {
             continue;
           }
-          prevTextModel.append(firstTextModel);
+          prevTextModel.concat(firstTextModel.delta);
           // first item, try to merget ext
           continue;
         }
@@ -1282,7 +1275,9 @@ export class Editor {
 
     const afterOffset = cursorState.offset + text.length;
     const textModel = textElement.firstChild! as BlockyTextModel;
-    textModel.insert(cursorState.offset, text, attributes);
+    textModel.compose(
+      new Delta().retain(cursorState.offset).insert(text, attributes)
+    );
     return {
       type: "collapsed",
       targetId: cursorState.targetId,

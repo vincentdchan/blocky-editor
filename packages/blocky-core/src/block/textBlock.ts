@@ -1,4 +1,5 @@
-import { isString } from "lodash-es";
+import { isNumber, isString } from "lodash-es";
+import Delta, { Op } from "quill-delta";
 import { elem, removeNode } from "blocky-common/es/dom";
 import {
   type IBlockDefinition,
@@ -16,7 +17,6 @@ import {
   BlockyTextModel,
   BlockyElement,
   type AttributesObject,
-  type TextNode,
 } from "@pkg/model";
 import { areEqualShallow } from "blocky-common/es/object";
 import fastDiff from "fast-diff";
@@ -46,17 +46,19 @@ interface FormattedTextSlice {
 function textModelToFormats(textModel: BlockyTextModel): FormattedTextSlice[] {
   const formats: FormattedTextSlice[] = [];
 
-  let ptr = textModel.textBegin;
   let index = 0;
-  while (ptr) {
-    formats.push({
-      index,
-      length: ptr.content.length,
-      attributes: ptr.attributes,
-    });
-    index += ptr.content.length;
-    ptr = ptr.nextSibling;
-  }
+  textModel.delta.forEach((op) => {
+    if (isString(op.insert)) {
+      formats.push({
+        index,
+        length: op.insert.length,
+        attributes: op.attributes,
+      });
+      index += op.insert.length;
+    } else if (isNumber(op.retain)) {
+      index += op.retain;
+    }
+  });
 
   return formats;
 }
@@ -314,60 +316,58 @@ class TextBlock extends Block {
 
     const diffs = fastDiff(oldContent, textContent, offset);
 
-    let index = 0;
+    const delta = new Delta();
     for (const [t, content] of diffs) {
       if (t === fastDiff.EQUAL) {
-        index += content.length;
+        delta.retain(content.length);
       } else if (t === fastDiff.INSERT) {
-        textModel.insert(index, content);
-        index += content.length;
+        delta.insert(content);
       } else if (t === fastDiff.DELETE) {
-        textModel.delete(index, content.length);
-        // index -= content.length;
+        delta.delete(content.length);
       }
     }
-
-    this.diffAndApplyFormats(formats, textModel);
+    textModel.compose(delta);
+    // this.diffAndApplyFormats(formats, textModel);
   }
 
-  private diffAndApplyFormats(
-    newFormats: FormattedTextSlice[],
-    textModel: BlockyTextModel
-  ) {
-    const oldFormats: FormattedTextSlice[] = textModelToFormats(textModel);
+  // private diffAndApplyFormats(
+  //   newFormats: FormattedTextSlice[],
+  //   textModel: BlockyTextModel
+  // ) {
+  //   const oldFormats: FormattedTextSlice[] = textModelToFormats(textModel);
 
-    const slices: (FormattedTextSlice | undefined)[] = Array(textModel.length);
+  //   const slices: (FormattedTextSlice | undefined)[] = Array(textModel.length);
 
-    for (const format of newFormats) {
-      slices[format.index] = format;
-    }
+  //   for (const format of newFormats) {
+  //     slices[format.index] = format;
+  //   }
 
-    for (const oldFormat of oldFormats) {
-      const f = slices[oldFormat.index];
-      if (!f) {
-        // format doesn't anymore, erase it.
-        textModel.format(oldFormat.index, oldFormat.length, undefined);
-        continue;
-      }
+  //   for (const oldFormat of oldFormats) {
+  //     const f = slices[oldFormat.index];
+  //     if (!f) {
+  //       // format doesn't anymore, erase it.
+  //       textModel.format(oldFormat.index, oldFormat.length, undefined);
+  //       continue;
+  //     }
 
-      if (!areEqualShallow(f.attributes, oldFormat.attributes)) {
-        if (oldFormat.length !== f.length) {
-          // length are different, erase it firstly
-          textModel.format(oldFormat.index, oldFormat.length, undefined);
-        }
-        textModel.format(f.index, f.length, f.attributes);
-      }
+  //     if (!areEqualShallow(f.attributes, oldFormat.attributes)) {
+  //       if (oldFormat.length !== f.length) {
+  //         // length are different, erase it firstly
+  //         textModel.format(oldFormat.index, oldFormat.length, undefined);
+  //       }
+  //       textModel.format(f.index, f.length, f.attributes);
+  //     }
 
-      slices[oldFormat.index] = undefined;
-    }
+  //     slices[oldFormat.index] = undefined;
+  //   }
 
-    for (let i = 0, len = slices.length; i < len; i++) {
-      const f = slices[i];
-      if (f) {
-        textModel.format(f.index, f.length, f.attributes);
-      }
-    }
-  }
+  //   for (let i = 0, len = slices.length; i < len; i++) {
+  //     const f = slices[i];
+  //     if (f) {
+  //       textModel.format(f.index, f.length, f.attributes);
+  //     }
+  //   }
+  // }
 
   override render(container: HTMLElement) {
     this.#container = container;
@@ -394,11 +394,11 @@ class TextBlock extends Block {
     return e;
   }
 
-  private createDomByNode(node: TextNode, editor: Editor): Node {
-    if (node.attributes) {
+  private createDomByOp(op: Op, editor: Editor): Node {
+    if (op.attributes) {
       let d: HTMLElement;
 
-      const { href, ...restAttr } = node.attributes;
+      const { href, ...restAttr } = op.attributes;
 
       if (isString(href)) {
         d = this.createAnchorNode(href);
@@ -406,7 +406,7 @@ class TextBlock extends Block {
         d = elem("span");
       }
 
-      d.textContent = node.content;
+      d.textContent = op.insert! as string;
 
       const spanRegistry = editor.registry.span;
 
@@ -422,7 +422,7 @@ class TextBlock extends Block {
 
       return d;
     } else {
-      return document.createTextNode(node.content);
+      return document.createTextNode(op.insert! as string);
     }
   }
 
@@ -503,9 +503,9 @@ class TextBlock extends Block {
     return this.#contentContainer;
   }
 
-  private isNodeMatch(node: TextNode, dom: Node): boolean {
-    if (node.attributes) {
-      if (isString(node.attributes.href)) {
+  private isNodeMatch(op: Op, dom: Node): boolean {
+    if (op.attributes) {
+      if (isString(op.attributes.href)) {
         return (
           dom instanceof HTMLElement && isString(dom.getAttribute(DataRefKey))
         );
@@ -515,10 +515,10 @@ class TextBlock extends Block {
         return false;
       }
 
-      return this.isAttributesMatch(dom, node.attributes);
+      return this.isAttributesMatch(dom, op.attributes);
     }
 
-    return node instanceof Text;
+    return dom instanceof Text;
   }
 
   // TODO: optimize this method
@@ -547,21 +547,23 @@ class TextBlock extends Block {
       this.#contentContainer!
     );
 
-    let nodePtr = textModel.textBegin;
     let domPtr: Node | null = contentContainer.firstChild;
     let prevDom: Node | null = null;
 
-    while (nodePtr) {
+    for (let i = 0, len = textModel.delta.ops.length; i < len; i++) {
+      const op = textModel.delta.ops[i];
+      if (!isString(op.insert)) {
+        continue;
+      }
       if (!domPtr) {
-        domPtr = this.createDomByNode(nodePtr, this.editor);
+        domPtr = this.createDomByOp(op, this.editor);
         contentContainer.insertBefore(domPtr, prevDom?.nextSibling ?? null);
       } else {
         // is old
-        if (!this.isNodeMatch(nodePtr, domPtr)) {
+        if (!this.isNodeMatch(op, domPtr)) {
           const oldDom = domPtr;
-          const newNode = this.createDomByNode(nodePtr, this.editor);
+          const newNode = this.createDomByOp(op, this.editor);
 
-          nodePtr = nodePtr.nextSibling;
           prevDom = domPtr;
           domPtr = domPtr.nextSibling;
 
@@ -569,13 +571,12 @@ class TextBlock extends Block {
           continue;
         } else {
           clearNodeAttributes(domPtr);
-          if (domPtr.textContent !== nodePtr.content) {
-            domPtr.textContent = nodePtr.content;
+          if (domPtr.textContent !== op.insert) {
+            domPtr.textContent = op.insert;
           }
         }
       }
 
-      nodePtr = nodePtr.nextSibling;
       prevDom = domPtr;
       domPtr = domPtr.nextSibling;
     }
@@ -717,7 +718,7 @@ class TextBlockDefinition implements IBlockDefinition {
       textContentContainer = node;
     }
 
-    let index = 0;
+    const delta = new Delta();
     if (textContentContainer) {
       let childPtr = textContentContainer.firstChild;
 
@@ -728,8 +729,7 @@ class TextBlockDefinition implements IBlockDefinition {
       while (childPtr) {
         if (childPtr instanceof Text) {
           const content = childPtr.textContent ?? "";
-          textModel.insert(index, content);
-          index += content.length;
+          delta.insert(content);
         } else if (childPtr instanceof HTMLElement) {
           if (converter.isContainerElement(childPtr)) {
             const childElements = converter.parseContainerElement(childPtr);
@@ -742,16 +742,16 @@ class TextBlockDefinition implements IBlockDefinition {
           } else {
             const content = childPtr.textContent ?? "";
             const attributes = editor.getAttributesBySpan(childPtr);
-            textModel.insert(index, content, attributes);
-            index += content.length;
+            delta.insert(content, attributes);
           }
         }
 
         childPtr = childPtr.nextSibling;
       }
     } else {
-      textModel.insert(0, node.textContent ?? "");
+      delta.insert(node.textContent ?? "");
     }
+    textModel.compose(delta);
 
     const { tagName } = node;
     if (tagName === "H1") {

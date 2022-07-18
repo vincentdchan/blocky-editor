@@ -1,4 +1,4 @@
-import type { ElementChangedEvent, TextChangedEvent } from "./events";
+import type { ElementChangedEvent } from "./events";
 import type { JSONNode, AttributesObject, BlockyNode } from "./element";
 import type { State } from "./state";
 import { BlockyElement, BlockyTextModel } from "./tree";
@@ -224,36 +224,7 @@ export class UndoManager {
     });
   }
 
-  #bindBlockyTextModel(blockyText: BlockyTextModel) {
-    blockyText.changed.on((evt: TextChangedEvent) => {
-      if (!this.recording) {
-        return;
-      }
-
-      const stackItem = this.getAUndoItem();
-
-      if (evt.type === "text-insert") {
-        const location = findNodeLocation(this.state.root, blockyText);
-        stackItem.push({
-          type: "op-text-insert",
-          location,
-          text: evt.text,
-        });
-      } else if (evt.type === "text-format") {
-        const location = findNodeLocation(this.state.root, blockyText);
-        stackItem.push({
-          type: "op-text-format",
-          location,
-        });
-      } else if (evt.type === "text-delete") {
-        const location = findNodeLocation(this.state.root, blockyText);
-        stackItem.push({
-          type: "op-text-delete",
-          location,
-        });
-      }
-    });
-  }
+  #bindBlockyTextModel(blockyText: BlockyTextModel) {}
 
   getAUndoItem(): StackItem {
     const peek = this.undoStack.peek();
