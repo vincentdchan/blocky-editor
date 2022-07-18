@@ -1,4 +1,5 @@
-import { isObject, isUndefined, isString, isNumber } from "lodash-es";
+import { isObject, isUndefined } from "lodash-es";
+import Delta from "quill-delta-es";
 import { isUpperCase } from "blocky-common/es/character";
 import { makeObservable } from "blocky-common/es/observable";
 import { removeNode } from "blocky-common/es/dom";
@@ -21,20 +22,13 @@ function jsonNodeToBlock(state: State, node: JSONNode): BlockyNode {
     throw new TypeError("id is expected for node: " + nodeName);
   }
   if (nodeName === "#text") {
-    const textModel = new BlockyTextModel();
+    const delta = new Delta();
 
-    let index = 0;
-    for (const delta of node.textContent!) {
-      const d = delta;
-      if (isString(d.insert)) {
-        textModel.insert(index, d.insert, d.attributes);
-        index += d.insert.length;
-      } else if (isNumber(d.retain)) {
-        index += d.retain;
-      }
+    for (const d of node.textContent!) {
+      delta.push(d);
     }
 
-    return textModel;
+    return new BlockyTextModel(delta);
   }
 
   const blockElement = new BlockElement(nodeName, id!);
@@ -50,6 +44,11 @@ function jsonNodeToBlock(state: State, node: JSONNode): BlockyNode {
 }
 
 export const DocNodeName = "doc";
+
+export interface NodeLocation {
+  id?: string;
+  path: number[];
+}
 
 /**
  * This class is used to store all the states
@@ -162,6 +161,48 @@ export class State {
       throw new Error(`duplicated id: ${element.id}`);
     }
     this.idMap.set(element.id, element);
+  }
+
+  findNodeByLocation(location: NodeLocation): BlockyNode {
+    let baseNode: BlockyElement;
+    if (isUndefined(location.id)) {
+      baseNode = this.root;
+    } else {
+      const block = this.idMap.get(location.id);
+      if (!block) {
+        throw new Error(`is not exist: ${location.id}`);
+      }
+      baseNode = block;
+    }
+
+    return this.#findPathInNode(location.id, baseNode, location.path);
+  }
+
+  #findPathInNode(
+    id: string | undefined,
+    baseNode: BlockyElement,
+    path: number[]
+  ): BlockyNode {
+    let ptr: BlockyNode = baseNode;
+    for (let i = 0, len = path.length; i < len; i++) {
+      const index = path[i];
+      if (!(ptr instanceof BlockyElement)) {
+        throw new Error(
+          `Child is not a BlockyElement at: ${id}, [${path
+            .slice(0, i + 1)
+            .join(", ")}]`
+        );
+      }
+      const child = ptr.childAt(index);
+      if (!child) {
+        throw new Error(
+          `Child not found at: ${id}, [${path.slice(0, i + 1).join(", ")}]`
+        );
+      }
+      ptr = child;
+    }
+
+    return ptr;
   }
 
   toJSON() {

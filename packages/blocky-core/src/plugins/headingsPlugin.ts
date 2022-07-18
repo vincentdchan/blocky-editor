@@ -1,64 +1,55 @@
 import { isWhiteSpace } from "blocky-common/es/text";
 import {
-  BlockyTextModel,
   TextType,
-  type TextChangedEvent,
   type Editor,
-  type Block,
   type IPlugin,
   setTextTypeForTextBlock,
-  TextBlockName,
 } from "@pkg/index";
+import fastDiff from "fast-diff";
+import Delta from "quill-delta-es";
 
 function makeHeadingsPlugin(): IPlugin {
-  const handleEveryBlock = (editor: Editor) => (block: Block) => {
-    const blockElement = block.props;
-
-    if (blockElement.nodeName !== TextBlockName) {
-      return;
-    }
-
-    const textModel = blockElement.firstChild as BlockyTextModel;
-
-    textModel.changed.on((e: TextChangedEvent) => {
-      if (e.type !== "text-insert") {
-        return;
-      }
-      let changed = false;
-      const { index, text } = e;
-      if (isWhiteSpace(text)) {
-        const content = textModel.toString();
-        const before = content.slice(0, index);
-        if (before === "#") {
-          textModel.delete(0, 2);
-          changed = true;
-          setTextTypeForTextBlock(blockElement, TextType.Heading1);
-        } else if (before === "##") {
-          textModel.delete(0, 3);
-          changed = true;
-          setTextTypeForTextBlock(blockElement, TextType.Heading2);
-        } else if (before === "###") {
-          textModel.delete(0, 4);
-          changed = true;
-          setTextTypeForTextBlock(blockElement, TextType.Heading3);
-        }
-      }
-
-      if (changed) {
-        editor.render(() => {
-          editor.state.cursorState = {
-            type: "collapsed",
-            targetId: block.props.id,
-            offset: 0,
-          };
-        });
-      }
-    });
-  };
   return {
     name: "headings",
     onInitialized(editor: Editor) {
-      editor.onEveryBlock.on(handleEveryBlock(editor));
+      editor.textInput.on((evt) => {
+        const { textModel, beforeDelta, blockElement } = evt;
+        const delta = new Delta();
+
+        let index = 0;
+        for (const [t, content] of evt.diff) {
+          if (t === fastDiff.INSERT) {
+            const before = beforeDelta.slice(0, index).reduce((prev, item) => {
+              if (typeof item.insert === "string") {
+                return prev + item.insert;
+              }
+              return prev;
+            }, "");
+            if (isWhiteSpace(content)) {
+              if (before === "#") {
+                delta.delete(2);
+                setTextTypeForTextBlock(blockElement, TextType.Heading1);
+              } else if (before === "##") {
+                delta.delete(3);
+                setTextTypeForTextBlock(blockElement, TextType.Heading2);
+              } else if (before === "###") {
+                delta.delete(4);
+                setTextTypeForTextBlock(blockElement, TextType.Heading3);
+              }
+              break;
+            }
+            index += content.length;
+          } else if (t == fastDiff.EQUAL) {
+            index += content.length;
+          }
+        }
+
+        if (delta.ops.length > 0) {
+          editor.update(() => {
+            textModel.compose(delta);
+          });
+        }
+      });
     },
   };
 }

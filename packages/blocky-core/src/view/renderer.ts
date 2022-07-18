@@ -163,7 +163,10 @@ export class DocRenderer {
         }
       }
 
-      const block = this.editor.state.blocks.get(id)!;
+      const block = this.editor.state.blocks.get(id);
+      if (!block) {
+        throw new Error(`block not found for id: ${id}`);
+      }
       block.render?.(domPtr as HTMLElement);
 
       nodePtr = nodePtr.nextSibling;
@@ -211,7 +214,10 @@ export class DocRenderer {
       editor.placeBannerAt(blockContainer, blockNode);
     });
 
-    const block = editor.state.blocks.get(blockNode.id)!;
+    const block = editor.state.blocks.get(blockNode.id);
+    if (!block) {
+      throw new Error(`block not found: ${blockNode.id}`);
+    }
     block.blockDidMount?.({
       element: blockContainer,
       clsPrefix,

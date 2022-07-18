@@ -1,6 +1,7 @@
 import { Slot } from "blocky-common/es/events";
 import { observe } from "blocky-common/es/observable";
 import { type Padding } from "blocky-common/es/dom";
+import Delta from "quill-delta-es";
 import {
   AttributesObject,
   State,
@@ -56,10 +57,7 @@ export interface IInsertOptions {
 export type NextTickFn = () => void;
 
 export class CursorChangedEvent {
-  constructor(
-    readonly id: string,
-    readonly state: CursorState | undefined
-  ) {}
+  constructor(readonly id: string, readonly state: CursorState | undefined) {}
 }
 
 export class EditorController {
@@ -126,7 +124,7 @@ export class EditorController {
     }
 
     const { options } = collaborativeCursorManager;
-    
+
     const name = options.idToName(id);
     const color = options.idToColor(id);
 
@@ -221,7 +219,7 @@ export class EditorController {
         return;
       }
       const textModel = blockElement.firstChild as BlockyTextModel;
-      textModel.format(index, length, attribs);
+      textModel.compose(new Delta().retain(index).retain(length, attribs));
 
       return () => {
         editor.state.cursorState = {
@@ -235,10 +233,7 @@ export class EditorController {
     });
   }
 
-  formatTextOnCursor(
-    cursorState: CursorState,
-    attribs?: AttributesObject
-  ) {
+  formatTextOnCursor(cursorState: CursorState, attribs?: AttributesObject) {
     const editor = this.editor;
     if (!editor) {
       return;

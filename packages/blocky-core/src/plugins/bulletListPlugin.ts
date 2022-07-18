@@ -1,13 +1,14 @@
 import { isWhiteSpace } from "blocky-common/es/text";
+import Delta from "quill-delta-es";
+import fastDiff from "fast-diff";
 import {
   BlockyTextModel,
   TextType,
-  type TextChangedEvent,
   setTextTypeForTextBlock,
   getTextTypeForTextBlock,
-  Block,
   BlockElement,
   TextBlockName,
+  type TextInputEvent,
   type IPlugin,
   type Editor,
 } from "@pkg/index";
@@ -16,36 +17,48 @@ function makeBulletListPlugin(): IPlugin {
   const turnTextBlockIntoBulletList = (
     editor: Editor,
     blockId: string,
+    textModel: BlockyTextModel,
     textElement: BlockElement
   ) => {
-    const textModel = textElement.firstChild! as BlockyTextModel;
-    textModel.delete(0, 2);
-    setTextTypeForTextBlock(textElement, TextType.Bulleted);
-    editor.render(() => {
-      editor.state.cursorState = {
-        type: "collapsed",
-        targetId: blockId,
-        offset: 0,
+    editor.update(() => {
+      setTextTypeForTextBlock(textElement, TextType.Bulleted);
+      textModel.compose(new Delta().delete(2));
+      return () => {
+        editor.state.cursorState = {
+          type: "collapsed",
+          targetId: blockId,
+          offset: 0,
+        };
       };
     });
   };
-  const handleEveryBlock = (editor: Editor) => (block: Block) => {
-    const textElement = block.props;
-    if (textElement.nodeName !== TextBlockName) {
-      return;
-    }
-    const textModel = textElement.firstChild! as BlockyTextModel;
-    textModel.changed.on((e: TextChangedEvent) => {
-      if (e.type !== "text-insert") {
-        return;
-      }
-      if (e.index === 1 && e.text.length === 1 && isWhiteSpace(e.text)) {
-        const content = textModel.toString();
-        if (content[0] === "-") {
-          turnTextBlockIntoBulletList(editor, block.props.id, textElement);
+  const handleTextInputEvent = (editor: Editor) => (evt: TextInputEvent) => {
+    const { beforeDelta, textModel } = evt;
+    let index = 0;
+    for (const [t, content] of evt.diff) {
+      if (t === fastDiff.INSERT) {
+        if (index === 1 && isWhiteSpace(content)) {
+          const before = beforeDelta.slice(0, index).reduce((prev, item) => {
+            if (typeof item.insert === "string") {
+              return prev + item.insert;
+            }
+            return prev;
+          }, "");
+          if (before === "-") {
+            turnTextBlockIntoBulletList(
+              editor,
+              evt.blockElement.id,
+              textModel,
+              evt.blockElement
+            );
+          }
+          break;
         }
+        index += content.length;
+      } else {
+        index += content.length;
       }
-    });
+    }
   };
   const handleEnter = (editor: Editor, e: KeyboardEvent) => {
     const { cursorState } = editor.state;
@@ -138,7 +151,7 @@ function makeBulletListPlugin(): IPlugin {
   return {
     name: "bullet-list",
     onInitialized(editor: Editor) {
-      editor.onEveryBlock.on(handleEveryBlock(editor));
+      editor.textInput.on(handleTextInputEvent(editor));
       editor.keyDown.on(handleKeydown(editor));
     },
   };

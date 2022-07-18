@@ -10,6 +10,8 @@ import {
 } from "blocky-common/es/disposable";
 import { type Position } from "blocky-common/es/position";
 import { debounce } from "lodash-es";
+import Delta from "quill-delta-es";
+import fastDiff from "fast-diff";
 import { DocRenderer } from "@pkg/view/renderer";
 import {
   State as DocumentState,
@@ -98,6 +100,15 @@ export enum UpdateFlag {
   NoLog = 0x02, // the update is commited by the program, do not log it
 }
 
+export class TextInputEvent {
+  constructor(
+    readonly beforeDelta: Delta,
+    readonly diff: fastDiff.Diff[],
+    readonly textModel: BlockyTextModel,
+    readonly blockElement: BlockElement
+  ) {}
+}
+
 /**
  * The internal view layer object of the editor.
  * It's not recommended to manipulate this class by the user.
@@ -125,6 +136,7 @@ export class Editor {
   readonly state: DocumentState;
   readonly registry: EditorRegistry;
   readonly keyDown = new Slot<KeyboardEvent>();
+  readonly textInput = new Slot<TextInputEvent>();
 
   readonly preservedTextType: Set<TextType> = new Set([TextType.Bulleted]);
 
@@ -581,6 +593,7 @@ export class Editor {
 
     block?.blockContentChanged?.({
       node: node as HTMLDivElement,
+      blockElement: blockNode,
       offset: currentOffset,
     });
   }
@@ -710,7 +723,12 @@ export class Editor {
       this.#handleDelete(e);
     } else if (isHotkey("mod+z", e)) {
       e.preventDefault();
-      this.state.undoManager.undo();
+      const item = this.state.undoManager.undo();
+      if (item) {
+        this.render(() => {
+          this.state.cursorState = item.curorState;
+        });
+      }
     } else if (isHotkey("mod+shift+z", e)) {
       e.preventDefault();
       this.state.undoManager.redo();
@@ -780,25 +798,25 @@ export class Editor {
 
       const cursorOffset = cursorState.offset;
 
-      const slices = textModel.slice(cursorOffset);
-
-      const newTextElement = this.state.createTextElement();
-      const newTextModel = newTextElement.firstChild! as BlockyTextModel;
-      const textType = getTextTypeForTextBlock(blockElement);
-      if (this.preservedTextType.has(textType)) {
-        // preserved data type
-        setTextTypeForTextBlock(newTextElement, textType);
-      }
-
-      let ptr = 0;
-      for (const slice of slices) {
-        newTextModel.insert(ptr, slice.content, slice.attributes);
-        ptr += slice.content.length;
-      }
-
-      textModel.delete(cursorOffset, textModel.length - cursorOffset);
+      const slices = textModel.delta.slice(cursorOffset);
 
       this.update(() => {
+        const newTextElement = this.state.createTextElement();
+        const newTextModel = newTextElement.firstChild! as BlockyTextModel;
+        const textType = getTextTypeForTextBlock(blockElement);
+        if (this.preservedTextType.has(textType)) {
+          // preserved data type
+          setTextTypeForTextBlock(newTextElement, textType);
+        }
+
+        newTextModel.concat(slices);
+
+        textModel.compose(
+          new Delta()
+            .retain(cursorOffset)
+            .delete(textModel.length - cursorOffset)
+        );
+
         const parentElement = blockElement.parent! as BlockyElement;
         parentElement.insertAfter(newTextElement, blockElement);
 
@@ -832,7 +850,7 @@ export class Editor {
     this.#isUpdating = true;
     try {
       if (flags & UpdateFlag.NoLog) {
-        this.state.undoManager.recording = false;
+        this.state.undoManager.pause();
       }
       let done: AfterFn | void;
       runInAction(this.state, () => {
@@ -841,7 +859,7 @@ export class Editor {
       this.render(() => {
         done?.();
         if (flags & UpdateFlag.NoLog) {
-          this.state.undoManager.recording = true;
+          this.state.undoManager.recover();
         }
         this.#debouncedSealUndo();
         if (flags & UpdateFlag.IgnoreSelection) {
@@ -932,15 +950,7 @@ export class Editor {
     const originalLength = prevTextModel.length;
 
     this.update(() => {
-      let length = prevTextModel.length;
-
-      let ptr = thisTextModel.textBegin;
-
-      while (ptr) {
-        prevTextModel.insert(length, ptr.content, ptr.attributes);
-        length += ptr.content.length;
-        ptr = ptr.nextSibling;
-      }
+      prevTextModel.concat(thisTextModel.delta);
 
       (node.parent as BlockyElement).removeChild(node);
 
@@ -1220,7 +1230,7 @@ export class Editor {
           if (!prevTextModel || !firstTextModel) {
             continue;
           }
-          prevTextModel.append(firstTextModel);
+          prevTextModel.concat(firstTextModel.delta);
           // first item, try to merget ext
           continue;
         }
@@ -1282,7 +1292,9 @@ export class Editor {
 
     const afterOffset = cursorState.offset + text.length;
     const textModel = textElement.firstChild! as BlockyTextModel;
-    textModel.insert(cursorState.offset, text, attributes);
+    textModel.compose(
+      new Delta().retain(cursorState.offset).insert(text, attributes)
+    );
     return {
       type: "collapsed",
       targetId: cursorState.targetId,

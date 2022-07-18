@@ -5,11 +5,11 @@ import {
   BlockyElement,
   type ElementChangedEvent,
   BlockyTextModel,
-  type TextChangedEvent,
   type DocumentState,
   type BlockyNode,
   BlockElement,
 } from "blocky-core";
+import Delta from "quill-delta-es";
 import { isUpperCase } from "blocky-common/es/character";
 
 export interface IYjsPluginOptions {
@@ -17,38 +17,13 @@ export interface IYjsPluginOptions {
   allowInit?: boolean;
 }
 
-function handleDeltaForText(textModel: BlockyTextModel, deltas: any[]) {
-  let ptr = 0;
-  for (const d of deltas) {
-    if (typeof d.retain !== "undefined") {
-      if (typeof d.attributes === "object") {
-        textModel.format(ptr, d.retain, d.attributes);
-      }
-      ptr += d.retain;
-    } else if (typeof d.insert === "string") {
-      textModel.insert(ptr, d.insert, d.attributes);
-      ptr += d.insert.length;
-    } else if (typeof d.delete === "number") {
-      textModel.delete(ptr, d.delete);
-    }
-  }
-}
-
 function createXmlTextByBlockyText(
   editor: Editor,
   textModel: BlockyTextModel
 ): Y.XmlText {
-  const result = new Y.XmlText(textModel.toString());
+  const result = new Y.XmlText();
 
-  let index = 0;
-  let ptr = textModel.textBegin;
-  while (ptr) {
-    if (ptr.attributes) {
-      result.format(index, ptr.content.length, ptr.attributes);
-    }
-    index += ptr.content.length;
-    ptr = ptr.nextSibling;
-  }
+  result.applyDelta(textModel.delta.ops);
 
   bindTextModel(editor, textModel, result);
 
@@ -76,29 +51,15 @@ function bindTextModel(
   yTextModel.observe((e: Y.YTextEvent) => {
     withSilent(state, () => {
       editor.update(() => {
-        handleDeltaForText(textModel, e.delta);
+        textModel.compose(new Delta(e.delta as any));
       });
     });
   });
 
-  textModel.changed.on((e: TextChangedEvent) => {
+  textModel.changed.on(({ oldDelta, newDelta }) => {
+    const diff = oldDelta.diff(newDelta);
     withSilent(state, () => {
-      switch (e.type) {
-        case "text-insert": {
-          yTextModel.insert(e.index, e.text, e.attributes);
-          break;
-        }
-
-        case "text-format": {
-          yTextModel.format(e.index, e.length, e.attributes!);
-          break;
-        }
-
-        case "text-delete": {
-          yTextModel.delete(e.index, e.length);
-          break;
-        }
-      }
+      yTextModel.applyDelta(diff.ops);
     });
   });
 }
@@ -107,19 +68,9 @@ function createBlockyTextModelByYText(
   editor: Editor,
   yText: Y.XmlText
 ): BlockyTextModel {
-  const result = new BlockyTextModel();
-
   const delta = yText.toDelta();
 
-  let index = 0;
-  for (const d of delta) {
-    if (typeof d.retain === "number") {
-      index += d.retain;
-    } else if (typeof d.insert === "string") {
-      result.insert(index, d.insert, d.attributes);
-      index += d.insert.length;
-    }
-  }
+  const result = new BlockyTextModel(new Delta(delta));
 
   bindTextModel(editor, result, yText);
 

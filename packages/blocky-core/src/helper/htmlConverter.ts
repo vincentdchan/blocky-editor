@@ -1,12 +1,12 @@
 import { isObject } from "lodash-es";
+import Delta from "quill-delta-es";
 import { BlockElement } from "@pkg/index";
 import { TextBlockName } from "@pkg/block/textBlock";
 import { BlockyTextModel } from "@pkg/model/tree";
 import type { IdGenerator } from "@pkg/helper/idHelper";
 
 function createTextElement(id: string, content: string): BlockElement {
-  const textModel = new BlockyTextModel();
-  textModel.insert(0, content);
+  const textModel = new BlockyTextModel(new Delta().insert(content));
   const result = new BlockElement(TextBlockName, id);
   result.appendChild(textModel);
   return result;
@@ -26,6 +26,10 @@ export interface HTMLConverterOptions {
   idGenerator: IdGenerator;
   leafHandler?: ElementHandler;
   divHandler?: ElementHandler;
+}
+
+function shouldBeGivenUp(contentString: string): boolean {
+  return /^\s*$/.test(contentString);
 }
 
 /**
@@ -59,21 +63,29 @@ export class HTMLConverter {
 
     let ptr = doc.firstChild;
     while (ptr) {
-      this.tryParseNode(ptr, result);
+      this.#tryParseNode(ptr, result);
       ptr = ptr.nextSibling;
     }
 
     return result;
   }
 
-  private tryParseNode(node: Node, result: BlockElement[]) {
-    if (node instanceof Text) {
-      const { textContent } = node;
-      if (textContent) {
-        result.push(
-          createTextElement(this.#idGenerator.mkBlockId(), textContent)
-        );
+  #pushTextIfPossible(node: Node, result: BlockElement[]) {
+    const { textContent } = node;
+    if (textContent) {
+      const lines = textContent.split("\n");
+      for (const line of lines) {
+        if (shouldBeGivenUp(line)) {
+          continue;
+        }
+        result.push(createTextElement(this.#idGenerator.mkBlockId(), line));
       }
+    }
+  }
+
+  #tryParseNode(node: Node, result: BlockElement[]) {
+    if (node instanceof Text) {
+      this.#pushTextIfPossible(node, result);
     } else if (isLeafElement(node)) {
       const blockElement = this.#leafHandler?.(node);
       if (isObject(blockElement)) {
@@ -83,12 +95,7 @@ export class HTMLConverter {
       if (blockElement === true) {
         return;
       }
-      const { textContent } = node;
-      if (textContent) {
-        result.push(
-          createTextElement(this.#idGenerator.mkBlockId(), textContent)
-        );
-      }
+      this.#pushTextIfPossible(node, result);
     } else if (this.isContainerElement(node)) {
       if (node instanceof HTMLDivElement) {
         const blockElement = this.#divHandler?.(node);
@@ -108,7 +115,7 @@ export class HTMLConverter {
     const result: BlockElement[] = [];
     let ptr = container.firstChild;
     while (ptr) {
-      this.tryParseNode(ptr, result);
+      this.#tryParseNode(ptr, result);
       ptr = ptr.nextSibling;
     }
     return result;
