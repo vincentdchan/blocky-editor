@@ -1,4 +1,7 @@
-import { AttributesObject, JSONNode } from "./element";
+import type { AttributesObject, JSONNode } from "./element";
+import type { TreeEvent } from "./events";
+import type { State } from "./state";
+import type { BlockyElement } from "./tree";
 
 export interface InsertOperation {
   type: "insert-operation";
@@ -110,9 +113,19 @@ export class UndoManager {
   readonly undoStack: FixedSizeStack;
   readonly redoStack: FixedSizeStack;
 
-  constructor(stackSize: number = 20) {
+  constructor(readonly state: State, stackSize: number = 20) {
     this.undoStack = new FixedSizeStack(stackSize);
     this.redoStack = new FixedSizeStack(stackSize);
+
+    this.#listenOnState();
+  }
+
+  #listenOnState() {
+    this.#bindBlockyNode(this.state.root);
+  }
+
+  #bindBlockyNode(element: BlockyElement) {
+    element.changed.on((evt: TreeEvent) => {});
   }
 
   getAUndoItem(): StackItem {

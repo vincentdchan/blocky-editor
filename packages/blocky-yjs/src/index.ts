@@ -81,7 +81,7 @@ function bindTextModel(
     });
   });
 
-  textModel.onChanged.on((e: TextChangedEvent) => {
+  textModel.changed.on((e: TextChangedEvent) => {
     withSilent(state, () => {
       switch (e.type) {
         case "text-insert": {
@@ -184,7 +184,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         blockyElement: BlockyElement,
         yElement: Y.XmlElement
       ) {
-        blockyElement.onChanged.on((e: ElementChangedEvent) => {
+        blockyElement.changed.on((e: ElementChangedEvent) => {
           withSilent(state, () => {
             switch (e.type) {
               case "element-insert-child": {
@@ -390,7 +390,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         });
       });
 
-      state.root.onChanged.on((e) => {
+      state.root.changed.on((e) => {
         withSilent(state, () => {
           if (e.type === "element-insert-child") {
             const node = makeYElementByBlockyElement(e.child as any);
