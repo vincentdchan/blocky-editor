@@ -704,10 +704,10 @@ export class Editor {
       this.#handleDelete(e);
     } else if (isHotkey("mod+z", e)) {
       e.preventDefault();
-      this.state.undoManager.redo();
+      this.state.undoManager.undo();
     } else if (isHotkey("mod+shift+z", e)) {
       e.preventDefault();
-      this.state.undoManager.undo();
+      this.state.undoManager.redo();
     }
   };
 
