@@ -9,6 +9,7 @@ import {
   flattenDisposable,
 } from "blocky-common/es/disposable";
 import { type Position } from "blocky-common/es/position";
+import { debounce } from "lodash-es";
 import { DocRenderer } from "@pkg/view/renderer";
 import {
   State as DocumentState,
@@ -90,6 +91,11 @@ function makeDefaultPadding(): Padding {
     bottom: 72,
     left: 56,
   };
+}
+
+export enum UpdateFlag {
+  IgnoreSelection = 0x01,
+  NoLog = 0x02, // the update is commited by the program, do not log it
 }
 
 /**
@@ -809,25 +815,36 @@ export class Editor {
     }
   }
 
+  #debouncedSealUndo = debounce(() => {
+    this.state.undoManager.seal();
+  }, 1000);
+
   /**
    * Update the state in fn, after
    * fn is called, the render function
    * will be called.
    */
-  update(fn: () => AfterFn | void, ignoreSelection = false) {
+  update(fn: () => AfterFn | void, flags: number = 0) {
     if (this.#isUpdating) {
       throw new Error("is in updating process");
     }
 
     this.#isUpdating = true;
     try {
+      if (flags & UpdateFlag.NoLog) {
+        this.state.undoManager.recording = false;
+      }
       let done: AfterFn | void;
       runInAction(this.state, () => {
         done = fn();
       });
       this.render(() => {
         done?.();
-        if (ignoreSelection) {
+        if (flags & UpdateFlag.NoLog) {
+          this.state.undoManager.recording = true;
+        }
+        this.#debouncedSealUndo();
+        if (flags & UpdateFlag.IgnoreSelection) {
           return;
         }
         this.#selectionChanged();
@@ -1168,16 +1185,16 @@ export class Editor {
    * Maybe use an external library is better for unit tests. But it will increase
    * the size of the bundles.
    */
-  pasteHTMLAtCursor(html: string) {
+  pasteHTMLAtCursor(html: string, updateFlags = 0) {
     try {
       const blocks = this.#htmlConverter.parseFromString(html);
-      this.#pasteElementsAtCursor(blocks);
+      this.#pasteElementsAtCursor(blocks, updateFlags);
     } catch (e) {
       console.error(e);
     }
   }
 
-  #pasteElementsAtCursor(elements: BlockElement[]) {
+  #pasteElementsAtCursor(elements: BlockElement[], updateFlags: number) {
     if (elements.length === 0) {
       return;
     }
@@ -1211,7 +1228,7 @@ export class Editor {
         parent.insertAfter(element, prev);
         prev = element;
       }
-    });
+    }, updateFlags);
   }
 
   /**
