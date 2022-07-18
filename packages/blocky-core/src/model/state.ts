@@ -1,4 +1,5 @@
 import { isObject, isUndefined, isString, isNumber } from "lodash-es";
+import Delta from "quill-delta";
 import { isUpperCase } from "blocky-common/es/character";
 import { makeObservable } from "blocky-common/es/observable";
 import { removeNode } from "blocky-common/es/dom";
@@ -21,20 +22,13 @@ function jsonNodeToBlock(state: State, node: JSONNode): BlockyNode {
     throw new TypeError("id is expected for node: " + nodeName);
   }
   if (nodeName === "#text") {
-    const textModel = new BlockyTextModel();
+    const delta = new Delta();
 
-    let index = 0;
-    for (const delta of node.textContent!) {
-      const d = delta;
-      if (isString(d.insert)) {
-        textModel.insert(index, d.insert, d.attributes);
-        index += d.insert.length;
-      } else if (isNumber(d.retain)) {
-        index += d.retain;
-      }
+    for (const d of node.textContent!) {
+      delta.push(d);
     }
 
-    return textModel;
+    return new BlockyTextModel(delta);
   }
 
   const blockElement = new BlockElement(nodeName, id!);

@@ -1,8 +1,8 @@
 import { isWhiteSpace } from "blocky-common/es/text";
+import Delta from "quill-delta";
 import {
   BlockyTextModel,
   TextType,
-  type TextChangedEvent,
   setTextTypeForTextBlock,
   getTextTypeForTextBlock,
   Block,
@@ -19,13 +19,15 @@ function makeBulletListPlugin(): IPlugin {
     textElement: BlockElement
   ) => {
     const textModel = textElement.firstChild! as BlockyTextModel;
-    textModel.delete(0, 2);
     setTextTypeForTextBlock(textElement, TextType.Bulleted);
-    editor.render(() => {
-      editor.state.cursorState = {
-        type: "collapsed",
-        targetId: blockId,
-        offset: 0,
+    editor.update(() => {
+      textModel.compose(new Delta().delete(2));
+      return () => {
+        editor.state.cursorState = {
+          type: "collapsed",
+          targetId: blockId,
+          offset: 0,
+        };
       };
     });
   };
@@ -35,17 +37,17 @@ function makeBulletListPlugin(): IPlugin {
       return;
     }
     const textModel = textElement.firstChild! as BlockyTextModel;
-    textModel.changed.on((e: TextChangedEvent) => {
-      if (e.type !== "text-insert") {
-        return;
-      }
-      if (e.index === 1 && e.text.length === 1 && isWhiteSpace(e.text)) {
-        const content = textModel.toString();
-        if (content[0] === "-") {
-          turnTextBlockIntoBulletList(editor, block.props.id, textElement);
-        }
-      }
-    });
+    // textModel.changed.on((e: TextChangedEvent) => {
+    //   if (e.type !== "text-insert") {
+    //     return;
+    //   }
+    //   if (e.index === 1 && e.text.length === 1 && isWhiteSpace(e.text)) {
+    //     const content = textModel.toString();
+    //     if (content[0] === "-") {
+    //       turnTextBlockIntoBulletList(editor, block.props.id, textElement);
+    //     }
+    //   }
+    // });
   };
   const handleEnter = (editor: Editor, e: KeyboardEvent) => {
     const { cursorState } = editor.state;
