@@ -108,15 +108,15 @@ export class CollaborativeCursor {
     }
   }
 
-  private handleMouseEnter = () => {
+  #handleMouseEnter = () => {
     this.#debouncedShowLabel();
   };
 
-  private handleMouseLeave = () => {
-    this.hideLabel();
+  #handleMouseLeave = () => {
+    this.#hideLabel();
   };
 
-  private showLabel() {
+  #showLabel() {
     if (this.#label) {
       return;
     }
@@ -133,7 +133,7 @@ export class CollaborativeCursor {
     }
   }
 
-  private hideLabel() {
+  #hideLabel() {
     if (!this.#label) {
       return;
     }
@@ -209,8 +209,8 @@ export class CollaborativeCursor {
 
   #createCursorRectWithCoord(): CollaborativeCursorRect {
     const cursorRect = new CollaborativeCursorRect();
-    cursorRect.mouseEnter.on(this.handleMouseEnter);
-    cursorRect.mouseLeave.on(this.handleMouseLeave);
+    cursorRect.mouseEnter.on(this.#handleMouseEnter);
+    cursorRect.mouseLeave.on(this.#handleMouseLeave);
     cursorRect.setColor(this.#color);
     cursorRect.setHeight(this.#height);
     cursorRect.mount(this.parent);
@@ -221,9 +221,9 @@ export class CollaborativeCursor {
     if (this.initTimeout) {
       clearTimeout(this.initTimeout);
     }
-    this.showLabel();
+    this.#showLabel();
     this.initTimeout = setTimeout(() => {
-      this.hideLabel();
+      this.#hideLabel();
       this.initTimeout = undefined;
     }, 3000);
   }
@@ -268,7 +268,7 @@ export class CollaborativeCursorManager extends DivContainer {
     };
   }
 
-  private insert(cursor: CollaborativeCursor) {
+  #insert(cursor: CollaborativeCursor) {
     const { id } = cursor;
     if (this.#cursors.has(id)) {
       throw new Error("cursor has been inserted");
@@ -284,7 +284,7 @@ export class CollaborativeCursorManager extends DivContainer {
 
     const newCursor = new CollaborativeCursor(id, this.container);
 
-    this.insert(newCursor);
+    this.#insert(newCursor);
 
     return newCursor;
   }
