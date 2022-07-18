@@ -49,7 +49,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
   #textEnd?: TextNode;
   #length = 0;
 
-  readonly onChanged: WithStateSlot<TextChangedEvent> = new WithStateSlot(this);
+  readonly changed: WithStateSlot<TextChangedEvent> = new WithStateSlot(this);
 
   constructor() {}
 
@@ -60,7 +60,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
 
     this.insertData(index, text, attributes);
 
-    this.onChanged.emit({
+    this.changed.emit({
       type: "text-insert",
       index,
       text,
@@ -235,7 +235,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
             { content: after, attributes: ptr.attributes },
             next
           );
-          this.onChanged.emit({
+          this.changed.emit({
             type: "text-format",
             index: originalIndex,
             length,
@@ -253,7 +253,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
       ptr = ptr.nextSibling;
     }
 
-    this.onChanged.emit({
+    this.changed.emit({
       type: "text-format",
       index: originalIndex,
       length,
@@ -308,7 +308,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
       this.#tryMergeNode(prev);
     }
 
-    this.onChanged.emit({
+    this.changed.emit({
       type: "text-delete",
       index,
       length: originalLen,
@@ -453,7 +453,7 @@ export class BlockyElement implements BlockyNode, WithState {
   #lastChild: BlockyNode | null = null;
   #attributes: InternAttributes = Object.create(null);
 
-  onChanged: WithStateSlot<ElementChangedEvent> = new WithStateSlot(this);
+  changed: WithStateSlot<ElementChangedEvent> = new WithStateSlot(this);
 
   constructor(public nodeName: string) {
     if (nodeName === "#text") {
@@ -506,7 +506,7 @@ export class BlockyElement implements BlockyNode, WithState {
     this.childrenLength++;
     this.state?.handleNewBlockMounted(node);
 
-    this.onChanged.emit({
+    this.changed.emit({
       type: "element-insert-child",
       parent: this,
       child: node,
@@ -559,7 +559,7 @@ export class BlockyElement implements BlockyNode, WithState {
     this.childrenLength++;
     this.state?.handleNewBlockMounted(node);
 
-    this.onChanged.emit({
+    this.changed.emit({
       type: "element-insert-child",
       parent: this,
       child: node,
@@ -612,7 +612,7 @@ export class BlockyElement implements BlockyNode, WithState {
     const oldValue = this.#attributes[name];
     this.#attributes[name] = value;
 
-    this.onChanged.emit({
+    this.changed.emit({
       type: "element-set-attrib",
       key: name,
       value,
@@ -680,7 +680,7 @@ export class BlockyElement implements BlockyNode, WithState {
 
     this.state?.unmountBlock(node);
 
-    this.onChanged.emit({
+    this.changed.emit({
       type: "element-remove-child",
       parent: this,
       child: node,

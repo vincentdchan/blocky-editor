@@ -9,7 +9,7 @@ test("tree append", () => {
   parent.appendChild(firstChild);
 
   let callbackIsCalled = false;
-  parent.onChanged.on((e) => {
+  parent.changed.on((e) => {
     if (e.type === "element-insert-child") {
       callbackIsCalled = true;
       expect(e.getInsertIndex()).toEqual(1);
@@ -29,7 +29,7 @@ test("tree insert at first", () => {
   parent.appendChild(firstChild);
 
   let callbackIsCalled = false;
-  parent.onChanged.on((e) => {
+  parent.changed.on((e) => {
     if (e.type === "element-insert-child") {
       callbackIsCalled = true;
       expect(e.getInsertIndex()).toEqual(0);
@@ -45,7 +45,7 @@ test("tree set attribute", () => {
   const node = new BlockyElement("block");
 
   let callbackIsCalled = false;
-  node.onChanged.on((e) => {
+  node.changed.on((e) => {
     if (e.type === "element-set-attrib") {
       callbackIsCalled = true;
       expect(e.key).toEqual("key");

@@ -89,7 +89,7 @@ export class State {
   readonly blocks: Map<string, Block> = new Map();
   readonly newBlockCreated: Slot<Block> = new Slot();
   readonly blockDeleted: Slot<BlockElement> = new Slot();
-  readonly undoManager: UndoManager = new UndoManager();
+  readonly undoManager: UndoManager;
   cursorState: CursorState | undefined;
   silent = false;
 
@@ -98,6 +98,7 @@ export class State {
     readonly blockRegistry: BlockRegistry,
     readonly idHelper: IdGenerator
   ) {
+    this.undoManager = new UndoManager(this);
     makeObservable(this, "cursorState");
   }
 
