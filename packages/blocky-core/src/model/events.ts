@@ -27,6 +27,7 @@ export type TextChangedEvent =
 
 export interface ElementSetAttributeEvent {
   type: "element-set-attrib";
+  node: BlockyNode;
   key: string;
   value: string;
   oldValue?: string;
