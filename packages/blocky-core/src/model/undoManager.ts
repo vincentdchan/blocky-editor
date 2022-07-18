@@ -1,8 +1,34 @@
-import { TreeEvent } from "@pkg/model/events";
+import { AttributesObject, JSONNode } from "./element";
+
+export interface InsertOperation {
+  type: "insert-operation";
+  parentId?: string;
+  path: number[];
+}
+
+export interface DeleteOperation {
+  type: "delete-operation";
+  parentId?: string;
+  path: number[];
+  snapshot: JSONNode;
+}
+
+export interface UpdateAttributeOperation {
+  type: "update-attribute-operation";
+  id: string;
+  path: number[];
+  newAttributes: AttributesObject;
+  oldAttributes: AttributesObject;
+}
+
+export type Operation =
+  | InsertOperation
+  | UpdateAttributeOperation
+  | DeleteOperation;
 
 /**
  * A stack item is used to store
- * a lot of operations commited by the user.
+ * a lot of operations committed by the user.
  *
  * The data stored in the object is used
  * to restore when the user trigger undo.
@@ -15,17 +41,17 @@ export class StackItem {
   prevSibling: StackItem | null = null;
   nextSibling: StackItem | null = null;
   sealed = false;
-  readonly events: TreeEvent[] = [];
+  readonly operations: Operation[] = [];
 
   seal() {
     this.sealed = true;
   }
 
-  push(evt: TreeEvent) {
+  push(operation: Operation) {
     if (this.sealed) {
       throw new Error("StackItem is sealed.");
     }
-    this.events.push(evt);
+    this.operations.push(operation);
   }
 }
 
@@ -67,6 +93,12 @@ export class FixedSizeStack {
 
     this.#length--;
     return first;
+  }
+
+  clear() {
+    this.#begin = null;
+    this.#end = null;
+    this.#length = 0;
   }
 
   get length() {
