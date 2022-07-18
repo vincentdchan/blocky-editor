@@ -188,8 +188,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
           withSilent(state, () => {
             switch (e.type) {
               case "element-insert-child": {
-                const { child } = e;
-                const index = e.getInsertIndex();
+                const { child, index } = e;
 
                 let element: Y.XmlElement | Y.XmlText;
                 if (child instanceof BlockyElement) {
@@ -209,8 +208,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
                 break;
               }
               case "element-remove-child": {
-                const index = e.getInsertIndex();
-                yElement.delete(index);
+                yElement.delete(e.index);
                 break;
               }
             }
@@ -394,11 +392,9 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         withSilent(state, () => {
           if (e.type === "element-insert-child") {
             const node = makeYElementByBlockyElement(e.child as any);
-            const index = e.getInsertIndex();
-            docFragment.insert(index, [node]);
+            docFragment.insert(e.index, [node]);
           } else if (e.type === "element-remove-child") {
-            const index = e.getInsertIndex();
-            docFragment.delete(index);
+            docFragment.delete(e.index);
           }
         });
       });

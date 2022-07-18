@@ -1,24 +1,30 @@
-import type { AttributesObject, JSONNode } from "./element";
 import type { TreeEvent } from "./events";
+import type { JSONNode, AttributesObject, BlockyNode } from "./element";
 import type { State } from "./state";
-import type { BlockyElement } from "./tree";
+import { BlockyElement } from "./tree";
+import { BlockElement } from "..";
+
+interface NodeLocation {
+  id?: string;
+  path: number[];
+}
 
 export interface InsertOperation {
   type: "insert-operation";
-  parentId?: string;
-  path: number[];
+  parentLoc?: NodeLocation;
+  index: number;
 }
 
 export interface DeleteOperation {
   type: "delete-operation";
-  parentId?: string;
-  path: number[];
+  parentLoc: NodeLocation;
+  index: number;
   snapshot: JSONNode;
 }
 
 export interface UpdateAttributeOperation {
   type: "update-attribute-operation";
-  id: string;
+  id?: string;
   path: number[];
   newAttributes: AttributesObject;
   oldAttributes: AttributesObject;
@@ -109,6 +115,30 @@ export class FixedSizeStack {
   }
 }
 
+function findNodeLocation(root: BlockyElement, node: BlockyNode): NodeLocation {
+  if (root === node) {
+    return { path: [] };
+  }
+  if (node instanceof BlockElement) {
+    return {
+      id: node.id,
+      path: [],
+    };
+  }
+  const parent = node.parent!;
+  const parentPath = findNodeLocation(root, parent);
+
+  let cnt = 0;
+  let ptr = node.prevSibling;
+  while (ptr) {
+    cnt++;
+    ptr = ptr.prevSibling;
+  }
+
+  parentPath.path.push(cnt);
+  return parentPath;
+}
+
 export class UndoManager {
   readonly undoStack: FixedSizeStack;
   readonly redoStack: FixedSizeStack;
@@ -125,7 +155,44 @@ export class UndoManager {
   }
 
   #bindBlockyNode(element: BlockyElement) {
-    element.changed.on((evt: TreeEvent) => {});
+    element.changed.on((evt: TreeEvent) => {
+      const stackItem = this.getAUndoItem();
+
+      if (evt.type === "element-insert-child") {
+        const { child, parent, index } = evt;
+        const parentLoc = findNodeLocation(this.state.root, parent);
+        stackItem.push({
+          type: "insert-operation",
+          parentLoc,
+          index,
+        });
+        if (child instanceof BlockyElement) {
+          this.#bindBlockyNode(child);
+        }
+      } else if (evt.type === "element-set-attrib") {
+        const { id, path } = findNodeLocation(this.state.root, evt.node);
+        stackItem.push({
+          type: "update-attribute-operation",
+          newAttributes: {
+            [evt.key]: evt.value,
+          },
+          oldAttributes: {
+            [evt.key]: evt.oldValue,
+          },
+          id,
+          path,
+        });
+      } else if (evt.type === "element-remove-child") {
+        const parentLoc = findNodeLocation(this.state.root, evt.parent);
+        const snapshot = evt.child.toJSON();
+        stackItem.push({
+          type: "delete-operation",
+          parentLoc,
+          index: evt.index,
+          snapshot,
+        });
+      }
+    });
   }
 
   getAUndoItem(): StackItem {
@@ -138,7 +205,17 @@ export class UndoManager {
     return newItem;
   }
 
-  undo() {}
+  undo() {
+    const item = this.undoStack.pop();
+    if (!item) {
+      return;
+    }
+    this.#undoStackItem(item);
+  }
+
+  #undoStackItem(stackItem: StackItem) {
+    console.log("redo", stackItem);
+  }
 
   redo() {}
 }

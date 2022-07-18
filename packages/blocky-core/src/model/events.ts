@@ -27,6 +27,7 @@ export type TextChangedEvent =
 
 export interface ElementSetAttributeEvent {
   type: "element-set-attrib";
+  node: BlockyNode;
   key: string;
   value: string;
   oldValue?: string;
@@ -36,14 +37,14 @@ export interface ElementRemoveChildEvent {
   type: "element-remove-child";
   parent: BlockyNode;
   child: BlockyNode;
-  getInsertIndex: () => number;
+  index: number;
 }
 
 export interface ElementInsertChildEvent {
   type: "element-insert-child";
   parent: BlockyNode;
   child: BlockyNode;
-  getInsertIndex: () => number;
+  index: number;
 }
 
 export type ElementChangedEvent =

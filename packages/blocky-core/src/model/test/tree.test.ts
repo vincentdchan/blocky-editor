@@ -12,7 +12,7 @@ test("tree append", () => {
   parent.changed.on((e) => {
     if (e.type === "element-insert-child") {
       callbackIsCalled = true;
-      expect(e.getInsertIndex()).toEqual(1);
+      expect(e.index).toEqual(1);
     }
   });
 
@@ -32,7 +32,7 @@ test("tree insert at first", () => {
   parent.changed.on((e) => {
     if (e.type === "element-insert-child") {
       callbackIsCalled = true;
-      expect(e.getInsertIndex()).toEqual(0);
+      expect(e.index).toEqual(0);
     }
   });
 
