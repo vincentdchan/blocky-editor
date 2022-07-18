@@ -20,7 +20,7 @@ function makeHeadingsPlugin(): IPlugin {
 
     const textModel = blockElement.firstChild as BlockyTextModel;
 
-    textModel.onChanged.on((e: TextChangedEvent) => {
+    textModel.changed.on((e: TextChangedEvent) => {
       if (e.type !== "text-insert") {
         return;
       }
