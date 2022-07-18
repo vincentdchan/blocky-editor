@@ -824,7 +824,7 @@ export class Editor {
    * fn is called, the render function
    * will be called.
    */
-  update(fn: () => AfterFn | void, flags: number = 0) {
+  update(fn: () => AfterFn | void, flags = 0) {
     if (this.#isUpdating) {
       throw new Error("is in updating process");
     }
