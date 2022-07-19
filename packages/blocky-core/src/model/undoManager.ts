@@ -227,11 +227,14 @@ export class UndoManager {
           if (this.shouldRecord) {
             const stackItem = this.getAUndoItem();
             const parentLoc = findNodeLocation(this.state.root, parent);
-            stackItem.push({
-              type: "op-insert-node",
-              parentLoc,
-              index,
-            });
+            stackItem.push(
+              {
+                type: "op-insert-node",
+                parentLoc,
+                index,
+              },
+              this.state.cursorState
+            );
           }
           this.#bindBlockyNode(child);
           break;
@@ -346,6 +349,10 @@ export class UndoManager {
         this.#undoTextEditOperation(op);
         break;
       }
+      case "op-insert-node": {
+        this.#undoInsertNode(op);
+        break;
+      }
     }
   }
 
@@ -359,6 +366,21 @@ export class UndoManager {
       return;
     }
     node.delta = textEdit.oldDelta;
+  }
+
+  #undoInsertNode(insertNodeOperation: InsertNodeOperation) {
+    const { parentLoc, index } = insertNodeOperation;
+    let parentNode: BlockyElement;
+    if (parentLoc) {
+      parentNode = this.state.findNodeByLocation(parentLoc) as BlockyElement;
+    } else {
+      parentNode = this.state.root;
+    }
+
+    const child = parentNode.childAt(index);
+    if (child) {
+      parentNode.removeChild(child);
+    }
   }
 
   redo() {}
