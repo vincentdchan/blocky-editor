@@ -1,3 +1,4 @@
+import Delta from "quill-delta-es";
 import type { ElementChangedEvent } from "./events";
 import type { JSONNode, AttributesObject, BlockyNode } from "./element";
 import type { State } from "./state";
@@ -29,30 +30,18 @@ export interface UpdateNodeOperation {
   oldAttributes: AttributesObject;
 }
 
-export interface TextInsertOperation {
-  type: "op-text-insert";
+export interface TextEditOperation {
+  type: "op-text-edit";
   location: NodeLocation;
-  text: string;
-  attributes?: AttributesObject;
-}
-
-export interface TextFormatOperation {
-  type: "op-text-format";
-  location: NodeLocation;
-}
-
-export interface TextDeleteOperation {
-  type: "op-text-delete";
-  location: NodeLocation;
+  newDelta: Delta;
+  oldDelta: Delta;
 }
 
 export type Operation =
   | InsertNodeOperation
   | DeleteNodeOperation
   | UpdateNodeOperation
-  | TextInsertOperation
-  | TextFormatOperation
-  | TextDeleteOperation;
+  | TextEditOperation;
 
 /**
  * A stack item is used to store
@@ -197,7 +186,7 @@ export class UndoManager {
         if (child instanceof BlockyElement) {
           this.#bindBlockyNode(child);
         } else if (child instanceof BlockyTextModel) {
-          this.#bindBlockyTextModel();
+          this.#bindBlockyTextModel(child);
         }
       } else if (evt.type === "element-set-attrib") {
         const location = findNodeLocation(this.state.root, element);
@@ -224,7 +213,19 @@ export class UndoManager {
     });
   }
 
-  #bindBlockyTextModel() {}
+  #bindBlockyTextModel(textModel: BlockyTextModel) {
+    const location = findNodeLocation(this.state.root, textModel);
+    textModel.changed.on((evt) => {
+      const stackItem = this.getAUndoItem();
+      const { oldDelta, newDelta } = evt;
+      stackItem.push({
+        type: "op-text-edit",
+        location,
+        newDelta,
+        oldDelta,
+      });
+    });
+  }
 
   getAUndoItem(): StackItem {
     const peek = this.undoStack.peek();
