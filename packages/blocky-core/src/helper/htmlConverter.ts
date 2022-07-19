@@ -28,6 +28,10 @@ export interface HTMLConverterOptions {
   divHandler?: ElementHandler;
 }
 
+function shouldBeGivenUp(contentString: string): boolean {
+  return /^(\s|\\n)*$/.test(contentString);
+}
+
 /**
  * This class is used to parse
  * the HTML pasted by the user.
@@ -59,21 +63,25 @@ export class HTMLConverter {
 
     let ptr = doc.firstChild;
     while (ptr) {
-      this.tryParseNode(ptr, result);
+      this.#tryParseNode(ptr, result);
       ptr = ptr.nextSibling;
     }
 
     return result;
   }
 
-  private tryParseNode(node: Node, result: BlockElement[]) {
+  #pushTextIfPossible(node: Node, result: BlockElement[]) {
+    const { textContent } = node;
+    if (textContent && !shouldBeGivenUp(textContent)) {
+      result.push(
+        createTextElement(this.#idGenerator.mkBlockId(), textContent)
+      );
+    }
+  }
+
+  #tryParseNode(node: Node, result: BlockElement[]) {
     if (node instanceof Text) {
-      const { textContent } = node;
-      if (textContent) {
-        result.push(
-          createTextElement(this.#idGenerator.mkBlockId(), textContent)
-        );
-      }
+      this.#pushTextIfPossible(node, result);
     } else if (isLeafElement(node)) {
       const blockElement = this.#leafHandler?.(node);
       if (isObject(blockElement)) {
@@ -83,12 +91,7 @@ export class HTMLConverter {
       if (blockElement === true) {
         return;
       }
-      const { textContent } = node;
-      if (textContent) {
-        result.push(
-          createTextElement(this.#idGenerator.mkBlockId(), textContent)
-        );
-      }
+      this.#pushTextIfPossible(node, result);
     } else if (this.isContainerElement(node)) {
       if (node instanceof HTMLDivElement) {
         const blockElement = this.#divHandler?.(node);
@@ -108,7 +111,7 @@ export class HTMLConverter {
     const result: BlockElement[] = [];
     let ptr = container.firstChild;
     while (ptr) {
-      this.tryParseNode(ptr, result);
+      this.#tryParseNode(ptr, result);
       ptr = ptr.nextSibling;
     }
     return result;
