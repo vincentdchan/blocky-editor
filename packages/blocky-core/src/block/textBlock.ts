@@ -18,7 +18,6 @@ import {
   BlockyElement,
   type AttributesObject,
 } from "@pkg/model";
-import { areEqualShallow } from "blocky-common/es/object";
 import fastDiff from "fast-diff";
 import { type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";

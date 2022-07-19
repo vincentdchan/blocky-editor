@@ -1,4 +1,4 @@
-import Delta from "quill-delta";
+import Delta, { Op } from "quill-delta";
 import { type WithState, WithStateSlot } from "@pkg/helper/withStateSlot";
 import type {
   JSONNode,
