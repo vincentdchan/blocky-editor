@@ -1,4 +1,5 @@
 import { test, expect, describe } from "vitest";
+import "@pkg/index";
 import { FixedSizeStack, StackItem } from "../undoManager";
 
 describe("FixedSizeStack", () => {

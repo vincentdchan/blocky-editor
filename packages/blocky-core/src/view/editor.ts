@@ -9,7 +9,7 @@ import {
   flattenDisposable,
 } from "blocky-common/es/disposable";
 import { type Position } from "blocky-common/es/position";
-import { debounce, rest } from "lodash-es";
+import { debounce } from "lodash-es";
 import Delta from "quill-delta-es";
 import fastDiff from "fast-diff";
 import { DocRenderer } from "@pkg/view/renderer";
