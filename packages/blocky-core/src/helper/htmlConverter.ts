@@ -29,7 +29,7 @@ export interface HTMLConverterOptions {
 }
 
 function shouldBeGivenUp(contentString: string): boolean {
-  return /^(\s|\\n)*$/.test(contentString);
+  return /^\s*$/.test(contentString);
 }
 
 /**
@@ -72,10 +72,14 @@ export class HTMLConverter {
 
   #pushTextIfPossible(node: Node, result: BlockElement[]) {
     const { textContent } = node;
-    if (textContent && !shouldBeGivenUp(textContent)) {
-      result.push(
-        createTextElement(this.#idGenerator.mkBlockId(), textContent)
-      );
+    if (textContent) {
+      const lines = textContent.split("\n");
+      for (const line of lines) {
+        if (shouldBeGivenUp(line)) {
+          continue;
+        }
+        result.push(createTextElement(this.#idGenerator.mkBlockId(), line));
+      }
     }
   }
 
