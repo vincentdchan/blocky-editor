@@ -170,6 +170,17 @@ export class UndoManager {
    */
   undoState: UndoState = UndoState.Recording;
 
+  /**
+   * When the composition started, the current cursorState
+   * is saved here.
+   * When a text edit is committed, the value will be
+   * consumed by the [UndoManager].
+   *
+   * This is not a good solution because the text summited
+   * maybe not be the text which is pointed by the cursor.
+   */
+  cursorBeforeComposition: CursorState | undefined;
+
   readonly undoStack: FixedSizeStack;
   readonly redoStack: FixedSizeStack;
 
@@ -283,6 +294,10 @@ export class UndoManager {
           },
           this.state.cursorState
         );
+        if (this.cursorBeforeComposition) {
+          stackItem.curorState = this.cursorBeforeComposition;
+          this.cursorBeforeComposition = undefined;
+        }
       }
     });
   }
