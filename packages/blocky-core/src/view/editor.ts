@@ -473,6 +473,10 @@ export class Editor {
       return;
     }
 
+    if (this.composing) {
+      return;
+    }
+
     if (sel.rangeCount === 0) {
       return;
     }
@@ -499,11 +503,18 @@ export class Editor {
     );
 
     if (range.collapsed) {
-      this.state.cursorState = {
+      const newCursorState: CursorState = {
         type: "collapsed",
         targetId: startNode.id,
         offset: absoluteStartOffset,
       };
+      if (!areEqualShallow(newCursorState, this.state.cursorState)) {
+        this.state.cursorState = {
+          type: "collapsed",
+          targetId: startNode.id,
+          offset: absoluteStartOffset,
+        };
+      }
     } else {
       const endNode = this.#findBlockNodeContainer(endContainer);
       if (!endNode) {
@@ -515,13 +526,22 @@ export class Editor {
         endContainer,
         endOffset
       );
-      this.state.cursorState = {
+      const newCursorState: CursorState = {
         type: "open",
         startId: startNode.id,
         startOffset: absoluteStartOffset,
         endId: endNode.id,
         endOffset: absoluteEndOffset,
       };
+      if (!areEqualShallow(newCursorState, this.state.cursorState)) {
+        this.state.cursorState = {
+          type: "open",
+          startId: startNode.id,
+          startOffset: absoluteStartOffset,
+          endId: endNode.id,
+          endOffset: absoluteEndOffset,
+        };
+      }
     }
 
     const { toolbarDelegate } = this;
