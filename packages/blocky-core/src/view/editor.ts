@@ -9,7 +9,7 @@ import {
   flattenDisposable,
 } from "blocky-common/es/disposable";
 import { type Position } from "blocky-common/es/position";
-import { debounce } from "lodash-es";
+import { debounce, rest } from "lodash-es";
 import Delta from "quill-delta-es";
 import fastDiff from "fast-diff";
 import { DocRenderer } from "@pkg/view/renderer";
@@ -649,6 +649,7 @@ export class Editor {
     // this is essential because the cursor will change
     // after the user typing.
     this.#selectionChanged();
+    this.#debouncedSealUndo();
   };
 
   placeBannerAt(blockContainer: HTMLElement, node: BlockElement) {
@@ -706,11 +707,13 @@ export class Editor {
 
   #handleCompositionStart = () => {
     this.composing = true;
+    this.state.undoManager.cursorBeforeComposition = this.state.cursorState;
   };
 
   #handleCompositionEnd = () => {
     this.composing = false;
     this.#handleContentChanged();
+    this.state.undoManager.cursorBeforeComposition = undefined;
   };
 
   #handleKeyDown = (e: KeyboardEvent) => {
