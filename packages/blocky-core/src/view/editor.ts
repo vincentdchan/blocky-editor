@@ -795,15 +795,15 @@ export class Editor {
 
       const slices = textModel.delta.slice(cursorOffset);
 
-      const newTextElement = this.state.createTextElement();
-      const newTextModel = newTextElement.firstChild! as BlockyTextModel;
-      const textType = getTextTypeForTextBlock(blockElement);
-      if (this.preservedTextType.has(textType)) {
-        // preserved data type
-        setTextTypeForTextBlock(newTextElement, textType);
-      }
-
       this.update(() => {
+        const newTextElement = this.state.createTextElement();
+        const newTextModel = newTextElement.firstChild! as BlockyTextModel;
+        const textType = getTextTypeForTextBlock(blockElement);
+        if (this.preservedTextType.has(textType)) {
+          // preserved data type
+          setTextTypeForTextBlock(newTextElement, textType);
+        }
+
         newTextModel.concat(slices);
 
         textModel.compose(

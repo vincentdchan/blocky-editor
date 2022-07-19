@@ -229,6 +229,7 @@ export class BlockyElement implements BlockyNode, WithState {
     if (!lastNode || lastNode.nodeName !== "block-children") {
       return;
     }
+    lastNode.state = this.state;
     let ptr = lastNode.firstChild;
     while (ptr) {
       if (!ptr.state) {
