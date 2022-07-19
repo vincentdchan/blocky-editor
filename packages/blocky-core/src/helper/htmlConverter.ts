@@ -1,5 +1,5 @@
 import { isObject } from "lodash-es";
-import Delta from "quill-delta";
+import Delta from "quill-delta-es";
 import { BlockElement } from "@pkg/index";
 import { TextBlockName } from "@pkg/block/textBlock";
 import { BlockyTextModel } from "@pkg/model/tree";

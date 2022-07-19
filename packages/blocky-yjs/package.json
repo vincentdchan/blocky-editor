@@ -26,6 +26,6 @@
     "yjs": "^13.5.39"
   },
   "dependencies": {
-    "quill-delta": "^5.0.0"
+    "quill-delta-es": "^5.0.1"
   }
 }
