@@ -45,6 +45,11 @@ function jsonNodeToBlock(state: State, node: JSONNode): BlockyNode {
 
 export const DocNodeName = "doc";
 
+export interface NodeLocation {
+  id?: string;
+  path: number[];
+}
+
 /**
  * This class is used to store all the states
  * used to render the editor. Including:
@@ -156,6 +161,48 @@ export class State {
       throw new Error(`duplicated id: ${element.id}`);
     }
     this.idMap.set(element.id, element);
+  }
+
+  findNodeByLocation(location: NodeLocation): BlockyNode {
+    let baseNode: BlockyElement;
+    if (isUndefined(location.id)) {
+      baseNode = this.root;
+    } else {
+      const block = this.idMap.get(location.id);
+      if (!block) {
+        throw new Error(`is not exist: ${location.id}`);
+      }
+      baseNode = block;
+    }
+
+    return this.#findPathInNode(location.id, baseNode, location.path);
+  }
+
+  #findPathInNode(
+    id: string | undefined,
+    baseNode: BlockyElement,
+    path: number[]
+  ): BlockyNode {
+    let ptr: BlockyNode = baseNode;
+    for (let i = 0, len = path.length; i < len; i++) {
+      const index = path[i];
+      if (!(ptr instanceof BlockyElement)) {
+        throw new Error(
+          `Child is not a BlockyElement at: ${id}, [${path
+            .slice(0, i + 1)
+            .join(", ")}]`
+        );
+      }
+      const child = ptr.childAt(index);
+      if (!child) {
+        throw new Error(
+          `Child not found at: ${id}, [${path.slice(0, i + 1).join(", ")}]`
+        );
+      }
+      ptr = child;
+    }
+
+    return ptr;
   }
 
   toJSON() {

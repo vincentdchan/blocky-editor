@@ -723,7 +723,12 @@ export class Editor {
       this.#handleDelete(e);
     } else if (isHotkey("mod+z", e)) {
       e.preventDefault();
-      this.state.undoManager.undo();
+      const item = this.state.undoManager.undo();
+      if (item) {
+        this.render(() => {
+          this.state.cursorState = item.curorState;
+        });
+      }
     } else if (isHotkey("mod+shift+z", e)) {
       e.preventDefault();
       this.state.undoManager.redo();
@@ -845,7 +850,7 @@ export class Editor {
     this.#isUpdating = true;
     try {
       if (flags & UpdateFlag.NoLog) {
-        this.state.undoManager.recording = false;
+        this.state.undoManager.pause();
       }
       let done: AfterFn | void;
       runInAction(this.state, () => {
@@ -854,7 +859,7 @@ export class Editor {
       this.render(() => {
         done?.();
         if (flags & UpdateFlag.NoLog) {
-          this.state.undoManager.recording = true;
+          this.state.undoManager.recover();
         }
         this.#debouncedSealUndo();
         if (flags & UpdateFlag.IgnoreSelection) {

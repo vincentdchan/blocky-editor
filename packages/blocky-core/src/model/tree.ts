@@ -43,6 +43,12 @@ export class BlockyTextModel implements BlockyNode, WithState {
     return this.#delta;
   }
 
+  set delta(v: Delta) {
+    const oldDelta = this.#delta;
+    this.#delta = v;
+    this.changed.emit({ oldDelta, newDelta: v });
+  }
+
   compose(delta: Delta) {
     const oldDelta = this.#delta;
     const newDelta = this.delta.compose(delta);
@@ -238,6 +244,17 @@ export class BlockyElement implements BlockyNode, WithState {
       }
       ptr = ptr.nextSibling;
     }
+  }
+
+  childAt(index: number): BlockyNode | null {
+    let ptr: BlockyNode | null = this.#firstChild;
+
+    while (ptr && index >= 1) {
+      index--;
+      ptr = ptr.nextSibling;
+    }
+
+    return ptr;
   }
 
   insertChildAt(index: number, node: BlockyNode) {

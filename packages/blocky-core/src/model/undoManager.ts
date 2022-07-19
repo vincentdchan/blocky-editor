@@ -1,14 +1,11 @@
 import Delta from "quill-delta-es";
+import { isEqual } from "lodash-es";
+import { BlockElement } from "@pkg/block/basic";
+import { BlockyElement, BlockyTextModel } from "./tree";
 import type { ElementChangedEvent } from "./events";
 import type { JSONNode, AttributesObject, BlockyNode } from "./element";
-import type { State } from "./state";
-import { BlockyElement, BlockyTextModel } from "./tree";
-import { BlockElement } from "..";
-
-interface NodeLocation {
-  id?: string;
-  path: number[];
-}
+import type { State, NodeLocation } from "./state";
+import { CursorState } from "./cursor";
 
 export interface InsertNodeOperation {
   type: "op-insert-node";
@@ -57,6 +54,7 @@ export type Operation =
 export class StackItem {
   prevSibling: StackItem | null = null;
   nextSibling: StackItem | null = null;
+  curorState: CursorState | undefined = undefined;
   sealed = false;
   readonly operations: Operation[] = [];
 
@@ -64,11 +62,23 @@ export class StackItem {
     this.sealed = true;
   }
 
-  push(operation: Operation) {
+  push(operation: Operation, curorState?: CursorState) {
     if (this.sealed) {
       throw new Error("StackItem is sealed.");
     }
+    if (this.operations.length > 0 && operation.type === "op-text-edit") {
+      const last = this.operations[this.operations.length - 1];
+      if (
+        last.type === "op-text-edit" &&
+        isEqual(last.location, operation.location)
+      ) {
+        last.newDelta = operation.newDelta;
+        // do NOT set the cursor state
+        return;
+      }
+    }
     this.operations.push(operation);
+    this.curorState = curorState;
   }
 }
 
@@ -147,11 +157,18 @@ function findNodeLocation(root: BlockyElement, node: BlockyNode): NodeLocation {
   return parentPath;
 }
 
+enum UndoState {
+  Pause = 0,
+  Recording = 1,
+  Undoing = 2,
+  Redoing = 3,
+}
+
 export class UndoManager {
   /**
    * Indicates whether the [UndoManager] is working
    */
-  recording = true;
+  undoState: UndoState = UndoState.Recording;
 
   readonly undoStack: FixedSizeStack;
   readonly redoStack: FixedSizeStack;
@@ -163,67 +180,110 @@ export class UndoManager {
     this.#listenOnState();
   }
 
-  #listenOnState() {
-    this.#bindBlockyNode(this.state.root);
+  get shouldRecord(): boolean {
+    return this.undoState === UndoState.Recording;
   }
 
-  #bindBlockyNode(element: BlockyElement) {
+  pause() {
+    if (this.undoState === UndoState.Recording) {
+      this.undoState = UndoState.Pause;
+    }
+  }
+
+  recover() {
+    if (this.undoState === UndoState.Pause) {
+      this.undoState = UndoState.Recording;
+    }
+  }
+
+  #listenOnState() {
+    this.#bindBlockyElement(this.state.root);
+  }
+
+  #bindBlockyNode(node: BlockyNode) {
+    if (node instanceof BlockyElement) {
+      this.#bindBlockyElement(node);
+    } else if (node instanceof BlockyTextModel) {
+      this.#bindBlockyTextModel(node);
+    }
+  }
+
+  #bindBlockyElement(element: BlockyElement) {
     element.changed.on((evt: ElementChangedEvent) => {
-      if (!this.recording) {
-        return;
-      }
-
-      const stackItem = this.getAUndoItem();
-
-      if (evt.type === "element-insert-child") {
-        const { child, parent, index } = evt;
-        const parentLoc = findNodeLocation(this.state.root, parent);
-        stackItem.push({
-          type: "op-insert-node",
-          parentLoc,
-          index,
-        });
-        if (child instanceof BlockyElement) {
+      switch (evt.type) {
+        case "element-insert-child": {
+          const { child, parent, index } = evt;
+          if (this.shouldRecord) {
+            const stackItem = this.getAUndoItem();
+            const parentLoc = findNodeLocation(this.state.root, parent);
+            stackItem.push({
+              type: "op-insert-node",
+              parentLoc,
+              index,
+            });
+          }
           this.#bindBlockyNode(child);
-        } else if (child instanceof BlockyTextModel) {
-          this.#bindBlockyTextModel(child);
+          break;
         }
-      } else if (evt.type === "element-set-attrib") {
-        const location = findNodeLocation(this.state.root, element);
-        stackItem.push({
-          type: "op-update-attributes",
-          location,
-          newAttributes: {
-            [evt.key]: evt.value,
-          },
-          oldAttributes: {
-            [evt.key]: evt.oldValue,
-          },
-        });
-      } else if (evt.type === "element-remove-child") {
-        const parentLoc = findNodeLocation(this.state.root, evt.parent);
-        const snapshot = evt.child.toJSON();
-        stackItem.push({
-          type: "op-delete-node",
-          parentLoc,
-          index: evt.index,
-          snapshot,
-        });
+
+        case "element-set-attrib": {
+          if (this.shouldRecord) {
+            const stackItem = this.getAUndoItem();
+            const location = findNodeLocation(this.state.root, element);
+            stackItem.push({
+              type: "op-update-attributes",
+              location,
+              newAttributes: {
+                [evt.key]: evt.value,
+              },
+              oldAttributes: {
+                [evt.key]: evt.oldValue,
+              },
+            });
+          }
+          break;
+        }
+
+        case "element-remove-child": {
+          if (this.shouldRecord) {
+            const parentLoc = findNodeLocation(this.state.root, evt.parent);
+            const stackItem = this.getAUndoItem();
+            const snapshot = evt.child.toJSON();
+            stackItem.push({
+              type: "op-delete-node",
+              parentLoc,
+              index: evt.index,
+              snapshot,
+            });
+          }
+          break;
+        }
       }
     });
+
+    let ptr = element.firstChild;
+    while (ptr) {
+      this.#bindBlockyNode(ptr);
+      ptr = ptr.nextSibling;
+    }
   }
 
   #bindBlockyTextModel(textModel: BlockyTextModel) {
     const location = findNodeLocation(this.state.root, textModel);
     textModel.changed.on((evt) => {
-      const stackItem = this.getAUndoItem();
-      const { oldDelta, newDelta } = evt;
-      stackItem.push({
-        type: "op-text-edit",
-        location,
-        newDelta,
-        oldDelta,
-      });
+      if (this.shouldRecord) {
+        const stackItem = this.getAUndoItem();
+        const { oldDelta, newDelta } = evt;
+        stackItem.push(
+          {
+            type: "op-text-edit",
+            location,
+            newDelta,
+            oldDelta,
+          },
+          this.state.cursorState
+        );
+      }
     });
   }
 
@@ -244,16 +304,46 @@ export class UndoManager {
     }
   }
 
-  undo() {
-    const item = this.undoStack.pop();
-    if (!item) {
-      return;
+  undo(): StackItem | void {
+    const prevState = this.undoState;
+    this.undoState = UndoState.Undoing;
+    try {
+      const item = this.undoStack.pop();
+      if (!item) {
+        return;
+      }
+      this.#undoStackItem(item);
+      return item;
+    } finally {
+      this.undoState = prevState;
     }
-    this.#undoStackItem(item);
   }
 
   #undoStackItem(stackItem: StackItem) {
-    console.log("redo", stackItem);
+    for (let i = stackItem.operations.length - 1; i >= 0; i--) {
+      this.#undoOperation(stackItem.operations[i]);
+    }
+  }
+
+  #undoOperation(op: Operation) {
+    switch (op.type) {
+      case "op-text-edit": {
+        this.#undoTextEditOperation(op);
+        break;
+      }
+    }
+  }
+
+  #undoTextEditOperation(textEdit: TextEditOperation) {
+    const node = this.state.findNodeByLocation(textEdit.location);
+    if (!(node instanceof BlockyTextModel)) {
+      console.warn(
+        `Node at the location is not a BlockyTextModel`,
+        textEdit.location
+      );
+      return;
+    }
+    node.delta = textEdit.oldDelta;
   }
 
   redo() {}
