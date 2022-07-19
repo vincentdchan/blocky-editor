@@ -1,4 +1,3 @@
-
 # Data manipulation
 
 ## State
@@ -16,12 +15,11 @@ The state instance can be accessed from the editor and the controller.
 For example:
 
 ```typescript
-editor.state // get access to the state. 
-controller.state  // get state from the controller
+editor.state; // get access to the state.
+controller.state; // get state from the controller
 ```
 
 ### Construct the state
-
 
 **Empty State:**
 
@@ -92,32 +90,31 @@ which can store attributes:
 
 ```typescript
 class BlockyElement implements BlockyNode {
-
   setAttribute(name: string, value: string);
   getAttribute(name: string): string | undefined;
   insertAfter(node: BlockyNode, after?: BlockyNode);
   appendChild(node: BlockyNode);
   removeChild(node: BlockyNode);
-
 }
 ```
 
 ### BlockyTextModel
 
-`BlockyTextModel` is a kind of `BlockyNode`, which
-is used to store text.
-
-`BlockyTextModel` is a leaf in the document tree.
-It doesn't have children.
+The text model of the blocky editor is implemented by [quill-delta](https://github.com/quilljs/delta).
 
 ```typescript
 export class BlockyTextModel implements BlockyNode {
-
-  insert(index: number, text: string, attributes?: AttributesObject);
-  format(index: number, length: number, attributes?: AttributesObject);
-  delete(index: number, length: number);
-
+  delta = new Delta();
+  compose(delta: Delta);
+  concat(delta: Delta);
 }
+```
+
+You can the the `compose` method to submit changeds. For example:
+
+```typescript
+textModel.compose(new Delta().insert("Hello world"));
+textModel.compose(new Delta().retain(4).delete(1)); // delete 1 char at the index 4
 ```
 
 ## Collaborative editing
