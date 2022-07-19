@@ -11,6 +11,7 @@ import {
 import { type Position } from "blocky-common/es/position";
 import { debounce } from "lodash-es";
 import Delta from "quill-delta-es";
+import fastDiff from "fast-diff";
 import { DocRenderer } from "@pkg/view/renderer";
 import {
   State as DocumentState,
@@ -99,6 +100,15 @@ export enum UpdateFlag {
   NoLog = 0x02, // the update is commited by the program, do not log it
 }
 
+export class TextInputEvent {
+  constructor(
+    readonly beforeDelta: Delta,
+    readonly diff: fastDiff.Diff[],
+    readonly textModel: BlockyTextModel,
+    readonly blockElement: BlockElement
+  ) {}
+}
+
 /**
  * The internal view layer object of the editor.
  * It's not recommended to manipulate this class by the user.
@@ -126,6 +136,7 @@ export class Editor {
   readonly state: DocumentState;
   readonly registry: EditorRegistry;
   readonly keyDown = new Slot<KeyboardEvent>();
+  readonly textInput = new Slot<TextInputEvent>();
 
   readonly preservedTextType: Set<TextType> = new Set([TextType.Bulleted]);
 
@@ -582,6 +593,7 @@ export class Editor {
 
     block?.blockContentChanged?.({
       node: node as HTMLDivElement,
+      blockElement: blockNode,
       offset: currentOffset,
     });
   }

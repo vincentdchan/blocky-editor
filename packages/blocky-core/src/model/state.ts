@@ -1,4 +1,4 @@
-import { isObject, isUndefined, isString, isNumber } from "lodash-es";
+import { isObject, isUndefined } from "lodash-es";
 import Delta from "quill-delta-es";
 import { isUpperCase } from "blocky-common/es/character";
 import { makeObservable } from "blocky-common/es/observable";

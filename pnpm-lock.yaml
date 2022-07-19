@@ -36,7 +36,7 @@ importers:
       is-hotkey: ^0.2.0
       jsdom: ^20.0.0
       lodash-es: ^4.17.21
-      quill-delta-es: ^5.0.1
+      quill-delta-es: ^5.0.2
       tsc-alias: ^1.6.9
       tslib: ^2.4.0
       typescript: ^4.7.3
@@ -47,7 +47,7 @@ importers:
       fast-diff: 1.2.0
       is-hotkey: 0.2.0
       lodash-es: 4.17.21
-      quill-delta-es: 5.0.1
+      quill-delta-es: 5.0.2
     devDependencies:
       '@types/is-hotkey': 0.1.7
       '@types/lodash-es': 4.17.6
@@ -109,11 +109,11 @@ importers:
     specifiers:
       blocky-common: workspace:*
       blocky-core: workspace:*
-      quill-delta-es: ^5.0.1
+      quill-delta-es: ^5.0.2
       typescript: ^4.7.3
       yjs: ^13.5.39
     dependencies:
-      quill-delta-es: 5.0.1
+      quill-delta-es: 5.0.2
     devDependencies:
       blocky-common: link:../blocky-common
       blocky-core: link:../blocky-core
@@ -1995,8 +1995,8 @@ packages:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
     dev: true
 
-  /quill-delta-es/5.0.1:
-    resolution: {integrity: sha512-d0K8O19iQS0HQFLHAGl+PON3VhB3xT/Xm9Sv9EYnL3FBE9oU3EDNwLdDG/i4BenHwPvdl/8Jt/xzrYL+Iv57Ow==}
+  /quill-delta-es/5.0.2:
+    resolution: {integrity: sha512-oQFnjJvQ3HZ55DW56FaRtbfgWFREKEJIoVVmfcFWDsxWtKIF5kv+JLF4kupEKu3Kzxu9a/7XLqSCFVZRpLIvwQ==}
     engines: {node: '>= 12.0.0'}
     dependencies:
       fast-diff: 1.2.0
