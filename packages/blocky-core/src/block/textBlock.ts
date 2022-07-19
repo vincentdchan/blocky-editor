@@ -1,5 +1,5 @@
 import { isNumber, isString } from "lodash-es";
-import Delta, { Op } from "quill-delta";
+import Delta, { Op } from "quill-delta-es";
 import { elem, removeNode } from "blocky-common/es/dom";
 import {
   type IBlockDefinition,

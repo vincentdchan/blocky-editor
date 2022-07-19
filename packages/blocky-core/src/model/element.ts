@@ -1,5 +1,5 @@
 import type { State } from "./state";
-import type { Op } from "quill-delta";
+import type { Op } from "quill-delta-es";
 
 export interface AttributesObject {
   [key: string]: any;

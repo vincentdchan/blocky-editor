@@ -1,5 +1,5 @@
 import { isWhiteSpace } from "blocky-common/es/text";
-import Delta from "quill-delta";
+import Delta from "quill-delta-es";
 import {
   BlockyTextModel,
   TextType,

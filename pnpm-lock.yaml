@@ -36,7 +36,7 @@ importers:
       is-hotkey: ^0.2.0
       jsdom: ^20.0.0
       lodash-es: ^4.17.21
-      quill-delta: ^5.0.0
+      quill-delta-es: ^5.0.1
       tsc-alias: ^1.6.9
       tslib: ^2.4.0
       typescript: ^4.7.3
@@ -47,7 +47,7 @@ importers:
       fast-diff: 1.2.0
       is-hotkey: 0.2.0
       lodash-es: 4.17.21
-      quill-delta: 5.0.0
+      quill-delta-es: 5.0.1
     devDependencies:
       '@types/is-hotkey': 0.1.7
       '@types/lodash-es': 4.17.6
@@ -109,11 +109,11 @@ importers:
     specifiers:
       blocky-common: workspace:*
       blocky-core: workspace:*
-      quill-delta: ^5.0.0
+      quill-delta-es: ^5.0.1
       typescript: ^4.7.3
       yjs: ^13.5.39
     dependencies:
-      quill-delta: 5.0.0
+      quill-delta-es: 5.0.1
     devDependencies:
       blocky-common: link:../blocky-common
       blocky-core: link:../blocky-core
@@ -1790,14 +1790,6 @@ packages:
     resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
     dev: false
 
-  /lodash.clonedeep/4.5.0:
-    resolution: {integrity: sha512-H5ZhCF25riFd9uB5UCkVKo61m3S/xZk1x4wA6yp/L3RFP6Z/eHH1ymQcGLo7J3GMPfm0V/7m1tryHuGVxpqEBQ==}
-    dev: false
-
-  /lodash.isequal/4.5.0:
-    resolution: {integrity: sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==}
-    dev: false
-
   /lodash.merge/4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
     dev: true
@@ -2003,13 +1995,12 @@ packages:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
     dev: true
 
-  /quill-delta/5.0.0:
-    resolution: {integrity: sha512-lVORU8dBPJdxPmwtdGhfRcz2cekn8Osuj5kwHoPMQ3MNlDT/IZ0CGUnQ/tLsAaTn31LWcDC1KyL+gkiGbBlBBw==}
+  /quill-delta-es/5.0.1:
+    resolution: {integrity: sha512-d0K8O19iQS0HQFLHAGl+PON3VhB3xT/Xm9Sv9EYnL3FBE9oU3EDNwLdDG/i4BenHwPvdl/8Jt/xzrYL+Iv57Ow==}
     engines: {node: '>= 12.0.0'}
     dependencies:
       fast-diff: 1.2.0
-      lodash.clonedeep: 4.5.0
-      lodash.isequal: 4.5.0
+      lodash-es: 4.17.21
     dev: false
 
   /readdirp/3.6.0:

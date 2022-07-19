@@ -9,7 +9,7 @@ import {
   type BlockyNode,
   BlockElement,
 } from "blocky-core";
-import Delta from "quill-delta";
+import Delta from "quill-delta-es";
 import { isUpperCase } from "blocky-common/es/character";
 
 export interface IYjsPluginOptions {

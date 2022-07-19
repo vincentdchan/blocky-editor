@@ -10,7 +10,7 @@ import {
 } from "blocky-common/es/disposable";
 import { type Position } from "blocky-common/es/position";
 import { debounce } from "lodash-es";
-import Delta from "quill-delta";
+import Delta from "quill-delta-es";
 import { DocRenderer } from "@pkg/view/renderer";
 import {
   State as DocumentState,

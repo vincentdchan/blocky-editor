@@ -1,7 +1,7 @@
 import { Slot } from "blocky-common/es/events";
 import { observe } from "blocky-common/es/observable";
 import { type Padding } from "blocky-common/es/dom";
-import Delta from "quill-delta";
+import Delta from "quill-delta-es";
 import {
   AttributesObject,
   State,
