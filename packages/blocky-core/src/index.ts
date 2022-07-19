@@ -25,4 +25,5 @@ export {
   TextType,
   DocNodeName,
 } from "./model";
+export { Change } from "./model/change";
 export { TextBlockName } from "./block/textBlock";

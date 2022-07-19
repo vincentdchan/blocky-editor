@@ -1,5 +1,4 @@
 import { isObject, isUndefined } from "lodash-es";
-import Delta from "quill-delta-es";
 import { isUpperCase } from "blocky-common/es/character";
 import { makeObservable } from "blocky-common/es/observable";
 import { removeNode } from "blocky-common/es/dom";
@@ -9,39 +8,10 @@ import type { BlockyNode, JSONNode } from "./element";
 import { TextBlockName } from "@pkg/block/textBlock";
 import { type IdGenerator } from "@pkg/helper/idHelper";
 import { type CursorState } from "@pkg/model/cursor";
+import { blockyNodeFromJsonNode } from "@pkg/model/deserialize";
 import { UndoManager } from "@pkg/model/undoManager";
 import { Block, BlockElement } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
-
-function jsonNodeToBlock(state: State, node: JSONNode): BlockyNode {
-  if (!isObject(node)) {
-    throw new TypeError("object is expected");
-  }
-  const { nodeName, id } = node;
-  if (isUpperCase(nodeName) && isUndefined(id)) {
-    throw new TypeError("id is expected for node: " + nodeName);
-  }
-  if (nodeName === "#text") {
-    const delta = new Delta();
-
-    for (const d of node.textContent!) {
-      delta.push(d);
-    }
-
-    return new BlockyTextModel(delta);
-  }
-
-  const blockElement = new BlockElement(nodeName, id!);
-  blockElement.state = state;
-
-  if (node.children && node.children.length > 0) {
-    for (const child of node.children) {
-      blockElement.appendChild(jsonNodeToBlock(state, child));
-    }
-  }
-
-  return blockElement;
-}
 
 export const DocNodeName = "doc";
 
@@ -65,20 +35,21 @@ export class State {
     blockRegistry: BlockRegistry,
     idHelper: IdGenerator
   ): State {
-    const rootNode = new BlockyElement(DocNodeName);
-    const state = new State(rootNode, blockRegistry, idHelper);
-    rootNode.state = state;
-
     if (doc.nodeName !== "document") {
       throw new Error("the root nodeName is expected to 'document'");
     }
 
+    const children: BlockyNode[] = [];
     doc.children?.forEach((child) => {
       if (isObject(child)) {
-        const block = jsonNodeToBlock(state, child);
-        rootNode.appendChild(block);
+        const block = blockyNodeFromJsonNode(child);
+        children.push(block);
       }
     });
+
+    const rootNode = new BlockyElement(DocNodeName, undefined, children);
+    const state = new State(rootNode, blockRegistry, idHelper);
+    rootNode.state = state;
 
     return state;
   }
@@ -99,13 +70,23 @@ export class State {
   ) {
     this.undoManager = new UndoManager(this);
     makeObservable(this, "cursorState");
+
+    // TODO: recursive add
+    let ptr = root.firstChild;
+    while (ptr) {
+      this.handleNewBlockMounted(ptr);
+      ptr = ptr.nextSibling;
+    }
   }
 
   createTextElement(): BlockElement {
-    const result = new BlockElement(TextBlockName, this.idHelper.mkBlockId());
     const textModel = new BlockyTextModel();
-    result.appendChild(textModel);
-    return result;
+    return new BlockElement(
+      TextBlockName,
+      this.idHelper.mkBlockId(),
+      undefined,
+      [textModel]
+    );
   }
 
   handleNewBlockMounted(child: BlockyNode) {

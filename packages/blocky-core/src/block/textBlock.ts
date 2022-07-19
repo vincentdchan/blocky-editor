@@ -17,7 +17,10 @@ import {
   BlockyTextModel,
   BlockyElement,
   type AttributesObject,
+  State,
+  BlockyNode,
 } from "@pkg/model";
+import { Change } from "@pkg/model/change";
 import fastDiff from "fast-diff";
 import { TextInputEvent, type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";
@@ -50,14 +53,17 @@ function textTypeCanIndent(textType: TextType): boolean {
   return textType === TextType.Normal || textType === TextType.Bulleted;
 }
 
-function insertOrGetChildrenContainer(element: BlockElement): BlockyElement {
+function insertOrGetChildrenContainer(
+  change: Change,
+  element: BlockElement
+): BlockyElement {
   let childrenContainer = element.childrenContainer;
   if (childrenContainer) {
     return childrenContainer;
   }
 
   childrenContainer = new BlockyElement("block-children");
-  element.appendChild(childrenContainer);
+  change.appendChild(element, childrenContainer);
 
   return childrenContainer;
 }
@@ -566,11 +572,16 @@ class TextBlock extends Block {
 
       const copy = this.props.clone();
 
-      parentElement.removeChild(this.props);
+      const change = new Change(this.editor.state);
+      change.removeNode(parentElement, this.props);
 
       const prevBlockyElement = prevElement as BlockElement;
-      const childrenContainer = insertOrGetChildrenContainer(prevBlockyElement);
-      childrenContainer.appendChild(copy);
+      const childrenContainer = insertOrGetChildrenContainer(
+        change,
+        prevBlockyElement
+      );
+      change.appendChild(childrenContainer, copy);
+      change.apply();
 
       return () => {
         this.editor.state.cursorState = prevCursorState;
@@ -595,7 +606,9 @@ class TextBlock extends Block {
 
       const copy = this.props.clone();
 
-      parentElement.removeChild(this.props);
+      const change = new Change(this.editor.state);
+      change.removeNode(parentElement, this.props);
+      change.apply();
 
       const parentOfParentBlockElement =
         parentBlockElement.parent as BlockyElement;
@@ -651,10 +664,11 @@ class TextBlockDefinition implements IBlockDefinition {
     converter: HTMLConverter
   ): BlockElement {
     const newId = editor.idGenerator.mkBlockId();
-    const result = new BlockElement(TextBlockName, newId);
 
     const textModel = new BlockyTextModel();
-    result.appendChild(textModel);
+    const attributes = Object.create(null);
+    const childrenNode: BlockyNode[] = [textModel];
+    const childrenContainer: BlockyNode[] = [];
 
     // TODO: Maybe using querySelector is slow.
     // Should make a benchmark here
@@ -671,7 +685,7 @@ class TextBlockDefinition implements IBlockDefinition {
 
       const dataType = textContentContainer.getAttribute("data-type") || "0";
       const dataTypeInt = parseInt(dataType, 10);
-      setTextTypeForTextBlock(result, dataTypeInt);
+      attributes.textType = dataTypeInt;
 
       while (childPtr) {
         if (childPtr instanceof Text) {
@@ -680,12 +694,7 @@ class TextBlockDefinition implements IBlockDefinition {
         } else if (childPtr instanceof HTMLElement) {
           if (converter.isContainerElement(childPtr)) {
             const childElements = converter.parseContainerElement(childPtr);
-            if (childElements.length > 0) {
-              const childrenContainer = insertOrGetChildrenContainer(result);
-              for (const element of childElements) {
-                childrenContainer.appendChild(element);
-              }
-            }
+            childrenContainer.push(...childElements);
           } else {
             const content = childPtr.textContent ?? "";
             const attributes = editor.getAttributesBySpan(childPtr);
@@ -702,16 +711,25 @@ class TextBlockDefinition implements IBlockDefinition {
 
     const { tagName } = node;
     if (tagName === "H1") {
-      setTextTypeForTextBlock(result, TextType.Heading1);
+      attributes.textType = TextType.Heading1;
     } else if (tagName === "H2") {
-      setTextTypeForTextBlock(result, TextType.Heading2);
+      attributes.textType = TextType.Heading2;
     } else if (tagName === "H3") {
-      setTextTypeForTextBlock(result, TextType.Heading3);
+      attributes.textType = TextType.Heading3;
     } else if (tagName === "LI") {
-      setTextTypeForTextBlock(result, TextType.Bulleted);
+      attributes.textType = TextType.Bulleted;
     }
 
-    return result;
+    if (childrenContainer.length > 0) {
+      const blockChildren = new BlockyElement(
+        "block-children",
+        undefined,
+        childrenContainer
+      );
+      childrenNode.push(blockChildren);
+    }
+
+    return new BlockElement(TextBlockName, newId, attributes, childrenNode);
   }
 }
 
@@ -757,10 +775,15 @@ export function makeTextBlockDefinition(): IBlockDefinition {
 }
 
 export function setTextTypeForTextBlock(
+  state: State,
   blockElement: BlockElement,
   textType: TextType
 ) {
-  blockElement.setAttribute("textType", textType.toString());
+  new Change(state)
+    .setAttribute(blockElement, {
+      textType: textType.toString(),
+    })
+    .apply();
 }
 
 export function getTextTypeForTextBlock(blockElement: BlockElement): TextType {

@@ -1,11 +1,13 @@
 import Delta from "quill-delta-es";
 import { isEqual } from "lodash-es";
 import { BlockElement } from "@pkg/block/basic";
+import { blockyNodeFromJsonNode } from "@pkg/model/deserialize";
 import { BlockyElement, BlockyTextModel } from "./tree";
 import type { ElementChangedEvent } from "./events";
 import type { JSONNode, AttributesObject, BlockyNode } from "./element";
 import type { State, NodeLocation } from "./state";
 import { CursorState } from "./cursor";
+import { Change } from "./change";
 
 export interface InsertNodeOperation {
   type: "op-insert-node";
@@ -51,10 +53,10 @@ export type Operation =
  * When a StackItem is sealed, it can't be
  * changed anymore.
  */
-export class StackItem {
-  prevSibling: StackItem | null = null;
-  nextSibling: StackItem | null = null;
-  curorState: CursorState | undefined = undefined;
+export class HistoryItem {
+  prevSibling: HistoryItem | null = null;
+  nextSibling: HistoryItem | null = null;
+  cursorState: CursorState | undefined = undefined;
   sealed = false;
   readonly operations: Operation[] = [];
 
@@ -62,7 +64,7 @@ export class StackItem {
     this.sealed = true;
   }
 
-  push(operation: Operation, curorState?: CursorState) {
+  push(operation: Operation, cursorState?: CursorState) {
     if (this.sealed) {
       throw new Error("StackItem is sealed.");
     }
@@ -78,37 +80,37 @@ export class StackItem {
       }
     }
     this.operations.push(operation);
-    this.curorState = curorState;
+    this.cursorState = cursorState;
   }
 }
 
 export class FixedSizeStack {
-  #begin: StackItem | null = null;
-  #end: StackItem | null = null;
+  #begin: HistoryItem | null = null;
+  #end: HistoryItem | null = null;
   #length = 0;
 
   constructor(private maxSize: number) {}
 
-  push(item: StackItem) {
+  push(item: HistoryItem) {
     if (this.length >= this.maxSize) {
-      this.pop();
+      this.#removeFirst();
     }
-    if (!this.#begin) {
+    if (!this.#end) {
       this.#begin = item;
       this.#end = item;
     } else {
-      item.nextSibling = this.#begin;
-      item.prevSibling = null;
-      this.#begin = item;
+      this.#end.nextSibling = item;
+      item.prevSibling = this.#end;
+      this.#end = item;
     }
     this.#length++;
   }
 
-  peek(): StackItem | null {
-    return this.#begin;
+  peek(): HistoryItem | null {
+    return this.#end;
   }
 
-  pop(): StackItem | void {
+  #removeFirst() {
     if (this.#length === 0) {
       return;
     }
@@ -119,7 +121,23 @@ export class FixedSizeStack {
     }
 
     this.#length--;
+    first.prevSibling = null;
+    first.nextSibling = null;
     return first;
+  }
+
+  pop(): HistoryItem | void {
+    if (this.#length === 0) {
+      return;
+    }
+    const last = this.#end!;
+    this.#end = last.prevSibling;
+    if (this.#begin === last) {
+      this.#begin = null;
+    }
+
+    this.#length--;
+    return last;
   }
 
   clear() {
@@ -227,11 +245,14 @@ export class UndoManager {
           if (this.shouldRecord) {
             const stackItem = this.getAUndoItem();
             const parentLoc = findNodeLocation(this.state.root, parent);
-            stackItem.push({
-              type: "op-insert-node",
-              parentLoc,
-              index,
-            });
+            stackItem.push(
+              {
+                type: "op-insert-node",
+                parentLoc,
+                index,
+              },
+              this.state.cursorState
+            );
           }
           this.#bindBlockyNode(child);
           break;
@@ -295,19 +316,19 @@ export class UndoManager {
           this.state.cursorState
         );
         if (this.cursorBeforeComposition) {
-          stackItem.curorState = this.cursorBeforeComposition;
+          stackItem.cursorState = this.cursorBeforeComposition;
           this.cursorBeforeComposition = undefined;
         }
       }
     });
   }
 
-  getAUndoItem(): StackItem {
+  getAUndoItem(): HistoryItem {
     const peek = this.undoStack.peek();
     if (peek && !peek.sealed) {
       return peek;
     }
-    const newItem = new StackItem();
+    const newItem = new HistoryItem();
     this.undoStack.push(newItem);
     return newItem;
   }
@@ -319,7 +340,7 @@ export class UndoManager {
     }
   }
 
-  undo(): StackItem | void {
+  undo(): HistoryItem | void {
     const prevState = this.undoState;
     this.undoState = UndoState.Undoing;
     try {
@@ -334,7 +355,7 @@ export class UndoManager {
     }
   }
 
-  #undoStackItem(stackItem: StackItem) {
+  #undoStackItem(stackItem: HistoryItem) {
     for (let i = stackItem.operations.length - 1; i >= 0; i--) {
       this.#undoOperation(stackItem.operations[i]);
     }
@@ -344,6 +365,14 @@ export class UndoManager {
     switch (op.type) {
       case "op-text-edit": {
         this.#undoTextEditOperation(op);
+        break;
+      }
+      case "op-insert-node": {
+        this.#undoInsertNode(op);
+        break;
+      }
+      case "op-delete-node": {
+        this.#undoDeleteNode(op);
         break;
       }
     }
@@ -359,6 +388,34 @@ export class UndoManager {
       return;
     }
     node.delta = textEdit.oldDelta;
+  }
+
+  #undoInsertNode(insertNodeOperation: InsertNodeOperation) {
+    const { parentLoc, index } = insertNodeOperation;
+    let parentNode: BlockyElement;
+    if (parentLoc) {
+      parentNode = this.state.findNodeByLocation(parentLoc) as BlockyElement;
+    } else {
+      parentNode = this.state.root;
+    }
+
+    const child = parentNode.childAt(index);
+    if (child) {
+      new Change(this.state).removeNode(parentNode, child).apply();
+    }
+  }
+
+  #undoDeleteNode(deleteNodeOperation: DeleteNodeOperation) {
+    const { parentLoc, snapshot, index } = deleteNodeOperation;
+    const node = blockyNodeFromJsonNode(snapshot);
+    let parentNode: BlockyElement;
+    if (parentLoc) {
+      parentNode = this.state.findNodeByLocation(parentLoc) as BlockyElement;
+    } else {
+      parentNode = this.state.root;
+    }
+
+    new Change(this.state).insertChildAt(parentNode, index, node).apply();
   }
 
   redo() {}

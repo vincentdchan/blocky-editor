@@ -8,6 +8,7 @@ import {
   type DocumentState,
   type BlockyNode,
   BlockElement,
+  Change,
 } from "blocky-core";
 import Delta from "quill-delta-es";
 import { isUpperCase } from "blocky-common/es/character";
@@ -89,38 +90,34 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         yElement: Y.XmlElement
       ): BlockyElement {
         let result: BlockyElement;
-
-        if (isUpperCase(yElement.nodeName)) {
-          result = new BlockElement(
-            yElement.nodeName,
-            yElement.getAttribute("id")
-          );
-        } else {
-          result = new BlockyElement(yElement.nodeName);
-        }
-
-        result.state = state;
-
-        const attribs = yElement.getAttributes();
-        for (const key in attribs) {
-          const value = attribs[key];
-          if (value) {
-            result.setAttribute(key, value);
-          }
-        }
+        const children: BlockyNode[] = [];
 
         let childPtr = yElement.firstChild;
         while (childPtr) {
           if (childPtr instanceof Y.XmlElement) {
             const child = makeBlockyElementByYElement(childPtr);
-            result.appendChild(child);
+            children.push(child);
           } else if (childPtr instanceof Y.XmlText) {
             const textModel = createBlockyTextModelByYText(editor, childPtr);
-            result.appendChild(textModel);
+            children.push(textModel);
           }
 
           childPtr = childPtr.nextSibling;
         }
+
+        const attribs = yElement.getAttributes();
+        if (isUpperCase(yElement.nodeName)) {
+          result = new BlockElement(
+            yElement.nodeName,
+            yElement.getAttribute("id"),
+            attribs,
+            children
+          );
+        } else {
+          result = new BlockyElement(yElement.nodeName, attribs, children);
+        }
+
+        result.state = state;
 
         bindBlockyElement(editor, result, yElement);
 
@@ -169,8 +166,11 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         yElement.observe((e: Y.YXmlEvent) => {
           withSilent(state, () => {
             editor.update(() => {
+              const change = new Change(editor.state);
               e.attributesChanged.forEach((key) => {
-                blockyElement.setAttribute(key, yElement.getAttribute(key));
+                change.setAttribute(blockyElement, {
+                  [key]: yElement.getAttribute(key),
+                });
               });
 
               // @ts-ignore
@@ -186,7 +186,11 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
                       const createdElement =
                         makeBlockyElementByYElement(yXmlElement);
 
-                      blockyElement.insertChildAt(index, createdElement);
+                      change.insertChildAt(
+                        blockyElement,
+                        index,
+                        createdElement
+                      );
 
                       index++;
                     }
@@ -196,6 +200,8 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
                   }
                 }
               }
+
+              change.apply();
             });
           });
         });
@@ -219,7 +225,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
           if (ptr) {
             state.root.insertAfter(createdElement, ptr);
           } else {
-            state.root.appendChild(createdElement);
+            new Change(state).appendChild(state.root, createdElement).apply();
           }
 
           ptr = createdElement;
@@ -242,12 +248,14 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
           return;
         }
 
+        const change = new Change(state);
         while (count > 0 && ptr) {
           const next: BlockyNode | null = ptr.nextSibling;
-          state.root.removeChild(ptr);
+          change.removeNode(state.root, ptr);
           ptr = next;
           count--;
         }
+        change.apply();
       };
 
       function makeYElementByBlockyElement(
@@ -286,14 +294,16 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
       if (allowInit) {
         withSilent(state, () => {
           let child = docFragment.firstChild;
+          const change = new Change(state);
           while (child) {
             const element = makeBlockyElementByYElement(child as any);
             if (!element) {
               continue;
             }
-            state.root.appendChild(element);
+            change.appendChild(state.root, element);
             child = child.nextSibling;
           }
+          change.apply();
         });
       } else {
         // init from root

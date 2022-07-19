@@ -21,7 +21,7 @@ function makeBulletListPlugin(): IPlugin {
     textElement: BlockElement
   ) => {
     editor.update(() => {
-      setTextTypeForTextBlock(textElement, TextType.Bulleted);
+      setTextTypeForTextBlock(editor.state, textElement, TextType.Bulleted);
       textModel.compose(new Delta().delete(2));
       return () => {
         editor.state.cursorState = {
@@ -91,7 +91,7 @@ function makeBulletListPlugin(): IPlugin {
       e.preventDefault();
       editor.state.cursorState = undefined;
       editor.update(() => {
-        setTextTypeForTextBlock(textElement, TextType.Normal);
+        setTextTypeForTextBlock(editor.state, textElement, TextType.Normal);
         return () => {
           editor.state.cursorState = {
             type: "collapsed",
@@ -137,7 +137,7 @@ function makeBulletListPlugin(): IPlugin {
       e.preventDefault();
       editor.state.cursorState = undefined;
       editor.update(() => {
-        setTextTypeForTextBlock(textElement, TextType.Normal);
+        setTextTypeForTextBlock(editor.state, textElement, TextType.Normal);
         return () => {
           editor.state.cursorState = {
             type: "collapsed",

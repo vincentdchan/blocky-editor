@@ -14,6 +14,7 @@ function makeHeadingsPlugin(): IPlugin {
     onInitialized(editor: Editor) {
       editor.textInput.on((evt) => {
         const { textModel, beforeDelta, blockElement } = evt;
+        const { state } = editor;
         const delta = new Delta();
 
         let index = 0;
@@ -28,13 +29,13 @@ function makeHeadingsPlugin(): IPlugin {
             if (isWhiteSpace(content)) {
               if (before === "#") {
                 delta.delete(2);
-                setTextTypeForTextBlock(blockElement, TextType.Heading1);
+                setTextTypeForTextBlock(state, blockElement, TextType.Heading1);
               } else if (before === "##") {
                 delta.delete(3);
-                setTextTypeForTextBlock(blockElement, TextType.Heading2);
+                setTextTypeForTextBlock(state, blockElement, TextType.Heading2);
               } else if (before === "###") {
                 delta.delete(4);
-                setTextTypeForTextBlock(blockElement, TextType.Heading3);
+                setTextTypeForTextBlock(state, blockElement, TextType.Heading3);
               }
               break;
             }
