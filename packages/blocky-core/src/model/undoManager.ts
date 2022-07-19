@@ -197,7 +197,7 @@ export class UndoManager {
         if (child instanceof BlockyElement) {
           this.#bindBlockyNode(child);
         } else if (child instanceof BlockyTextModel) {
-          this.#bindBlockyTextModel(child);
+          this.#bindBlockyTextModel();
         }
       } else if (evt.type === "element-set-attrib") {
         const location = findNodeLocation(this.state.root, element);
@@ -224,7 +224,7 @@ export class UndoManager {
     });
   }
 
-  #bindBlockyTextModel(blockyText: BlockyTextModel) {}
+  #bindBlockyTextModel() {}
 
   getAUndoItem(): StackItem {
     const peek = this.undoStack.peek();

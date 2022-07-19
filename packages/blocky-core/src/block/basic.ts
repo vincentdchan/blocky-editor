@@ -81,6 +81,7 @@ export interface BlockBlurEvent {
 
 export interface BlockContentChangedEvent {
   node: HTMLDivElement;
+  blockElement: BlockElement;
   offset?: number;
 }
 

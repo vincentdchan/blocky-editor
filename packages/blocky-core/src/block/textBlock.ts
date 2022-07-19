@@ -1,4 +1,4 @@
-import { isNumber, isString } from "lodash-es";
+import { isString } from "lodash-es";
 import Delta, { Op } from "quill-delta-es";
 import { elem, removeNode } from "blocky-common/es/dom";
 import {
@@ -19,7 +19,7 @@ import {
   type AttributesObject,
 } from "@pkg/model";
 import fastDiff from "fast-diff";
-import { type Editor } from "@pkg/view/editor";
+import { TextInputEvent, type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";
 import { HTMLConverter } from "@pkg/helper/htmlConverter";
 
@@ -40,26 +40,6 @@ interface FormattedTextSlice {
   index: number;
   length: number;
   attributes?: AttributesObject;
-}
-
-function textModelToFormats(textModel: BlockyTextModel): FormattedTextSlice[] {
-  const formats: FormattedTextSlice[] = [];
-
-  let index = 0;
-  textModel.delta.forEach((op) => {
-    if (isString(op.insert)) {
-      formats.push({
-        index,
-        length: op.insert.length,
-        attributes: op.attributes,
-      });
-      index += op.insert.length;
-    } else if (isNumber(op.retain)) {
-      index += op.retain;
-    }
-  });
-
-  return formats;
 }
 
 function getTextTypeFromElement(element: BlockyElement): TextType {
@@ -293,7 +273,10 @@ class TextBlock extends Block {
     }
   }
 
-  override blockContentChanged({ offset }: BlockContentChangedEvent): void {
+  override blockContentChanged({
+    offset,
+    blockElement,
+  }: BlockContentChangedEvent): void {
     const contentContainer = this.findContentContainer();
     const formats: FormattedTextSlice[] = [];
 
@@ -325,48 +308,13 @@ class TextBlock extends Block {
         delta.delete(content.length);
       }
     }
+    const beforeDelta = textModel.delta;
     textModel.compose(delta);
-    // this.diffAndApplyFormats(formats, textModel);
+
+    this.editor.textInput.emit(
+      new TextInputEvent(beforeDelta, diffs, textModel, blockElement)
+    );
   }
-
-  // private diffAndApplyFormats(
-  //   newFormats: FormattedTextSlice[],
-  //   textModel: BlockyTextModel
-  // ) {
-  //   const oldFormats: FormattedTextSlice[] = textModelToFormats(textModel);
-
-  //   const slices: (FormattedTextSlice | undefined)[] = Array(textModel.length);
-
-  //   for (const format of newFormats) {
-  //     slices[format.index] = format;
-  //   }
-
-  //   for (const oldFormat of oldFormats) {
-  //     const f = slices[oldFormat.index];
-  //     if (!f) {
-  //       // format doesn't anymore, erase it.
-  //       textModel.format(oldFormat.index, oldFormat.length, undefined);
-  //       continue;
-  //     }
-
-  //     if (!areEqualShallow(f.attributes, oldFormat.attributes)) {
-  //       if (oldFormat.length !== f.length) {
-  //         // length are different, erase it firstly
-  //         textModel.format(oldFormat.index, oldFormat.length, undefined);
-  //       }
-  //       textModel.format(f.index, f.length, f.attributes);
-  //     }
-
-  //     slices[oldFormat.index] = undefined;
-  //   }
-
-  //   for (let i = 0, len = slices.length; i < len; i++) {
-  //     const f = slices[i];
-  //     if (f) {
-  //       textModel.format(f.index, f.length, f.attributes);
-  //     }
-  //   }
-  // }
 
   override render(container: HTMLElement) {
     this.#container = container;
