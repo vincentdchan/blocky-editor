@@ -21,11 +21,9 @@ function createXmlTextByBlockyText(
   editor: Editor,
   textModel: BlockyTextModel
 ): Y.XmlText {
-  const result = new Y.XmlText(textModel.toString());
+  const result = new Y.XmlText();
 
-  textModel.delta.forEach((op) => {
-    result.applyDelta(op);
-  });
+  result.applyDelta(textModel.delta.ops);
 
   bindTextModel(editor, textModel, result);
 
@@ -61,7 +59,7 @@ function bindTextModel(
   textModel.changed.on(({ oldDelta, newDelta }) => {
     const diff = oldDelta.diff(newDelta);
     withSilent(state, () => {
-      diff.forEach((op) => yTextModel.applyDelta(op));
+      yTextModel.applyDelta(diff.ops);
     });
   });
 }
