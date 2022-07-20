@@ -13,14 +13,14 @@ import {
   BlockElement,
 } from "./basic";
 import {
+  type AttributesObject,
   TextType,
   BlockyTextModel,
   BlockyElement,
-  type AttributesObject,
   State,
   BlockyNode,
+  Changeset,
 } from "@pkg/model";
-import { Changeset } from "@pkg/model/change";
 import fastDiff from "fast-diff";
 import { TextInputEvent, type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";
@@ -609,11 +609,16 @@ class TextBlock extends Block {
 
       const change = new Changeset(this.editor.state);
       change.removeNode(parentElement, this.props);
-      change.apply();
 
       const parentOfParentBlockElement =
         parentBlockElement.parent as BlockyElement;
-      parentOfParentBlockElement.insertAfter(copy, parentBlockElement);
+      change.insertChildAfter(
+        parentOfParentBlockElement,
+        copy,
+        parentBlockElement
+      );
+
+      change.apply();
 
       return () => {
         this.editor.state.cursorState = prevCursorState;

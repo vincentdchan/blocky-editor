@@ -23,9 +23,11 @@ export interface DeltaChangedEvent {
 export const symSetAttribute = Symbol("setAttribute");
 export const symAppendChild = Symbol("appendChild");
 export const symInsertChildAt = Symbol("insertChildAt");
+export const symInsertAfter = Symbol("insertAfter");
 export const symRemoveChild = Symbol("removeChild");
 export const symTextEdit = Symbol("textEdit");
 export const symTextConcat = Symbol("textConcat");
+export const symDeleteChildrenAt = Symbol("deleteChildrenAt");
 
 export class BlockyTextModel implements BlockyNode, WithState {
   #delta = new Delta();
@@ -157,7 +159,7 @@ export class BlockyElement implements BlockyNode, WithState {
     return this.#lastChild;
   }
 
-  insertAfter(node: BlockyNode, after?: BlockyNode) {
+  [symInsertAfter](node: BlockyNode, after?: BlockyNode) {
     if (after && after.parent !== this) {
       throw new TypeError("after node is a child of this node");
     }
@@ -287,7 +289,7 @@ export class BlockyElement implements BlockyNode, WithState {
     }
 
     if (index === 0) {
-      this.insertAfter(node);
+      this[symInsertAfter](node);
       return;
     }
 
@@ -298,7 +300,7 @@ export class BlockyElement implements BlockyNode, WithState {
       ptr = ptr.nextSibling;
     }
 
-    this.insertAfter(node, ptr ?? undefined);
+    this[symInsertAfter](node, ptr ?? undefined);
   }
 
   [symSetAttribute](name: string, value: string) {
@@ -324,7 +326,7 @@ export class BlockyElement implements BlockyNode, WithState {
     return { ...this.#attributes };
   }
 
-  deleteChildrenAt(index: number, count: number) {
+  [symDeleteChildrenAt](index: number, count: number) {
     let ptr = this.#firstChild;
 
     while (index > 0) {
