@@ -13,6 +13,7 @@ describe("FixedSizeStack", () => {
     expect(poped).toBe(first);
     expect(fixedSizeStack.pop()).toBeUndefined();
   });
+
   test("maxSize", () => {
     const fixedSizeStack = new FixedSizeStack(2);
     const first = new StackItem();
@@ -25,6 +26,8 @@ describe("FixedSizeStack", () => {
     fixedSizeStack.push(third);
     expect(fixedSizeStack.length).toBe(2);
     expect(fixedSizeStack.peek()).toBe(third);
+    expect(first.prevSibling).toBeNull();
+    expect(first.nextSibling).toBeNull();
   });
 
   test("clear()", () => {

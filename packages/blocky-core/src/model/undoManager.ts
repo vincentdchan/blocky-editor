@@ -91,24 +91,24 @@ export class FixedSizeStack {
 
   push(item: StackItem) {
     if (this.length >= this.maxSize) {
-      this.pop();
+      this.#removeFirst();
     }
-    if (!this.#begin) {
+    if (!this.#end) {
       this.#begin = item;
       this.#end = item;
     } else {
-      item.nextSibling = this.#begin;
-      item.prevSibling = null;
-      this.#begin = item;
+      this.#end.nextSibling = item;
+      item.prevSibling = this.#end;
+      this.#end = item;
     }
     this.#length++;
   }
 
   peek(): StackItem | null {
-    return this.#begin;
+    return this.#end;
   }
 
-  pop(): StackItem | void {
+  #removeFirst() {
     if (this.#length === 0) {
       return;
     }
@@ -119,7 +119,23 @@ export class FixedSizeStack {
     }
 
     this.#length--;
+    first.prevSibling = null;
+    first.nextSibling = null;
     return first;
+  }
+
+  pop(): StackItem | void {
+    if (this.#length === 0) {
+      return;
+    }
+    const last = this.#end!;
+    this.#end = last.prevSibling;
+    if (this.#begin === last) {
+      this.#begin = null;
+    }
+
+    this.#length--;
+    return last;
   }
 
   clear() {
