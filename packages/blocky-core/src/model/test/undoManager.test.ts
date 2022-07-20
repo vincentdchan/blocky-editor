@@ -1,12 +1,12 @@
 import { test, expect, describe } from "vitest";
 import "@pkg/index";
-import { FixedSizeStack, StackItem } from "../undoManager";
+import { FixedSizeStack, HistoryItem } from "../undoManager";
 
 describe("FixedSizeStack", () => {
   test("push() + pop()", () => {
     const fixedSizeStack = new FixedSizeStack(100);
     expect(fixedSizeStack.length).toBe(0);
-    const first = new StackItem();
+    const first = new HistoryItem();
     fixedSizeStack.push(first);
     expect(fixedSizeStack.length).toBe(1);
     const poped = fixedSizeStack.pop();
@@ -16,13 +16,13 @@ describe("FixedSizeStack", () => {
 
   test("maxSize", () => {
     const fixedSizeStack = new FixedSizeStack(2);
-    const first = new StackItem();
+    const first = new HistoryItem();
     fixedSizeStack.push(first);
     expect(fixedSizeStack.length).toBe(1);
-    const second = new StackItem();
+    const second = new HistoryItem();
     fixedSizeStack.push(second);
     expect(fixedSizeStack.length).toBe(2);
-    const third = new StackItem();
+    const third = new HistoryItem();
     fixedSizeStack.push(third);
     expect(fixedSizeStack.length).toBe(2);
     expect(fixedSizeStack.peek()).toBe(third);
@@ -32,8 +32,8 @@ describe("FixedSizeStack", () => {
 
   test("clear()", () => {
     const fixedSizeStack = new FixedSizeStack(10);
-    fixedSizeStack.push(new StackItem());
-    fixedSizeStack.push(new StackItem());
+    fixedSizeStack.push(new HistoryItem());
+    fixedSizeStack.push(new HistoryItem());
     expect(fixedSizeStack.length).toBe(2);
     fixedSizeStack.clear();
     expect(fixedSizeStack.length).toBe(0);

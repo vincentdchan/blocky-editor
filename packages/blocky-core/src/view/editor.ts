@@ -749,7 +749,7 @@ export class Editor {
       const item = this.state.undoManager.undo();
       if (item) {
         this.render(() => {
-          this.state.cursorState = item.curorState;
+          this.state.cursorState = item.cursorState;
         });
       }
     } else if (isHotkey("mod+shift+z", e)) {
