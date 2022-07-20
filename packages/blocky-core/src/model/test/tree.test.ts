@@ -4,6 +4,8 @@ import {
   symAppendChild,
   symSetAttribute,
   symInsertChildAt,
+  symInsertAfter,
+  symDeleteChildrenAt,
 } from "@pkg/model/tree";
 
 test("tree append", () => {
@@ -41,7 +43,7 @@ test("tree insert at first", () => {
     }
   });
 
-  parent.insertAfter(secondChild);
+  parent[symInsertAfter](secondChild);
 
   expect(callbackIsCalled).toBeTruthy();
 });
@@ -88,7 +90,7 @@ test("tree delete children at index", () => {
   parent[symAppendChild](secondChild);
   parent[symAppendChild](thirdChild);
 
-  parent.deleteChildrenAt(1, 1);
+  parent[symDeleteChildrenAt](1, 1);
   expect(parent.childrenLength).toBe(2);
   expect(firstChild.nextSibling).toBe(thirdChild);
   expect(thirdChild.prevSibling).toBe(firstChild);
@@ -105,7 +107,7 @@ test("child validation", () => {
   const firstChild = new BlockyElement("child");
   element[symAppendChild](firstChild);
   expect(() => {
-    element.insertAfter(element, firstChild);
+    element[symInsertAfter](element, firstChild);
   }).toThrowError("Can not add ancesters of a node as child");
 });
 

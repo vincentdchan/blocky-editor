@@ -3,11 +3,12 @@ import { observe } from "blocky-common/es/observable";
 import { type Padding } from "blocky-common/es/dom";
 import Delta from "quill-delta-es";
 import {
+  type CursorState,
   AttributesObject,
   State,
   BlockyElement,
-  type CursorState,
   BlockyTextModel,
+  Changeset,
 } from "@pkg/model";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
@@ -20,7 +21,6 @@ import { type BlockElement } from "@pkg/block/basic";
 import { type CollaborativeCursorOptions } from "./collaborativeCursors";
 import { type Editor } from "./editor";
 import { isUpperCase } from "blocky-common/es/character";
-import { Changeset } from "@pkg/model/change";
 
 export interface IEditorControllerOptions {
   pluginRegistry?: PluginRegistry;
@@ -153,7 +153,9 @@ export class EditorController {
     const parentNode = prevNode.parent! as BlockyElement;
 
     const updateState = () => {
-      parentNode.insertAfter(element, prevNode);
+      new Changeset(editor.state)
+        .insertChildAfter(parentNode, element, prevNode)
+        .apply();
     };
     if (options?.noRender !== true) {
       editor.update(() => {
