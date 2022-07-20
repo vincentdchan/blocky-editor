@@ -1,10 +1,8 @@
 import { test, expect } from "vitest";
-import {
-  TextBlockName,
-  BlockyElement,
-  BlockElement,
-  DocNodeName,
-} from "@pkg/index";
+import "@pkg/index";
+import { BlockElement } from "@pkg/block/basic";
+import { TextBlockName } from "@pkg/block/textBlock";
+import { DocNodeName, BlockyElement } from "@pkg/model";
 
 test("block level 0", () => {
   const root = new BlockyElement(DocNodeName);

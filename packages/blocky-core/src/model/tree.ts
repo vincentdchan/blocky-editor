@@ -8,6 +8,7 @@ import type {
 } from "./element";
 import type { ElementChangedEvent } from "./events";
 import type { State } from "./state";
+import { isUndefined } from "lodash-es";
 
 export interface TextSlice {
   content: string;
@@ -21,6 +22,7 @@ export interface DeltaChangedEvent {
 
 export class BlockyTextModel implements BlockyNode, WithState {
   #delta = new Delta();
+  #cachedString: string | undefined;
   state?: State;
   parent: BlockyNode | null = null;
   nextSibling: BlockyNode | null = null;
@@ -46,24 +48,26 @@ export class BlockyTextModel implements BlockyNode, WithState {
   set delta(v: Delta) {
     const oldDelta = this.#delta;
     this.#delta = v;
+    this.#cachedString = undefined;
     this.changed.emit({ oldDelta, newDelta: v });
   }
 
   compose(delta: Delta) {
-    const oldDelta = this.#delta;
-    const newDelta = this.delta.compose(delta);
-    this.#delta = newDelta;
-    this.changed.emit({ oldDelta, newDelta });
+    this.delta = this.#delta.compose(delta);
   }
 
   concat(delta: Delta) {
-    const oldDelta = this.#delta;
-    const newDelta = this.delta.concat(delta);
-    this.#delta = newDelta;
-    this.changed.emit({ oldDelta, newDelta });
+    this.delta = this.#delta.concat(delta);
   }
 
   toString(): string {
+    if (isUndefined(this.#cachedString)) {
+      this.#cachedString = this.#computeString();
+    }
+    return this.#cachedString;
+  }
+
+  #computeString(): string {
     return this.#delta.reduce((prev, op) => {
       if (typeof op.insert === "string") {
         return (prev += op.insert);
