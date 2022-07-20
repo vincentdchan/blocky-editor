@@ -53,7 +53,7 @@ import {
 } from "./collaborativeCursors";
 import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { isHotkey } from "is-hotkey";
-import { Change } from "..";
+import { Changeset } from "@pkg/model/change";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
@@ -587,7 +587,7 @@ export class Editor {
     return true;
   }
 
-  #checkMarkedDom(change: Change, node: Node, currentOffset?: number) {
+  #checkMarkedDom(changeset: Changeset, node: Node, currentOffset?: number) {
     const treeNode = node._mgNode as BlockElement;
     if (!node.parentNode) {
       // dom has been removed
@@ -596,7 +596,7 @@ export class Editor {
 
       const parent = treeNode.parent as BlockyElement | undefined;
       if (parent) {
-        change.removeNode(parent, treeNode);
+        changeset.removeNode(parent, treeNode);
       }
       return;
     }
@@ -623,11 +623,11 @@ export class Editor {
 
   #checkNodesChanged() {
     const doms = this.state.domMap.values();
-    const change = new Change(this.state);
+    const changeset = new Changeset(this.state);
     for (const dom of doms) {
-      this.#checkMarkedDom(change, dom, undefined);
+      this.#checkMarkedDom(changeset, dom, undefined);
     }
-    change.apply();
+    changeset.apply();
   }
 
   #handleOpenCursorContentChanged() {
@@ -650,7 +650,7 @@ export class Editor {
       return;
     }
 
-    const change = new Change(this.state);
+    const change = new Changeset(this.state);
     this.#checkMarkedDom(change, domNode, currentOffset);
     change.apply();
     // this is essential because the cursor will change
@@ -839,13 +839,14 @@ export class Editor {
           setTextTypeForTextBlock(this.state, newTextElement, textType);
         }
 
-        newTextModel.concat(slices);
-
-        textModel.compose(
-          new Delta()
-            .retain(cursorOffset)
-            .delete(textModel.length - cursorOffset)
-        );
+        new Changeset(this.state)
+          .textConcat(newTextModel, () => slices)
+          .textEdit(textModel, () =>
+            new Delta()
+              .retain(cursorOffset)
+              .delete(textModel.length - cursorOffset)
+          )
+          .apply();
 
         const parentElement = blockElement.parent! as BlockyElement;
         parentElement.insertAfter(newTextElement, blockElement);
@@ -980,9 +981,8 @@ export class Editor {
     const originalLength = prevTextModel.length;
 
     this.update(() => {
-      prevTextModel.concat(thisTextModel.delta);
-
-      new Change(this.state)
+      new Changeset(this.state)
+        .textConcat(prevTextModel, () => thisTextModel.delta)
         .removeNode(node.parent as BlockyElement, node)
         .apply();
 
@@ -1029,7 +1029,7 @@ export class Editor {
       const parent = node.parent as BlockyElement | undefined;
 
       if (parent) {
-        new Change(this.state).removeNode(parent, node).apply();
+        new Changeset(this.state).removeNode(parent, node).apply();
       }
       return () => {
         if (prevNode) {
@@ -1251,6 +1251,7 @@ export class Editor {
     let prev = currentBlockElement;
 
     this.update(() => {
+      const changeset = new Changeset(this.state);
       for (let i = 0, len = elements.length; i < len; i++) {
         const element = elements[i];
 
@@ -1265,7 +1266,7 @@ export class Editor {
           if (!prevTextModel || !firstTextModel) {
             continue;
           }
-          prevTextModel.concat(firstTextModel.delta);
+          changeset.textConcat(prevTextModel, () => firstTextModel.delta);
           // first item, try to merget ext
           continue;
         }
@@ -1273,6 +1274,7 @@ export class Editor {
         parent.insertAfter(element, prev);
         prev = element;
       }
+      changeset.apply();
     }, updateFlags);
   }
 
@@ -1327,9 +1329,11 @@ export class Editor {
 
     const afterOffset = cursorState.offset + text.length;
     const textModel = textElement.firstChild! as BlockyTextModel;
-    textModel.compose(
-      new Delta().retain(cursorState.offset).insert(text, attributes)
-    );
+    new Changeset(this.state)
+      .textEdit(textModel, () =>
+        new Delta().retain(cursorState.offset).insert(text, attributes)
+      )
+      .apply();
     return {
       type: "collapsed",
       targetId: cursorState.targetId,

@@ -1,11 +1,15 @@
 import type { State } from "./state";
 import type { AttributesObject, BlockyNode } from "@pkg/model/element";
+import Delta from "quill-delta-es";
 import {
   type BlockyElement,
+  type BlockyTextModel,
   symSetAttribute,
   symAppendChild,
   symRemoveChild,
   symInsertChildAt,
+  symTextEdit,
+  symTextConcat,
 } from "./tree";
 
 export class Changeset {
@@ -31,6 +35,16 @@ export class Changeset {
     node: BlockyNode
   ): Changeset {
     parent[symInsertChildAt](index, node);
+    return this;
+  }
+  textEdit(textNode: BlockyTextModel, delta: () => Delta): Changeset {
+    const d = delta();
+    textNode[symTextEdit](d);
+    return this;
+  }
+  textConcat(textNode: BlockyTextModel, delta: () => Delta): Changeset {
+    const d = delta();
+    textNode[symTextConcat](d);
     return this;
   }
   apply() {}
