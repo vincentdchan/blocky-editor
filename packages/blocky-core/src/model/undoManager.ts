@@ -1,6 +1,7 @@
 import Delta from "quill-delta-es";
 import { isEqual } from "lodash-es";
 import { BlockElement } from "@pkg/block/basic";
+import { blockyNodeFromJsonNode } from "@pkg/model/deserialize";
 import { BlockyElement, BlockyTextModel } from "./tree";
 import type { ElementChangedEvent } from "./events";
 import type { JSONNode, AttributesObject, BlockyNode } from "./element";
@@ -404,7 +405,16 @@ export class UndoManager {
   }
 
   #undoDeleteNode(deleteNodeOperation: DeleteNodeOperation) {
-    console.log("undo delete node:", deleteNodeOperation);
+    const { parentLoc, snapshot, index } = deleteNodeOperation;
+    const node = blockyNodeFromJsonNode(snapshot);
+    let parentNode: BlockyElement;
+    if (parentLoc) {
+      parentNode = this.state.findNodeByLocation(parentLoc) as BlockyElement;
+    } else {
+      parentNode = this.state.root;
+    }
+
+    parentNode.insertChildAt(index, node);
   }
 
   redo() {}
