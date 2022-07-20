@@ -7,6 +7,7 @@ import type { ElementChangedEvent } from "./events";
 import type { JSONNode, AttributesObject, BlockyNode } from "./element";
 import type { State, NodeLocation } from "./state";
 import { CursorState } from "./cursor";
+import { Change } from "./change";
 
 export interface InsertNodeOperation {
   type: "op-insert-node";
@@ -400,7 +401,7 @@ export class UndoManager {
 
     const child = parentNode.childAt(index);
     if (child) {
-      parentNode.removeChild(child);
+      new Change(this.state).removeNode(parentNode, child).apply();
     }
   }
 
@@ -414,7 +415,7 @@ export class UndoManager {
       parentNode = this.state.root;
     }
 
-    parentNode.insertChildAt(index, node);
+    new Change(this.state).insertChildAt(parentNode, index, node).apply();
   }
 
   redo() {}

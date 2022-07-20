@@ -20,6 +20,11 @@ export interface DeltaChangedEvent {
   newDelta: Delta;
 }
 
+export const symSetAttribute = Symbol("setAttribute");
+export const symAppendChild = Symbol("appendChild");
+export const symInsertChildAt = Symbol("insertChildAt");
+export const symRemoveChild = Symbol("removeChild");
+
 export class BlockyTextModel implements BlockyNode, WithState {
   #delta = new Delta();
   #cachedString: string | undefined;
@@ -124,9 +129,21 @@ export class BlockyElement implements BlockyNode, WithState {
 
   changed: WithStateSlot<ElementChangedEvent> = new WithStateSlot(this);
 
-  constructor(public nodeName: string) {
+  constructor(
+    public nodeName: string,
+    attributes?: AttributesObject,
+    children?: BlockyNode[]
+  ) {
     if (nodeName === "#text") {
       throw new Error("illegal nodeName for an element");
+    }
+    if (typeof attributes === "object") {
+      for (const key in attributes) {
+        this.#attributes[key] = attributes[key];
+      }
+    }
+    if (Array.isArray(children)) {
+      children.forEach((child) => this[symAppendChild](child));
     }
   }
 
@@ -204,7 +221,7 @@ export class BlockyElement implements BlockyNode, WithState {
     }
   }
 
-  appendChild(node: BlockyNode) {
+  [symAppendChild](node: BlockyNode) {
     this.#validateChild(node);
     if (!this.#firstChild) {
       this.#firstChild = node;
@@ -261,9 +278,9 @@ export class BlockyElement implements BlockyNode, WithState {
     return ptr;
   }
 
-  insertChildAt(index: number, node: BlockyNode) {
+  [symInsertChildAt](index: number, node: BlockyNode) {
     if (index === this.childrenLength) {
-      this.appendChild(node);
+      this[symAppendChild](node);
       return;
     }
 
@@ -282,7 +299,7 @@ export class BlockyElement implements BlockyNode, WithState {
     this.insertAfter(node, ptr ?? undefined);
   }
 
-  setAttribute(name: string, value: string) {
+  [symSetAttribute](name: string, value: string) {
     if (bannedAttributesName.has(name)) {
       throw new Error(`'${name}' is preserved`);
     }
@@ -315,14 +332,14 @@ export class BlockyElement implements BlockyNode, WithState {
 
     while (ptr && count > 0) {
       const next = ptr.nextSibling;
-      this.removeChild(ptr);
+      this[symRemoveChild](ptr);
 
       ptr = next;
       count--;
     }
   }
 
-  removeChild(node: BlockyNode) {
+  [symRemoveChild](node: BlockyNode) {
     const { parent } = node;
     if (parent !== this) {
       throw new TypeError("node is not the child of this element");
@@ -389,14 +406,14 @@ export class BlockyElement implements BlockyNode, WithState {
     for (const key in attribs) {
       const value = attribs[key];
       if (value) {
-        result.setAttribute(key, value);
+        result[symSetAttribute](key, value);
       }
     }
 
     let childPtr = this.#firstChild;
 
     while (childPtr) {
-      result.appendChild(childPtr.clone());
+      result[symAppendChild](childPtr.clone());
       childPtr = childPtr.nextSibling;
     }
 

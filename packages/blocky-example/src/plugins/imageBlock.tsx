@@ -91,11 +91,18 @@ export function makeImageBlockPlugin(): IPlugin {
             const img = node.querySelector("img");
             if (img) {
               const newId = editor.idGenerator.mkBlockId();
-              const element = new BlockElement(ImageBlockName, newId);
               const src = img.getAttribute("src");
+              let attributes: object | undefined;
               if (src) {
-                element.setAttribute("src", src);
+                attributes = {
+                  src: src,
+                };
               }
+              const element = new BlockElement(
+                ImageBlockName,
+                newId,
+                attributes
+              );
               return element;
             }
           },

@@ -13,17 +13,18 @@ export function blockyNodeFromJsonNode(jsonNode: JSONNode): BlockyNode {
   if (isUpperCase(nodeName[0])) {
     return blockElementFromJsonNode(jsonNode);
   }
-  const result = new BlockyElement(nodeName);
+  const attributes = Object.create(null);
   for (const key in rest) {
     const value = (rest as any)[key];
     if (value) {
-      result.setAttribute(key, value);
+      attributes[key] = value;
     }
   }
-  children?.forEach((child) => {
-    result.appendChild(blockyNodeFromJsonNode(child));
-  });
-  return result;
+  const childrenNode: BlockyNode[] =
+    children?.map((child) => {
+      return blockyNodeFromJsonNode(child);
+    }) ?? [];
+  return new BlockyElement(nodeName, attributes, childrenNode);
 }
 
 export function textNodeFromJsonNode(jsonNode: JSONNode): BlockyTextModel {
@@ -40,15 +41,15 @@ export function blockElementFromJsonNode(jsonNode: JSONNode): BlockElement {
   if (isUndefined(id)) {
     throw new TypeError("id is missing for jsonNode");
   }
-  const result = new BlockElement(nodeName, id);
+  const attributes = Object.create(null);
   for (const key in rest) {
     const value = (rest as any)[key];
     if (value) {
-      result.setAttribute(key, value);
+      attributes[key] = value;
     }
   }
-  children?.forEach((child) => {
-    result.appendChild(blockyNodeFromJsonNode(child));
+  const childrenNode = children?.map((child) => {
+    return blockyNodeFromJsonNode(child);
   });
-  return result;
+  return new BlockElement(nodeName, id, attributes, childrenNode);
 }
