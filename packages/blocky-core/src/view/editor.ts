@@ -53,6 +53,7 @@ import {
 } from "./collaborativeCursors";
 import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { isHotkey } from "is-hotkey";
+import { Change } from "..";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
@@ -586,7 +587,7 @@ export class Editor {
     return true;
   }
 
-  #checkMarkedDom(node: Node, currentOffset?: number) {
+  #checkMarkedDom(change: Change, node: Node, currentOffset?: number) {
     const treeNode = node._mgNode as BlockElement;
     if (!node.parentNode) {
       // dom has been removed
@@ -594,7 +595,9 @@ export class Editor {
       this.destructBlockNode(node);
 
       const parent = treeNode.parent as BlockyElement | undefined;
-      parent?.removeChild(treeNode);
+      if (parent) {
+        change.removeNode(parent, treeNode);
+      }
       return;
     }
 
@@ -620,9 +623,11 @@ export class Editor {
 
   #checkNodesChanged() {
     const doms = this.state.domMap.values();
+    const change = new Change(this.state);
     for (const dom of doms) {
-      this.#checkMarkedDom(dom, undefined);
+      this.#checkMarkedDom(change, dom, undefined);
     }
+    change.apply();
   }
 
   #handleOpenCursorContentChanged() {
@@ -645,7 +650,9 @@ export class Editor {
       return;
     }
 
-    this.#checkMarkedDom(domNode, currentOffset);
+    const change = new Change(this.state);
+    this.#checkMarkedDom(change, domNode, currentOffset);
+    change.apply();
     // this is essential because the cursor will change
     // after the user typing.
     this.#selectionChanged();
@@ -829,7 +836,7 @@ export class Editor {
         const textType = getTextTypeForTextBlock(blockElement);
         if (this.preservedTextType.has(textType)) {
           // preserved data type
-          setTextTypeForTextBlock(newTextElement, textType);
+          setTextTypeForTextBlock(this.state, newTextElement, textType);
         }
 
         newTextModel.concat(slices);
@@ -975,7 +982,9 @@ export class Editor {
     this.update(() => {
       prevTextModel.concat(thisTextModel.delta);
 
-      (node.parent as BlockyElement).removeChild(node);
+      new Change(this.state)
+        .removeNode(node.parent as BlockyElement, node)
+        .apply();
 
       return () => {
         this.state.cursorState = {
@@ -1018,7 +1027,10 @@ export class Editor {
 
     this.update(() => {
       const parent = node.parent as BlockyElement | undefined;
-      parent?.removeChild(node);
+
+      if (parent) {
+        new Change(this.state).removeNode(parent, node).apply();
+      }
       return () => {
         if (prevNode) {
           this.state.cursorState = {

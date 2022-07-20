@@ -20,6 +20,7 @@ import { type BlockElement } from "@pkg/block/basic";
 import { type CollaborativeCursorOptions } from "./collaborativeCursors";
 import { type Editor } from "./editor";
 import { isUpperCase } from "blocky-common/es/character";
+import { Change } from "..";
 
 export interface IEditorControllerOptions {
   pluginRegistry?: PluginRegistry;
@@ -286,7 +287,7 @@ export class EditorController {
 
     editor.update(() => {
       const parent = blockNode.parent! as BlockyElement;
-      parent.removeChild(blockNode);
+      new Change(this.state).removeNode(parent, blockNode).apply();
     });
   }
 }

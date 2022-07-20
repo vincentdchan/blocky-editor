@@ -2,9 +2,12 @@ import { type IDisposable } from "blocky-common/es/disposable";
 import { type Position } from "blocky-common/es/position";
 import { type HTMLConverter } from "@pkg/helper/htmlConverter";
 import { CursorState, type CollapsedCursor } from "@pkg/model/cursor";
-import { BlockyElement } from "@pkg/model/tree";
+import { BlockyElement, symSetAttribute } from "@pkg/model/tree";
+import { BlockyNode } from "@pkg/model/element";
 import { type Editor } from "@pkg/view/editor";
 import { DocNodeName } from "@pkg/model/state";
+import type { AttributesObject } from "..";
+import { isUndefined } from "lodash-es";
 
 export interface BlockDidMountEvent {
   element: HTMLElement;
@@ -133,9 +136,17 @@ export interface IBlockDefinition {
  * at the end of the block to store the children.
  */
 export class BlockElement extends BlockyElement {
-  constructor(blockName: string, id: string) {
-    super(blockName);
-    this.setAttribute("id", id);
+  constructor(
+    blockName: string,
+    id: string,
+    attributes?: AttributesObject,
+    children?: BlockyNode[]
+  ) {
+    if (isUndefined(attributes)) {
+      attributes = {};
+    }
+    attributes.id = id;
+    super(blockName, attributes, children);
   }
 
   get childrenContainer(): BlockyElement | undefined {
@@ -151,11 +162,11 @@ export class BlockElement extends BlockyElement {
     return;
   }
 
-  override setAttribute(name: string, value: string) {
+  override [symSetAttribute](name: string, value: string) {
     if (name === "block-children") {
       throw new TypeError(`${name} is reserved`);
     }
-    super.setAttribute(name, value);
+    super[symSetAttribute](name, value);
   }
 
   get id(): string {
@@ -188,27 +199,18 @@ export class BlockElement extends BlockyElement {
   }
 
   override clone(): BlockElement {
-    const result = new BlockElement(this.nodeName, this.id);
-
     const attribs = this.getAttributes();
-    for (const key in attribs) {
-      if (key === "id") {
-        continue;
-      }
-      const value = attribs[key];
-      if (value) {
-        result.setAttribute(key, value);
-      }
-    }
+    delete attribs.id;
 
     let childPtr = this.firstChild;
 
+    const children: BlockyNode[] = [];
     while (childPtr) {
-      result.appendChild(childPtr.clone());
+      children.push(childPtr.clone());
       childPtr = childPtr.nextSibling;
     }
 
-    return result;
+    return new BlockElement(this.nodeName, this.id, attribs, children);
   }
 }
 
