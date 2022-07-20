@@ -1,4 +1,4 @@
-import type { State } from "./state";
+import type { State, NodeLocation } from "./state";
 import type { AttributesObject, BlockyNode } from "@pkg/model/element";
 import Delta from "quill-delta-es";
 import {
@@ -7,9 +7,11 @@ import {
   symSetAttribute,
   symAppendChild,
   symRemoveChild,
+  symInsertAfter,
   symInsertChildAt,
   symTextEdit,
   symTextConcat,
+  symDeleteChildrenAt,
 } from "./tree";
 
 export class Changeset {
@@ -27,6 +29,22 @@ export class Changeset {
   }
   removeNode(parent: BlockyElement, child: BlockyNode): Changeset {
     parent[symRemoveChild](child);
+    return this;
+  }
+  symDeleteChildrenAt(
+    parent: BlockyElement,
+    index: number,
+    count: number
+  ): Changeset {
+    parent[symDeleteChildrenAt](index, count);
+    return this;
+  }
+  insertChildAfter(
+    parent: BlockyElement,
+    child: BlockyNode,
+    after?: BlockyNode
+  ): Changeset {
+    parent[symInsertAfter](child, after);
     return this;
   }
   insertChildAt(

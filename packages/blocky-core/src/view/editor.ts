@@ -14,11 +14,12 @@ import Delta from "quill-delta-es";
 import fastDiff from "fast-diff";
 import { DocRenderer } from "@pkg/view/renderer";
 import {
-  State as DocumentState,
   type AttributesObject,
+  State as DocumentState,
   TextType,
   BlockyTextModel,
   BlockyElement,
+  Changeset,
 } from "@pkg/model";
 import {
   CollapsedCursor,
@@ -53,7 +54,6 @@ import {
 } from "./collaborativeCursors";
 import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { isHotkey } from "is-hotkey";
-import { Changeset } from "@pkg/model/change";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
@@ -791,7 +791,9 @@ export class Editor {
     const currentBlock = this.state.idMap.get(afterId);
 
     this.update(() => {
-      parent.insertAfter(newTextElement, currentBlock);
+      new Changeset(this.state)
+        .insertChildAfter(parent, newTextElement, currentBlock)
+        .apply();
 
       return () => {
         this.state.cursorState = {
@@ -839,17 +841,18 @@ export class Editor {
           setTextTypeForTextBlock(this.state, newTextElement, textType);
         }
 
-        new Changeset(this.state)
+        const change = new Changeset(this.state)
           .textConcat(newTextModel, () => slices)
           .textEdit(textModel, () =>
             new Delta()
               .retain(cursorOffset)
               .delete(textModel.length - cursorOffset)
-          )
-          .apply();
+          );
 
         const parentElement = blockElement.parent! as BlockyElement;
-        parentElement.insertAfter(newTextElement, blockElement);
+        change.insertChildAfter(parentElement, newTextElement, blockElement);
+
+        change.apply();
 
         return () => {
           this.state.cursorState = {
@@ -1271,7 +1274,7 @@ export class Editor {
           continue;
         }
 
-        parent.insertAfter(element, prev);
+        changeset.insertChildAfter(parent, element, prev);
         prev = element;
       }
       changeset.apply();

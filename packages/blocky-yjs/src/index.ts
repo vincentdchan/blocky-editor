@@ -198,7 +198,11 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
                     }
                   } else if (typeof delta.delete === "number") {
                     const numToDelete = delta.delete;
-                    blockyElement.deleteChildrenAt(index, numToDelete);
+                    change.symDeleteChildrenAt(
+                      blockyElement,
+                      index,
+                      numToDelete
+                    );
                   }
                 }
               }
@@ -218,6 +222,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
           ptr = ptr.nextSibling;
         }
 
+        const change = new Changeset(state);
         for (const element of elements) {
           const createdElement = makeBlockyElementByYElement(element);
           if (!createdElement) {
@@ -225,15 +230,14 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
           }
 
           if (ptr) {
-            state.root.insertAfter(createdElement, ptr);
+            change.insertChildAfter(state.root, createdElement, ptr);
           } else {
-            new Changeset(state)
-              .appendChild(state.root, createdElement)
-              .apply();
+            change.appendChild(state.root, createdElement);
           }
 
           ptr = createdElement;
         }
+        change.apply();
       };
 
       const handleDelete = (index: number, count: number) => {

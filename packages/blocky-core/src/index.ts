@@ -24,6 +24,6 @@ export {
   BlockyElement,
   TextType,
   DocNodeName,
+  Changeset,
 } from "./model";
-export { Changeset } from "./model/change";
 export { TextBlockName } from "./block/textBlock";
