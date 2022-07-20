@@ -1,5 +1,6 @@
-import type { State, NodeLocation } from "./state";
+import type { State } from "./state";
 import type { AttributesObject, BlockyNode } from "@pkg/model/element";
+import type { Operation } from "./operations";
 import Delta from "quill-delta-es";
 import {
   type BlockyElement,
@@ -15,6 +16,7 @@ import {
 } from "./tree";
 
 export class Changeset {
+  readonly operations: Operation[] = [];
   constructor(readonly state: State) {}
   setAttribute(node: BlockyElement, attributes: AttributesObject): Changeset {
     for (const key in attributes) {
