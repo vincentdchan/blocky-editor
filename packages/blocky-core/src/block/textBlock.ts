@@ -20,7 +20,7 @@ import {
   State,
   BlockyNode,
 } from "@pkg/model";
-import { Change } from "@pkg/model/change";
+import { Changeset } from "@pkg/model/change";
 import fastDiff from "fast-diff";
 import { TextInputEvent, type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";
@@ -54,7 +54,7 @@ function textTypeCanIndent(textType: TextType): boolean {
 }
 
 function insertOrGetChildrenContainer(
-  change: Change,
+  change: Changeset,
   element: BlockElement
 ): BlockyElement {
   let childrenContainer = element.childrenContainer;
@@ -572,7 +572,7 @@ class TextBlock extends Block {
 
       const copy = this.props.clone();
 
-      const change = new Change(this.editor.state);
+      const change = new Changeset(this.editor.state);
       change.removeNode(parentElement, this.props);
 
       const prevBlockyElement = prevElement as BlockElement;
@@ -606,7 +606,7 @@ class TextBlock extends Block {
 
       const copy = this.props.clone();
 
-      const change = new Change(this.editor.state);
+      const change = new Changeset(this.editor.state);
       change.removeNode(parentElement, this.props);
       change.apply();
 
@@ -779,7 +779,7 @@ export function setTextTypeForTextBlock(
   blockElement: BlockElement,
   textType: TextType
 ) {
-  new Change(state)
+  new Changeset(state)
     .setAttribute(blockElement, {
       textType: textType.toString(),
     })
