@@ -25,5 +25,5 @@ export {
   TextType,
   DocNodeName,
 } from "./model";
-export { Changeset as Change } from "./model/change";
+export { Changeset } from "./model/change";
 export { TextBlockName } from "./block/textBlock";

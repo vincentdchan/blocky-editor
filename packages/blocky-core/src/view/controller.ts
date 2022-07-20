@@ -20,7 +20,7 @@ import { type BlockElement } from "@pkg/block/basic";
 import { type CollaborativeCursorOptions } from "./collaborativeCursors";
 import { type Editor } from "./editor";
 import { isUpperCase } from "blocky-common/es/character";
-import { Change } from "..";
+import { Changeset } from "@pkg/model/change";
 
 export interface IEditorControllerOptions {
   pluginRegistry?: PluginRegistry;
@@ -220,7 +220,11 @@ export class EditorController {
         return;
       }
       const textModel = blockElement.firstChild as BlockyTextModel;
-      textModel.compose(new Delta().retain(index).retain(length, attribs));
+      new Changeset(this.state)
+        .textEdit(textModel, () =>
+          new Delta().retain(index).retain(length, attribs)
+        )
+        .apply();
 
       return () => {
         editor.state.cursorState = {
@@ -287,7 +291,7 @@ export class EditorController {
 
     editor.update(() => {
       const parent = blockNode.parent! as BlockyElement;
-      new Change(this.state).removeNode(parent, blockNode).apply();
+      new Changeset(this.state).removeNode(parent, blockNode).apply();
     });
   }
 }

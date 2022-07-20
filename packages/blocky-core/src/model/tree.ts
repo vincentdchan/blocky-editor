@@ -24,6 +24,8 @@ export const symSetAttribute = Symbol("setAttribute");
 export const symAppendChild = Symbol("appendChild");
 export const symInsertChildAt = Symbol("insertChildAt");
 export const symRemoveChild = Symbol("removeChild");
+export const symTextEdit = Symbol("textEdit");
+export const symTextConcat = Symbol("textConcat");
 
 export class BlockyTextModel implements BlockyNode, WithState {
   #delta = new Delta();
@@ -57,11 +59,11 @@ export class BlockyTextModel implements BlockyNode, WithState {
     this.changed.emit({ oldDelta, newDelta: v });
   }
 
-  compose(delta: Delta) {
+  [symTextEdit](delta: Delta) {
     this.delta = this.#delta.compose(delta);
   }
 
-  concat(delta: Delta) {
+  [symTextConcat](delta: Delta) {
     this.delta = this.#delta.concat(delta);
   }
 

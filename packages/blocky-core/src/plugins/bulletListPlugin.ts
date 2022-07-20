@@ -8,6 +8,7 @@ import {
   getTextTypeForTextBlock,
   BlockElement,
   TextBlockName,
+  Changeset,
   type TextInputEvent,
   type IPlugin,
   type Editor,
@@ -22,7 +23,9 @@ function makeBulletListPlugin(): IPlugin {
   ) => {
     editor.update(() => {
       setTextTypeForTextBlock(editor.state, textElement, TextType.Bulleted);
-      textModel.compose(new Delta().delete(2));
+      new Changeset(editor.state)
+        .textEdit(textModel, () => new Delta().delete(2))
+        .apply();
       return () => {
         editor.state.cursorState = {
           type: "collapsed",

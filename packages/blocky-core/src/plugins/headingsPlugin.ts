@@ -4,6 +4,7 @@ import {
   type Editor,
   type IPlugin,
   setTextTypeForTextBlock,
+  Changeset,
 } from "@pkg/index";
 import fastDiff from "fast-diff";
 import Delta from "quill-delta-es";
@@ -47,7 +48,9 @@ function makeHeadingsPlugin(): IPlugin {
 
         if (delta.ops.length > 0) {
           editor.update(() => {
-            textModel.compose(delta);
+            new Changeset(editor.state)
+              .textEdit(textModel, () => delta)
+              .apply();
           });
         }
       });
