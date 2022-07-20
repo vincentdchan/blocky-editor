@@ -8,7 +8,7 @@ import {
   type DocumentState,
   type BlockyNode,
   BlockElement,
-  Change,
+  Changeset,
 } from "blocky-core";
 import Delta from "quill-delta-es";
 import { isUpperCase } from "blocky-common/es/character";
@@ -52,7 +52,9 @@ function bindTextModel(
   yTextModel.observe((e: Y.YTextEvent) => {
     withSilent(state, () => {
       editor.update(() => {
-        textModel.compose(new Delta(e.delta as any));
+        new Changeset(state)
+          .textEdit(textModel, () => new Delta(e.delta as any))
+          .apply();
       });
     });
   });
@@ -166,7 +168,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         yElement.observe((e: Y.YXmlEvent) => {
           withSilent(state, () => {
             editor.update(() => {
-              const change = new Change(editor.state);
+              const change = new Changeset(editor.state);
               e.attributesChanged.forEach((key) => {
                 change.setAttribute(blockyElement, {
                   [key]: yElement.getAttribute(key),
@@ -225,7 +227,9 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
           if (ptr) {
             state.root.insertAfter(createdElement, ptr);
           } else {
-            new Change(state).appendChild(state.root, createdElement).apply();
+            new Changeset(state)
+              .appendChild(state.root, createdElement)
+              .apply();
           }
 
           ptr = createdElement;
@@ -248,7 +252,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
           return;
         }
 
-        const change = new Change(state);
+        const change = new Changeset(state);
         while (count > 0 && ptr) {
           const next: BlockyNode | null = ptr.nextSibling;
           change.removeNode(state.root, ptr);
@@ -294,7 +298,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
       if (allowInit) {
         withSilent(state, () => {
           let child = docFragment.firstChild;
-          const change = new Change(state);
+          const change = new Changeset(state);
           while (child) {
             const element = makeBlockyElementByYElement(child as any);
             if (!element) {

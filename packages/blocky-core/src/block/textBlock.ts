@@ -315,7 +315,8 @@ class TextBlock extends Block {
       }
     }
     const beforeDelta = textModel.delta;
-    textModel.compose(delta);
+
+    new Changeset(this.editor.state).textEdit(textModel, () => delta).apply();
 
     this.editor.textInput.emit(
       new TextInputEvent(beforeDelta, diffs, textModel, blockElement)
@@ -665,9 +666,7 @@ class TextBlockDefinition implements IBlockDefinition {
   ): BlockElement {
     const newId = editor.idGenerator.mkBlockId();
 
-    const textModel = new BlockyTextModel();
     const attributes = Object.create(null);
-    const childrenNode: BlockyNode[] = [textModel];
     const childrenContainer: BlockyNode[] = [];
 
     // TODO: Maybe using querySelector is slow.
@@ -707,7 +706,7 @@ class TextBlockDefinition implements IBlockDefinition {
     } else {
       delta.insert(node.textContent ?? "");
     }
-    textModel.compose(delta);
+    const textModel = new BlockyTextModel(delta);
 
     const { tagName } = node;
     if (tagName === "H1") {
@@ -720,6 +719,7 @@ class TextBlockDefinition implements IBlockDefinition {
       attributes.textType = TextType.Bulleted;
     }
 
+    const childrenNode: BlockyNode[] = [textModel];
     if (childrenContainer.length > 0) {
       const blockChildren = new BlockyElement(
         "block-children",
