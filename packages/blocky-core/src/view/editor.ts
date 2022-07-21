@@ -1217,16 +1217,16 @@ export class Editor {
    * Maybe use an external library is better for unit tests. But it will increase
    * the size of the bundles.
    */
-  pasteHTMLAtCursor(html: string, updateFlags = 0) {
+  pasteHTMLAtCursor(html: string) {
     try {
       const blocks = this.#htmlConverter.parseFromString(html);
-      this.#pasteElementsAtCursor(blocks, updateFlags);
+      this.#pasteElementsAtCursor(blocks);
     } catch (e) {
       console.error(e);
     }
   }
 
-  #pasteElementsAtCursor(elements: BlockElement[], updateFlags: number) {
+  #pasteElementsAtCursor(elements: BlockElement[]) {
     if (elements.length === 0) {
       return;
     }
