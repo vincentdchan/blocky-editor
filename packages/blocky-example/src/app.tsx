@@ -120,7 +120,12 @@ class App extends Component<unknown, AppState> {
     });
 
     this.editorControllerLeft = makeController(this.doc1);
-    this.editorControllerLeft.enqueueNextTick(this.firstTick);
+    this.editorControllerLeft.state.cursorState = {
+      type: "collapsed",
+      targetId: (this.editorControllerLeft.state.root.firstChild! as any).id,
+      offset: 0,
+    };
+    this.editorControllerLeft.pasteHTMLAtCursor(ReadMeContent);
 
     this.editorControllerRight = makeRightController(this.doc2);
 
@@ -136,20 +141,6 @@ class App extends Component<unknown, AppState> {
       headingContent: "Blocky Editor",
     };
   }
-
-  private firstTick = () => {
-    const { editor } = this.editorControllerLeft;
-    if (!editor) {
-      return;
-    }
-    // force reset the paste cursor state
-    editor.state.cursorState = {
-      type: "collapsed",
-      targetId: (editor.state.root.firstChild! as any).id,
-      offset: 0,
-    };
-    editor.pasteHTMLAtCursor(ReadMeContent);
-  };
 
   private handleHeadingChanged = (e: JSX.TargetedEvent<HTMLInputElement>) => {
     this.setState({

@@ -1,3 +1,4 @@
+import { isUpperCase } from "blocky-common/es/character";
 import { Slot } from "blocky-common/es/events";
 import { observe } from "blocky-common/es/observable";
 import { type Padding } from "blocky-common/es/dom";
@@ -8,19 +9,25 @@ import {
   State,
   BlockyElement,
   BlockyTextModel,
+  BlockyNode,
   Changeset,
 } from "@pkg/model";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
 import { MarkupGenerator } from "@pkg/model/markup";
+import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { type BannerFactory } from "@pkg/view/bannerDelegate";
 import { type ToolbarFactory } from "@pkg/view/toolbarDelegate";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
-import { type BlockElement } from "@pkg/block/basic";
+import {
+  type BlockElement,
+  BlockPasteEvent,
+  TryParsePastedDOMEvent,
+} from "@pkg/block/basic";
+import { TextBlockName } from "@pkg/block/textBlock";
 import { type CollaborativeCursorOptions } from "./collaborativeCursors";
 import { type Editor } from "./editor";
-import { isUpperCase } from "blocky-common/es/character";
 
 export interface IEditorControllerOptions {
   pluginRegistry?: PluginRegistry;
@@ -61,8 +68,21 @@ export class CursorChangedEvent {
   constructor(readonly id: string, readonly state: CursorState | null) {}
 }
 
+/**
+ * The [EditorController] is focused on the data manipulation.
+ * It doesn't cared about the changes on UI.
+ *
+ * The UI details are handled in [Editor] class.
+ * If you want to modify the state easily, use the [EditorController].
+ *
+ * Another use of [EditorController] is to manipulate the document
+ * before the Editor is created.
+ * For example, insert text to the document before
+ * the editor is created.
+ */
 export class EditorController {
   #nextTick: NextTickFn[] = [];
+  #htmlConverter: HTMLConverter;
 
   editor: Editor | undefined;
   readonly pluginRegistry: PluginRegistry;
@@ -99,6 +119,12 @@ export class EditorController {
     this.blockRegistry = options?.blockRegistry ?? new BlockRegistry();
     this.idGenerator = options?.idGenerator ?? makeDefaultIdGenerator();
     this.m = new MarkupGenerator(this.idGenerator);
+
+    this.#htmlConverter = new HTMLConverter({
+      idGenerator: this.idGenerator,
+      leafHandler: this.#leafHandler,
+      divHandler: this.#divHandler,
+    });
 
     if (options?.state) {
       this.state = options.state;
@@ -287,5 +313,138 @@ export class EditorController {
     new Changeset(this.state).removeChild(parent, blockNode).apply({
       refreshCursor: true,
     });
+  }
+
+  /**
+   * Use the API provided by the browser to parse the html for the bundle size.
+   * Maybe use an external library is better for unit tests. But it will increase
+   * the size of the bundles.
+   */
+  pasteHTMLAtCursor(html: string) {
+    try {
+      const blocks = this.#htmlConverter.parseFromString(html);
+      this.#pasteElementsAtCursor(blocks);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  #pasteElementsAtCursor(elements: BlockElement[]) {
+    if (elements.length === 0) {
+      return;
+    }
+    const currentBlockElement = this.#getBlockElementAtCollapsedCursor();
+    if (!currentBlockElement) {
+      return;
+    }
+    const parent = currentBlockElement.parent! as BlockyElement;
+    const prev = currentBlockElement;
+
+    const changeset = new Changeset(this.state);
+    const insertChildren: BlockyNode[] = [];
+    for (let i = 0, len = elements.length; i < len; i++) {
+      const element = elements[i];
+
+      if (
+        i === 0 &&
+        currentBlockElement.nodeName === TextBlockName &&
+        element.nodeName === TextBlockName
+      ) {
+        const prevTextModel =
+          currentBlockElement.firstChild! as BlockyTextModel;
+        const firstTextModel = element.firstChild! as BlockyTextModel;
+        if (!prevTextModel || !firstTextModel) {
+          continue;
+        }
+        changeset.textConcat(prevTextModel, () => firstTextModel.delta);
+        // first item, try to merge text
+        continue;
+      }
+      insertChildren.push(element);
+    }
+    changeset.insertChildrenAfter(parent, insertChildren, prev);
+    changeset.apply();
+  }
+
+  #leafHandler = (node: Node): BlockElement | void => {
+    const tryEvt = new TryParsePastedDOMEvent({
+      editorController: this,
+      node: node as HTMLElement,
+    });
+    const testElement = this.blockRegistry.handlePasteElement(tryEvt);
+    if (testElement) {
+      return testElement;
+    }
+
+    const blockDef = this.blockRegistry.getBlockDefByName(TextBlockName);
+    const pasteHandler = blockDef?.onPaste;
+    const evt = new BlockPasteEvent({
+      node: node as HTMLElement,
+      editorController: this,
+      converter: this.#htmlConverter,
+    });
+    if (pasteHandler) {
+      return pasteHandler.call(blockDef, evt);
+    }
+  };
+
+  #divHandler = (node: Node): BlockElement | void => {
+    const element = node as HTMLElement;
+    const dataType = element.getAttribute("data-type");
+    if (!dataType) {
+      return;
+    }
+    const blockDef = this.blockRegistry.getBlockDefByName(dataType);
+    if (!blockDef) {
+      return;
+    }
+
+    const pasteHandler = blockDef?.onPaste;
+    if (pasteHandler) {
+      const evt = new BlockPasteEvent({
+        editorController: this,
+        node: element,
+        converter: this.#htmlConverter,
+      });
+      return pasteHandler.call(blockDef, evt);
+    }
+  };
+
+  /**
+   * Calculate the attributes from the dom.
+   * It's used for pasting text, and to recognize the dom created by the browser.
+   */
+  getAttributesBySpan(span: HTMLElement): AttributesObject {
+    const spanRegistry = this.spanRegistry;
+    const attributes: AttributesObject = {};
+    const href = span.getAttribute("data-href");
+    if (href) {
+      attributes["href"] = href;
+    } else if (span instanceof HTMLAnchorElement) {
+      attributes["href"] = span.getAttribute("href");
+    }
+
+    for (const cls of span.classList) {
+      const style = spanRegistry.classnames.get(cls);
+      if (style) {
+        attributes[style.name] = true;
+      }
+    }
+
+    return attributes;
+  }
+
+  #getBlockElementAtCollapsedCursor(): BlockElement | undefined {
+    const { cursorState } = this.state;
+    if (!cursorState) {
+      return;
+    }
+    if (cursorState.type === "open") {
+      return;
+    }
+
+    const { targetId } = cursorState;
+
+    return this.state.idMap.get(targetId) as BlockElement | undefined;
   }
 }

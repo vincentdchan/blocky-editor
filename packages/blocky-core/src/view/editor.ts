@@ -20,7 +20,6 @@ import {
   BlockyTextModel,
   BlockyElement,
   Changeset,
-  BlockyNode,
 } from "@pkg/model";
 import {
   CollapsedCursor,
@@ -40,18 +39,12 @@ import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import { UndoManager } from "@pkg/model/undoManager";
 import type { EditorController } from "./controller";
-import {
-  Block,
-  BlockElement,
-  BlockPasteEvent,
-  TryParsePastedDOMEvent,
-} from "@pkg/block/basic";
+import { Block, BlockElement } from "@pkg/block/basic";
 import { getTextTypeForTextBlock } from "@pkg/block/textBlock";
 import {
   type CollaborativeCursorOptions,
   CollaborativeCursorManager,
 } from "./collaborativeCursors";
-import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { isHotkey } from "is-hotkey";
 import { FinalizedChangeset } from "@pkg/model/change";
 
@@ -114,7 +107,6 @@ export class TextInputEvent {
  * used by the plugins to do something internally.
  */
 export class Editor {
-  #htmlConverter: HTMLConverter;
   #container: HTMLDivElement;
   #renderedDom: HTMLDivElement | undefined;
   #renderer: DocRenderer;
@@ -184,12 +176,6 @@ export class Editor {
     this.#container = container;
     this.idGenerator = idGenerator ?? makeDefaultIdGenerator();
 
-    this.#htmlConverter = new HTMLConverter({
-      idGenerator: this.idGenerator,
-      leafHandler: this.#leafHandler,
-      divHandler: this.#divHandler,
-    });
-
     this.padding = {
       ...makeDefaultPadding(),
       ...padding,
@@ -231,53 +217,6 @@ export class Editor {
 
     this.undoManager = new UndoManager(state);
   }
-
-  #leafHandler = (node: Node): BlockElement | void => {
-    const blockRegistry = this.registry.block;
-
-    const tryEvt = new TryParsePastedDOMEvent({
-      editor: this,
-      node: node as HTMLElement,
-    });
-    const testElement = blockRegistry.handlePasteElement(tryEvt);
-    if (testElement) {
-      return testElement;
-    }
-
-    const blockDef = blockRegistry.getBlockDefByName(TextBlockName);
-    const pasteHandler = blockDef?.onPaste;
-    const evt = new BlockPasteEvent({
-      node: node as HTMLElement,
-      editor: this,
-      converter: this.#htmlConverter,
-    });
-    if (pasteHandler) {
-      return pasteHandler.call(blockDef, evt);
-    }
-  };
-
-  #divHandler = (node: Node): BlockElement | void => {
-    const element = node as HTMLElement;
-    const blockRegistry = this.registry.block;
-    const dataType = element.getAttribute("data-type");
-    if (!dataType) {
-      return;
-    }
-    const blockDef = blockRegistry.getBlockDefByName(dataType);
-    if (!blockDef) {
-      return;
-    }
-
-    const pasteHandler = blockDef?.onPaste;
-    if (pasteHandler) {
-      const evt = new BlockPasteEvent({
-        editor: this,
-        node: element,
-        converter: this.#htmlConverter,
-      });
-      return pasteHandler.call(blockDef, evt);
-    }
-  };
 
   #initBlockCreated() {
     this.disposables.push(
@@ -1195,7 +1134,7 @@ export class Editor {
 
     const htmlData = clipboardData.getData(MineType.Html);
     if (htmlData) {
-      this.pasteHTMLAtCursor(htmlData);
+      this.controller.pasteHTMLAtCursor(htmlData);
       return;
     }
 
@@ -1205,81 +1144,6 @@ export class Editor {
       return;
     }
   };
-
-  /**
-   * Use the API provided by the browser to parse the html for the bundle size.
-   * Maybe use an external library is better for unit tests. But it will increase
-   * the size of the bundles.
-   */
-  pasteHTMLAtCursor(html: string) {
-    try {
-      const blocks = this.#htmlConverter.parseFromString(html);
-      this.#pasteElementsAtCursor(blocks);
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  #pasteElementsAtCursor(elements: BlockElement[]) {
-    if (elements.length === 0) {
-      return;
-    }
-    const currentBlockElement = this.#getBlockElementAtCollapsedCursor();
-    if (!currentBlockElement) {
-      return;
-    }
-    const parent = currentBlockElement.parent! as BlockyElement;
-    const prev = currentBlockElement;
-
-    const changeset = new Changeset(this.state);
-    const insertChildren: BlockyNode[] = [];
-    for (let i = 0, len = elements.length; i < len; i++) {
-      const element = elements[i];
-
-      if (
-        i === 0 &&
-        currentBlockElement.nodeName === TextBlockName &&
-        element.nodeName === TextBlockName
-      ) {
-        const prevTextModel =
-          currentBlockElement.firstChild! as BlockyTextModel;
-        const firstTextModel = element.firstChild! as BlockyTextModel;
-        if (!prevTextModel || !firstTextModel) {
-          continue;
-        }
-        changeset.textConcat(prevTextModel, () => firstTextModel.delta);
-        // first item, try to merge text
-        continue;
-      }
-      insertChildren.push(element);
-    }
-    changeset.insertChildrenAfter(parent, insertChildren, prev);
-    changeset.apply();
-  }
-
-  /**
-   * Calculate the attributes from the dom.
-   * It's used for pasting text, and to recognize the dom created by the browser.
-   */
-  getAttributesBySpan(span: HTMLElement): AttributesObject {
-    const spanRegistry = this.registry.span;
-    const attributes: AttributesObject = {};
-    const href = span.getAttribute("data-href");
-    if (href) {
-      attributes["href"] = href;
-    } else if (span instanceof HTMLAnchorElement) {
-      attributes["href"] = span.getAttribute("href");
-    }
-
-    for (const cls of span.classList) {
-      const style = spanRegistry.classnames.get(cls);
-      if (style) {
-        attributes[style.name] = true;
-      }
-    }
-
-    return attributes;
-  }
 
   #pastePlainTextOnCursor(text: string) {
     const cursor = this.#insertTextAt(this.state.cursorState, text);
