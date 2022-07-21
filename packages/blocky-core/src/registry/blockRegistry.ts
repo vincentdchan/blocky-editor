@@ -10,13 +10,21 @@ import { makeTextBlockDefinition, TextBlockName } from "@pkg/block/textBlock";
 export class BlockRegistry {
   #types: IBlockDefinition[];
   #nameMap: Map<string, number> = new Map();
+  #sealed = false;
 
   constructor() {
     this.#types = [makeTextBlockDefinition()];
     this.#nameMap.set(TextBlockName, 0);
   }
 
+  seal() {
+    this.#sealed = true;
+  }
+
   register(blockType: IBlockDefinition): number {
+    if (this.#sealed) {
+      throw new Error("The plugin registry is sealed");
+    }
     const { name } = blockType;
     if (this.#nameMap.has(name)) {
       throw new Error(`SpanType '${name}' exists`);
