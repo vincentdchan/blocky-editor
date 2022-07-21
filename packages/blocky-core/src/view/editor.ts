@@ -760,12 +760,7 @@ export class Editor {
       this.#handleDelete(e);
     } else if (isHotkey("mod+z", e)) {
       e.preventDefault();
-      const item = this.state.undoManager.undo();
-      if (item) {
-        this.render(() => {
-          this.state.cursorState = item.cursorState;
-        });
-      }
+      this.state.undoManager.undo();
     } else if (isHotkey("mod+shift+z", e)) {
       e.preventDefault();
       this.state.undoManager.redo();
