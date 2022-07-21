@@ -75,7 +75,6 @@ export class State {
   readonly blockDeleted: Slot<BlockElement> = new Slot();
   readonly beforeChangesetApply: Slot<FinalizedChangeset> = new Slot();
   readonly changesetApplied: Slot<FinalizedChangeset> = new Slot();
-  readonly undoManager: UndoManager;
   cursorState: CursorState | null = null;
   silent = false;
 
@@ -84,7 +83,6 @@ export class State {
     readonly blockRegistry: BlockRegistry,
     readonly idHelper: IdGenerator
   ) {
-    this.undoManager = new UndoManager(this);
     makeObservable(this, "cursorState");
 
     // TODO: recursive add

@@ -38,6 +38,7 @@ import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { BannerDelegate, type BannerFactory } from "./bannerDelegate";
 import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
+import { UndoManager } from "@pkg/model/undoManager";
 import type { EditorController } from "./controller";
 import {
   Block,
@@ -126,6 +127,7 @@ export class Editor {
   idGenerator: IdGenerator;
 
   readonly anchorSpanClass: string = "blocky-text-anchor";
+  readonly undoManager: UndoManager;
 
   readonly state: DocumentState;
   readonly registry: EditorRegistry;
@@ -226,6 +228,8 @@ export class Editor {
 
     this.state.beforeChangesetApply.on(this.#handleBeforeChangesetApply);
     this.state.changesetApplied.on(this.#handleChangesetApplied);
+
+    this.undoManager = new UndoManager(state);
   }
 
   #leafHandler = (node: Node): BlockElement | void => {
@@ -716,13 +720,13 @@ export class Editor {
 
   #handleCompositionStart = () => {
     this.composing = true;
-    this.state.undoManager.cursorBeforeComposition = this.state.cursorState;
+    this.undoManager.cursorBeforeComposition = this.state.cursorState;
   };
 
   #handleCompositionEnd = () => {
     this.composing = false;
     this.#handleContentChanged();
-    this.state.undoManager.cursorBeforeComposition = null;
+    this.undoManager.cursorBeforeComposition = null;
   };
 
   #handleKeyDown = (e: KeyboardEvent) => {
@@ -755,10 +759,10 @@ export class Editor {
       this.#handleDelete(e);
     } else if (isHotkey("mod+z", e)) {
       e.preventDefault();
-      this.state.undoManager.undo();
+      this.undoManager.undo();
     } else if (isHotkey("mod+shift+z", e)) {
       e.preventDefault();
-      this.state.undoManager.redo();
+      this.undoManager.redo();
     }
   };
 
@@ -855,7 +859,7 @@ export class Editor {
   }
 
   #debouncedSealUndo = debounce(() => {
-    this.state.undoManager.seal();
+    this.undoManager.seal();
   }, 1000);
 
   #handleBeforeChangesetApply = (changeset: FinalizedChangeset) => {
@@ -878,7 +882,7 @@ export class Editor {
     }
 
     if (options.recordUndo) {
-      const undoItem = this.state.undoManager.getAUndoItem();
+      const undoItem = this.undoManager.getAUndoItem();
       undoItem.push(...changeset.operations);
       this.#debouncedSealUndo();
     }
