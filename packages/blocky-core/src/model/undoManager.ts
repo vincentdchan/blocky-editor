@@ -1,3 +1,4 @@
+import { isUndefined } from "lodash-es";
 import { Changeset } from "./change";
 import { CursorState } from "./cursor";
 import { type Operation, invertOperation } from "./operations";
@@ -17,7 +18,7 @@ import type { State } from "./state";
 export class HistoryItem {
   prevSibling: HistoryItem | null = null;
   nextSibling: HistoryItem | null = null;
-  cursorState: CursorState | null = null;
+  cursorState?: CursorState | null = null;
   sealed = false;
   readonly operations: Operation[] = [];
 
@@ -37,6 +38,9 @@ export class HistoryItem {
     for (let i = this.operations.length - 1; i >= 0; i--) {
       const item = this.operations[i];
       result.push(invertOperation(item));
+    }
+    if (!isUndefined(this.cursorState)) {
+      result.setCursorState(this.cursorState);
     }
     return result;
   }
@@ -135,6 +139,7 @@ export class UndoManager {
       return peek;
     }
     const newItem = new HistoryItem();
+    newItem.cursorState = this.state.cursorState;
     this.undoStack.push(newItem);
     return newItem;
   }
