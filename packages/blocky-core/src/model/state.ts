@@ -12,7 +12,6 @@ import {
   symSetDelta,
 } from "./tree";
 import { blockyNodeFromJsonNode } from "@pkg/model/deserialize";
-import { UndoManager } from "@pkg/model/undoManager";
 import { Block, BlockElement } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { TextBlockName } from "@pkg/block/textBlock";

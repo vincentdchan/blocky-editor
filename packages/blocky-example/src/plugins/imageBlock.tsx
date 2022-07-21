@@ -87,7 +87,7 @@ export function makeImageBlockPlugin(): IPlugin {
           name: ImageBlockName,
           component: (data: BlockElement) => <ImageBlock blockElement={data} />,
           tryParsePastedDOM(e: TryParsePastedDOMEvent) {
-            const { node, editor } = e;
+            const { node } = e;
             const img = node.querySelector("img");
             if (img) {
               const newId = editor.idGenerator.mkBlockId();

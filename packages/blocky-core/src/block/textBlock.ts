@@ -24,6 +24,7 @@ import fastDiff from "fast-diff";
 import { TextInputEvent, type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";
 import { HTMLConverter } from "@pkg/helper/htmlConverter";
+import { EditorController } from "..";
 
 export const TextBlockName = "Text";
 
@@ -644,22 +645,22 @@ class TextBlockDefinition implements IBlockDefinition {
   }
 
   onPaste({
-    editor,
+    editorController,
     node: container,
     converter,
   }: BlockPasteEvent): BlockElement | undefined {
-    return this.#getTextElementFromDOM(editor, container, converter);
+    return this.#getTextElementFromDOM(editorController, container, converter);
   }
 
   /**
    * Rebuild the data structure from the pasted html.
    */
   #getTextElementFromDOM(
-    editor: Editor,
+    editorController: EditorController,
     node: HTMLElement,
     converter: HTMLConverter
   ): BlockElement {
-    const newId = editor.idGenerator.mkBlockId();
+    const newId = editorController.idGenerator.mkBlockId();
 
     const attributes = Object.create(null);
     const childrenContainer: BlockyNode[] = [];
@@ -691,7 +692,7 @@ class TextBlockDefinition implements IBlockDefinition {
             childrenContainer.push(...childElements);
           } else {
             const content = childPtr.textContent ?? "";
-            const attributes = editor.getAttributesBySpan(childPtr);
+            const attributes = editorController.getAttributesBySpan(childPtr);
             delta.insert(content, attributes);
           }
         }

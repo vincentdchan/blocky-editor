@@ -5,6 +5,7 @@ import { CursorState, type CollapsedCursor } from "@pkg/model/cursor";
 import { BlockyElement, symSetAttribute } from "@pkg/model/tree";
 import { BlockyNode } from "@pkg/model/element";
 import { type Editor } from "@pkg/view/editor";
+import { type EditorController } from "@pkg/view/controller";
 import { DocNodeName } from "@pkg/model/state";
 import { Changeset } from "@pkg/model/change";
 import type { AttributesObject } from "..";
@@ -25,7 +26,7 @@ export interface CursorDomResult {
 }
 
 export interface BlockPasteEventProps {
-  editor: Editor;
+  editorController: EditorController;
   node: HTMLElement;
   converter: HTMLConverter;
 }
@@ -43,30 +44,30 @@ export class BlockEvent {
 }
 
 export class BlockPasteEvent extends BlockEvent {
-  editor: Editor;
+  editorController: EditorController;
   node: HTMLElement;
   converter: HTMLConverter;
 
-  constructor({ editor, node, converter }: BlockPasteEventProps) {
+  constructor({ editorController, node, converter }: BlockPasteEventProps) {
     super();
-    this.editor = editor;
+    this.editorController = editorController;
     this.node = node;
     this.converter = converter;
   }
 }
 
 export interface TryParsePastedDOMEventProps {
-  editor: Editor;
+  editorController: EditorController;
   node: HTMLElement;
 }
 
 export class TryParsePastedDOMEvent extends BlockEvent {
-  editor: Editor;
+  editorController: EditorController;
   node: HTMLElement;
 
-  constructor({ editor, node }: TryParsePastedDOMEventProps) {
+  constructor({ editorController, node }: TryParsePastedDOMEventProps) {
     super();
-    this.editor = editor;
+    this.editorController = editorController;
     this.node = node;
   }
 }
