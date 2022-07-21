@@ -1,6 +1,5 @@
 import {
   type TryParsePastedDOMEvent,
-  type Editor,
   type IPlugin,
   BlockElement,
 } from "blocky-core";
@@ -81,33 +80,27 @@ class ImageBlock extends PureComponent<ImageBlockProps, ImageBlockState> {
 export function makeImageBlockPlugin(): IPlugin {
   return {
     name: ImageBlockName,
-    onInitialized(editor: Editor) {
-      editor.registry.block.register(
-        makeReactBlock({
-          name: ImageBlockName,
-          component: (data: BlockElement) => <ImageBlock blockElement={data} />,
-          tryParsePastedDOM(e: TryParsePastedDOMEvent) {
-            const { node } = e;
-            const img = node.querySelector("img");
-            if (img) {
-              const newId = editor.idGenerator.mkBlockId();
-              const src = img.getAttribute("src");
-              let attributes: object | undefined;
-              if (src) {
-                attributes = {
-                  src: src,
-                };
-              }
-              const element = new BlockElement(
-                ImageBlockName,
-                newId,
-                attributes
-              );
-              return element;
+    blocks: [
+      makeReactBlock({
+        name: ImageBlockName,
+        component: (data: BlockElement) => <ImageBlock blockElement={data} />,
+        tryParsePastedDOM(e: TryParsePastedDOMEvent) {
+          const { node, editorController } = e;
+          const img = node.querySelector("img");
+          if (img) {
+            const newId = editorController.idGenerator.mkBlockId();
+            const src = img.getAttribute("src");
+            let attributes: object | undefined;
+            if (src) {
+              attributes = {
+                src: src,
+              };
             }
-          },
-        })
-      );
-    },
+            const element = new BlockElement(ImageBlockName, newId, attributes);
+            return element;
+          }
+        },
+      }),
+    ],
   };
 }

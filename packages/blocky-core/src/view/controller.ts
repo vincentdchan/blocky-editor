@@ -126,6 +126,17 @@ export class EditorController {
       divHandler: this.#divHandler,
     });
 
+    options?.plugins?.forEach((plugin) => {
+      plugin.blocks?.forEach((block) => {
+        this.blockRegistry.register(block);
+      });
+      plugin.spans?.forEach((span) => {
+        this.spanRegistry.register(span);
+      });
+    });
+    this.blockRegistry.seal();
+    this.spanRegistry.seal();
+
     if (options?.state) {
       this.state = options.state;
     } else {

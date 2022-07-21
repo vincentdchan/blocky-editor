@@ -53,21 +53,6 @@ function textTypeCanIndent(textType: TextType): boolean {
   return textType === TextType.Normal || textType === TextType.Bulleted;
 }
 
-function insertOrGetChildrenContainer(
-  change: Changeset,
-  element: BlockElement
-): BlockyElement {
-  let childrenContainer = element.childrenContainer;
-  if (childrenContainer) {
-    return childrenContainer;
-  }
-
-  childrenContainer = new BlockyElement("block-children");
-  change.appendChild(element, childrenContainer);
-
-  return childrenContainer;
-}
-
 /**
  * TextBlock is a very special block in the editor.
  * It's handling all the editable element.
@@ -576,11 +561,17 @@ class TextBlock extends Block {
     change.removeChild(parentElement, this.props);
 
     const prevBlockyElement = prevElement as BlockElement;
-    const childrenContainer = insertOrGetChildrenContainer(
-      change,
-      prevBlockyElement
-    );
-    change.appendChild(childrenContainer, copy);
+
+    let childrenContainer = prevBlockyElement.childrenContainer;
+    if (childrenContainer) {
+      change.appendChild(childrenContainer, copy);
+    } else {
+      childrenContainer = new BlockyElement("block-children", undefined, [
+        copy,
+      ]);
+      change.appendChild(prevBlockyElement, childrenContainer);
+    }
+
     change.setCursorState(prevCursorState);
     change.apply({
       refreshCursor: true,

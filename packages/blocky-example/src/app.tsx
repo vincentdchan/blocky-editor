@@ -9,6 +9,7 @@ import {
 } from "blocky-preact";
 import { makeYjsPlugin } from "blocky-yjs";
 import makeBoldedTextPlugin from "blocky-core/dist/plugins/boldedTextPlugin";
+import makeCodeTextPlugin from "blocky-core/dist/plugins/codeTextPlugin";
 import makeBulletListPlugin from "blocky-core/dist/plugins/bulletListPlugin";
 import makeHeadingsPlugin from "blocky-core/dist/plugins/headingsPlugin";
 import { makeImageBlockPlugin } from "./plugins/imageBlock";
@@ -27,6 +28,7 @@ interface AppState {
 function makeEditorPlugins(doc: Y.Doc, allowInit?: boolean): IPlugin[] {
   return [
     makeBoldedTextPlugin(),
+    makeCodeTextPlugin(),
     makeBulletListPlugin(),
     makeHeadingsPlugin(),
     makeImageBlockPlugin(),

@@ -113,3 +113,7 @@
   flex-direction: column;
   flex: 1;
 }
+
+:root {
+  --color-neutral-muted: rgba(175,184,193,0.2);
+}

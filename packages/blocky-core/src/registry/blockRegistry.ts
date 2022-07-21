@@ -5,18 +5,21 @@ import type {
   IBlockDefinition,
   TryParsePastedDOMEvent,
 } from "@pkg/block/basic";
+import { Registry } from "./registry";
 import { makeTextBlockDefinition, TextBlockName } from "@pkg/block/textBlock";
 
-export class BlockRegistry {
+export class BlockRegistry extends Registry<IBlockDefinition> {
   #types: IBlockDefinition[];
   #nameMap: Map<string, number> = new Map();
 
   constructor() {
+    super();
     this.#types = [makeTextBlockDefinition()];
     this.#nameMap.set(TextBlockName, 0);
   }
 
   register(blockType: IBlockDefinition): number {
+    this.ensureUnsealed();
     const { name } = blockType;
     if (this.#nameMap.has(name)) {
       throw new Error(`SpanType '${name}' exists`);

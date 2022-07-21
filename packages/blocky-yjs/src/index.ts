@@ -186,11 +186,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
                       makeBlockyElementByYElement(yXmlElement);
                     blockyChildren.push(createdElement);
                   }
-                  new Changeset(state).insertChildrenAt(
-                    blockyElement,
-                    index,
-                    blockyChildren
-                  );
+                  change.insertChildrenAt(blockyElement, index, blockyChildren);
                 } else if (typeof delta.delete === "number") {
                   const numToDelete = delta.delete;
                   change.deleteChildrenAt(blockyElement, index, numToDelete);
