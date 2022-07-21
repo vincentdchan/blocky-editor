@@ -95,11 +95,6 @@ function makeDefaultPadding(): Padding {
   };
 }
 
-export enum UpdateFlag {
-  IgnoreSelection = 0x01,
-  NoLog = 0x02, // the update is commited by the program, do not log it
-}
-
 export class TextInputEvent {
   constructor(
     readonly beforeDelta: Delta,

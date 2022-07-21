@@ -1,5 +1,5 @@
 import { Component, JSX } from "preact";
-import { EditorController, UpdateFlag, type IPlugin } from "blocky-core";
+import { EditorController, type IPlugin } from "blocky-core";
 import * as Y from "yjs";
 import {
   BlockyEditor,
@@ -148,7 +148,7 @@ class App extends Component<unknown, AppState> {
       targetId: (editor.state.root.firstChild! as any).id,
       offset: 0,
     };
-    editor.pasteHTMLAtCursor(ReadMeContent, UpdateFlag.NoLog);
+    editor.pasteHTMLAtCursor(ReadMeContent);
   };
 
   private handleHeadingChanged = (e: JSX.TargetedEvent<HTMLInputElement>) => {
