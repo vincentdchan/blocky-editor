@@ -58,7 +58,7 @@ export interface IInsertOptions {
 export type NextTickFn = () => void;
 
 export class CursorChangedEvent {
-  constructor(readonly id: string, readonly state: CursorState | undefined) {}
+  constructor(readonly id: string, readonly state: CursorState | null) {}
 }
 
 export class EditorController {
@@ -135,7 +135,7 @@ export class EditorController {
   mount(editor: Editor) {
     this.editor = editor;
 
-    observe(this.state, "cursorState", (s: CursorState | undefined) => {
+    observe(this.state, "cursorState", (s: CursorState | null) => {
       const id = editor.collaborativeCursorManager.options.id;
       const evt = new CursorChangedEvent(id, s);
       this.cursorChanged.emit(evt);
@@ -152,26 +152,25 @@ export class EditorController {
     const prevNode = this.state.idMap.get(afterId)!;
     const parentNode = prevNode.parent! as BlockyElement;
 
-    const updateState = () => {
-      new Changeset(editor.state)
-        .insertChildAfter(parentNode, element, prevNode)
-        .apply();
+    const updateState = (): Changeset => {
+      return new Changeset(editor.state).insertChildrenAfter(
+        parentNode,
+        [element],
+        prevNode
+      );
     };
     if (options?.noRender !== true) {
-      editor.update(() => {
-        updateState();
-        if (options?.autoFocus) {
-          return () => {
-            this.state.cursorState = {
-              type: "collapsed",
-              targetId: element.id,
-              offset: 0,
-            };
-          };
-        }
-      });
+      const changeset = updateState();
+      if (options?.autoFocus) {
+        changeset.setCursorState({
+          type: "collapsed",
+          targetId: element.id,
+          offset: 0,
+        });
+      }
+      changeset.apply();
     } else {
-      updateState();
+      updateState().apply();
     }
 
     return element.id;
@@ -215,29 +214,23 @@ export class EditorController {
     }
 
     // prevent the cursor from jumping around
-    editor.state.cursorState = undefined;
 
-    editor.update(() => {
-      if (!blockElement.firstChild) {
-        return;
-      }
-      const textModel = blockElement.firstChild as BlockyTextModel;
-      new Changeset(this.state)
-        .textEdit(textModel, () =>
-          new Delta().retain(index).retain(length, attribs)
-        )
-        .apply();
-
-      return () => {
-        editor.state.cursorState = {
-          type: "open",
-          startId: blockId,
-          endId: blockId,
-          startOffset: index,
-          endOffset: index + length,
-        };
-      };
-    });
+    if (!blockElement.firstChild) {
+      return;
+    }
+    const textModel = blockElement.firstChild as BlockyTextModel;
+    new Changeset(this.state)
+      .textEdit(textModel, () =>
+        new Delta().retain(index).retain(length, attribs)
+      )
+      .setCursorState({
+        type: "open",
+        startId: blockId,
+        endId: blockId,
+        startOffset: index,
+        endOffset: index + length,
+      })
+      .apply();
   }
 
   formatTextOnCursor(cursorState: CursorState, attribs?: AttributesObject) {
@@ -281,7 +274,6 @@ export class EditorController {
       return;
     }
 
-    this.state.cursorState = undefined;
     const blockNode = this.state.idMap.get(id);
     if (!blockNode) {
       return;
@@ -291,9 +283,9 @@ export class EditorController {
       return;
     }
 
-    editor.update(() => {
-      const parent = blockNode.parent! as BlockyElement;
-      new Changeset(this.state).removeNode(parent, blockNode).apply();
+    const parent = blockNode.parent! as BlockyElement;
+    new Changeset(this.state).removeChild(parent, blockNode).apply({
+      refreshCursor: true,
     });
   }
 }

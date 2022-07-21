@@ -1,6 +1,6 @@
 import { $on, isContainNode, removeNode } from "blocky-common/es/dom";
 import { isUpperCase } from "blocky-common/es/character";
-import { observe, runInAction } from "blocky-common/es/observable";
+import { observe } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
 import { type Padding } from "blocky-common/es/dom";
 import { areEqualShallow } from "blocky-common/es/object";
@@ -9,7 +9,7 @@ import {
   flattenDisposable,
 } from "blocky-common/es/disposable";
 import { type Position } from "blocky-common/es/position";
-import { debounce } from "lodash-es";
+import { debounce, isUndefined } from "lodash-es";
 import Delta from "quill-delta-es";
 import fastDiff from "fast-diff";
 import { DocRenderer } from "@pkg/view/renderer";
@@ -20,6 +20,7 @@ import {
   BlockyTextModel,
   BlockyElement,
   Changeset,
+  BlockyNode,
 } from "@pkg/model";
 import {
   CollapsedCursor,
@@ -44,16 +45,14 @@ import {
   BlockPasteEvent,
   TryParsePastedDOMEvent,
 } from "@pkg/block/basic";
-import {
-  setTextTypeForTextBlock,
-  getTextTypeForTextBlock,
-} from "@pkg/block/textBlock";
+import { getTextTypeForTextBlock } from "@pkg/block/textBlock";
 import {
   type CollaborativeCursorOptions,
   CollaborativeCursorManager,
 } from "./collaborativeCursors";
 import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { isHotkey } from "is-hotkey";
+import { FinalizedChangeset } from "@pkg/model/change";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
@@ -124,7 +123,6 @@ export class Editor {
   #renderedDom: HTMLDivElement | undefined;
   #renderer: DocRenderer;
   #lastFocusedId: string | undefined;
-  #isUpdating = false;
 
   readonly onEveryBlock: Slot<Block> = new Slot();
 
@@ -230,6 +228,9 @@ export class Editor {
     });
 
     this.#initBlockCreated();
+
+    this.state.beforeChangesetApply.on(this.#handleBeforeChangesetApply);
+    this.state.changesetApplied.on(this.#handleChangesetApplied);
   }
 
   #leafHandler = (node: Node): BlockElement | void => {
@@ -297,7 +298,7 @@ export class Editor {
     id: string,
     name: string,
     color: string,
-    state: CursorState | undefined
+    state: CursorState | null
   ) {
     setTimeout(() => {
       if (!state) {
@@ -436,7 +437,7 @@ export class Editor {
 
   #handleTreeNodeNotFound(startContainer: Node) {
     if (!this.#trySelectOnParent(startContainer)) {
-      this.state.cursorState = undefined;
+      this.state.cursorState = null;
     }
   }
 
@@ -487,7 +488,7 @@ export class Editor {
 
     // not a dom in this editor, ignore it.
     if (!isContainNode(startContainer, this.#container)) {
-      this.state.cursorState = undefined;
+      this.state.cursorState = null;
       return;
     }
 
@@ -519,7 +520,7 @@ export class Editor {
     } else {
       const endNode = this.#findBlockNodeContainer(endContainer);
       if (!endNode) {
-        this.state.cursorState = undefined;
+        this.state.cursorState = null;
         return;
       }
       const absoluteEndOffset = this.#findTextOffsetInBlock(
@@ -596,18 +597,19 @@ export class Editor {
 
       const parent = treeNode.parent as BlockyElement | undefined;
       if (parent) {
-        changeset.removeNode(parent, treeNode);
+        changeset.removeChild(parent, treeNode);
       }
       return;
     }
 
-    this.#checkBlockContent(node, treeNode, currentOffset);
+    this.#checkBlockContent(changeset, node, treeNode, currentOffset);
   }
 
   /**
    * Check if there is new span created by the browser
    */
   #checkBlockContent(
+    changeset: Changeset,
     node: Node,
     blockNode: BlockElement,
     currentOffset?: number
@@ -615,6 +617,7 @@ export class Editor {
     const block = this.state.blocks.get(blockNode.id);
 
     block?.blockContentChanged?.({
+      changeset,
       node: node as HTMLDivElement,
       blockElement: blockNode,
       offset: currentOffset,
@@ -627,7 +630,9 @@ export class Editor {
     for (const dom of doms) {
       this.#checkMarkedDom(changeset, dom, undefined);
     }
-    changeset.apply();
+    changeset.apply({
+      updateView: false,
+    });
   }
 
   #handleOpenCursorContentChanged() {
@@ -637,7 +642,7 @@ export class Editor {
 
   #handleContentChanged = () => {
     const { cursorState } = this.state;
-    if (cursorState === undefined || cursorState.type === "open") {
+    if (cursorState === null || cursorState.type === "open") {
       this.#handleOpenCursorContentChanged();
       return;
     }
@@ -652,7 +657,9 @@ export class Editor {
 
     const change = new Changeset(this.state);
     this.#checkMarkedDom(change, domNode, currentOffset);
-    change.apply();
+    change.apply({
+      updateView: false,
+    });
     // this is essential because the cursor will change
     // after the user typing.
     this.#selectionChanged();
@@ -720,7 +727,7 @@ export class Editor {
   #handleCompositionEnd = () => {
     this.composing = false;
     this.#handleContentChanged();
-    this.state.undoManager.cursorBeforeComposition = undefined;
+    this.state.undoManager.cursorBeforeComposition = null;
   };
 
   #handleKeyDown = (e: KeyboardEvent) => {
@@ -790,19 +797,14 @@ export class Editor {
     const newTextElement = this.state.createTextElement();
     const currentBlock = this.state.idMap.get(afterId);
 
-    this.update(() => {
-      new Changeset(this.state)
-        .insertChildAfter(parent, newTextElement, currentBlock)
-        .apply();
-
-      return () => {
-        this.state.cursorState = {
-          type: "collapsed",
-          targetId: newTextElement.id,
-          offset: 0,
-        };
-      };
-    });
+    new Changeset(this.state)
+      .insertChildrenAfter(parent, [newTextElement], currentBlock)
+      .setCursorState({
+        type: "collapsed",
+        targetId: newTextElement.id,
+        offset: 0,
+      })
+      .apply();
   }
 
   #commitNewLine() {
@@ -832,36 +834,31 @@ export class Editor {
 
       const slices = textModel.delta.slice(cursorOffset);
 
-      this.update(() => {
-        const newTextElement = this.state.createTextElement();
-        const newTextModel = newTextElement.firstChild! as BlockyTextModel;
-        const textType = getTextTypeForTextBlock(blockElement);
-        if (this.preservedTextType.has(textType)) {
-          // preserved data type
-          setTextTypeForTextBlock(this.state, newTextElement, textType);
-        }
+      const textType = getTextTypeForTextBlock(blockElement);
+      const attributes = Object.create(null);
+      if (this.preservedTextType.has(textType)) {
+        // preserved data type
+        attributes.textType = textType;
+      }
 
-        const change = new Changeset(this.state)
-          .textConcat(newTextModel, () => slices)
-          .textEdit(textModel, () =>
-            new Delta()
-              .retain(cursorOffset)
-              .delete(textModel.length - cursorOffset)
-          );
+      const newTextElement = this.state.createTextElement(attributes);
+      const newTextModel = newTextElement.firstChild! as BlockyTextModel;
 
-        const parentElement = blockElement.parent! as BlockyElement;
-        change.insertChildAfter(parentElement, newTextElement, blockElement);
-
-        change.apply();
-
-        return () => {
-          this.state.cursorState = {
-            type: "collapsed",
-            targetId: newTextElement.id,
-            offset: 0,
-          };
-        };
-      });
+      const parentElement = blockElement.parent! as BlockyElement;
+      new Changeset(this.state)
+        .insertChildrenAfter(parentElement, [newTextElement], blockElement)
+        .textConcat(newTextModel, () => slices)
+        .textEdit(textModel, () =>
+          new Delta()
+            .retain(cursorOffset)
+            .delete(textModel.length - cursorOffset)
+        )
+        .setCursorState({
+          type: "collapsed",
+          targetId: newTextElement.id,
+          offset: 0,
+        })
+        .apply();
     } else {
       console.error("unhandled");
     }
@@ -871,40 +868,31 @@ export class Editor {
     this.state.undoManager.seal();
   }, 1000);
 
-  /**
-   * Update the state in fn, after
-   * fn is called, the render function
-   * will be called.
-   */
-  update(fn: () => AfterFn | void, flags = 0) {
-    if (this.#isUpdating) {
-      throw new Error("is in updating process");
+  #handleBeforeChangesetApply = (changeset: FinalizedChangeset) => {
+    const { afterCursor, options } = changeset;
+    if (!isUndefined(afterCursor) || options.refreshCursor) {
+      this.state.cursorState = null;
+    }
+  };
+
+  #handleChangesetApplied = (changeset: FinalizedChangeset) => {
+    const { options } = changeset;
+    if (options.updateView) {
+      this.render(() => {
+        if (!isUndefined(changeset.afterCursor)) {
+          this.state.cursorState = changeset.afterCursor;
+        } else if (options.refreshCursor) {
+          this.state.cursorState = changeset.beforeCursor;
+        }
+      });
     }
 
-    this.#isUpdating = true;
-    try {
-      if (flags & UpdateFlag.NoLog) {
-        this.state.undoManager.pause();
-      }
-      let done: AfterFn | void;
-      runInAction(this.state, () => {
-        done = fn();
-      });
-      this.render(() => {
-        done?.();
-        if (flags & UpdateFlag.NoLog) {
-          this.state.undoManager.recover();
-        }
-        this.#debouncedSealUndo();
-        if (flags & UpdateFlag.IgnoreSelection) {
-          return;
-        }
-        this.#selectionChanged();
-      });
-    } finally {
-      this.#isUpdating = false;
+    if (options.recordUndo) {
+      const undoItem = this.state.undoManager.getAUndoItem();
+      undoItem.push(...changeset.operations);
+      this.#debouncedSealUndo();
     }
-  }
+  };
 
   openExternalLink(link: string) {
     // TODO: handle this in plugin
@@ -983,20 +971,15 @@ export class Editor {
     const prevTextModel = firstChild as BlockyTextModel;
     const originalLength = prevTextModel.length;
 
-    this.update(() => {
-      new Changeset(this.state)
-        .textConcat(prevTextModel, () => thisTextModel.delta)
-        .removeNode(node.parent as BlockyElement, node)
-        .apply();
-
-      return () => {
-        this.state.cursorState = {
-          type: "collapsed",
-          targetId: prevNode.id,
-          offset: originalLength,
-        };
-      };
-    });
+    new Changeset(this.state)
+      .textConcat(prevTextModel, () => thisTextModel.delta)
+      .removeChild(node.parent as BlockyElement, node)
+      .setCursorState({
+        type: "collapsed",
+        targetId: prevNode.id,
+        offset: originalLength,
+      })
+      .apply();
 
     return true;
   }
@@ -1028,42 +1011,43 @@ export class Editor {
       return false;
     }
 
-    this.update(() => {
-      const parent = node.parent as BlockyElement | undefined;
+    const changeset = new Changeset(this.state);
+    const parent = node.parent as BlockyElement | undefined;
 
-      if (parent) {
-        new Changeset(this.state).removeNode(parent, node).apply();
-      }
-      return () => {
-        if (prevNode) {
-          this.state.cursorState = {
-            type: "collapsed",
-            targetId: prevNode.id,
-            offset: 0,
-          };
-          this.#focusEndOfNode(prevNode);
-        } else {
-          this.state.cursorState = undefined;
-        }
-      };
-    });
+    if (parent) {
+      changeset.removeChild(parent, node).apply();
+    }
+
+    if (prevNode) {
+      changeset.setCursorState({
+        type: "collapsed",
+        targetId: prevNode.id,
+        offset: 0,
+      });
+      this.#focusEndOfNode(changeset, prevNode);
+    } else {
+      changeset.setCursorState(null);
+    }
+
+    changeset.apply();
+
     return true;
   }
 
-  #focusEndOfNode(node: BlockElement) {
+  #focusEndOfNode(changeset: Changeset, node: BlockElement) {
     if (node.nodeName === TextBlockName) {
       const textModel = node.firstChild! as BlockyTextModel;
-      this.state.cursorState = {
+      changeset.setCursorState({
         type: "collapsed",
         targetId: node.id,
         offset: textModel.length,
-      };
+      });
     } else {
-      this.state.cursorState = {
+      changeset.setCursorState({
         type: "collapsed",
         targetId: node.id,
         offset: 0,
-      };
+      });
     }
   }
 
@@ -1251,34 +1235,32 @@ export class Editor {
       return;
     }
     const parent = currentBlockElement.parent! as BlockyElement;
-    let prev = currentBlockElement;
+    const prev = currentBlockElement;
 
-    this.update(() => {
-      const changeset = new Changeset(this.state);
-      for (let i = 0, len = elements.length; i < len; i++) {
-        const element = elements[i];
+    const changeset = new Changeset(this.state);
+    const insertChildren: BlockyNode[] = [];
+    for (let i = 0, len = elements.length; i < len; i++) {
+      const element = elements[i];
 
-        if (
-          i === 0 &&
-          currentBlockElement.nodeName === TextBlockName &&
-          element.nodeName === TextBlockName
-        ) {
-          const prevTextModel =
-            currentBlockElement.firstChild! as BlockyTextModel;
-          const firstTextModel = element.firstChild! as BlockyTextModel;
-          if (!prevTextModel || !firstTextModel) {
-            continue;
-          }
-          changeset.textConcat(prevTextModel, () => firstTextModel.delta);
-          // first item, try to merget ext
+      if (
+        i === 0 &&
+        currentBlockElement.nodeName === TextBlockName &&
+        element.nodeName === TextBlockName
+      ) {
+        const prevTextModel =
+          currentBlockElement.firstChild! as BlockyTextModel;
+        const firstTextModel = element.firstChild! as BlockyTextModel;
+        if (!prevTextModel || !firstTextModel) {
           continue;
         }
-
-        changeset.insertChildAfter(parent, element, prev);
-        prev = element;
+        changeset.textConcat(prevTextModel, () => firstTextModel.delta);
+        // first item, try to merge text
+        continue;
       }
-      changeset.apply();
-    }, updateFlags);
+      insertChildren.push(element);
+    }
+    changeset.insertChildrenAfter(parent, insertChildren, prev);
+    changeset.apply();
   }
 
   /**
@@ -1313,21 +1295,21 @@ export class Editor {
   }
 
   #insertTextAt(
-    cursorState: CursorState | undefined,
+    cursorState: CursorState | null,
     text: string,
     attributes?: AttributesObject
-  ): CursorState | undefined {
+  ): CursorState | null {
     if (!cursorState) {
-      return;
+      return null;
     }
 
     if (cursorState.type === "open") {
-      return;
+      return null;
     }
 
     const textElement = this.getTextElementByBlockId(cursorState.targetId);
     if (!textElement) {
-      return;
+      return null;
     }
 
     const afterOffset = cursorState.offset + text.length;

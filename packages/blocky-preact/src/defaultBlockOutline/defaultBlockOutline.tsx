@@ -1,5 +1,4 @@
 import { Component, JSX } from "preact";
-import { isUndefined } from "lodash-es";
 import { ReactBlockContext } from "../reactBlock";
 import {
   type IDisposable,
@@ -49,7 +48,7 @@ class DefaultBlockOutlineInternal extends Component<
   private handleeApplyCursorChangedEvent = (evt: CursorChangedEvent) => {
     const { state } = evt;
     const shouldShowOutline =
-      !isUndefined(state) &&
+      state !== null &&
       state.type === "collapsed" &&
       state.targetId === this.props.blockId;
 
@@ -77,7 +76,7 @@ class DefaultBlockOutlineInternal extends Component<
   private handleNewCursorState = (evt: CursorChangedEvent) => {
     const { state } = evt;
     const shouldShowOutline =
-      !isUndefined(state) &&
+      state !== null &&
       state.type === "collapsed" &&
       state.targetId === this.props.blockId;
     if (shouldShowOutline === this.state.showOutline) {

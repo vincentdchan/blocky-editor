@@ -1,10 +1,8 @@
 import { test, expect, describe } from "vitest";
 import {
   BlockyElement,
-  symAppendChild,
   symSetAttribute,
   symInsertChildAt,
-  symInsertAfter,
   symDeleteChildrenAt,
 } from "@pkg/model/tree";
 
@@ -13,7 +11,7 @@ test("tree append", () => {
   const firstChild = new BlockyElement("first-child");
   const secondChild = new BlockyElement("second-child");
 
-  parent[symAppendChild](firstChild);
+  parent[symInsertChildAt](parent.childrenLength, firstChild);
 
   let callbackIsCalled = false;
   parent.changed.on((e) => {
@@ -23,7 +21,7 @@ test("tree append", () => {
     }
   });
 
-  parent[symAppendChild](secondChild);
+  parent[symInsertChildAt](parent.childrenLength, secondChild);
 
   expect(callbackIsCalled).toBeTruthy();
 });
@@ -33,7 +31,7 @@ test("tree insert at first", () => {
   const firstChild = new BlockyElement("first-child");
   const secondChild = new BlockyElement("second-child");
 
-  parent[symAppendChild](firstChild);
+  parent[symInsertChildAt](parent.childrenLength, firstChild);
 
   let callbackIsCalled = false;
   parent.changed.on((e) => {
@@ -43,7 +41,7 @@ test("tree insert at first", () => {
     }
   });
 
-  parent[symInsertAfter](secondChild);
+  parent[symInsertChildAt](3, secondChild);
 
   expect(callbackIsCalled).toBeTruthy();
 });
@@ -71,8 +69,8 @@ test("tree insert at index", () => {
   const secondChild = new BlockyElement("second-child");
   const thirdChild = new BlockyElement("third-child");
 
-  parent[symAppendChild](firstChild);
-  parent[symAppendChild](thirdChild);
+  parent[symInsertChildAt](parent.childrenLength, firstChild);
+  parent[symInsertChildAt](parent.childrenLength, thirdChild);
 
   parent[symInsertChildAt](1, secondChild);
 
@@ -86,9 +84,9 @@ test("tree delete children at index", () => {
   const secondChild = new BlockyElement("second-child");
   const thirdChild = new BlockyElement("third-child");
 
-  parent[symAppendChild](firstChild);
-  parent[symAppendChild](secondChild);
-  parent[symAppendChild](thirdChild);
+  parent[symInsertChildAt](parent.childrenLength, firstChild);
+  parent[symInsertChildAt](parent.childrenLength, secondChild);
+  parent[symInsertChildAt](parent.childrenLength, thirdChild);
 
   parent[symDeleteChildrenAt](1, 1);
   expect(parent.childrenLength).toBe(2);
@@ -102,13 +100,13 @@ test("tree delete children at index", () => {
 test("child validation", () => {
   const element = new BlockyElement("name");
   expect(() => {
-    element[symAppendChild](element);
-  }).toThrowError("Can not add ancesters of a node as child");
+    element[symInsertChildAt](element.childrenLength, element);
+  }).toThrowError("Can not add ancestors of a node as child");
   const firstChild = new BlockyElement("child");
-  element[symAppendChild](firstChild);
+  element[symInsertChildAt](element.childrenLength, firstChild);
   expect(() => {
-    element[symInsertAfter](element, firstChild);
-  }).toThrowError("Can not add ancesters of a node as child");
+    element[symInsertChildAt](1, element);
+  }).toThrowError("Can not add ancestors of a node as child");
 });
 
 describe("toJSON()", () => {

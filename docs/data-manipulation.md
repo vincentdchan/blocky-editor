@@ -37,15 +37,20 @@ const controller = new EditorController();
 
 ### Update the state
 
-Changes applied to the state will not update the UI. So you must wrap the changing operations in a function:
+The document tree is read-only. It should be regarded as immutable tree.
+
+If you want to mutate the tree, you need to apply changeset
+to the state.
+
+For example:
 
 ```typescript
-editor.update(() => {
-  // Modify the state
-});
+new Changeset(this.editor.state).appendChild(container, child).apply(); // append child
+new Changeset(this.editor.state).removeChild(container, child).apply(); // remove child
 ```
 
-When the operations are finished, the editor will automatically update the UI.
+When apply is called, the changeset will be applied to the editor.
+At the same time, the changeset will be logged and transmitted.
 
 ### Serialization
 
@@ -90,11 +95,10 @@ which can store attributes:
 
 ```typescript
 class BlockyElement implements BlockyNode {
-  setAttribute(name: string, value: string);
   getAttribute(name: string): string | undefined;
-  insertAfter(node: BlockyNode, after?: BlockyNode);
-  appendChild(node: BlockyNode);
-  removeChild(node: BlockyNode);
+  firstChild: BlockyNode | null;
+  lastChild: BlockyNode | null;
+  childrenLength: number;
 }
 ```
 
@@ -104,17 +108,15 @@ The text model of the blocky editor is implemented by [quill-delta](https://gith
 
 ```typescript
 export class BlockyTextModel implements BlockyNode {
-  delta = new Delta();
-  compose(delta: Delta);
-  concat(delta: Delta);
+  get delta(): Delta;
 }
 ```
 
 You can the the `compose` method to submit changeds. For example:
 
 ```typescript
-textModel.compose(new Delta().insert("Hello world"));
-textModel.compose(new Delta().retain(4).delete(1)); // delete 1 char at the index 4
+changeset.textEdit(() => new Delta().insert("Hello world")).apply();
+changeset.textEdit(() => new Delta().retain(4).delete(1)).apply(); // delete 1 char at the index 4
 ```
 
 ## Collaborative editing
