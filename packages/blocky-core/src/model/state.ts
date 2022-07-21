@@ -3,15 +3,29 @@ import { isUpperCase } from "blocky-common/es/character";
 import { makeObservable } from "blocky-common/es/observable";
 import { removeNode } from "blocky-common/es/dom";
 import { Slot } from "blocky-common/es/events";
-import { BlockyElement, BlockyTextModel } from "./tree";
-import type { BlockyNode, JSONNode } from "./element";
-import { TextBlockName } from "@pkg/block/textBlock";
-import { type IdGenerator } from "@pkg/helper/idHelper";
-import { type CursorState } from "@pkg/model/cursor";
+import {
+  BlockyElement,
+  BlockyTextModel,
+  symSetAttribute,
+  symInsertChildAt,
+  symDeleteChildrenAt,
+  symSetDelta,
+} from "./tree";
 import { blockyNodeFromJsonNode } from "@pkg/model/deserialize";
 import { UndoManager } from "@pkg/model/undoManager";
 import { Block, BlockElement } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
+import { TextBlockName } from "@pkg/block/textBlock";
+import type { FinalizedChangeset } from "@pkg/model/change";
+import type { AttributesObject, BlockyNode, JSONNode } from "./element";
+import type { IdGenerator } from "@pkg/helper/idHelper";
+import type { CursorState } from "@pkg/model/cursor";
+import type {
+  InsertNodeOperation,
+  UpdateNodeOperation,
+  RemoveNodeOperation,
+  TextEditOperation,
+} from "./operations";
 
 export const DocNodeName = "doc";
 
@@ -59,8 +73,10 @@ export class State {
   readonly blocks: Map<string, Block> = new Map();
   readonly newBlockCreated: Slot<Block> = new Slot();
   readonly blockDeleted: Slot<BlockElement> = new Slot();
+  readonly beforeChangesetApply: Slot<FinalizedChangeset> = new Slot();
+  readonly changesetApplied: Slot<FinalizedChangeset> = new Slot();
   readonly undoManager: UndoManager;
-  cursorState: CursorState | undefined;
+  cursorState: CursorState | null = null;
   silent = false;
 
   constructor(
@@ -79,12 +95,66 @@ export class State {
     }
   }
 
-  createTextElement(): BlockElement {
+  apply(changeset: FinalizedChangeset) {
+    this.beforeChangesetApply.emit(changeset);
+
+    for (const op of changeset.operations) {
+      switch (op.type) {
+        case "op-insert-node": {
+          this.#applyInsertOperation(op);
+          break;
+        }
+        case "op-update-node": {
+          this.#applyUpdateOperation(op);
+          break;
+        }
+        case "op-remove-node": {
+          this.#applyRemoveOperation(op);
+          break;
+        }
+        case "op-text-edit": {
+          this.#applyTextEditOperation(op);
+          break;
+        }
+      }
+    }
+
+    this.changesetApplied.emit(changeset);
+  }
+
+  #applyInsertOperation(insertOperation: InsertNodeOperation) {
+    const { parentLoc, children } = insertOperation;
+    let { index } = insertOperation;
+    const parent = this.findNodeByLocation(parentLoc) as BlockyElement;
+    for (const child of children) {
+      parent[symInsertChildAt](index++, child);
+    }
+  }
+  #applyUpdateOperation(updateOperation: UpdateNodeOperation) {
+    const { location, attributes } = updateOperation;
+    const node = this.findNodeByLocation(location) as BlockyElement;
+    for (const key in attributes) {
+      const value = attributes[key];
+      node[symSetAttribute](key, value);
+    }
+  }
+  #applyRemoveOperation(removeOperation: RemoveNodeOperation) {
+    const { parentLoc, index, children } = removeOperation;
+    const parent = this.findNodeByLocation(parentLoc) as BlockyElement;
+    parent[symDeleteChildrenAt](index, children.length);
+  }
+  #applyTextEditOperation(textEditOperation: TextEditOperation) {
+    const { location, newDelta } = textEditOperation;
+    const textNode = this.findNodeByLocation(location) as BlockyTextModel;
+    textNode[symSetDelta](newDelta);
+  }
+
+  createTextElement(attributes?: AttributesObject): BlockElement {
     const textModel = new BlockyTextModel();
     return new BlockElement(
       TextBlockName,
       this.idHelper.mkBlockId(),
-      undefined,
+      attributes,
       [textModel]
     );
   }
@@ -151,7 +221,7 @@ export class State {
     } else {
       const block = this.idMap.get(location.id);
       if (!block) {
-        throw new Error(`is not exist: ${location.id}`);
+        throw new Error(`id doesn't exist: ${location.id}`);
       }
       baseNode = block;
     }

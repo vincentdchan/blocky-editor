@@ -1,71 +1,219 @@
-import type { State } from "./state";
+import { BlockElement } from "@pkg/block/basic";
+import Delta from "quill-delta-es";
+import type { State, NodeLocation } from "./state";
 import type { AttributesObject, BlockyNode } from "@pkg/model/element";
 import type { Operation } from "./operations";
-import Delta from "quill-delta-es";
-import {
-  type BlockyElement,
-  type BlockyTextModel,
-  symSetAttribute,
-  symAppendChild,
-  symRemoveChild,
-  symInsertAfter,
-  symInsertChildAt,
-  symTextEdit,
-  symTextConcat,
-  symDeleteChildrenAt,
-} from "./tree";
+import type { BlockyElement, BlockyTextModel } from "./tree";
+import type { CursorState } from "./cursor";
+
+function findNodeLocation(root: BlockyElement, node: BlockyNode): NodeLocation {
+  if (root === node) {
+    return { path: [] };
+  }
+  if (node instanceof BlockElement) {
+    return {
+      id: node.id,
+      path: [],
+    };
+  }
+  const parent = node.parent!;
+  const parentPath = findNodeLocation(root, parent);
+
+  let cnt = 0;
+  let ptr = node.prevSibling;
+  while (ptr) {
+    cnt++;
+    ptr = ptr.prevSibling;
+  }
+
+  parentPath.path.push(cnt);
+  return parentPath;
+}
+
+export interface ChangesetApplyOptions {
+  updateView: boolean;
+  ignoreCursor: boolean;
+  recordUndo: boolean;
+  refreshCursor: boolean;
+}
+
+const defaultApplyOptions: ChangesetApplyOptions = {
+  updateView: true,
+  ignoreCursor: false,
+  recordUndo: true,
+  refreshCursor: false,
+};
 
 export class Changeset {
-  readonly operations: Operation[] = [];
-  constructor(readonly state: State) {}
+  operations: Operation[] = [];
+  beforeCursor: CursorState | null = null;
+  afterCursor?: CursorState | null;
+  constructor(readonly state: State) {
+    this.beforeCursor = state.cursorState;
+  }
   setAttribute(node: BlockyElement, attributes: AttributesObject): Changeset {
+    const oldAttributes = Object.create(null);
     for (const key in attributes) {
-      const value = attributes[key];
-      node[symSetAttribute](key, value);
+      const oldValue = node.getAttribute(key);
+      oldAttributes[key] = oldValue;
     }
+    const location = findNodeLocation(this.state.root, node);
+    this.push({
+      type: "op-update-node",
+      attributes,
+      oldAttributes,
+      location,
+    });
+    return this;
+  }
+  setCursorState(cursorState: CursorState | null): Changeset {
+    this.afterCursor = cursorState;
     return this;
   }
   appendChild(node: BlockyElement, child: BlockyNode): Changeset {
-    node[symAppendChild](child);
+    const parentLoc = findNodeLocation(this.state.root, node);
+    const index = node.childrenLength;
+    this.push({
+      type: "op-insert-node",
+      index,
+      parentLoc,
+      children: [child],
+    });
     return this;
   }
-  removeNode(parent: BlockyElement, child: BlockyNode): Changeset {
-    parent[symRemoveChild](child);
+  removeChild(parent: BlockyElement, child: BlockyNode): Changeset {
+    const parentLoc = findNodeLocation(this.state.root, parent);
+    const index = parent.indexOf(child);
+    this.push({
+      type: "op-remove-node",
+      parentLoc,
+      index,
+      children: [child],
+    });
     return this;
   }
-  symDeleteChildrenAt(
+  deleteChildrenAt(
     parent: BlockyElement,
     index: number,
     count: number
   ): Changeset {
-    parent[symDeleteChildrenAt](index, count);
+    if (count === 0) {
+      return this;
+    }
+    const parentLoc = findNodeLocation(this.state.root, parent);
+
+    let child = parent.childAt(index);
+    if (child == null) {
+      return this;
+    }
+
+    const children: BlockyNode[] = [];
+    while (child && count > 0) {
+      children.push(child);
+      child = child.nextSibling;
+      count--;
+    }
+
+    this.push({
+      type: "op-remove-node",
+      parentLoc,
+      index,
+      children,
+    });
     return this;
   }
-  insertChildAfter(
+  insertChildrenAfter(
     parent: BlockyElement,
-    child: BlockyNode,
+    children: BlockyNode[],
     after?: BlockyNode
   ): Changeset {
-    parent[symInsertAfter](child, after);
+    const parentLoc = findNodeLocation(this.state.root, parent);
+    let index = 0;
+    if (after) {
+      index = parent.indexOf(after) + 1;
+    }
+    this.push({
+      type: "op-insert-node",
+      parentLoc,
+      index,
+      children,
+    });
     return this;
   }
-  insertChildAt(
+  insertChildrenAt(
     parent: BlockyElement,
     index: number,
-    node: BlockyNode
+    children: BlockyNode[]
   ): Changeset {
-    parent[symInsertChildAt](index, node);
+    const parentLoc = findNodeLocation(this.state.root, parent);
+    this.push({
+      type: "op-insert-node",
+      index,
+      parentLoc,
+      children,
+    });
     return this;
   }
   textEdit(textNode: BlockyTextModel, delta: () => Delta): Changeset {
     const d = delta();
-    textNode[symTextEdit](d);
+    if (d.ops.length === 0) {
+      return this;
+    }
+    const oldDelta = textNode.delta;
+    const location = findNodeLocation(this.state.root, textNode);
+    const newDelta = oldDelta.compose(d);
+    this.push({
+      type: "op-text-edit",
+      newDelta,
+      oldDelta,
+      location,
+    });
     return this;
   }
   textConcat(textNode: BlockyTextModel, delta: () => Delta): Changeset {
     const d = delta();
-    textNode[symTextConcat](d);
+    if (d.ops.length === 0) {
+      return this;
+    }
+    const oldDelta = textNode.delta;
+    const location = findNodeLocation(this.state.root, textNode);
+    const newDelta = oldDelta.concat(d);
+    this.push({
+      type: "op-text-edit",
+      newDelta,
+      oldDelta,
+      location,
+    });
     return this;
   }
-  apply() {}
+  push(operation: Operation) {
+    this.operations.push(operation);
+  }
+  apply(options?: Partial<ChangesetApplyOptions>) {
+    const finalizedChangeset = this.finalize(options);
+    if (finalizedChangeset.operations.length === 0) {
+      return;
+    }
+    this.state.apply(finalizedChangeset);
+  }
+  finalize(options?: Partial<ChangesetApplyOptions>): FinalizedChangeset {
+    const result: FinalizedChangeset = {
+      operations: this.operations,
+      beforeCursor: this.beforeCursor,
+      afterCursor: this.afterCursor,
+      options: {
+        ...defaultApplyOptions,
+        ...options,
+      },
+    };
+    this.operations = [];
+    return result;
+  }
+}
+
+export interface FinalizedChangeset {
+  operations: Operation[];
+  beforeCursor: CursorState | null;
+  afterCursor?: CursorState | null;
+  options: ChangesetApplyOptions;
 }

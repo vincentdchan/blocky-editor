@@ -6,6 +6,7 @@ import { BlockyElement, symSetAttribute } from "@pkg/model/tree";
 import { BlockyNode } from "@pkg/model/element";
 import { type Editor } from "@pkg/view/editor";
 import { DocNodeName } from "@pkg/model/state";
+import { Changeset } from "@pkg/model/change";
 import type { AttributesObject } from "..";
 import { isUndefined } from "lodash-es";
 
@@ -79,10 +80,11 @@ export interface BlockFocusedEvent {
 export interface BlockBlurEvent {
   selection: Selection;
   node: HTMLDivElement;
-  cursor: CursorState | undefined;
+  cursor: CursorState | null;
 }
 
 export interface BlockContentChangedEvent {
+  changeset: Changeset;
   node: HTMLDivElement;
   blockElement: BlockElement;
   offset?: number;

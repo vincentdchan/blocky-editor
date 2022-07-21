@@ -1,11 +1,5 @@
 import { isWhiteSpace } from "blocky-common/es/text";
-import {
-  TextType,
-  type Editor,
-  type IPlugin,
-  setTextTypeForTextBlock,
-  Changeset,
-} from "@pkg/index";
+import { type Editor, type IPlugin, TextType, Changeset } from "@pkg/index";
 import fastDiff from "fast-diff";
 import Delta from "quill-delta-es";
 
@@ -16,6 +10,7 @@ function makeHeadingsPlugin(): IPlugin {
       editor.textInput.on((evt) => {
         const { textModel, beforeDelta, blockElement } = evt;
         const { state } = editor;
+        const changeset = new Changeset(state);
         const delta = new Delta();
 
         let index = 0;
@@ -30,13 +25,19 @@ function makeHeadingsPlugin(): IPlugin {
             if (isWhiteSpace(content)) {
               if (before === "#") {
                 delta.delete(2);
-                setTextTypeForTextBlock(state, blockElement, TextType.Heading1);
+                changeset.setAttribute(blockElement, {
+                  textType: TextType.Heading1,
+                });
               } else if (before === "##") {
                 delta.delete(3);
-                setTextTypeForTextBlock(state, blockElement, TextType.Heading2);
+                changeset.setAttribute(blockElement, {
+                  textType: TextType.Heading2,
+                });
               } else if (before === "###") {
                 delta.delete(4);
-                setTextTypeForTextBlock(state, blockElement, TextType.Heading3);
+                changeset.setAttribute(blockElement, {
+                  textType: TextType.Heading3,
+                });
               }
               break;
             }
@@ -46,13 +47,8 @@ function makeHeadingsPlugin(): IPlugin {
           }
         }
 
-        if (delta.ops.length > 0) {
-          editor.update(() => {
-            new Changeset(editor.state)
-              .textEdit(textModel, () => delta)
-              .apply();
-          });
-        }
+        changeset.textEdit(textModel, () => delta);
+        changeset.apply();
       });
     },
   };
