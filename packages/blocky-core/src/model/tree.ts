@@ -217,7 +217,7 @@ export class BlockyElement implements BlockyNode, WithState {
     let ptr: BlockyElement | null = this;
     while (ptr) {
       if (ptr === node) {
-        throw new Error("Can not add ancesters of a node as child");
+        throw new Error("Can not add ancestors of a node as child");
       }
       ptr = ptr.parent as BlockyElement | null;
     }
