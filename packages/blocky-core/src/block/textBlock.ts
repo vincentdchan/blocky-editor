@@ -17,7 +17,6 @@ import {
   TextType,
   BlockyTextModel,
   BlockyElement,
-  State,
   BlockyNode,
   Changeset,
 } from "@pkg/model";
@@ -280,6 +279,7 @@ class TextBlock extends Block {
   }
 
   override blockContentChanged({
+    changeset,
     offset,
     blockElement,
   }: BlockContentChangedEvent): void {
@@ -316,7 +316,7 @@ class TextBlock extends Block {
     }
     const beforeDelta = textModel.delta;
 
-    new Changeset(this.editor.state).textEdit(textModel, () => delta).apply();
+    changeset.textEdit(textModel, () => delta);
 
     this.editor.textInput.emit(
       new TextInputEvent(beforeDelta, diffs, textModel, blockElement)
@@ -563,30 +563,26 @@ class TextBlock extends Block {
     }
 
     const prevCursorState = this.editor.state.cursorState;
-    this.editor.state.cursorState = undefined;
 
-    this.editor.update(() => {
-      const parentElement = this.props.parent as BlockyElement | undefined;
-      if (!parentElement) {
-        return;
-      }
+    const parentElement = this.props.parent as BlockyElement | undefined;
+    if (!parentElement) {
+      return;
+    }
 
-      const copy = this.props.clone();
+    const copy = this.props.clone();
 
-      const change = new Changeset(this.editor.state);
-      change.removeNode(parentElement, this.props);
+    const change = new Changeset(this.editor.state);
+    change.removeChild(parentElement, this.props);
 
-      const prevBlockyElement = prevElement as BlockElement;
-      const childrenContainer = insertOrGetChildrenContainer(
-        change,
-        prevBlockyElement
-      );
-      change.appendChild(childrenContainer, copy);
-      change.apply();
-
-      return () => {
-        this.editor.state.cursorState = prevCursorState;
-      };
+    const prevBlockyElement = prevElement as BlockElement;
+    const childrenContainer = insertOrGetChildrenContainer(
+      change,
+      prevBlockyElement
+    );
+    change.appendChild(childrenContainer, copy);
+    change.setCursorState(prevCursorState);
+    change.apply({
+      refreshCursor: true,
     });
   }
 
@@ -600,30 +596,24 @@ class TextBlock extends Block {
     }
 
     const prevCursorState = this.editor.state.cursorState;
-    this.editor.state.cursorState = undefined;
 
-    this.editor.update(() => {
-      const parentElement = this.props.parent! as BlockyElement;
+    const parentElement = this.props.parent! as BlockyElement;
 
-      const copy = this.props.clone();
+    const copy = this.props.clone();
 
-      const change = new Changeset(this.editor.state);
-      change.removeNode(parentElement, this.props);
+    const change = new Changeset(this.editor.state);
+    change.removeChild(parentElement, this.props);
 
-      const parentOfParentBlockElement =
-        parentBlockElement.parent as BlockyElement;
-      change.insertChildAfter(
-        parentOfParentBlockElement,
-        copy,
-        parentBlockElement
-      );
+    const parentOfParentBlockElement =
+      parentBlockElement.parent as BlockyElement;
+    change.insertChildrenAfter(
+      parentOfParentBlockElement,
+      [copy],
+      parentBlockElement
+    );
 
-      change.apply();
-
-      return () => {
-        this.editor.state.cursorState = prevCursorState;
-      };
-    });
+    change.setCursorState(prevCursorState);
+    change.apply();
   }
 
   private findParentBlockElement(): BlockElement | undefined {
@@ -777,18 +767,6 @@ function isRangeEqual(
 
 export function makeTextBlockDefinition(): IBlockDefinition {
   return new TextBlockDefinition();
-}
-
-export function setTextTypeForTextBlock(
-  state: State,
-  blockElement: BlockElement,
-  textType: TextType
-) {
-  new Changeset(state)
-    .setAttribute(blockElement, {
-      textType: textType.toString(),
-    })
-    .apply();
 }
 
 export function getTextTypeForTextBlock(blockElement: BlockElement): TextType {

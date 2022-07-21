@@ -10,10 +10,7 @@ export {
   type CollaborativeCursorOptions,
 } from "./view/collaborativeCursors";
 export { type IPlugin } from "./registry/pluginRegistry";
-export {
-  setTextTypeForTextBlock,
-  getTextTypeForTextBlock,
-} from "./block/textBlock";
+export { getTextTypeForTextBlock } from "./block/textBlock";
 export {
   type CursorState,
   State as DocumentState,

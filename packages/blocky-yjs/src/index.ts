@@ -51,11 +51,9 @@ function bindTextModel(
   const { state } = editor;
   yTextModel.observe((e: Y.YTextEvent) => {
     withSilent(state, () => {
-      editor.update(() => {
-        new Changeset(state)
-          .textEdit(textModel, () => new Delta(e.delta as any))
-          .apply();
-      });
+      new Changeset(state)
+        .textEdit(textModel, () => new Delta(e.delta as any))
+        .apply();
     });
   });
 
@@ -167,77 +165,57 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
 
         yElement.observe((e: Y.YXmlEvent) => {
           withSilent(state, () => {
-            editor.update(() => {
-              const change = new Changeset(editor.state);
-              e.attributesChanged.forEach((key) => {
-                change.setAttribute(blockyElement, {
-                  [key]: yElement.getAttribute(key),
-                });
+            const change = new Changeset(editor.state);
+            e.attributesChanged.forEach((key) => {
+              change.setAttribute(blockyElement, {
+                [key]: yElement.getAttribute(key),
               });
+            });
 
-              // @ts-ignore
-              if (e.childListChanged) {
-                let index = 0;
-                for (const delta of e.delta) {
-                  if (typeof delta.retain === "number") {
-                    index += delta.retain;
-                  } else if (Array.isArray(delta.insert)) {
-                    for (const xmlElement of delta.insert) {
-                      const yXmlElement = xmlElement as Y.XmlElement;
-
-                      const createdElement =
-                        makeBlockyElementByYElement(yXmlElement);
-
-                      change.insertChildAt(
-                        blockyElement,
-                        index,
-                        createdElement
-                      );
-
-                      index++;
-                    }
-                  } else if (typeof delta.delete === "number") {
-                    const numToDelete = delta.delete;
-                    change.symDeleteChildrenAt(
-                      blockyElement,
-                      index,
-                      numToDelete
-                    );
+            // @ts-ignore
+            if (e.childListChanged) {
+              let index = 0;
+              for (const delta of e.delta) {
+                if (typeof delta.retain === "number") {
+                  index += delta.retain;
+                } else if (Array.isArray(delta.insert)) {
+                  const blockyChildren: BlockyNode[] = [];
+                  for (const xmlElement of delta.insert) {
+                    const yXmlElement = xmlElement as Y.XmlElement;
+                    const createdElement =
+                      makeBlockyElementByYElement(yXmlElement);
+                    blockyChildren.push(createdElement);
                   }
+                  new Changeset(state).insertChildrenAt(
+                    blockyElement,
+                    index,
+                    blockyChildren
+                  );
+                } else if (typeof delta.delete === "number") {
+                  const numToDelete = delta.delete;
+                  change.deleteChildrenAt(blockyElement, index, numToDelete);
                 }
               }
+            }
 
-              change.apply();
-            });
+            change.apply();
           });
         });
       }
 
       const handleInsert = (index: number, elements: Y.XmlElement[]) => {
-        index--;
-        let ptr = state.root.firstChild;
-
-        while (ptr && index > 0) {
-          index--;
-          ptr = ptr.nextSibling;
-        }
-
-        const change = new Changeset(state);
+        const blockyChildren: BlockyElement[] = [];
         for (const element of elements) {
           const createdElement = makeBlockyElementByYElement(element);
           if (!createdElement) {
             continue;
           }
 
-          if (ptr) {
-            change.insertChildAfter(state.root, createdElement, ptr);
-          } else {
-            change.appendChild(state.root, createdElement);
-          }
-
-          ptr = createdElement;
+          blockyChildren.push(createdElement);
         }
-        change.apply();
+        new Changeset(state)
+          .insertChildrenAt(state.root, index, blockyChildren)
+          .apply();
       };
 
       const handleDelete = (index: number, count: number) => {
@@ -259,7 +237,7 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
         const change = new Changeset(state);
         while (count > 0 && ptr) {
           const next: BlockyNode | null = ptr.nextSibling;
-          change.removeNode(state.root, ptr);
+          change.removeChild(state.root, ptr);
           ptr = next;
           count--;
         }
@@ -339,21 +317,19 @@ export function makeYjsPlugin(options: IYjsPluginOptions): IPlugin {
 
       docFragment.observe((e: Y.YXmlEvent) => {
         withSilent(state, () => {
-          editor.update(() => {
-            let ptr = 0;
-            for (const d of e.delta) {
-              if (typeof d.retain === "number") {
-                ptr += d.retain;
-              } else if (
-                typeof d.insert !== "undefined" &&
-                Array.isArray(d.insert)
-              ) {
-                handleInsert(ptr, d.insert);
-              } else if (typeof d.delete === "number") {
-                handleDelete(ptr, d.delete);
-              }
+          let ptr = 0;
+          for (const d of e.delta) {
+            if (typeof d.retain === "number") {
+              ptr += d.retain;
+            } else if (
+              typeof d.insert !== "undefined" &&
+              Array.isArray(d.insert)
+            ) {
+              handleInsert(ptr, d.insert);
+            } else if (typeof d.delete === "number") {
+              handleDelete(ptr, d.delete);
             }
-          });
+          }
         });
       });
 

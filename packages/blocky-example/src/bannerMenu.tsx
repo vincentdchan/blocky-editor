@@ -1,10 +1,5 @@
 import { Component, type RefObject, createRef } from "preact";
-import {
-  type EditorController,
-  BlockElement,
-  TextType,
-  setTextTypeForTextBlock,
-} from "blocky-core";
+import { type EditorController, BlockElement, TextType } from "blocky-core";
 import {
   type IDisposable,
   flattenDisposable,
@@ -93,13 +88,14 @@ class BannerMenu extends Component<BannerProps, BannerState> {
     });
   };
 
-  private insertText = (typeType: TextType) => () => {
+  private insertText = (textType: TextType) => () => {
     const { editorController, focusedNode } = this.props;
     if (!focusedNode) {
       return;
     }
-    const textElement = editorController.state.createTextElement();
-    setTextTypeForTextBlock(textElement, typeType);
+    const textElement = editorController.state.createTextElement({
+      textType,
+    });
     editorController.insertBlockAfterId(textElement, focusedNode.id, {
       autoFocus: true,
     });

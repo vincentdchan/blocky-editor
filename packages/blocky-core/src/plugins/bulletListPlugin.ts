@@ -4,7 +4,6 @@ import fastDiff from "fast-diff";
 import {
   BlockyTextModel,
   TextType,
-  setTextTypeForTextBlock,
   getTextTypeForTextBlock,
   BlockElement,
   TextBlockName,
@@ -21,19 +20,17 @@ function makeBulletListPlugin(): IPlugin {
     textModel: BlockyTextModel,
     textElement: BlockElement
   ) => {
-    editor.update(() => {
-      setTextTypeForTextBlock(editor.state, textElement, TextType.Bulleted);
-      new Changeset(editor.state)
-        .textEdit(textModel, () => new Delta().delete(2))
-        .apply();
-      return () => {
-        editor.state.cursorState = {
-          type: "collapsed",
-          targetId: blockId,
-          offset: 0,
-        };
-      };
-    });
+    new Changeset(editor.state)
+      .setAttribute(textElement, {
+        textType: TextType.Bulleted,
+      })
+      .textEdit(textModel, () => new Delta().delete(2))
+      .setCursorState({
+        type: "collapsed",
+        targetId: blockId,
+        offset: 0,
+      })
+      .apply();
   };
   const handleTextInputEvent = (editor: Editor) => (evt: TextInputEvent) => {
     const { beforeDelta, textModel } = evt;
@@ -92,17 +89,16 @@ function makeBulletListPlugin(): IPlugin {
     }
     if (textModel.length === 0) {
       e.preventDefault();
-      editor.state.cursorState = undefined;
-      editor.update(() => {
-        setTextTypeForTextBlock(editor.state, textElement, TextType.Normal);
-        return () => {
-          editor.state.cursorState = {
-            type: "collapsed",
-            targetId,
-            offset: 0,
-          };
-        };
-      });
+      new Changeset(editor.state)
+        .setAttribute(textElement, {
+          textType: TextType.Normal,
+        })
+        .setCursorState({
+          type: "collapsed",
+          targetId,
+          offset: 0,
+        })
+        .apply();
     }
   };
   /**
@@ -138,17 +134,16 @@ function makeBulletListPlugin(): IPlugin {
     const textType = getTextTypeForTextBlock(textElement);
     if (textType === TextType.Bulleted) {
       e.preventDefault();
-      editor.state.cursorState = undefined;
-      editor.update(() => {
-        setTextTypeForTextBlock(editor.state, textElement, TextType.Normal);
-        return () => {
-          editor.state.cursorState = {
-            type: "collapsed",
-            targetId,
-            offset: 0,
-          };
-        };
-      });
+      new Changeset(editor.state)
+        .setAttribute(textElement, {
+          textType: TextType.Normal,
+        })
+        .setCursorState({
+          type: "collapsed",
+          targetId,
+          offset: 0,
+        })
+        .apply();
     }
   };
   return {
