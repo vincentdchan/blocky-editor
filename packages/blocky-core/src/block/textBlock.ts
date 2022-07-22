@@ -39,12 +39,6 @@ interface TextPosition {
   offset: number;
 }
 
-interface FormattedTextSlice {
-  index: number;
-  length: number;
-  attributes?: AttributesObject;
-}
-
 function getTextTypeFromElement(element: BlockyElement): TextType {
   return parseInt(element.getAttribute("textType") ?? "0", 10);
 }
@@ -248,64 +242,38 @@ class TextBlock extends Block {
   /**
    * Convert DOM to [[FormattedTextSlice]]
    */
-  private getFormattedTextSliceFromNode(
-    index: number,
-    node: Node
-  ): FormattedTextSlice {
+  private getFormattedTextSliceFromNode(newDelta: Delta, node: Node) {
+    const content = node.textContent ?? "";
     if (node instanceof HTMLSpanElement) {
       const attributes = this.getAttributeObjectFromElement(node);
-      return { index, length: node.textContent?.length ?? 0, attributes };
+      newDelta.insert(content, attributes);
     } else {
-      return {
-        index,
-        length: node.textContent?.length ?? 0,
-        attributes: undefined,
-      };
+      newDelta.insert(content);
     }
   }
 
   override blockContentChanged({
     changeset,
-    offset,
     blockElement,
   }: BlockContentChangedEvent): void {
     const contentContainer = this.findContentContainer();
-    const formats: FormattedTextSlice[] = [];
 
-    let textContent = "";
+    const newDelta = new Delta();
 
     let ptr = contentContainer.firstChild;
-    let idx = 0;
     while (ptr) {
-      const format = this.getFormattedTextSliceFromNode(idx, ptr);
-      formats.push(format);
-
-      idx += ptr.textContent?.length ?? 0;
-      textContent += ptr.textContent;
+      this.getFormattedTextSliceFromNode(newDelta, ptr);
       ptr = ptr.nextSibling;
     }
 
     const textModel = this.props.firstChild! as BlockyTextModel;
-    const oldContent = textModel.toString();
 
-    const diffs = fastDiff(oldContent, textContent, offset);
-
-    const delta = new Delta();
-    for (const [t, content] of diffs) {
-      if (t === fastDiff.EQUAL) {
-        delta.retain(content.length);
-      } else if (t === fastDiff.INSERT) {
-        delta.insert(content);
-      } else if (t === fastDiff.DELETE) {
-        delta.delete(content.length);
-      }
-    }
     const beforeDelta = textModel.delta;
 
-    changeset.textEdit(textModel, () => delta);
+    changeset.textReplaceDelta(textModel, () => newDelta);
 
     this.editor.textInput.emit(
-      new TextInputEvent(beforeDelta, diffs, textModel, blockElement)
+      new TextInputEvent(beforeDelta, [], textModel, blockElement)
     );
   }
 
