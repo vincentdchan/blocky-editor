@@ -100,6 +100,7 @@ export class HTMLConverter {
         const blockElement = this.#divHandler?.(node);
         if (isObject(blockElement)) {
           result.push(blockElement);
+          return;
         }
         if (blockElement === true) {
           return;
