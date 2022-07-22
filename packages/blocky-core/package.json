@@ -28,7 +28,6 @@
   },
   "dependencies": {
     "blocky-common": "workspace:>=1.10.0",
-    "fast-diff": "^1.2.0",
     "is-hotkey": "^0.2.0",
     "lodash-es": "^4.17.21",
     "quill-delta-es": "^5.0.2"
