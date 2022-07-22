@@ -174,6 +174,21 @@ export class Changeset {
     });
     return this;
   }
+  textReplaceDelta(textNode: BlockyTextModel, delta: () => Delta): Changeset {
+    const newDelta = delta();
+    if (newDelta.ops.length === 0) {
+      return this;
+    }
+    const oldDelta = textNode.delta;
+    const location = findNodeLocation(this.state.root, textNode);
+    this.push({
+      type: "op-text-edit",
+      newDelta,
+      oldDelta,
+      location,
+    });
+    return this;
+  }
   textConcat(textNode: BlockyTextModel, delta: () => Delta): Changeset {
     const d = delta();
     if (d.ops.length === 0) {
