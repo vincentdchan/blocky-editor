@@ -11,7 +11,6 @@ import {
 import { type Position } from "blocky-common/es/position";
 import { debounce, isUndefined } from "lodash-es";
 import Delta from "quill-delta-es";
-import fastDiff from "fast-diff";
 import { DocRenderer } from "@pkg/view/renderer";
 import {
   type AttributesObject,
@@ -88,7 +87,7 @@ function makeDefaultPadding(): Padding {
 export class TextInputEvent {
   constructor(
     readonly beforeDelta: Delta,
-    readonly diff: fastDiff.Diff[],
+    readonly applyDelta: Delta,
     readonly textModel: BlockyTextModel,
     readonly blockElement: BlockElement
   ) {}

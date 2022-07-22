@@ -1,7 +1,7 @@
 import { isWhiteSpace } from "blocky-common/es/text";
 import { type Editor, type IPlugin, TextType, Changeset } from "@pkg/index";
-import fastDiff from "fast-diff";
 import Delta from "quill-delta-es";
+import { isNumber, isString } from "lodash-es";
 
 function makeHeadingsPlugin(): IPlugin {
   return {
@@ -14,15 +14,15 @@ function makeHeadingsPlugin(): IPlugin {
         const delta = new Delta();
 
         let index = 0;
-        for (const [t, content] of evt.diff) {
-          if (t === fastDiff.INSERT) {
+        for (const op of evt.applyDelta.ops) {
+          if (isString(op.insert)) {
             const before = beforeDelta.slice(0, index).reduce((prev, item) => {
               if (typeof item.insert === "string") {
                 return prev + item.insert;
               }
               return prev;
             }, "");
-            if (isWhiteSpace(content)) {
+            if (isWhiteSpace(op.insert)) {
               if (before === "#") {
                 delta.delete(2);
                 changeset.setAttribute(blockElement, {
@@ -41,9 +41,9 @@ function makeHeadingsPlugin(): IPlugin {
               }
               break;
             }
-            index += content.length;
-          } else if (t == fastDiff.EQUAL) {
-            index += content.length;
+            index += op.insert.length;
+          } else if (isNumber(op.retain)) {
+            index += op.retain;
           }
         }
 

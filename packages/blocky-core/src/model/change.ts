@@ -165,42 +165,28 @@ export class Changeset {
     }
     const oldDelta = textNode.delta;
     const location = findNodeLocation(this.state.root, textNode);
-    const newDelta = oldDelta.compose(d);
+    const invert = d.invert(oldDelta);
     this.push({
       type: "op-text-edit",
-      newDelta,
-      oldDelta,
-      location,
-    });
-    return this;
-  }
-  textReplaceDelta(textNode: BlockyTextModel, delta: () => Delta): Changeset {
-    const newDelta = delta();
-    if (newDelta.ops.length === 0) {
-      return this;
-    }
-    const oldDelta = textNode.delta;
-    const location = findNodeLocation(this.state.root, textNode);
-    this.push({
-      type: "op-text-edit",
-      newDelta,
-      oldDelta,
+      delta: d,
+      invert,
       location,
     });
     return this;
   }
   textConcat(textNode: BlockyTextModel, delta: () => Delta): Changeset {
-    const d = delta();
+    let d = delta();
     if (d.ops.length === 0) {
       return this;
     }
     const oldDelta = textNode.delta;
+    d = new Delta().retain(oldDelta.length()).concat(d);
     const location = findNodeLocation(this.state.root, textNode);
-    const newDelta = oldDelta.concat(d);
+    const invert = d.invert(oldDelta);
     this.push({
       type: "op-text-edit",
-      newDelta,
-      oldDelta,
+      delta: d,
+      invert,
       location,
     });
     return this;
