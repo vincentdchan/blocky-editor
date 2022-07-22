@@ -4,7 +4,11 @@ import {
   type IDisposable,
   flattenDisposable,
 } from "blocky-common/es/disposable";
-import { type EditorController, type CursorChangedEvent } from "blocky-core";
+import {
+  CursorState,
+  type EditorController,
+  type CursorChangedEvent,
+} from "blocky-core";
 
 interface DefaultBlockOutlineInternalProps {
   editorController: EditorController;
@@ -48,9 +52,7 @@ class DefaultBlockOutlineInternal extends Component<
   private handleeApplyCursorChangedEvent = (evt: CursorChangedEvent) => {
     const { state } = evt;
     const shouldShowOutline =
-      state !== null &&
-      state.type === "collapsed" &&
-      state.targetId === this.props.blockId;
+      state !== null && state.isCollapsed && state.id === this.props.blockId;
 
     const { editorController } = this.props;
     const { editor } = editorController;
@@ -76,9 +78,7 @@ class DefaultBlockOutlineInternal extends Component<
   private handleNewCursorState = (evt: CursorChangedEvent) => {
     const { state } = evt;
     const shouldShowOutline =
-      state !== null &&
-      state.type === "collapsed" &&
-      state.targetId === this.props.blockId;
+      state !== null && state.isCollapsed && state.id === this.props.blockId;
     if (shouldShowOutline === this.state.showOutline) {
       return;
     }
@@ -94,11 +94,7 @@ class DefaultBlockOutlineInternal extends Component<
 
   private handleContainerClicked = () => {
     const { editorController, blockId } = this.props;
-    editorController.state.cursorState = {
-      type: "collapsed",
-      targetId: blockId,
-      offset: 0,
-    };
+    editorController.state.cursorState = CursorState.collapse(blockId, 0);
   };
 
   override render(

@@ -1,7 +1,7 @@
 import {
   type Editor,
   type IPlugin,
-  type CursorState,
+  CursorState,
   type BlockElement,
   type BlockyTextModel,
   Changeset,
@@ -11,20 +11,20 @@ import { isHotkey } from "is-hotkey";
 import { isUndefined } from "lodash-es";
 
 function isSuccessor(a: CursorState, b: CursorState): boolean {
-  if (a.type === "open" || b.type === "open") {
+  if (a.isOpen || b.isOpen) {
     return false;
   }
-  if (a.targetId !== b.targetId) {
+  if (a.id !== b.id) {
     return false;
   }
   return b.offset === a.offset + 1;
 }
 
 function cursorGreater(a: CursorState, b: CursorState): boolean {
-  if (a.type === "open" || b.type === "open") {
+  if (a.isOpen || b.isOpen) {
     return false;
   }
-  if (a.targetId !== b.targetId) {
+  if (a.id !== b.id) {
     return false;
   }
   return (a.offset | 0) > (b.offset | 0);
@@ -103,12 +103,9 @@ function makeCodeTextPlugin(): IPlugin {
               codeTextDetector = new CodeTextDetector(
                 editor.state.cursorState,
                 (start: CursorState, end: CursorState) => {
-                  if (start.type === "open" || end.type === "open") {
-                    return;
-                  }
                   editor.controller.enqueueNextTick(() => {
                     const blockElement = editor.state.idMap.get(
-                      start.targetId
+                      start.id
                     ) as BlockElement;
                     const textModel =
                       blockElement.firstChild as BlockyTextModel;
@@ -126,11 +123,9 @@ function makeCodeTextPlugin(): IPlugin {
                             code: true,
                           })
                       )
-                      .setCursorState({
-                        type: "collapsed",
-                        targetId: start.targetId,
-                        offset: end.offset + 1 - 6,
-                      })
+                      .setCursorState(
+                        CursorState.collapse(start.id, end.offset + 1 - 6)
+                      )
                       .apply();
                   });
                   editor.controller.emitNextTicks();
