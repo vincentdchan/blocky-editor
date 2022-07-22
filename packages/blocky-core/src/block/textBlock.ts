@@ -20,7 +20,6 @@ import {
   BlockyNode,
   Changeset,
 } from "@pkg/model";
-import fastDiff from "fast-diff";
 import { TextInputEvent, type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";
 import { HTMLConverter } from "@pkg/helper/htmlConverter";
@@ -254,6 +253,7 @@ class TextBlock extends Block {
 
   override blockContentChanged({
     changeset,
+    offset,
     blockElement,
   }: BlockContentChangedEvent): void {
     const contentContainer = this.findContentContainer();
@@ -270,10 +270,11 @@ class TextBlock extends Block {
 
     const beforeDelta = textModel.delta;
 
-    changeset.textReplaceDelta(textModel, () => newDelta);
+    const diff = beforeDelta.diff(newDelta, offset);
+    changeset.textEdit(textModel, () => diff);
 
     this.editor.textInput.emit(
-      new TextInputEvent(beforeDelta, [], textModel, blockElement)
+      new TextInputEvent(beforeDelta, diff, textModel, blockElement)
     );
   }
 

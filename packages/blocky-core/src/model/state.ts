@@ -13,7 +13,7 @@ import {
   symSetAttribute,
   symInsertChildAt,
   symDeleteChildrenAt,
-  symSetDelta,
+  symApplyDelta,
 } from "./tree";
 import { blockyNodeFromJsonNode } from "@pkg/model/deserialize";
 import { Block, BlockElement } from "@pkg/block/basic";
@@ -144,9 +144,9 @@ export class State {
     parent[symDeleteChildrenAt](index, children.length);
   }
   #applyTextEditOperation(textEditOperation: TextEditOperation) {
-    const { location, newDelta } = textEditOperation;
+    const { location, delta } = textEditOperation;
     const textNode = this.findNodeByLocation(location) as BlockyTextModel;
-    textNode[symSetDelta](newDelta);
+    textNode[symApplyDelta](delta);
   }
 
   createTextElement(

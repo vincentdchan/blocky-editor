@@ -11,7 +11,7 @@ export interface DeltaChangedEvent {
 
 export const symSetAttribute = Symbol("setAttribute");
 export const symInsertChildAt = Symbol("insertChildAt");
-export const symSetDelta = Symbol("setDelta");
+export const symApplyDelta = Symbol("applyDelta");
 export const symDeleteChildrenAt = Symbol("deleteChildrenAt");
 
 export interface AttributesObject {
@@ -68,11 +68,12 @@ export class BlockyTextModel implements BlockyNode, WithState {
     return this.#delta;
   }
 
-  [symSetDelta](v: Delta) {
+  [symApplyDelta](v: Delta) {
     const oldDelta = this.#delta;
-    this.#delta = v;
+    const newDelta = oldDelta.compose(v);
+    this.#delta = newDelta;
     this.#cachedString = undefined;
-    this.changed.emit({ oldDelta, newDelta: v });
+    this.changed.emit({ oldDelta, newDelta });
   }
 
   toString(): string {

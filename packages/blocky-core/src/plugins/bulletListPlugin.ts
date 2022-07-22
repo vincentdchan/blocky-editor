@@ -1,6 +1,6 @@
 import { isWhiteSpace } from "blocky-common/es/text";
 import Delta from "quill-delta-es";
-import fastDiff from "fast-diff";
+import { isNumber, isString } from "lodash-es";
 import {
   BlockyTextModel,
   TextType,
@@ -32,9 +32,9 @@ function makeBulletListPlugin(): IPlugin {
   const handleTextInputEvent = (editor: Editor) => (evt: TextInputEvent) => {
     const { beforeDelta, textModel } = evt;
     let index = 0;
-    for (const [t, content] of evt.diff) {
-      if (t === fastDiff.INSERT) {
-        if (index === 1 && isWhiteSpace(content)) {
+    for (const op of evt.applyDelta.ops) {
+      if (isString(op.insert)) {
+        if (index === 1 && isWhiteSpace(op.insert)) {
           const before = beforeDelta.slice(0, index).reduce((prev, item) => {
             if (typeof item.insert === "string") {
               return prev + item.insert;
@@ -51,9 +51,9 @@ function makeBulletListPlugin(): IPlugin {
           }
           break;
         }
-        index += content.length;
-      } else {
-        index += content.length;
+        index += op.insert.length;
+      } else if (isNumber(op.retain)) {
+        index += op.retain;
       }
     }
   };

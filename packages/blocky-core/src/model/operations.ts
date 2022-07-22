@@ -26,8 +26,8 @@ export interface RemoveNodeOperation {
 export interface TextEditOperation {
   type: "op-text-edit";
   location: NodeLocation;
-  newDelta: Delta;
-  oldDelta: Delta;
+  delta: Delta;
+  invert: Delta;
 }
 
 export type Operation =
@@ -50,8 +50,8 @@ export function invertOperation(op: Operation): Operation {
       return {
         type: "op-text-edit",
         location: op.location,
-        oldDelta: op.newDelta,
-        newDelta: op.oldDelta,
+        delta: op.invert,
+        invert: op.delta,
       };
     }
     case "op-remove-node": {
