@@ -1,6 +1,7 @@
 import { isFunction } from "lodash-es";
 import type { IBlockDefinition } from "@pkg/block/basic";
 import type { Editor } from "@pkg/view/editor";
+import type { SpanStyle } from "./spanRegistry";
 
 export type AfterFn = () => void;
 
@@ -15,6 +16,11 @@ interface HookMethods {
 
 export interface IPlugin {
   name: string;
+
+  /**
+   * The span registered by the plugin.
+   */
+  spans?: SpanStyle[];
 
   /**
    * The block registered by the plugin.

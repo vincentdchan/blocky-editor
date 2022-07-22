@@ -5,26 +5,21 @@ import type {
   IBlockDefinition,
   TryParsePastedDOMEvent,
 } from "@pkg/block/basic";
+import { Registry } from "./registry";
 import { makeTextBlockDefinition, TextBlockName } from "@pkg/block/textBlock";
 
-export class BlockRegistry {
+export class BlockRegistry extends Registry<IBlockDefinition> {
   #types: IBlockDefinition[];
   #nameMap: Map<string, number> = new Map();
-  #sealed = false;
 
   constructor() {
+    super();
     this.#types = [makeTextBlockDefinition()];
     this.#nameMap.set(TextBlockName, 0);
   }
 
-  seal() {
-    this.#sealed = true;
-  }
-
   register(blockType: IBlockDefinition): number {
-    if (this.#sealed) {
-      throw new Error("The plugin registry is sealed");
-    }
+    this.ensureUnsealed();
     const { name } = blockType;
     if (this.#nameMap.has(name)) {
       throw new Error(`SpanType '${name}' exists`);

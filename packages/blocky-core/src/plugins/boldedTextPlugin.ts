@@ -13,16 +13,18 @@ import { isHotkey } from "is-hotkey";
 function makeBoldedTextPlugin(): IPlugin {
   return {
     name: "bolded-text",
-    onInitialized(editor: Editor) {
-      editor.registry.span.register({
+    spans: [
+      {
         name: "bold",
-        className: "mg-editor-bold",
-      });
+        className: "blocky-bold-text",
+      },
+    ],
+    onInitialized(editor: Editor) {
       editor.keyDown.on((e: KeyboardEvent) => {
         if (isHotkey("mod+b", e)) {
           e.preventDefault();
           editor.controller.formatTextOnSelectedText({
-            bold: true
+            bold: true,
           });
           return;
         }
