@@ -1,4 +1,5 @@
 import { isObject, isUndefined } from "lodash-es";
+import Delta from "quill-delta-es";
 import { isUpperCase } from "blocky-common/es/character";
 import { makeObservable } from "blocky-common/es/observable";
 import { removeNode } from "blocky-common/es/dom";
@@ -148,8 +149,11 @@ export class State {
     textNode[symSetDelta](newDelta);
   }
 
-  createTextElement(attributes?: AttributesObject): BlockElement {
-    const textModel = new BlockyTextModel();
+  createTextElement(
+    delta?: Delta | undefined,
+    attributes?: AttributesObject
+  ): BlockElement {
+    const textModel = new BlockyTextModel(delta);
     return new BlockElement(
       TextBlockName,
       this.idHelper.mkBlockId(),

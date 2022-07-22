@@ -21,13 +21,14 @@ import { type BannerFactory } from "@pkg/view/bannerDelegate";
 import { type ToolbarFactory } from "@pkg/view/toolbarDelegate";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import {
-  type BlockElement,
+  BlockElement,
   BlockPasteEvent,
   TryParsePastedDOMEvent,
 } from "@pkg/block/basic";
 import { TextBlockName } from "@pkg/block/textBlock";
 import { type CollaborativeCursorOptions } from "./collaborativeCursors";
 import { type Editor } from "./editor";
+import { isUndefined } from "lodash-es";
 
 export interface IEditorControllerOptions {
   pluginRegistry?: PluginRegistry;
@@ -341,6 +342,7 @@ export class EditorController {
     const parent = currentBlockElement.parent! as BlockyElement;
     const prev = currentBlockElement;
 
+    let appendDelta: Delta | undefined;
     const changeset = new Changeset(this.state);
     const insertChildren: BlockyNode[] = [];
     for (let i = 0, len = elements.length; i < len; i++) {
@@ -359,18 +361,67 @@ export class EditorController {
           continue;
         }
         const offset = this.state.cursorState?.offset ?? prevTextModel.length;
+        // only insert text, don NOT need to insert
+        if (len === 1) {
+          changeset.textEdit(prevTextModel, () =>
+            new Delta().retain(offset).concat(firstTextModel.delta)
+          );
+          changeset.setCursorState(
+            CursorState.collapse(
+              currentBlockElement.id,
+              offset + firstTextModel.delta.length()
+            )
+          );
+          break;
+        }
+        appendDelta = prevTextModel.delta.slice(offset);
         changeset.textEdit(prevTextModel, () =>
-          new Delta().retain(offset).concat(firstTextModel.delta)
-        );
-        changeset.setCursorState(
-          CursorState.collapse(
-            currentBlockElement.id,
-            offset + firstTextModel.delta.length()
-          )
+          new Delta()
+            .retain(offset)
+            .delete(prevTextModel.length - offset)
+            .concat(firstTextModel.delta)
         );
         continue;
       }
       insertChildren.push(element);
+    }
+    if (!isUndefined(appendDelta)) {
+      if (
+        insertChildren.length > 0 &&
+        insertChildren[insertChildren.length - 1].nodeName === TextBlockName
+      ) {
+        // append to previous element
+        const lastChild = insertChildren[
+          insertChildren.length - 1
+        ] as BlockElement;
+        const textModel = lastChild.firstChild! as BlockyTextModel;
+        const prevOffset = textModel.delta.length();
+        changeset.setCursorState(
+          CursorState.collapse(lastChild.id, prevOffset)
+        );
+        const childrenOfChildren: BlockyNode[] = [
+          new BlockyTextModel(textModel.delta.concat(appendDelta)),
+        ];
+        let ptr = textModel.nextSibling;
+        while (ptr) {
+          childrenOfChildren.push(ptr);
+          ptr = ptr.nextSibling;
+        }
+        const newChild = new BlockElement(
+          TextBlockName,
+          lastChild.id,
+          lastChild.getAttributes(),
+          childrenOfChildren
+        );
+        insertChildren[insertChildren.length - 1] = newChild;
+      } else {
+        const appendElement = this.state.createTextElement(appendDelta);
+        const textModel = appendElement.firstChild! as BlockyTextModel;
+        changeset.setCursorState(
+          CursorState.collapse(appendElement.id, textModel.length)
+        );
+        insertChildren.push(appendElement);
+      }
     }
     changeset.insertChildrenAfter(parent, insertChildren, prev);
     changeset.apply();

@@ -758,7 +758,10 @@ export class Editor {
         attributes.textType = textType;
       }
 
-      const newTextElement = this.state.createTextElement(attributes);
+      const newTextElement = this.state.createTextElement(
+        undefined,
+        attributes
+      );
       const newTextModel = newTextElement.firstChild! as BlockyTextModel;
 
       const parentElement = blockElement.parent! as BlockyElement;
