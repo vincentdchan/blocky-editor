@@ -1,5 +1,5 @@
 import { Component, JSX } from "preact";
-import { EditorController, type IPlugin } from "blocky-core";
+import { CursorState, EditorController, type IPlugin } from "blocky-core";
 import * as Y from "yjs";
 import {
   BlockyEditor,
@@ -122,11 +122,10 @@ class App extends Component<unknown, AppState> {
     });
 
     this.editorControllerLeft = makeController(this.doc1);
-    this.editorControllerLeft.state.cursorState = {
-      type: "collapsed",
-      targetId: (this.editorControllerLeft.state.root.firstChild! as any).id,
-      offset: 0,
-    };
+    this.editorControllerLeft.state.cursorState = CursorState.collapse(
+      (this.editorControllerLeft.state.root.firstChild! as any).id,
+      0
+    );
     this.editorControllerLeft.pasteHTMLAtCursor(ReadMeContent);
 
     this.editorControllerRight = makeRightController(this.doc2);

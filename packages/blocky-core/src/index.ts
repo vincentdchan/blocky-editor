@@ -12,7 +12,7 @@ export {
 export { type IPlugin } from "./registry/pluginRegistry";
 export { getTextTypeForTextBlock } from "./block/textBlock";
 export {
-  type CursorState,
+  CursorState,
   State as DocumentState,
   type AttributesObject,
   type ElementChangedEvent,

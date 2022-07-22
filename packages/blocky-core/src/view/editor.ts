@@ -21,11 +21,7 @@ import {
   BlockyElement,
   Changeset,
 } from "@pkg/model";
-import {
-  CollapsedCursor,
-  OpenCursorState,
-  type CursorState,
-} from "@pkg/model/cursor";
+import { CursorState } from "@pkg/model/cursor";
 import {
   IPlugin,
   PluginRegistry,
@@ -248,8 +244,8 @@ export class Editor {
       cursor.name = name;
 
       const containerRect = this.#container.getBoundingClientRect();
-      if (state.type === "collapsed") {
-        const blockId = state.targetId;
+      if (state.isCollapsed) {
+        const blockId = state.id;
         const offset = state.offset;
 
         const block = this.state.blocks.get(blockId);
@@ -361,11 +357,7 @@ export class Editor {
         return false;
       }
 
-      this.state.cursorState = {
-        type: "collapsed",
-        targetId: node.id,
-        offset: 0,
-      };
+      this.state.cursorState = CursorState.collapse(node.id, 0);
 
       return true;
     }
@@ -443,17 +435,15 @@ export class Editor {
     );
 
     if (range.collapsed) {
-      const newCursorState: CursorState = {
-        type: "collapsed",
-        targetId: startNode.id,
-        offset: absoluteStartOffset,
-      };
+      const newCursorState = CursorState.collapse(
+        startNode.id,
+        absoluteStartOffset
+      );
       if (!areEqualShallow(newCursorState, this.state.cursorState)) {
-        this.state.cursorState = {
-          type: "collapsed",
-          targetId: startNode.id,
-          offset: absoluteStartOffset,
-        };
+        this.state.cursorState = CursorState.collapse(
+          startNode.id,
+          absoluteStartOffset
+        );
       }
     } else {
       const endNode = this.#findBlockNodeContainer(endContainer);
@@ -466,21 +456,19 @@ export class Editor {
         endContainer,
         endOffset
       );
-      const newCursorState: CursorState = {
-        type: "open",
-        startId: startNode.id,
-        startOffset: absoluteStartOffset,
-        endId: endNode.id,
-        endOffset: absoluteEndOffset,
-      };
+      const newCursorState = new CursorState(
+        startNode.id,
+        absoluteStartOffset,
+        endNode.id,
+        absoluteEndOffset
+      );
       if (!areEqualShallow(newCursorState, this.state.cursorState)) {
-        this.state.cursorState = {
-          type: "open",
-          startId: startNode.id,
-          startOffset: absoluteStartOffset,
-          endId: endNode.id,
-          endOffset: absoluteEndOffset,
-        };
+        this.state.cursorState = new CursorState(
+          startNode.id,
+          absoluteStartOffset,
+          endNode.id,
+          absoluteEndOffset
+        );
       }
     }
 
@@ -501,7 +489,7 @@ export class Editor {
       return false;
     }
 
-    if (cursorState.type === "collapsed") {
+    if (cursorState.isCollapsed) {
       return false;
     }
 
@@ -580,16 +568,16 @@ export class Editor {
 
   #handleContentChanged = () => {
     const { cursorState } = this.state;
-    if (cursorState === null || cursorState.type === "open") {
+    if (cursorState === null || cursorState.isOpen) {
       this.#handleOpenCursorContentChanged();
       return;
     }
 
-    const { targetId, offset: currentOffset } = cursorState;
+    const { id, offset: currentOffset } = cursorState;
 
-    const domNode = this.state.domMap.get(targetId);
+    const domNode = this.state.domMap.get(id);
     if (!domNode) {
-      console.warn(`id of block doesn't exist: ${targetId}`);
+      console.warn(`id of block doesn't exist: ${id}`);
       return;
     }
 
@@ -711,10 +699,10 @@ export class Editor {
     if (!cursorState) {
       return;
     }
-    if (cursorState.type === "open") {
+    if (cursorState.isOpen) {
       return;
     }
-    const block = this.state.blocks.get(cursorState.targetId);
+    const block = this.state.blocks.get(cursorState.id);
     if (!block) {
       return;
     }
@@ -732,11 +720,7 @@ export class Editor {
 
     new Changeset(this.state)
       .insertChildrenAfter(parent, [newTextElement], currentBlock)
-      .setCursorState({
-        type: "collapsed",
-        targetId: newTextElement.id,
-        offset: 0,
-      })
+      .setCursorState(CursorState.collapse(newTextElement.id, 0))
       .apply();
   }
 
@@ -745,8 +729,8 @@ export class Editor {
     if (!cursorState) {
       return;
     }
-    if (cursorState.type === "collapsed") {
-      const blockElement = this.state.idMap.get(cursorState.targetId) as
+    if (cursorState.isCollapsed) {
+      const blockElement = this.state.idMap.get(cursorState.id) as
         | BlockElement
         | undefined;
       if (!blockElement) {
@@ -757,7 +741,7 @@ export class Editor {
         // default behavior
         this.#insertEmptyTextAfterBlock(
           blockElement.parent! as BlockyElement,
-          cursorState.targetId
+          cursorState.id
         );
         return;
       }
@@ -786,11 +770,7 @@ export class Editor {
             .retain(cursorOffset)
             .delete(textModel.length - cursorOffset)
         )
-        .setCursorState({
-          type: "collapsed",
-          targetId: newTextElement.id,
-          offset: 0,
-        })
+        .setCursorState(CursorState.collapse(newTextElement.id, 0))
         .apply();
     } else {
       console.error("unhandled");
@@ -860,17 +840,17 @@ export class Editor {
     if (!cursorState) {
       return false;
     }
-    if (cursorState.type === "open") {
+    if (cursorState.isOpen) {
       return false;
     }
 
-    const { targetId, offset } = cursorState;
+    const { id, offset } = cursorState;
 
     if (offset !== 0) {
       return false;
     }
 
-    const node = this.state.idMap.get(targetId) as BlockElement | undefined;
+    const node = this.state.idMap.get(id) as BlockElement | undefined;
     if (!node) {
       return false;
     }
@@ -885,11 +865,7 @@ export class Editor {
     }
 
     if (prevNode.nodeName !== TextBlockName) {
-      this.state.cursorState = {
-        type: "collapsed",
-        targetId: prevNode.id,
-        offset: 0,
-      };
+      this.state.cursorState = CursorState.collapse(prevNode.id, 0);
       return true;
     }
     const firstChild = prevNode.firstChild;
@@ -907,11 +883,7 @@ export class Editor {
     new Changeset(this.state)
       .textConcat(prevTextModel, () => thisTextModel.delta)
       .removeChild(node.parent!, node)
-      .setCursorState({
-        type: "collapsed",
-        targetId: prevNode.id,
-        offset: originalLength,
-      })
+      .setCursorState(CursorState.collapse(prevNode.id, originalLength))
       .apply();
 
     return true;
@@ -922,13 +894,11 @@ export class Editor {
     if (!cursorState) {
       return;
     }
-    if (cursorState.type === "open") {
+    if (cursorState.isOpen) {
       return;
     }
 
-    const { targetId } = cursorState;
-
-    return this.state.idMap.get(targetId) as BlockElement | undefined;
+    return this.state.idMap.get(cursorState.id) as BlockElement | undefined;
   }
 
   #deleteBlockOnFocusedCursor(): boolean {
@@ -952,11 +922,7 @@ export class Editor {
     }
 
     if (prevNode) {
-      changeset.setCursorState({
-        type: "collapsed",
-        targetId: prevNode.id,
-        offset: 0,
-      });
+      changeset.setCursorState(CursorState.collapse(prevNode.id, 0));
       this.#focusEndOfNode(changeset, prevNode);
     } else {
       changeset.setCursorState(null);
@@ -970,17 +936,9 @@ export class Editor {
   #focusEndOfNode(changeset: Changeset, node: BlockElement) {
     if (node.nodeName === TextBlockName) {
       const textModel = node.firstChild! as BlockyTextModel;
-      changeset.setCursorState({
-        type: "collapsed",
-        targetId: node.id,
-        offset: textModel.length,
-      });
+      changeset.setCursorState(CursorState.collapse(node.id, textModel.length));
     } else {
-      changeset.setCursorState({
-        type: "collapsed",
-        targetId: node.id,
-        offset: 0,
-      });
+      changeset.setCursorState(CursorState.collapse(node.id, 0));
     }
   }
 
@@ -1011,7 +969,7 @@ export class Editor {
       return;
     }
 
-    if (newState.type === "open") {
+    if (newState.isOpen) {
       this.#focusOnOpenCursor(newState, sel);
       return;
     }
@@ -1019,12 +977,12 @@ export class Editor {
     this.#focusOnCollapsedCursor(newState, sel);
   };
 
-  #focusOnCollapsedCursor(collapsedCursor: CollapsedCursor, sel: Selection) {
-    const { targetId } = collapsedCursor;
+  #focusOnCollapsedCursor(collapsedCursor: CursorState, sel: Selection) {
+    const { id } = collapsedCursor;
 
-    const targetNode = this.state.domMap.get(targetId);
+    const targetNode = this.state.domMap.get(id);
     if (!targetNode) {
-      throw new Error(`dom not found: ${targetId}`);
+      throw new Error(`dom not found: ${id}`);
     }
 
     if (
@@ -1040,7 +998,7 @@ export class Editor {
     }
   }
 
-  #focusOnOpenCursor(openCursor: OpenCursorState, sel: Selection) {
+  #focusOnOpenCursor(openCursor: CursorState, sel: Selection) {
     const { startId, startOffset, endId, endOffset } = openCursor;
 
     const startBlock = this.state.blocks.get(startId);
@@ -1078,11 +1036,7 @@ export class Editor {
    * If it's a text block try to focus on the text.
    * Otherwise, focus on the outline?
    */
-  #focusBlock(
-    sel: Selection,
-    blockDom: HTMLDivElement,
-    cursor: CollapsedCursor
-  ) {
+  #focusBlock(sel: Selection, blockDom: HTMLDivElement, cursor: CursorState) {
     const node = blockDom._mgNode as BlockElement | undefined;
     if (!node) {
       return;
@@ -1161,11 +1115,11 @@ export class Editor {
       return null;
     }
 
-    if (cursorState.type === "open") {
+    if (cursorState.isOpen) {
       return null;
     }
 
-    const textElement = this.getTextElementByBlockId(cursorState.targetId);
+    const textElement = this.getTextElementByBlockId(cursorState.id);
     if (!textElement) {
       return null;
     }
@@ -1177,11 +1131,7 @@ export class Editor {
         new Delta().retain(cursorState.offset).insert(text, attributes)
       )
       .apply();
-    return {
-      type: "collapsed",
-      targetId: cursorState.targetId,
-      offset: afterOffset,
-    };
+    return CursorState.collapse(cursorState.id, afterOffset);
   }
 
   getTextElementByBlockId(blockId: string): BlockElement | undefined {

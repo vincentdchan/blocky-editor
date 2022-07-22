@@ -4,7 +4,7 @@ import { observe } from "blocky-common/es/observable";
 import { type Padding } from "blocky-common/es/dom";
 import Delta from "quill-delta-es";
 import {
-  type CursorState,
+  CursorState,
   AttributesObject,
   State,
   BlockyElement,
@@ -199,11 +199,7 @@ export class EditorController {
     if (options?.noRender !== true) {
       const changeset = updateState();
       if (options?.autoFocus) {
-        changeset.setCursorState({
-          type: "collapsed",
-          targetId: element.id,
-          offset: 0,
-        });
+        changeset.setCursorState(CursorState.collapse(element.id, 0));
       }
       changeset.apply();
     } else {
@@ -260,13 +256,7 @@ export class EditorController {
       .textEdit(textModel, () =>
         new Delta().retain(index).retain(length, attribs)
       )
-      .setCursorState({
-        type: "open",
-        startId: blockId,
-        endId: blockId,
-        startOffset: index,
-        endOffset: index + length,
-      })
+      .setCursorState(new CursorState(blockId, index, blockId, index + length))
       .apply();
   }
 
@@ -276,7 +266,7 @@ export class EditorController {
       return;
     }
 
-    if (cursorState.type === "collapsed") {
+    if (cursorState.isCollapsed) {
       return;
     }
 
@@ -450,12 +440,11 @@ export class EditorController {
     if (!cursorState) {
       return;
     }
-    if (cursorState.type === "open") {
+
+    if (cursorState.isOpen) {
       return;
     }
 
-    const { targetId } = cursorState;
-
-    return this.state.idMap.get(targetId) as BlockElement | undefined;
+    return this.state.idMap.get(cursorState.id) as BlockElement | undefined;
   }
 }
