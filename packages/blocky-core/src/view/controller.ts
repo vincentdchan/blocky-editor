@@ -346,6 +346,7 @@ export class EditorController {
     for (let i = 0, len = elements.length; i < len; i++) {
       const element = elements[i];
 
+      // first item, try to merge text
       if (
         i === 0 &&
         currentBlockElement.nodeName === TextBlockName &&
@@ -357,8 +358,16 @@ export class EditorController {
         if (!prevTextModel || !firstTextModel) {
           continue;
         }
-        changeset.textConcat(prevTextModel, () => firstTextModel.delta);
-        // first item, try to merge text
+        const offset = this.state.cursorState?.offset ?? prevTextModel.length;
+        changeset.textEdit(prevTextModel, () =>
+          new Delta().retain(offset).concat(firstTextModel.delta)
+        );
+        changeset.setCursorState(
+          CursorState.collapse(
+            currentBlockElement.id,
+            offset + firstTextModel.delta.length()
+          )
+        );
         continue;
       }
       insertChildren.push(element);
