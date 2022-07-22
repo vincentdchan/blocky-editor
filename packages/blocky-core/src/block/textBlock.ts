@@ -576,11 +576,17 @@ class TextBlock extends Block {
     change.removeChild(parentElement, this.props);
 
     const prevBlockyElement = prevElement as BlockElement;
-    const childrenContainer = insertOrGetChildrenContainer(
-      change,
-      prevBlockyElement
-    );
-    change.appendChild(childrenContainer, copy);
+
+    let childrenContainer = prevBlockyElement.childrenContainer;
+    if (childrenContainer) {
+      change.appendChild(childrenContainer, copy);
+    } else {
+      childrenContainer = new BlockyElement("block-children", undefined, [
+        copy,
+      ]);
+      change.appendChild(prevBlockyElement, childrenContainer);
+    }
+
     change.setCursorState(prevCursorState);
     change.apply({
       refreshCursor: true,
