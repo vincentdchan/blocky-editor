@@ -14,7 +14,8 @@ function isLeafElement(node: Node): node is HTMLElement {
   return (
     node instanceof HTMLParagraphElement ||
     node instanceof HTMLHeadingElement ||
-    node instanceof HTMLLIElement
+    node instanceof HTMLLIElement ||
+    node instanceof HTMLSpanElement
   );
 }
 
