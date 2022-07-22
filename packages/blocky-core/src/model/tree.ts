@@ -163,7 +163,6 @@ export class BlockyElement implements BlockyNode, WithState {
     }
     this.#validateChild(node);
     node.parent = this;
-    node.state = this.state;
     if (!after) {
       if (this.#firstChild) {
         this.#firstChild.prevSibling = node;
@@ -192,7 +191,6 @@ export class BlockyElement implements BlockyNode, WithState {
     }
 
     this.childrenLength++;
-    this.state?.handleNewBlockMounted(node);
 
     let cnt = 0;
     if (after) {
@@ -203,14 +201,16 @@ export class BlockyElement implements BlockyNode, WithState {
       }
     }
 
+    if (node instanceof BlockyElement) {
+      node.handleMountToBlock(this.state);
+    }
+
     this.changed.emit({
       type: "element-insert-child",
       parent: this,
       child: node,
       index: cnt,
     });
-
-    this.#handleInsertChildren(node);
   }
 
   #validateChild(node: BlockyNode) {
@@ -238,10 +238,12 @@ export class BlockyElement implements BlockyNode, WithState {
     node.prevSibling = this.#lastChild;
     node.nextSibling = null;
     node.parent = this;
-    node.state = this.state;
     this.#lastChild = node;
     this.childrenLength++;
-    this.state?.handleNewBlockMounted(node);
+
+    if (node instanceof BlockyElement) {
+      node.handleMountToBlock(this.state);
+    }
 
     this.changed.emit({
       type: "element-insert-child",
@@ -249,21 +251,16 @@ export class BlockyElement implements BlockyNode, WithState {
       child: node,
       index: insertIndex,
     });
-
-    this.#handleInsertChildren(node);
   }
 
-  #handleInsertChildren(node: BlockyNode) {
-    const lastNode = node.lastChild;
-    if (!lastNode || lastNode.nodeName !== "block-children") {
-      return;
-    }
-    lastNode.state = this.state;
-    let ptr = lastNode.firstChild;
+  handleMountToBlock(state?: State) {
+    this.state = state;
+    this.state?.handleNewBlockMounted(this);
+
+    let ptr = this.firstChild;
     while (ptr) {
-      if (!ptr.state) {
-        ptr.state = this.state;
-        this.state?.handleNewBlockMounted(ptr);
+      if (ptr instanceof BlockyElement) {
+        ptr.handleMountToBlock(state);
       }
       ptr = ptr.nextSibling;
     }
