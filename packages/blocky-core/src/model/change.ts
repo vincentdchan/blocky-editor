@@ -1,9 +1,13 @@
 import { BlockElement } from "@pkg/block/basic";
 import Delta from "quill-delta-es";
 import type { State, NodeLocation } from "./state";
-import type { AttributesObject, BlockyNode } from "@pkg/model/element";
 import type { Operation } from "./operations";
-import type { BlockyElement, BlockyTextModel } from "./tree";
+import type {
+  BlockyElement,
+  BlockyTextModel,
+  AttributesObject,
+  BlockyNode,
+} from "@pkg/model/tree";
 import type { CursorState } from "./cursor";
 
 function findNodeLocation(root: BlockyElement, node: BlockyNode): NodeLocation {

@@ -4,6 +4,9 @@ import { makeObservable } from "blocky-common/es/observable";
 import { removeNode } from "blocky-common/es/dom";
 import { Slot } from "blocky-common/es/events";
 import {
+  type AttributesObject,
+  type BlockyNode,
+  type JSONNode,
   BlockyElement,
   BlockyTextModel,
   symSetAttribute,
@@ -16,7 +19,6 @@ import { Block, BlockElement } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { TextBlockName } from "@pkg/block/textBlock";
 import type { FinalizedChangeset } from "@pkg/model/change";
-import type { AttributesObject, BlockyNode, JSONNode } from "./element";
 import type { IdGenerator } from "@pkg/helper/idHelper";
 import type { CursorState } from "@pkg/model/cursor";
 import type {

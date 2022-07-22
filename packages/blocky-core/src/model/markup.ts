@@ -1,6 +1,6 @@
 import { isObject } from "lodash-es";
 import type { IdGenerator } from "@pkg/helper/idHelper";
-import type { AttributesObject, JSONNode, JSONChild } from "./element";
+import type { AttributesObject, JSONNode, JSONChild } from "@pkg/model/tree";
 
 export class MarkupGenerator {
   constructor(private idGen: IdGenerator) {}

@@ -1,19 +1,8 @@
-import Delta from "quill-delta-es";
+import { isUndefined } from "lodash-es";
+import Delta, { Op } from "quill-delta-es";
 import { type WithState, WithStateSlot } from "@pkg/helper/withStateSlot";
-import type {
-  JSONNode,
-  JSONChild,
-  AttributesObject,
-  BlockyNode,
-} from "./element";
 import type { ElementChangedEvent } from "./events";
 import type { State } from "./state";
-import { isUndefined } from "lodash-es";
-
-export interface TextSlice {
-  content: string;
-  attributes?: AttributesObject;
-}
 
 export interface DeltaChangedEvent {
   oldDelta: Delta;
@@ -25,11 +14,40 @@ export const symInsertChildAt = Symbol("insertChildAt");
 export const symSetDelta = Symbol("setDelta");
 export const symDeleteChildrenAt = Symbol("deleteChildrenAt");
 
+export interface AttributesObject {
+  [key: string]: any;
+}
+
+export interface JSONNode {
+  nodeName: string;
+  id?: string;
+  textContent?: Op[];
+  attributes?: AttributesObject;
+  children?: JSONChild[];
+}
+
+export type JSONChild = JSONNode;
+
+export interface BlockyNode {
+  state?: State;
+
+  nodeName: string;
+  parent: BlockyElement | null;
+  nextSibling: BlockyNode | null;
+  prevSibling: BlockyNode | null;
+  firstChild: BlockyNode | null;
+  lastChild: BlockyNode | null;
+  childrenLength: number;
+
+  clone(): BlockyNode;
+  toJSON(): JSONNode;
+}
+
 export class BlockyTextModel implements BlockyNode, WithState {
   #delta = new Delta();
   #cachedString: string | undefined;
   state?: State;
-  parent: BlockyNode | null = null;
+  parent: BlockyElement | null = null;
   nextSibling: BlockyNode | null = null;
   prevSibling: BlockyNode | null = null;
   readonly changed: WithStateSlot<DeltaChangedEvent> = new WithStateSlot(this);
@@ -109,7 +127,7 @@ interface InternAttributes {
 
 export class BlockyElement implements BlockyNode, WithState {
   state?: State;
-  parent: BlockyNode | null = null;
+  parent: BlockyElement | null = null;
   nextSibling: BlockyNode | null = null;
   prevSibling: BlockyNode | null = null;
 
@@ -219,7 +237,7 @@ export class BlockyElement implements BlockyNode, WithState {
       if (ptr === node) {
         throw new Error("Can not add ancestors of a node as child");
       }
-      ptr = ptr.parent as BlockyElement | null;
+      ptr = ptr.parent;
     }
   }
 

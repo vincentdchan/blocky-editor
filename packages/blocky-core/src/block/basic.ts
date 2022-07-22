@@ -2,13 +2,16 @@ import { type IDisposable } from "blocky-common/es/disposable";
 import { type Position } from "blocky-common/es/position";
 import { type HTMLConverter } from "@pkg/helper/htmlConverter";
 import { CursorState, type CollapsedCursor } from "@pkg/model/cursor";
-import { BlockyElement, symSetAttribute } from "@pkg/model/tree";
-import { BlockyNode } from "@pkg/model/element";
+import {
+  type AttributesObject,
+  type BlockyNode,
+  BlockyElement,
+  symSetAttribute,
+} from "@pkg/model/tree";
 import { type Editor } from "@pkg/view/editor";
 import { type EditorController } from "@pkg/view/controller";
 import { DocNodeName } from "@pkg/model/state";
 import { Changeset } from "@pkg/model/change";
-import type { AttributesObject } from "..";
 import { isUndefined } from "lodash-es";
 
 export interface BlockDidMountEvent {
