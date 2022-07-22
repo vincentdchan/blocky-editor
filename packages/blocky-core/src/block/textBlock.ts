@@ -550,7 +550,7 @@ class TextBlock extends Block {
 
     const prevCursorState = this.editor.state.cursorState;
 
-    const parentElement = this.props.parent as BlockyElement | undefined;
+    const parentElement = this.props.parent;
     if (!parentElement) {
       return;
     }
@@ -596,8 +596,7 @@ class TextBlock extends Block {
     const change = new Changeset(this.editor.state);
     change.removeChild(parentElement, this.props);
 
-    const parentOfParentBlockElement =
-      parentBlockElement.parent as BlockyElement;
+    const parentOfParentBlockElement = parentBlockElement.parent!;
     change.insertChildrenAfter(
       parentOfParentBlockElement,
       [copy],

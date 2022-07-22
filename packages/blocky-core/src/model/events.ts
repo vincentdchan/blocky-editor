@@ -1,4 +1,4 @@
-import type { BlockyNode } from "./element";
+import type { BlockyNode } from "@pkg/model/tree";
 
 export interface ElementSetAttributeEvent {
   type: "element-set-attrib";

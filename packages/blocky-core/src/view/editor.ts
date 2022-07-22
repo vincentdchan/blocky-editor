@@ -533,7 +533,7 @@ export class Editor {
 
       this.destructBlockNode(node);
 
-      const parent = treeNode.parent as BlockyElement | undefined;
+      const parent = treeNode.parent;
       if (parent) {
         changeset.removeChild(parent, treeNode);
       }
@@ -906,7 +906,7 @@ export class Editor {
 
     new Changeset(this.state)
       .textConcat(prevTextModel, () => thisTextModel.delta)
-      .removeChild(node.parent as BlockyElement, node)
+      .removeChild(node.parent!, node)
       .setCursorState({
         type: "collapsed",
         targetId: prevNode.id,
@@ -945,7 +945,7 @@ export class Editor {
     }
 
     const changeset = new Changeset(this.state);
-    const parent = node.parent as BlockyElement | undefined;
+    const parent = node.parent;
 
     if (parent) {
       changeset.removeChild(parent, node).apply();

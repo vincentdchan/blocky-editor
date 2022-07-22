@@ -1,5 +1,5 @@
 import Delta from "quill-delta-es";
-import type { AttributesObject, BlockyNode } from "./element";
+import type { AttributesObject, BlockyNode } from "@pkg/model/tree";
 import type { NodeLocation } from "./state";
 
 export interface InsertNodeOperation {

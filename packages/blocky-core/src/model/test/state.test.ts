@@ -3,7 +3,7 @@ import { expect, test } from "vitest";
 import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { MarkupGenerator } from "@pkg/model/markup";
 import { State } from "@pkg/model/state";
-import { JSONNode } from "../element";
+import type { JSONNode } from "../tree";
 
 function makeDefaultUtils() {
   const blockRegistry = new BlockRegistry();
