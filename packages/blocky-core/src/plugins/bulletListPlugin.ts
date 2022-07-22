@@ -8,6 +8,7 @@ import {
   BlockElement,
   TextBlockName,
   Changeset,
+  CursorState,
   type TextInputEvent,
   type IPlugin,
   type Editor,
@@ -25,11 +26,7 @@ function makeBulletListPlugin(): IPlugin {
         textType: TextType.Bulleted,
       })
       .textEdit(textModel, () => new Delta().delete(2))
-      .setCursorState({
-        type: "collapsed",
-        targetId: blockId,
-        offset: 0,
-      })
+      .setCursorState(CursorState.collapse(blockId, 0))
       .apply();
   };
   const handleTextInputEvent = (editor: Editor) => (evt: TextInputEvent) => {
@@ -65,16 +62,16 @@ function makeBulletListPlugin(): IPlugin {
     if (!cursorState) {
       return;
     }
-    if (cursorState.type === "open") {
+    if (cursorState.isOpen) {
       return;
     }
 
-    const { targetId, offset } = cursorState;
+    const { id, offset } = cursorState;
     if (offset !== 0) {
       return;
     }
 
-    const textElement = editor.getTextElementByBlockId(targetId);
+    const textElement = editor.getTextElementByBlockId(id);
     if (!textElement || textElement.nodeName !== TextBlockName) {
       return;
     }
@@ -93,11 +90,7 @@ function makeBulletListPlugin(): IPlugin {
         .setAttribute(textElement, {
           textType: TextType.Normal,
         })
-        .setCursorState({
-          type: "collapsed",
-          targetId,
-          offset: 0,
-        })
+        .setCursorState(CursorState.collapse(id, 0))
         .apply();
     }
   };
@@ -117,17 +110,17 @@ function makeBulletListPlugin(): IPlugin {
     if (!cursorState) {
       return;
     }
-    if (cursorState.type === "open") {
+    if (cursorState.isOpen) {
       return;
     }
 
-    const { targetId, offset } = cursorState;
+    const { id, offset } = cursorState;
 
     if (offset !== 0) {
       return;
     }
 
-    const textElement = editor.getTextElementByBlockId(targetId);
+    const textElement = editor.getTextElementByBlockId(id);
     if (!textElement) {
       return;
     }
@@ -138,11 +131,7 @@ function makeBulletListPlugin(): IPlugin {
         .setAttribute(textElement, {
           textType: TextType.Normal,
         })
-        .setCursorState({
-          type: "collapsed",
-          targetId,
-          offset: 0,
-        })
+        .setCursorState(CursorState.collapse(id, 0))
         .apply();
     }
   };
