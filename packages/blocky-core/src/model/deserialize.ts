@@ -1,13 +1,13 @@
 import { isUndefined, isArray } from "lodash-es";
 import { isUpperCase } from "blocky-common/es/character";
 import Delta from "quill-delta-es";
-import { BlockElement } from "@pkg/block/basic";
 import {
   type BlockyNode,
   type JSONNode,
+  BlockElement,
   BlockyElement,
   BlockyTextModel,
-} from "@pkg/model/tree";
+} from "@pkg/model";
 
 export function blockyNodeFromJsonNode(jsonNode: JSONNode): BlockyNode {
   const { nodeName, children, ...rest } = jsonNode;

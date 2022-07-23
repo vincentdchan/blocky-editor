@@ -1,10 +1,10 @@
 import { isUndefined } from "lodash-es";
 import { isUpperCase } from "blocky-common/es/character";
 import type {
-  BlockElement,
   IBlockDefinition,
   TryParsePastedDOMEvent,
 } from "@pkg/block/basic";
+import type { BlockElement } from "@pkg/model";
 import { Registry } from "./registry";
 import { makeTextBlockDefinition, TextBlockName } from "@pkg/block/textBlock";
 

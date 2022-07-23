@@ -1,18 +1,11 @@
 import { type IDisposable } from "blocky-common/es/disposable";
 import { type Position } from "blocky-common/es/position";
 import { type HTMLConverter } from "@pkg/helper/htmlConverter";
-import {
-  type AttributesObject,
-  type BlockyNode,
-  BlockyElement,
-  symSetAttribute,
-} from "@pkg/model/tree";
+import { type BlockyNode, BlockElement, BlockyElement } from "@pkg/model/tree";
 import { type Editor } from "@pkg/view/editor";
 import { type EditorController } from "@pkg/view/controller";
 import { CursorState } from "@pkg/model/cursor";
-import { DocNodeName } from "@pkg/model/state";
 import { Changeset } from "@pkg/model/change";
-import { isUndefined } from "lodash-es";
 
 export interface BlockDidMountEvent {
   element: HTMLElement;
@@ -135,92 +128,6 @@ export interface IBlockDefinition {
 }
 
 /**
- * This is a data layer of a block.
- * ID is used to locate a block in the document tree.
- *
- * A BlockElement can contain a <children-container>
- * at the end of the block to store the children.
- */
-export class BlockElement extends BlockyElement {
-  constructor(
-    blockName: string,
-    id: string,
-    attributes?: AttributesObject,
-    children?: BlockyNode[]
-  ) {
-    if (isUndefined(attributes)) {
-      attributes = {};
-    }
-    attributes.id = id;
-    super(blockName, attributes, children);
-  }
-
-  get childrenContainer(): BlockyElement | undefined {
-    const { lastChild } = this;
-    if (!lastChild) {
-      return;
-    }
-
-    if (lastChild.nodeName === "block-children") {
-      return lastChild as BlockyElement;
-    }
-
-    return;
-  }
-
-  override [symSetAttribute](name: string, value: string) {
-    if (name === "block-children") {
-      throw new TypeError(`${name} is reserved`);
-    }
-    super[symSetAttribute](name, value);
-  }
-
-  get id(): string {
-    return this.getAttribute("id")!;
-  }
-
-  /**
-   * Return the level of block,
-   * not the level of [Node].
-   */
-  blockLevel(): number {
-    const parentNode = this.parent;
-    if (!parentNode) {
-      return Number.MAX_SAFE_INTEGER;
-    }
-
-    if (parentNode.nodeName === DocNodeName) {
-      return 0;
-    }
-
-    if (parentNode.nodeName === "block-children") {
-      const parentOfParent = parentNode.parent;
-      if (!parentOfParent || !(parentOfParent instanceof BlockElement)) {
-        return Number.MAX_SAFE_INTEGER;
-      }
-      return parentOfParent.blockLevel() + 1;
-    }
-
-    return Number.MAX_SAFE_INTEGER;
-  }
-
-  override clone(): BlockElement {
-    const attribs = this.getAttributes();
-    delete attribs.id;
-
-    let childPtr = this.firstChild;
-
-    const children: BlockyNode[] = [];
-    while (childPtr) {
-      children.push(childPtr.clone());
-      childPtr = childPtr.nextSibling;
-    }
-
-    return new BlockElement(this.nodeName, this.id, attribs, children);
-  }
-}
-
-/**
  * Base class for all the blocks in the editor.
  */
 export class Block implements IDisposable {
@@ -276,6 +183,12 @@ export class Block implements IDisposable {
   blockContentChanged?(e: BlockContentChangedEvent): void;
 
   render?(container: HTMLElement): void;
+
+  /**
+   * If the block wants the renderer to render children of
+   * current block, return the head of the children
+   */
+  renderChildren?(): BlockyNode | void | null;
 
   getCursorDomByOffset?(offset: number): CursorDomResult | undefined;
 

@@ -11,6 +11,7 @@ import {
   BlockyTextModel,
   BlockyNode,
   Changeset,
+  BlockElement,
 } from "@pkg/model";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
@@ -20,11 +21,7 @@ import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { type BannerFactory } from "@pkg/view/bannerDelegate";
 import { type ToolbarFactory } from "@pkg/view/toolbarDelegate";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
-import {
-  BlockElement,
-  BlockPasteEvent,
-  TryParsePastedDOMEvent,
-} from "@pkg/block/basic";
+import { BlockPasteEvent, TryParsePastedDOMEvent } from "@pkg/block/basic";
 import { TextBlockName } from "@pkg/block/textBlock";
 import { type CollaborativeCursorOptions } from "./collaborativeCursors";
 import { type Editor } from "./editor";

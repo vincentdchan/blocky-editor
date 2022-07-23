@@ -1,3 +1,8 @@
+/**
+ * The types of the elements are referenced cyclically.
+ * Do NOT split them into several files.
+ * It will cause strange compilation errors by Vite.
+ */
 import { isUndefined } from "lodash-es";
 import Delta, { Op } from "quill-delta-es";
 import { type WithState, WithStateSlot } from "@pkg/helper/withStateSlot";
@@ -13,6 +18,7 @@ export const symSetAttribute = Symbol("setAttribute");
 export const symInsertChildAt = Symbol("insertChildAt");
 export const symApplyDelta = Symbol("applyDelta");
 export const symDeleteChildrenAt = Symbol("deleteChildrenAt");
+export const DocNodeName = "document";
 
 export interface AttributesObject {
   [key: string]: any;
@@ -174,6 +180,13 @@ export class BlockyElement implements BlockyNode, WithState {
       ptr = ptr.prevSibling;
     }
     return cnt;
+  }
+
+  get textContent(): BlockyTextModel | null {
+    if (this.#firstChild instanceof BlockyTextModel) {
+      return this.#firstChild;
+    }
+    return null;
   }
 
   #symInsertAfter(node: BlockyNode, after?: BlockyNode) {
@@ -390,7 +403,9 @@ export class BlockyElement implements BlockyNode, WithState {
     node.nextSibling = null;
     this.childrenLength--;
 
-    this.state?.unmountBlock(node);
+    if (node instanceof BlockyElement) {
+      node.handleUnmount();
+    }
 
     this.changed.emit({
       type: "element-remove-child",
@@ -398,20 +413,14 @@ export class BlockyElement implements BlockyNode, WithState {
       child: node,
       index: ptr,
     });
-
-    this.#handleRemoveChildren(node);
   }
 
-  #handleRemoveChildren(node: BlockyNode) {
-    const lastNode = node.lastChild;
-    if (!lastNode || lastNode.nodeName !== "block-children") {
-      return;
-    }
-    let ptr = lastNode.firstChild;
+  handleUnmount() {
+    this.state?.unmountBlock(this);
+    let ptr = this.#firstChild;
     while (ptr) {
-      if (!ptr.state) {
-        ptr.state = this.state;
-        this.state?.unmountBlock(ptr);
+      if (ptr instanceof BlockyElement) {
+        ptr.handleMountToBlock();
       }
       ptr = ptr.nextSibling;
     }
@@ -475,5 +484,74 @@ export class BlockyElement implements BlockyNode, WithState {
     }
 
     return result;
+  }
+}
+
+/**
+ * This is a data layer of a block.
+ * ID is used to locate a block in the document tree.
+ *
+ * A BlockElement can contain a <children-container>
+ * at the end of the block to store the children.
+ */
+export class BlockElement extends BlockyElement {
+  constructor(
+    blockName: string,
+    id: string,
+    attributes?: AttributesObject,
+    children?: BlockyNode[]
+  ) {
+    if (isUndefined(attributes)) {
+      attributes = {};
+    }
+    attributes.id = id;
+    super(blockName, attributes, children);
+  }
+
+  // validate this in changeset
+  override [symSetAttribute](name: string, value: string) {
+    if (name === "id") {
+      throw new TypeError(`${name} is reserved`);
+    }
+    super[symSetAttribute](name, value);
+  }
+
+  get id(): string {
+    return this.getAttribute("id")!;
+  }
+
+  /**
+   * Return the level of block,
+   * not the level of [Node].
+   */
+  blockLevel(): number {
+    const parentNode = this.parent;
+    if (!parentNode) {
+      return Number.MAX_SAFE_INTEGER;
+    }
+
+    if (parentNode.nodeName === DocNodeName) {
+      return 0;
+    }
+
+    if (parentNode instanceof BlockElement) {
+      return parentNode.blockLevel() + 1;
+    }
+    return Number.MAX_SAFE_INTEGER;
+  }
+
+  override clone(): BlockElement {
+    const attribs = this.getAttributes();
+    delete attribs.id;
+
+    let childPtr = this.firstChild;
+
+    const children: BlockyNode[] = [];
+    while (childPtr) {
+      children.push(childPtr.clone());
+      childPtr = childPtr.nextSibling;
+    }
+
+    return new BlockElement(this.nodeName, this.id, attribs, children);
   }
 }

@@ -10,7 +10,6 @@ import {
   type BlockPasteEvent,
   type CursorDomResult,
   Block,
-  BlockElement,
 } from "./basic";
 import {
   type AttributesObject,
@@ -19,6 +18,7 @@ import {
   BlockyElement,
   BlockyNode,
   Changeset,
+  BlockElement,
 } from "@pkg/model";
 import { TextInputEvent, type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";
@@ -290,6 +290,14 @@ class TextBlock extends Block {
     this.renderBlockTextContent(container, textModel);
   }
 
+  override renderChildren(): BlockyNode | void | null {
+    const textModel = this.props.firstChild! as BlockyTextModel;
+    if (!textModel) {
+      return;
+    }
+    return textModel.nextSibling;
+  }
+
   private createAnchorNode(href: string): HTMLSpanElement {
     const e = elem("span");
     e.classList.add(this.editor.anchorSpanClass);
@@ -531,15 +539,11 @@ class TextBlock extends Block {
 
     const prevBlockyElement = prevElement as BlockElement;
 
-    let childrenContainer = prevBlockyElement.childrenContainer;
-    if (childrenContainer) {
-      change.appendChild(childrenContainer, copy);
-    } else {
-      childrenContainer = new BlockyElement("block-children", undefined, [
-        copy,
-      ]);
-      change.appendChild(prevBlockyElement, childrenContainer);
-    }
+    change.insertChildrenAfter(
+      prevBlockyElement,
+      [copy],
+      prevBlockyElement.lastChild
+    );
 
     change.setCursorState(prevCursorState);
     change.apply({
@@ -676,12 +680,7 @@ class TextBlockDefinition implements IBlockDefinition {
 
     const childrenNode: BlockyNode[] = [textModel];
     if (childrenContainer.length > 0) {
-      const blockChildren = new BlockyElement(
-        "block-children",
-        undefined,
-        childrenContainer
-      );
-      childrenNode.push(blockChildren);
+      childrenNode.push(...childrenContainer);
     }
 
     return new BlockElement(TextBlockName, newId, attributes, childrenNode);

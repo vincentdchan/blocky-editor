@@ -19,6 +19,7 @@ import {
   BlockyTextModel,
   BlockyElement,
   Changeset,
+  BlockElement,
 } from "@pkg/model";
 import { CursorState } from "@pkg/model/cursor";
 import {
@@ -34,7 +35,7 @@ import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import { UndoManager } from "@pkg/model/undoManager";
 import type { EditorController } from "./controller";
-import { Block, BlockElement } from "@pkg/block/basic";
+import { Block } from "@pkg/block/basic";
 import { getTextTypeForTextBlock } from "@pkg/block/textBlock";
 import {
   type CollaborativeCursorOptions,
