@@ -1,6 +1,6 @@
 {
   "name": "blocky-yjs",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "description": "The plugin for connecting yjs and blocky editor",
   "main": "dist/index.js",
   "scripts": {
@@ -21,8 +21,8 @@
     "yjs": "^13.5.39"
   },
   "peerDependencies": {
-    "blocky-common": "workspace:>=1.10.0",
-    "blocky-core": "workspace:>=1.10.0",
+    "blocky-common": "workspace:>=1.11.0",
+    "blocky-core": "workspace:>=1.11.0",
     "yjs": "^13.5.39"
   },
   "dependencies": {
