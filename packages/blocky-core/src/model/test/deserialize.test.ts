@@ -1,8 +1,7 @@
 import { expect, test } from "vitest";
 import "@pkg/index";
-import { BlockElement } from "@pkg/block/basic";
 import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
-import { BlockyTextModel } from "@pkg/model/tree";
+import { BlockyTextModel, BlockElement } from "@pkg/model/tree";
 import { blockyNodeFromJsonNode } from "../deserialize";
 import Delta from "quill-delta-es";
 

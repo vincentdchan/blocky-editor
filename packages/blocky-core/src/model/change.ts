@@ -1,13 +1,13 @@
-import { BlockElement } from "@pkg/block/basic";
 import Delta from "quill-delta-es";
+import {
+  type BlockyElement,
+  type BlockyTextModel,
+  type AttributesObject,
+  type BlockyNode,
+  BlockElement,
+} from "@pkg/model/tree";
 import type { State, NodeLocation } from "./state";
 import type { Operation } from "./operations";
-import type {
-  BlockyElement,
-  BlockyTextModel,
-  AttributesObject,
-  BlockyNode,
-} from "@pkg/model/tree";
 import type { CursorState } from "./cursor";
 
 function findNodeLocation(root: BlockyElement, node: BlockyNode): NodeLocation {
@@ -129,7 +129,7 @@ export class Changeset {
   insertChildrenAfter(
     parent: BlockyElement,
     children: BlockyNode[],
-    after?: BlockyNode
+    after?: BlockyNode | null
   ): Changeset {
     const parentLoc = findNodeLocation(this.state.root, parent);
     let index = 0;

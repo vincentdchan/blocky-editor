@@ -70,15 +70,20 @@ Example:
 
 ```xml
 <document>
-  <Text>
-    <blocky-text/>
-  </Text>
-  <Text>
-    <blocky-text />
-    <block-children>
+  <head>
+    <title>
+      <blocky-text/>
+    </title>
+  </head>
+  <body>
+    <Text>
+      <blocky-text/>
+    </Text>
+    <Text>
+      <blocky-text />
       <Image src="" />
-    </block-children>
-  </Text>
+    </Text>
+  </body>
 </document>
 ```
 
