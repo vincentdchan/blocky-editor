@@ -10,30 +10,8 @@ import Delta from "quill-delta-es";
 import { isHotkey } from "is-hotkey";
 import { isUndefined } from "lodash-es";
 
-function isSuccessor(a: CursorState, b: CursorState): boolean {
-  if (a.isOpen || b.isOpen) {
-    return false;
-  }
-  if (a.id !== b.id) {
-    return false;
-  }
-  return b.offset === a.offset + 1;
-}
-
-function cursorGreater(a: CursorState, b: CursorState): boolean {
-  if (a.isOpen || b.isOpen) {
-    return false;
-  }
-  if (a.id !== b.id) {
-    return false;
-  }
-  return (a.offset | 0) > (b.offset | 0);
-}
-
 class CodeTextDetector {
-  #counter = 1;
   #cursor: CursorState;
-  #firstShot = false;
   constructor(
     private startCursorState: CursorState,
     private done: (
@@ -47,31 +25,18 @@ class CodeTextDetector {
     if (cursorState === null) {
       return false;
     }
-    if (!this.#firstShot) {
-      if (isSuccessor(this.#cursor, cursorState)) {
-        this.#cursor = cursorState;
-        if (++this.#counter === 3) {
-          this.#firstShot = true;
-        }
-        return true;
-      }
+    if (cursorState.offset - this.startCursorState.offset > 1) {
+      this.done(this.startCursorState, cursorState);
       return false;
-    } else {
-      if (++this.#counter === 6) {
-        this.done(this.startCursorState, cursorState);
-        return false;
-      }
-      return true;
     }
+    this.startCursorState = cursorState;
+    return true;
   }
   emitNonDot(cursorState: CursorState | null): boolean {
     if (cursorState === null) {
       return false;
     }
-    if (!this.#firstShot) {
-      return false;
-    }
-    return cursorGreater(cursorState, this.#cursor);
+    return cursorState.offset > this.#cursor.offset;
   }
 }
 
@@ -111,8 +76,8 @@ function makeCodeTextPlugin(): IPlugin {
                       blockElement.firstChild as BlockyTextModel;
                     const fullString = textModel.toString();
                     const codeContent = fullString.slice(
-                      start.offset + 3,
-                      end.offset + 1 - 3
+                      start.offset + 1,
+                      end.offset
                     );
                     new Changeset(editor.state)
                       .textEdit(textModel, () =>
@@ -124,7 +89,7 @@ function makeCodeTextPlugin(): IPlugin {
                           })
                       )
                       .setCursorState(
-                        CursorState.collapse(start.id, end.offset + 1 - 6)
+                        CursorState.collapse(start.id, end.offset - 1)
                       )
                       .apply();
                   });
