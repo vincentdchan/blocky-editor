@@ -10,6 +10,16 @@ import type { State, NodeLocation } from "./state";
 import type { Operation } from "./operations";
 import type { CursorState } from "./cursor";
 
+function nodeLocationEquals(a: NodeLocation, b: NodeLocation): boolean {
+  if (a.id !== b.id) {
+    return false;
+  }
+  if (a.path.length !== b.path.length) {
+    return false;
+  }
+  return true;
+}
+
 function findNodeLocation(root: BlockyElement, node: BlockyNode): NodeLocation {
   if (root === node) {
     return { path: [] };
@@ -191,7 +201,30 @@ export class Changeset {
     });
     return this;
   }
+  /**
+   * There is some merge mechanism there,
+   * If there is
+   *  - delete 1
+   *  - delete 2
+   *
+   * Then the second op should be transformed, so we got:
+   *  - delete 1
+   *  - delete 1
+   */
   push(operation: Operation) {
+    if (operation.type === "op-remove-node") {
+      for (let i = 0, len = this.operations.length; i < len; i++) {
+        const op = this.operations[i];
+        if (
+          op.type === "op-remove-node" &&
+          nodeLocationEquals(op.parentLoc, operation.parentLoc)
+        ) {
+          if (op.index < operation.index) {
+            operation.index -= op.children.length;
+          }
+        }
+      }
+    }
     this.operations.push(operation);
   }
   apply(options?: Partial<ChangesetApplyOptions>) {
