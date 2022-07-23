@@ -8,15 +8,17 @@ import {
   type AttributesObject,
   type BlockyNode,
   type JSONNode,
+  BlockElement,
   BlockyElement,
   BlockyTextModel,
+  DocNodeName,
   symSetAttribute,
   symInsertChildAt,
   symDeleteChildrenAt,
   symApplyDelta,
 } from "./tree";
 import { blockyNodeFromJsonNode } from "@pkg/model/deserialize";
-import { Block, BlockElement } from "@pkg/block/basic";
+import { Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { TextBlockName } from "@pkg/block/textBlock";
 import type { FinalizedChangeset } from "@pkg/model/change";
@@ -28,8 +30,6 @@ import type {
   RemoveNodeOperation,
   TextEditOperation,
 } from "./operations";
-
-export const DocNodeName = "doc";
 
 export interface NodeLocation {
   id?: string;

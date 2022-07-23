@@ -1,31 +1,34 @@
 import { type IDisposable } from "blocky-common/es/disposable";
 import type { EditorController } from "@pkg/view/controller";
-import { type BlockElement } from "@pkg/block/basic";
+import type { BlockElement } from "@pkg/model";
 import { UIDelegate } from "./uiDelegate";
 
 export interface BannerInstance extends IDisposable {
-
   onFocusedNodeChanged?(focusedNode: BlockElement | undefined): void;
-
 }
 
-export type BannerFactory = (dom: HTMLDivElement, editorController: EditorController) => BannerInstance | undefined;
+export type BannerFactory = (
+  dom: HTMLDivElement,
+  editorController: EditorController
+) => BannerInstance | undefined;
 
 export class BannerDelegate extends UIDelegate {
-
   #instance: BannerInstance | undefined;
   #focusedNode: BlockElement | undefined;
 
   get focusedNode(): BlockElement | undefined {
     return this.#focusedNode;
   }
-  
+
   set focusedNode(v: BlockElement | undefined) {
     this.#focusedNode = v;
     this.#instance?.onFocusedNodeChanged?.(v);
   }
 
-  constructor(private editorController: EditorController, private factory?: BannerFactory) {
+  constructor(
+    private editorController: EditorController,
+    private factory?: BannerFactory
+  ) {
     super("blocky-editor-banner-delegate blocky-cm-noselect");
   }
 
@@ -52,6 +55,4 @@ export class BannerDelegate extends UIDelegate {
     this.container.style.top = y + "px";
     this.container.style.left = x + "px";
   }
-
-
 }

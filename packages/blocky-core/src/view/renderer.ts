@@ -1,8 +1,12 @@
 import { elem, removeNode } from "blocky-common/es/dom";
 import { isUndefined } from "lodash-es";
-import { type BlockyElement } from "@pkg/model";
+import { type IBlockDefinition } from "@pkg/block/basic";
+import {
+  type BlockyElement,
+  type BlockyNode,
+  BlockElement,
+} from "@pkg/model/tree";
 import type { Editor } from "@pkg/view/editor";
-import { type BlockElement, type IBlockDefinition } from "@pkg/block/basic";
 
 function ensureChild<K extends keyof HTMLElementTagNameMap>(
   dom: HTMLElement,
@@ -82,7 +86,11 @@ export class DocRenderer {
         elem.style.padding = `${top}px ${right}px ${bottom}px ${left}px`;
       }
     );
-    this.renderBlocks(blocksContainer, blocksContainer.firstChild, model);
+    this.renderBlocks(
+      blocksContainer,
+      blocksContainer.firstChild,
+      model.firstChild
+    );
   }
 
   protected createBlockContainer() {
@@ -108,17 +116,17 @@ export class DocRenderer {
   protected renderBlocks(
     blocksContainer: HTMLElement,
     beginChild: ChildNode | null,
-    parentNode: BlockyElement
+    beginBlockyNode: BlockyNode | null
   ) {
-    let nodePtr = parentNode.firstChild;
+    let nodePtr = beginBlockyNode;
 
     // remove the following node;
     if (!nodePtr) {
       let next = beginChild?.nextSibling;
       while (next) {
-        const nextOfnext = next.nextSibling;
+        const nextOfNext = next.nextSibling;
         removeNode(next);
-        next = nextOfnext;
+        next = nextOfNext;
       }
       return;
     }
@@ -127,6 +135,11 @@ export class DocRenderer {
     let prevPtr: Node | undefined;
 
     while (nodePtr) {
+      if (!(nodePtr instanceof BlockElement)) {
+        // skip this element
+        nodePtr = nodePtr.nextSibling;
+        continue;
+      }
       const blockElement = nodePtr as BlockElement;
       const id = blockElement.id;
       const blockDef = this.editor.registry.block.getBlockDefByName(
@@ -173,14 +186,14 @@ export class DocRenderer {
       prevPtr = domPtr;
       domPtr = domPtr.nextSibling;
 
-      const { childrenContainer } = blockElement;
-      if (childrenContainer) {
+      const childrenBeginElement = block.renderChildren?.();
+      if (childrenBeginElement) {
         const { childrenContainerDOM, childrenBeginDOM } = block;
         if (childrenContainerDOM) {
           this.renderBlocks(
             childrenContainerDOM,
             childrenBeginDOM,
-            childrenContainer
+            childrenBeginElement
           );
         }
       }
