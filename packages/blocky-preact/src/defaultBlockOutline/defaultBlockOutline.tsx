@@ -8,6 +8,7 @@ import {
   CursorState,
   type EditorController,
   type CursorChangedEvent,
+  type CursorStateUpdateEvent,
 } from "blocky-core";
 
 interface DefaultBlockOutlineInternalProps {
@@ -40,7 +41,7 @@ class DefaultBlockOutlineInternal extends Component<
   override componentDidMount() {
     const { editorController } = this.props;
     this.disposables.push(
-      editorController.cursorChanged.on(this.handleNewCursorState)
+      editorController.state.cursorStateChanged.on(this.handleNewCursorState)
     );
     this.disposables.push(
       editorController.beforeApplyCursorChanged.on(
@@ -75,7 +76,7 @@ class DefaultBlockOutlineInternal extends Component<
     }
   };
 
-  private handleNewCursorState = (evt: CursorChangedEvent) => {
+  private handleNewCursorState = (evt: CursorStateUpdateEvent) => {
     const { state } = evt;
     const shouldShowOutline =
       state !== null && state.isCollapsed && state.id === this.props.blockId;
@@ -94,7 +95,7 @@ class DefaultBlockOutlineInternal extends Component<
 
   private handleContainerClicked = () => {
     const { editorController, blockId } = this.props;
-    editorController.state.cursorState = CursorState.collapse(blockId, 0);
+    editorController.setCursorState(CursorState.collapse(blockId, 0));
   };
 
   override render(

@@ -36,4 +36,13 @@ export class CursorState {
   get isOpen() {
     return !this.isCollapsed;
   }
+
+  equals(that: CursorState) {
+    return (
+      this.startId === that.startId &&
+      this.startOffset === that.startOffset &&
+      this.endId === that.endId &&
+      this.endOffset === that.endOffset
+    );
+  }
 }
