@@ -575,9 +575,30 @@ export class Editor {
     });
   }
 
+  /**
+   * Call the #checkNodesChanged to apply
+   * changes to the model.
+   *
+   * But there will be inconsistent between
+   * the model and the DOM. So we need to rerender again.
+   *
+   * But directly call the render() method will make the cursor
+   * wrong. So we need to read the cursor from the browser and store it.
+   *
+   * Before we call the update method, we need to clear the selection
+   * to prevent the browser make the cursor jumping around.
+   */
   #handleOpenCursorContentChanged() {
     this.#checkNodesChanged();
-    this.render();
+    this.#selectionChanged();
+    const storedCursorState = this.state.cursorState;
+    this.state[symSetCursorState](null, CursorStateUpdateReason.setByUser);
+    this.render(() => {
+      this.state[symSetCursorState](
+        storedCursorState,
+        CursorStateUpdateReason.setByUser
+      );
+    });
   }
 
   #handleContentChanged = () => {
