@@ -1,7 +1,6 @@
 import { isObject, isUndefined } from "lodash-es";
 import Delta from "quill-delta-es";
 import { isUpperCase } from "blocky-common/es/character";
-import { makeObservable } from "blocky-common/es/observable";
 import { removeNode } from "blocky-common/es/dom";
 import { Slot } from "blocky-common/es/events";
 import {
@@ -34,6 +33,24 @@ import type {
 export interface NodeLocation {
   id?: string;
   path: number[];
+}
+
+export const symSetCursorState = Symbol("setCursorState");
+
+export enum CursorStateUpdateReason {
+  /**
+   * The user changed the cursor manually through the changeset
+   */
+  setByUser = "setByUser",
+  /**
+   * handled by the browser, when the "input" event is trigger.
+   */
+  contentChanged = "contentChanged",
+}
+
+export interface CursorStateUpdateEvent {
+  state: CursorState | null;
+  reason: CursorStateUpdateReason;
 }
 
 /**
@@ -77,22 +94,47 @@ export class State {
   readonly blockDeleted: Slot<BlockElement> = new Slot();
   readonly beforeChangesetApply: Slot<FinalizedChangeset> = new Slot();
   readonly changesetApplied: Slot<FinalizedChangeset> = new Slot();
-  cursorState: CursorState | null = null;
+  readonly cursorStateChanged: Slot<CursorStateUpdateEvent> = new Slot();
+  #cursorState: CursorState | null = null;
   silent = false;
+
+  get cursorState(): CursorState | null {
+    return this.#cursorState;
+  }
 
   constructor(
     readonly root: BlockyElement,
     readonly blockRegistry: BlockRegistry,
     readonly idHelper: IdGenerator
   ) {
-    makeObservable(this, "cursorState");
-
-    // TODO: recursive add
     let ptr = root.firstChild;
     while (ptr) {
-      this.handleNewBlockMounted(ptr);
+      if (ptr instanceof BlockyElement) {
+        ptr.handleMountToBlock(this);
+      }
       ptr = ptr.nextSibling;
     }
+  }
+
+  [symSetCursorState](
+    cursorState: CursorState | null,
+    reason: CursorStateUpdateReason
+  ) {
+    if (this.#cursorState === null && cursorState === null) {
+      return;
+    }
+    if (
+      this.#cursorState !== null &&
+      cursorState !== null &&
+      this.#cursorState.equals(cursorState)
+    ) {
+      return;
+    }
+    this.#cursorState = cursorState;
+    this.cursorStateChanged.emit({
+      state: cursorState,
+      reason,
+    });
   }
 
   apply(changeset: FinalizedChangeset) {

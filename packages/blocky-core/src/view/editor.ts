@@ -1,6 +1,5 @@
 import { $on, isContainNode, removeNode } from "blocky-common/es/dom";
 import { isUpperCase } from "blocky-common/es/character";
-import { observe } from "blocky-common/es/observable";
 import { Slot } from "blocky-common/es/events";
 import { type Padding } from "blocky-common/es/dom";
 import { areEqualShallow } from "blocky-common/es/object";
@@ -22,6 +21,11 @@ import {
   BlockElement,
 } from "@pkg/model";
 import { CursorState } from "@pkg/model/cursor";
+import {
+  symSetCursorState,
+  CursorStateUpdateReason,
+  type CursorStateUpdateEvent,
+} from "@pkg/model/state";
 import {
   IPlugin,
   PluginRegistry,
@@ -193,9 +197,7 @@ export class Editor {
 
     document.addEventListener("selectionchange", this.#selectionChanged);
 
-    this.disposables.push(
-      observe(state, "cursorState", this.handleCursorStateChanged)
-    );
+    state.cursorStateChanged.on(this.handleCursorStateChanged);
 
     this.disposables.push($on(container, "mouseleave", this.#hideBanner));
 
@@ -357,7 +359,10 @@ export class Editor {
         return false;
       }
 
-      this.state.cursorState = CursorState.collapse(node.id, 0);
+      this.state[symSetCursorState](
+        CursorState.collapse(node.id, 0),
+        CursorStateUpdateReason.setByUser
+      );
 
       return true;
     }
@@ -367,7 +372,7 @@ export class Editor {
 
   #handleTreeNodeNotFound(startContainer: Node) {
     if (!this.#trySelectOnParent(startContainer)) {
-      this.state.cursorState = null;
+      this.state[symSetCursorState](null, CursorStateUpdateReason.setByUser);
     }
   }
 
@@ -418,7 +423,10 @@ export class Editor {
 
     // not a dom in this editor, ignore it.
     if (!isContainNode(startContainer, this.#container)) {
-      this.state.cursorState = null;
+      this.state[symSetCursorState](
+        null,
+        CursorStateUpdateReason.contentChanged
+      );
       return;
     }
 
@@ -440,15 +448,18 @@ export class Editor {
         absoluteStartOffset
       );
       if (!areEqualShallow(newCursorState, this.state.cursorState)) {
-        this.state.cursorState = CursorState.collapse(
-          startNode.id,
-          absoluteStartOffset
+        this.state[symSetCursorState](
+          CursorState.collapse(startNode.id, absoluteStartOffset),
+          CursorStateUpdateReason.contentChanged
         );
       }
     } else {
       const endNode = this.#findBlockNodeContainer(endContainer);
       if (!endNode) {
-        this.state.cursorState = null;
+        this.state[symSetCursorState](
+          null,
+          CursorStateUpdateReason.contentChanged
+        );
         return;
       }
       const absoluteEndOffset = this.#findTextOffsetInBlock(
@@ -463,11 +474,14 @@ export class Editor {
         absoluteEndOffset
       );
       if (!areEqualShallow(newCursorState, this.state.cursorState)) {
-        this.state.cursorState = new CursorState(
-          startNode.id,
-          absoluteStartOffset,
-          endNode.id,
-          absoluteEndOffset
+        this.state[symSetCursorState](
+          new CursorState(
+            startNode.id,
+            absoluteStartOffset,
+            endNode.id,
+            absoluteEndOffset
+          ),
+          CursorStateUpdateReason.contentChanged
         );
       }
     }
@@ -787,7 +801,7 @@ export class Editor {
   #handleBeforeChangesetApply = (changeset: FinalizedChangeset) => {
     const { afterCursor, options } = changeset;
     if (!isUndefined(afterCursor) || options.refreshCursor) {
-      this.state.cursorState = null;
+      this.state[symSetCursorState](null, CursorStateUpdateReason.setByUser);
     }
   };
 
@@ -796,9 +810,15 @@ export class Editor {
     if (options.updateView) {
       this.render(() => {
         if (!isUndefined(changeset.afterCursor)) {
-          this.state.cursorState = changeset.afterCursor;
+          this.state[symSetCursorState](
+            changeset.afterCursor,
+            CursorStateUpdateReason.setByUser
+          );
         } else if (options.refreshCursor) {
-          this.state.cursorState = changeset.beforeCursor;
+          this.state[symSetCursorState](
+            changeset.beforeCursor,
+            CursorStateUpdateReason.setByUser
+          );
         }
       });
     }
@@ -868,7 +888,9 @@ export class Editor {
     }
 
     if (prevNode.nodeName !== TextBlockName) {
-      this.state.cursorState = CursorState.collapse(prevNode.id, 0);
+      new Changeset(this.state)
+        .setCursorState(CursorState.collapse(prevNode.id, 0))
+        .apply();
       return true;
     }
     const firstChild = prevNode.firstChild;
@@ -945,14 +967,12 @@ export class Editor {
     }
   }
 
-  handleCursorStateChanged = (
-    newState: CursorState | undefined,
-    oldState: CursorState | undefined
-  ) => {
-    if (areEqualShallow(newState, oldState)) {
+  handleCursorStateChanged = (evt: CursorStateUpdateEvent) => {
+    if (evt.reason === CursorStateUpdateReason.contentChanged) {
       return;
     }
 
+    const newState = evt.state;
     const sel = window.getSelection();
     if (!sel) {
       return;
@@ -1103,17 +1123,14 @@ export class Editor {
   };
 
   #pastePlainTextOnCursor(text: string) {
-    const cursor = this.#insertTextAt(this.state.cursorState, text);
-    this.render(() => {
-      this.state.cursorState = cursor;
-    });
+    this.#insertTextAt(this.state.cursorState, text);
   }
 
   #insertTextAt(
     cursorState: CursorState | null,
     text: string,
     attributes?: AttributesObject
-  ): CursorState | null {
+  ) {
     if (!cursorState) {
       return null;
     }
@@ -1133,8 +1150,8 @@ export class Editor {
       .textEdit(textModel, () =>
         new Delta().retain(cursorState.offset).insert(text, attributes)
       )
+      .setCursorState(CursorState.collapse(cursorState.id, afterOffset))
       .apply();
-    return CursorState.collapse(cursorState.id, afterOffset);
   }
 
   getTextElementByBlockId(blockId: string): BlockElement | undefined {

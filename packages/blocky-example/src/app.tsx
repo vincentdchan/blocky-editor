@@ -122,9 +122,11 @@ class App extends Component<unknown, AppState> {
     });
 
     this.editorControllerLeft = makeController(this.doc1);
-    this.editorControllerLeft.state.cursorState = CursorState.collapse(
-      (this.editorControllerLeft.state.root.firstChild! as any).id,
-      0
+    this.editorControllerLeft.setCursorState(
+      CursorState.collapse(
+        (this.editorControllerLeft.state.root.firstChild! as any).id,
+        0
+      )
     );
     this.editorControllerLeft.pasteHTMLAtCursor(ReadMeContent);
 

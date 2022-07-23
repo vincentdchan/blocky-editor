@@ -1,4 +1,8 @@
-export { State } from "./state";
+export {
+  State,
+  CursorStateUpdateReason,
+  type CursorStateUpdateEvent,
+} from "./state";
 export { CursorState } from "./cursor";
 export { TextType } from "./text";
 export { Changeset } from "./change";

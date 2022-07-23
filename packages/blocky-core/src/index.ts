@@ -12,8 +12,10 @@ export {
 export { type IPlugin } from "./registry/pluginRegistry";
 export { getTextTypeForTextBlock } from "./block/textBlock";
 export {
-  CursorState,
   State as DocumentState,
+  CursorState,
+  CursorStateUpdateReason,
+  type CursorStateUpdateEvent,
   type AttributesObject,
   type ElementChangedEvent,
   type BlockyNode,

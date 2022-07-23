@@ -1,6 +1,5 @@
 import { isUpperCase } from "blocky-common/es/character";
 import { Slot } from "blocky-common/es/events";
-import { observe } from "blocky-common/es/observable";
 import { type Padding } from "blocky-common/es/dom";
 import Delta from "quill-delta-es";
 import {
@@ -13,6 +12,7 @@ import {
   Changeset,
   BlockElement,
 } from "@pkg/model";
+import { symSetCursorState, CursorStateUpdateReason } from "@pkg/model/state";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
@@ -170,9 +170,9 @@ export class EditorController {
   mount(editor: Editor) {
     this.editor = editor;
 
-    observe(this.state, "cursorState", (s: CursorState | null) => {
+    this.state.cursorStateChanged.on((e) => {
       const id = editor.collaborativeCursorManager.options.id;
-      const evt = new CursorChangedEvent(id, s);
+      const evt = new CursorChangedEvent(id, e.state);
       this.cursorChanged.emit(evt);
     });
   }
@@ -503,5 +503,12 @@ export class EditorController {
     }
 
     return this.state.idMap.get(cursorState.id) as BlockElement | undefined;
+  }
+
+  setCursorState(cursorState: CursorState | null) {
+    this.state[symSetCursorState](
+      cursorState,
+      CursorStateUpdateReason.setByUser
+    );
   }
 }

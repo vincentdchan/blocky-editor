@@ -1,8 +1,8 @@
 import { Component, createRef, type RefObject } from "preact";
 import {
   CursorState,
-  type BlockElement,
   Editor,
+  type BlockElement,
   type EditorController,
 } from "blocky-core";
 
@@ -24,9 +24,8 @@ export class BlockyEditor extends Component<Props> {
     editor.render(() => {
       const firstChild = editor.state.root.firstChild;
       if (firstChild) {
-        editor.state.cursorState = CursorState.collapse(
-          (firstChild as BlockElement).id,
-          0
+        controller.setCursorState(
+          CursorState.collapse((firstChild as BlockElement).id, 0)
         );
       }
     });
