@@ -31,7 +31,7 @@ importers:
       '@types/is-hotkey': ^0.1.7
       '@types/lodash-es': ^4.17.6
       '@types/node': ^17.0.41
-      blocky-common: workspace:>=1.10.0
+      blocky-common: workspace:>=1.11.0
       is-hotkey: ^0.2.0
       jsdom: ^20.0.0
       lodash-es: ^4.17.21
