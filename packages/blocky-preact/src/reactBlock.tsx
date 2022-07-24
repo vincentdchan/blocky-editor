@@ -3,7 +3,8 @@ import {
   type EditorController,
   type BlockCreatedEvent,
   type BlockElement,
-  Block,
+  type Block,
+  ContentBlock,
   TryParsePastedDOMEvent,
 } from "blocky-core";
 import {
@@ -28,16 +29,16 @@ export const ReactBlockContext = createContext<IReactBlockContext | undefined>(
   undefined
 );
 
-class ReactBlock extends Block {
+class ReactBlock extends ContentBlock {
   #rendered: HTMLElement | undefined;
 
   constructor(props: BlockElement, private options: ReactBlockOptions) {
     super(props);
   }
 
-  override render(container: HTMLElement) {
+  override render() {
     const { component } = this.options;
-    this.#rendered = container;
+    this.#rendered = this.contentContainer;
     const editorController = this.editor.controller;
     reactRender(
       <ReactBlockContext.Provider
@@ -45,7 +46,7 @@ class ReactBlock extends Block {
       >
         {component(this.props)}
       </ReactBlockContext.Provider>,
-      container
+      this.contentContainer
     );
   }
 

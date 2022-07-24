@@ -828,7 +828,7 @@ export class Editor {
 
   #handleChangesetApplied = (changeset: FinalizedChangeset) => {
     const { options } = changeset;
-    if (options.updateView) {
+    if (options.updateView || changeset.forceUpdate) {
       this.render(() => {
         if (!isUndefined(changeset.afterCursor)) {
           this.state[symSetCursorState](

@@ -4,11 +4,15 @@ import { type HTMLConverter } from "@pkg/helper/htmlConverter";
 import { type BlockyNode, BlockElement, BlockyElement } from "@pkg/model/tree";
 import { type Editor } from "@pkg/view/editor";
 import { type EditorController } from "@pkg/view/controller";
+import { elem } from "blocky-common/es/dom";
 import { CursorState } from "@pkg/model/cursor";
 import { Changeset } from "@pkg/model/change";
+import Delta from "quill-delta-es";
 
 export interface BlockDidMountEvent {
   element: HTMLElement;
+  blockDef: IBlockDefinition;
+  blockElement: BlockElement;
   clsPrefix: string;
 }
 
@@ -129,6 +133,9 @@ export interface IBlockDefinition {
 
 /**
  * Base class for all the blocks in the editor.
+ *
+ * If you want to write your own block, extending this class
+ * is overkill. Use [ContentBlock].
  */
 export class Block implements IDisposable {
   #editor: Editor | undefined;
@@ -200,5 +207,77 @@ export class Block implements IDisposable {
 
   dispose(): void {
     this.#editor = undefined;
+  }
+}
+
+const zeroWidthChar = "\u200b";
+
+/**
+ * Base class for the block with a content container
+ * Handle the copy & paste selection.
+ *
+ * If you want to write a custom block, extend this class
+ */
+export class ContentBlock extends Block {
+  #contentContainer: HTMLElement | undefined;
+  #selectSpan: HTMLSpanElement | undefined;
+
+  /**
+   * You elements should be rendered under the contentContainer
+   */
+  get contentContainer() {
+    return this.#contentContainer!;
+  }
+
+  override blockDidMount(e: BlockDidMountEvent): void {
+    const { element, blockDef } = e;
+    const contentContainer = elem("div", "blocky-content");
+    this.#contentContainer = contentContainer;
+
+    if (!blockDef.editable) {
+      contentContainer.contentEditable = "false";
+    }
+
+    element.appendChild(contentContainer);
+    const nonWidthChar = document.createTextNode(zeroWidthChar);
+    this.#selectSpan = elem("span", "blocky-select-span");
+    this.#selectSpan.setAttribute("data-id", e.blockElement.id);
+    this.#selectSpan.appendChild(nonWidthChar);
+    element.append(this.#selectSpan);
+  }
+
+  /**
+   * Select the text to simulate the selection.
+   */
+  override blockFocused(e: BlockFocusedEvent): void {
+    const { selection } = e;
+    const range = document.createRange();
+    range.selectNode(this.#selectSpan!);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  /**
+   * If user input something in the select span.
+   * Convert it to new block.
+   */
+  override blockContentChanged(e: BlockContentChangedEvent): void {
+    const { changeset } = e;
+    if (this.#selectSpan!.textContent !== zeroWidthChar) {
+      const newContent = this.#selectSpan!.textContent!;
+      this.#selectSpan!.textContent = zeroWidthChar;
+      const newElement = this.editor.state.createTextElement(
+        new Delta().insert(newContent)
+      );
+      changeset.forceUpdate = true;
+      changeset.insertChildrenAfter(
+        this.props!.parent as BlockyElement,
+        [newElement],
+        this.props
+      );
+      changeset.setCursorState(
+        CursorState.collapse(newElement.id, newContent.length)
+      );
+    }
   }
 }
