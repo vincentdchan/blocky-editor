@@ -1,5 +1,5 @@
 import { Component, JSX } from "preact";
-import { CursorState, EditorController, type IPlugin } from "blocky-core";
+import { EditorController, type IPlugin } from "blocky-core";
 import * as Y from "yjs";
 import {
   BlockyEditor,
@@ -76,7 +76,7 @@ function makeController(doc: Y.Doc): EditorController {
 }
 
 function makeRightController(doc: Y.Doc): EditorController {
-  return EditorController.emptyState({
+  return new EditorController({
     plugins: makeEditorPlugins(doc, true),
     collaborativeCursorOptions: {
       id: "User-2",
@@ -122,12 +122,7 @@ class App extends Component<unknown, AppState> {
     });
 
     this.editorControllerLeft = makeController(this.doc1);
-    this.editorControllerLeft.setCursorState(
-      CursorState.collapse(
-        (this.editorControllerLeft.state.root.firstChild! as any).id,
-        0
-      )
-    );
+    // paste before the editor initialized
     this.editorControllerLeft.pasteHTMLAtCursor(ReadMeContent);
 
     this.editorControllerRight = makeRightController(this.doc2);
@@ -198,7 +193,10 @@ class App extends Component<unknown, AppState> {
                   onChange={this.handleHeadingChanged}
                 />
               </div>
-              <BlockyEditor controller={this.editorControllerRight} />
+              <BlockyEditor
+                controller={this.editorControllerRight}
+                ignoreInitEmpty
+              />
             </div>
           </div>
         </div>

@@ -17,7 +17,7 @@ export const ReadMeContent = `
     Core: The core of the editor. Written in vanilla JS. It can be used standalone without any 
     UI frameworks.
     <ul>
-      <li>Gzipped size: ~28kb</li>
+      <li>Gzipped size: ~32kb</li>
     </ul>
   </li>
   <li>Preact: Wrap the editor in <a href="https://preactjs.com/">Preact</a>. Provide the UI facilities such as toolbar and banner.</li>

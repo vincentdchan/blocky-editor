@@ -92,21 +92,6 @@ export class EditorController {
   readonly cursorChanged: Slot<CursorChangedEvent> = new Slot();
   readonly beforeApplyCursorChanged: Slot<CursorChangedEvent> = new Slot();
 
-  static emptyState(options?: IEditorControllerOptions): EditorController {
-    const blockRegistry = options?.blockRegistry ?? new BlockRegistry();
-    const idGenerator = options?.idGenerator ?? makeDefaultIdGenerator();
-    const m = new MarkupGenerator(idGenerator);
-
-    const state = State.fromMarkup(m.doc([]), blockRegistry, idGenerator);
-
-    return new EditorController({
-      ...options,
-      blockRegistry,
-      idGenerator,
-      state,
-    });
-  }
-
   /**
    * A class to control the behavior in the editor
    */
@@ -140,7 +125,7 @@ export class EditorController {
     } else {
       const { m } = this;
       this.state = State.fromMarkup(
-        m.doc([m.textBlock("")]),
+        m.doc([]),
         this.blockRegistry,
         this.idGenerator
       );
@@ -373,6 +358,13 @@ export class EditorController {
     }
     let cursorState = this.state.cursorState;
     if (!cursorState) {
+      // if the document is empty,
+      // insert to the document directly
+      if (!this.state.root.firstChild) {
+        new Changeset(this.state)
+          .insertChildrenAt(this.state.root, 0, elements)
+          .apply();
+      }
       return;
     }
     if (cursorState.isOpen) {

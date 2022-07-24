@@ -1,4 +1,3 @@
-
 # Get started
 
 ## Install the editor
@@ -56,8 +55,6 @@ function makeController(): EditorController {
     }),
   });
 }
-
-
 ```
 
 ## Initialize the editor
@@ -78,13 +75,9 @@ class App extends Component {
   }
 
   render() {
-    return (
-      <BlockyEditor controller={this.editorController} />
-    );
+    return <BlockyEditor controller={this.editorController} />;
   }
-
 }
-
 ```
 
 ### VanillaJS
@@ -96,7 +89,6 @@ const container = document.querySelector("#app");
 const editor = Editor.fromController(container, controller);
 editor.render();
 ```
-
 
 ## Collaborative editing
 
@@ -129,7 +121,10 @@ function makeController(doc: Y.Doc): EditorController {
      * Define the plugins to implement customize features.
      */
     plugins: [
-      makeYjsPlugin({ doc, allowInit }),
+      makeYjsPlugin({
+        doc,
+        allowInit,
+      }),
       // ...
     ],
     // ...

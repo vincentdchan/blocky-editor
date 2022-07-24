@@ -856,6 +856,18 @@ export class Editor {
     window.open(link, "_blank")?.focus();
   }
 
+  initFirstEmptyBlock() {
+    if (this.state.root.firstChild) {
+      return;
+    }
+    const empty = this.state.createTextElement();
+    new Changeset(this.state)
+      .insertChildrenAt(this.state.root, 0, [empty])
+      .apply({
+        recordUndo: false,
+      });
+  }
+
   #handleDelete(e: KeyboardEvent) {
     if (this.#deleteBlockOnFocusedCursor()) {
       e.preventDefault();
