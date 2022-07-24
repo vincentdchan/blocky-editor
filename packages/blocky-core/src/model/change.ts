@@ -62,6 +62,7 @@ export class Changeset {
   operations: Operation[] = [];
   beforeCursor: CursorState | null = null;
   afterCursor?: CursorState | null;
+  forceUpdate = false;
   constructor(readonly state: State) {
     this.beforeCursor = state.cursorState;
   }
@@ -239,6 +240,7 @@ export class Changeset {
       operations: this.operations,
       beforeCursor: this.beforeCursor,
       afterCursor: this.afterCursor,
+      forceUpdate: this.forceUpdate,
       options: {
         ...defaultApplyOptions,
         ...options,
@@ -253,5 +255,6 @@ export interface FinalizedChangeset {
   operations: Operation[];
   beforeCursor: CursorState | null;
   afterCursor?: CursorState | null;
+  forceUpdate: boolean;
   options: ChangesetApplyOptions;
 }

@@ -216,10 +216,6 @@ export class DocRenderer {
   ) {
     const { editor, clsPrefix } = this;
 
-    if (!blockDef.editable) {
-      blockContainer.contentEditable = "false";
-    }
-
     blockContainer._mgNode = blockNode;
     editor.state.setDom(blockNode.id, blockContainer);
     blockContainer.setAttribute("data-type", blockDef.name);
@@ -233,6 +229,8 @@ export class DocRenderer {
     }
     block.blockDidMount?.({
       element: blockContainer,
+      blockDef,
+      blockElement: blockNode,
       clsPrefix,
     });
   }
