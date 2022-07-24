@@ -328,100 +328,153 @@ export class EditorController {
     }
   }
 
+  #deleteContentInsideInSelection(
+    cursorState: CursorState
+  ): CursorState | null {
+    if (cursorState.startId === cursorState.endId) {
+      const currentBlockElement = this.state.idMap.get(
+        cursorState.id
+      ) as BlockElement;
+      if (currentBlockElement.nodeName === TextBlockName) {
+        const textModel = currentBlockElement.firstChild as BlockyTextModel;
+        const startOffset = cursorState.startOffset;
+        const newState = CursorState.collapse(cursorState.id, startOffset);
+        new Changeset(this.state)
+          .textEdit(textModel, () =>
+            new Delta()
+              .retain(cursorState.startOffset)
+              .delete(cursorState.endOffset - cursorState.startOffset)
+          )
+          .setCursorState(newState)
+          .apply();
+        return newState;
+      } else {
+        const next = currentBlockElement.nextSibling as BlockElement | null;
+        const changeset = new Changeset(this.state).removeChild(
+          currentBlockElement.parent!,
+          currentBlockElement
+        );
+        if (next) {
+          const newState = CursorState.collapse(next.id, 0);
+          changeset.setCursorState(newState);
+          changeset.apply();
+          return newState;
+        } else {
+          changeset.apply();
+        }
+      }
+    }
+    return null;
+  }
+
   #pasteElementsAtCursor(elements: BlockElement[]) {
     if (elements.length === 0) {
       return;
     }
-    const currentBlockElement = this.#getBlockElementAtCollapsedCursor();
-    if (!currentBlockElement) {
+    let cursorState = this.state.cursorState;
+    if (!cursorState) {
       return;
     }
-    const parent = currentBlockElement.parent! as BlockyElement;
-    const prev = currentBlockElement;
+    if (cursorState.isOpen) {
+      cursorState = this.#deleteContentInsideInSelection(cursorState);
+      if (!cursorState) {
+        return;
+      }
+    }
+    const currentBlockElement = this.state.idMap.get(
+      cursorState.id
+    ) as BlockElement;
 
-    let appendDelta: Delta | undefined;
-    const changeset = new Changeset(this.state);
-    const insertChildren: BlockyNode[] = [];
-    for (let i = 0, len = elements.length; i < len; i++) {
-      const element = elements[i];
+    // optimize, do NOT do int next tick
+    this.enqueueNextTick(() => {
+      const parent = currentBlockElement.parent! as BlockyElement;
+      const prev = currentBlockElement;
 
-      // first item, try to merge text
-      if (
-        i === 0 &&
-        currentBlockElement.nodeName === TextBlockName &&
-        element.nodeName === TextBlockName
-      ) {
-        const prevTextModel =
-          currentBlockElement.firstChild! as BlockyTextModel;
-        const firstTextModel = element.firstChild! as BlockyTextModel;
-        if (!prevTextModel || !firstTextModel) {
+      let appendDelta: Delta | undefined;
+      const changeset = new Changeset(this.state);
+      const insertChildren: BlockyNode[] = [];
+      for (let i = 0, len = elements.length; i < len; i++) {
+        const element = elements[i];
+
+        // first item, try to merge text
+        if (
+          i === 0 &&
+          currentBlockElement.nodeName === TextBlockName &&
+          element.nodeName === TextBlockName
+        ) {
+          const prevTextModel =
+            currentBlockElement.firstChild! as BlockyTextModel;
+          const firstTextModel = element.firstChild! as BlockyTextModel;
+          if (!prevTextModel || !firstTextModel) {
+            continue;
+          }
+          const offset = this.state.cursorState?.offset ?? prevTextModel.length;
+          // only insert text, don NOT need to insert
+          if (len === 1) {
+            changeset.textEdit(prevTextModel, () =>
+              new Delta().retain(offset).concat(firstTextModel.delta)
+            );
+            changeset.setCursorState(
+              CursorState.collapse(
+                currentBlockElement.id,
+                offset + firstTextModel.delta.length()
+              )
+            );
+            break;
+          }
+          appendDelta = prevTextModel.delta.slice(offset);
+          changeset.textEdit(prevTextModel, () =>
+            new Delta()
+              .retain(offset)
+              .delete(prevTextModel.length - offset)
+              .concat(firstTextModel.delta)
+          );
           continue;
         }
-        const offset = this.state.cursorState?.offset ?? prevTextModel.length;
-        // only insert text, don NOT need to insert
-        if (len === 1) {
-          changeset.textEdit(prevTextModel, () =>
-            new Delta().retain(offset).concat(firstTextModel.delta)
-          );
+        insertChildren.push(element);
+      }
+      if (!isUndefined(appendDelta)) {
+        if (
+          insertChildren.length > 0 &&
+          insertChildren[insertChildren.length - 1].nodeName === TextBlockName
+        ) {
+          // append to previous element
+          const lastChild = insertChildren[
+            insertChildren.length - 1
+          ] as BlockElement;
+          const textModel = lastChild.firstChild! as BlockyTextModel;
+          const prevOffset = textModel.delta.length();
           changeset.setCursorState(
-            CursorState.collapse(
-              currentBlockElement.id,
-              offset + firstTextModel.delta.length()
-            )
+            CursorState.collapse(lastChild.id, prevOffset)
           );
-          break;
+          const childrenOfChildren: BlockyNode[] = [
+            new BlockyTextModel(textModel.delta.concat(appendDelta)),
+          ];
+          let ptr = textModel.nextSibling;
+          while (ptr) {
+            childrenOfChildren.push(ptr);
+            ptr = ptr.nextSibling;
+          }
+          const newChild = new BlockElement(
+            TextBlockName,
+            lastChild.id,
+            lastChild.getAttributes(),
+            childrenOfChildren
+          );
+          insertChildren[insertChildren.length - 1] = newChild;
+        } else {
+          const appendElement = this.state.createTextElement(appendDelta);
+          const textModel = appendElement.firstChild! as BlockyTextModel;
+          changeset.setCursorState(
+            CursorState.collapse(appendElement.id, textModel.length)
+          );
+          insertChildren.push(appendElement);
         }
-        appendDelta = prevTextModel.delta.slice(offset);
-        changeset.textEdit(prevTextModel, () =>
-          new Delta()
-            .retain(offset)
-            .delete(prevTextModel.length - offset)
-            .concat(firstTextModel.delta)
-        );
-        continue;
       }
-      insertChildren.push(element);
-    }
-    if (!isUndefined(appendDelta)) {
-      if (
-        insertChildren.length > 0 &&
-        insertChildren[insertChildren.length - 1].nodeName === TextBlockName
-      ) {
-        // append to previous element
-        const lastChild = insertChildren[
-          insertChildren.length - 1
-        ] as BlockElement;
-        const textModel = lastChild.firstChild! as BlockyTextModel;
-        const prevOffset = textModel.delta.length();
-        changeset.setCursorState(
-          CursorState.collapse(lastChild.id, prevOffset)
-        );
-        const childrenOfChildren: BlockyNode[] = [
-          new BlockyTextModel(textModel.delta.concat(appendDelta)),
-        ];
-        let ptr = textModel.nextSibling;
-        while (ptr) {
-          childrenOfChildren.push(ptr);
-          ptr = ptr.nextSibling;
-        }
-        const newChild = new BlockElement(
-          TextBlockName,
-          lastChild.id,
-          lastChild.getAttributes(),
-          childrenOfChildren
-        );
-        insertChildren[insertChildren.length - 1] = newChild;
-      } else {
-        const appendElement = this.state.createTextElement(appendDelta);
-        const textModel = appendElement.firstChild! as BlockyTextModel;
-        changeset.setCursorState(
-          CursorState.collapse(appendElement.id, textModel.length)
-        );
-        insertChildren.push(appendElement);
-      }
-    }
-    changeset.insertChildrenAfter(parent, insertChildren, prev);
-    changeset.apply();
+      changeset.insertChildrenAfter(parent, insertChildren, prev);
+      changeset.apply();
+    });
+    this.emitNextTicks();
   }
 
   #leafHandler = (node: Node): BlockElement | void => {
@@ -490,19 +543,6 @@ export class EditorController {
     }
 
     return attributes;
-  }
-
-  #getBlockElementAtCollapsedCursor(): BlockElement | undefined {
-    const { cursorState } = this.state;
-    if (!cursorState) {
-      return;
-    }
-
-    if (cursorState.isOpen) {
-      return;
-    }
-
-    return this.state.idMap.get(cursorState.id) as BlockElement | undefined;
   }
 
   setCursorState(cursorState: CursorState | null) {
