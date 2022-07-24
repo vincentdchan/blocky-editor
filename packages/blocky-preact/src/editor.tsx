@@ -8,6 +8,13 @@ import {
 
 export interface Props {
   controller: EditorController;
+
+  /**
+   * If this flag is false,
+   * the editor will not create an empty
+   * block automatically when the editor is created.
+   */
+  ignoreInitEmpty?: boolean;
 }
 
 export class BlockyEditor extends Component<Props> {
@@ -21,6 +28,9 @@ export class BlockyEditor extends Component<Props> {
       controller
     );
     const editor = this.#editor;
+    if (this.props.ignoreInitEmpty !== true) {
+      editor.initFirstEmptyBlock();
+    }
     editor.render(() => {
       const firstChild = editor.state.root.firstChild;
       if (firstChild) {
