@@ -21,7 +21,6 @@ export const ReadMeContent = `
     </ul>
   </li>
   <li>Preact: Wrap the editor in <a href="https://preactjs.com/">Preact</a>. Provide the UI facilities such as toolbar and banner.</li>
-  <li>Yjs: Connect the document with <a href="https://github.com/yjs/yjs">yjs</a> for collaborating editing.</li>
   <li>
     Example(this page): The example to demonstrate how to use the editor.
     <ul>
