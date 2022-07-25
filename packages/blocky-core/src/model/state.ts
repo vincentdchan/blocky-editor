@@ -1,7 +1,8 @@
-import { isObject } from "lodash-es";
+import { isObject, isUndefined } from "lodash-es";
 import Delta from "quill-delta-es";
 import { isUpperCase } from "blocky-common/es/character";
 import { removeNode } from "blocky-common/es/dom";
+import { hashIntArrays } from "blocky-common/es/hash";
 import { Slot } from "blocky-common/es/events";
 import {
   type AttributesObject,
@@ -32,8 +33,11 @@ import type {
 
 export class NodeLocation {
   static equals(a: NodeLocation, b: NodeLocation): boolean {
-    // optimize: cached the hash
     if (a.length !== b.length) {
+      return false;
+    }
+
+    if (a.hashCode !== b.hashCode) {
       return false;
     }
 
@@ -45,6 +49,7 @@ export class NodeLocation {
 
     return true;
   }
+  #hashCode: number | undefined;
   readonly path: readonly number[];
   constructor(path: number[]) {
     this.path = Object.freeze(path);
@@ -54,6 +59,12 @@ export class NodeLocation {
   }
   toString() {
     return "[" + this.path.join(", ") + "]";
+  }
+  get hashCode() {
+    if (isUndefined(this.#hashCode)) {
+      this.#hashCode = hashIntArrays(this.path);
+    }
+    return this.#hashCode;
   }
 }
 
