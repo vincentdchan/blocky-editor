@@ -793,16 +793,11 @@ export class Editor {
         attributes.textType = textType;
       }
 
-      const newTextElement = this.state.createTextElement(
-        undefined,
-        attributes
-      );
-      const newTextModel = newTextElement.firstChild! as BlockyTextModel;
+      const newTextElement = this.state.createTextElement(slices, attributes);
 
       const parentElement = blockElement.parent! as BlockyElement;
       new Changeset(this.state)
         .insertChildrenAfter(parentElement, [newTextElement], blockElement)
-        .textConcat(newTextModel, () => slices)
         .textEdit(textModel, () =>
           new Delta()
             .retain(cursorOffset)

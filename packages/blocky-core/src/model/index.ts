@@ -1,6 +1,7 @@
 export {
   State,
   CursorStateUpdateReason,
+  NodeLocation,
   type CursorStateUpdateEvent,
 } from "./state";
 export { CursorState } from "./cursor";

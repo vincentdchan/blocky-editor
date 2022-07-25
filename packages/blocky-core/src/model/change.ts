@@ -4,45 +4,10 @@ import {
   type BlockyTextModel,
   type AttributesObject,
   type BlockyNode,
-  BlockElement,
 } from "@pkg/model/tree";
-import type { State, NodeLocation } from "./state";
+import { type State, NodeLocation } from "./state";
 import type { Operation } from "./operations";
 import type { CursorState } from "./cursor";
-
-function nodeLocationEquals(a: NodeLocation, b: NodeLocation): boolean {
-  if (a.id !== b.id) {
-    return false;
-  }
-  if (a.path.length !== b.path.length) {
-    return false;
-  }
-  return true;
-}
-
-function findNodeLocation(root: BlockyElement, node: BlockyNode): NodeLocation {
-  if (root === node) {
-    return { path: [] };
-  }
-  if (node instanceof BlockElement) {
-    return {
-      id: node.id,
-      path: [],
-    };
-  }
-  const parent = node.parent!;
-  const parentPath = findNodeLocation(root, parent);
-
-  let cnt = 0;
-  let ptr = node.prevSibling;
-  while (ptr) {
-    cnt++;
-    ptr = ptr.prevSibling;
-  }
-
-  parentPath.path.push(cnt);
-  return parentPath;
-}
 
 export interface ChangesetApplyOptions {
   updateView: boolean;
@@ -72,7 +37,7 @@ export class Changeset {
       const oldValue = node.getAttribute(key);
       oldAttributes[key] = oldValue;
     }
-    const location = findNodeLocation(this.state.root, node);
+    const location = this.state.getLocationOfNode(node);
     this.push({
       type: "op-update-node",
       attributes,
@@ -86,7 +51,7 @@ export class Changeset {
     return this;
   }
   appendChild(node: BlockyElement, child: BlockyNode): Changeset {
-    const parentLoc = findNodeLocation(this.state.root, node);
+    const parentLoc = this.state.getLocationOfNode(node);
     const index = node.childrenLength;
     this.push({
       type: "op-insert-node",
@@ -97,7 +62,7 @@ export class Changeset {
     return this;
   }
   removeChild(parent: BlockyElement, child: BlockyNode): Changeset {
-    const parentLoc = findNodeLocation(this.state.root, parent);
+    const parentLoc = this.state.getLocationOfNode(parent);
     const index = parent.indexOf(child);
     this.push({
       type: "op-remove-node",
@@ -115,7 +80,7 @@ export class Changeset {
     if (count === 0) {
       return this;
     }
-    const parentLoc = findNodeLocation(this.state.root, parent);
+    const parentLoc = this.state.getLocationOfNode(parent);
 
     let child = parent.childAt(index);
     if (child == null) {
@@ -142,7 +107,7 @@ export class Changeset {
     children: BlockyNode[],
     after?: BlockyNode | null
   ): Changeset {
-    const parentLoc = findNodeLocation(this.state.root, parent);
+    const parentLoc = this.state.getLocationOfNode(parent);
     let index = 0;
     if (after) {
       index = parent.indexOf(after) + 1;
@@ -160,7 +125,7 @@ export class Changeset {
     index: number,
     children: BlockyNode[]
   ): Changeset {
-    const parentLoc = findNodeLocation(this.state.root, parent);
+    const parentLoc = this.state.getLocationOfNode(parent);
     this.push({
       type: "op-insert-node",
       index,
@@ -175,7 +140,7 @@ export class Changeset {
       return this;
     }
     const oldDelta = textNode.delta;
-    const location = findNodeLocation(this.state.root, textNode);
+    const location = this.state.getLocationOfNode(textNode);
     const invert = d.invert(oldDelta);
     this.push({
       type: "op-text-edit",
@@ -192,7 +157,7 @@ export class Changeset {
     }
     const oldDelta = textNode.delta;
     d = new Delta().retain(oldDelta.length()).concat(d);
-    const location = findNodeLocation(this.state.root, textNode);
+    const location = this.state.getLocationOfNode(textNode);
     const invert = d.invert(oldDelta);
     this.push({
       type: "op-text-edit",
@@ -218,7 +183,7 @@ export class Changeset {
         const op = this.operations[i];
         if (
           op.type === "op-remove-node" &&
-          nodeLocationEquals(op.parentLoc, operation.parentLoc)
+          NodeLocation.equals(op.parentLoc, operation.parentLoc)
         ) {
           if (op.index < operation.index) {
             operation.index -= op.children.length;
