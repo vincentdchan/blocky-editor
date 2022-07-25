@@ -1,13 +1,11 @@
 import { Component, JSX } from "preact";
 import { EditorController, type IPlugin } from "blocky-core";
-import * as Y from "yjs";
 import {
   BlockyEditor,
   makePreactBanner,
   makePreactToolbar,
   type BannerRenderProps,
 } from "blocky-preact";
-import { makeYjsPlugin } from "blocky-yjs";
 import makeBoldedTextPlugin from "blocky-core/dist/plugins/boldedTextPlugin";
 import makeCodeTextPlugin from "blocky-core/dist/plugins/codeTextPlugin";
 import makeBulletListPlugin from "blocky-core/dist/plugins/bulletListPlugin";
@@ -25,14 +23,13 @@ interface AppState {
   headingContent: string;
 }
 
-function makeEditorPlugins(doc: Y.Doc, allowInit?: boolean): IPlugin[] {
+function makeEditorPlugins(): IPlugin[] {
   return [
     makeBoldedTextPlugin(),
     makeCodeTextPlugin(),
     makeBulletListPlugin(),
     makeHeadingsPlugin(),
     makeImageBlockPlugin(),
-    makeYjsPlugin({ doc, allowInit }),
   ];
 }
 
@@ -42,7 +39,7 @@ const User2Color = "rgb(246 187 80)";
 /**
  * The controller is used to control the editor.
  */
-function makeController(doc: Y.Doc): EditorController {
+function makeController(): EditorController {
   return new EditorController({
     collaborativeCursorOptions: {
       id: "User-1",
@@ -52,7 +49,7 @@ function makeController(doc: Y.Doc): EditorController {
     /**
      * Define the plugins to implement customize features.
      */
-    plugins: makeEditorPlugins(doc, false),
+    plugins: makeEditorPlugins(),
     /**
      * Tell the editor how to render the banner.
      * We use a banner written in Preact here.
@@ -75,65 +72,46 @@ function makeController(doc: Y.Doc): EditorController {
   });
 }
 
-function makeRightController(doc: Y.Doc): EditorController {
-  return new EditorController({
-    plugins: makeEditorPlugins(doc, true),
-    collaborativeCursorOptions: {
-      id: "User-2",
-      idToName: (id: string) => id,
-      idToColor: () => User1Color,
-    },
-    bannerFactory: makePreactBanner(
-      ({ editorController, focusedNode }: BannerRenderProps) => (
-        <BannerMenu
-          editorController={editorController}
-          focusedNode={focusedNode}
-        />
-      )
-    ),
-    toolbarFactory: makePreactToolbar((editorController: EditorController) => {
-      return <ToolbarMenu editorController={editorController} />;
-    }),
-  });
-}
+// function makeRightController(doc: Y.Doc): EditorController {
+//   return new EditorController({
+//     plugins: makeEditorPlugins(doc, true),
+//     collaborativeCursorOptions: {
+//       id: "User-2",
+//       idToName: (id: string) => id,
+//       idToColor: () => User1Color,
+//     },
+//     bannerFactory: makePreactBanner(
+//       ({ editorController, focusedNode }: BannerRenderProps) => (
+//         <BannerMenu
+//           editorController={editorController}
+//           focusedNode={focusedNode}
+//         />
+//       )
+//     ),
+//     toolbarFactory: makePreactToolbar((editorController: EditorController) => {
+//       return <ToolbarMenu editorController={editorController} />;
+//     }),
+//   });
+// }
 
 class App extends Component<unknown, AppState> {
-  private doc1: Y.Doc;
-  private doc2: Y.Doc;
   private editorControllerLeft: EditorController;
-  private editorControllerRight: EditorController;
+  // private editorControllerRight: EditorController;
 
   constructor(props: unknown) {
     super(props);
-    this.doc1 = new Y.Doc();
-    this.doc2 = new Y.Doc();
 
-    this.doc1.on("update", (update) => {
-      // simulate the network
-      setTimeout(() => {
-        Y.applyUpdate(this.doc2, update);
-      }, 0);
-    });
-
-    this.doc2.on("update", (update) => {
-      setTimeout(() => {
-        Y.applyUpdate(this.doc1, update);
-      }, 0);
-    });
-
-    this.editorControllerLeft = makeController(this.doc1);
+    this.editorControllerLeft = makeController();
     // paste before the editor initialized
     this.editorControllerLeft.pasteHTMLAtCursor(ReadMeContent);
 
-    this.editorControllerRight = makeRightController(this.doc2);
+    // this.editorControllerLeft.cursorChanged.on((evt) => {
+    //   this.editorControllerRight.applyCursorChangedEvent(evt);
+    // });
 
-    this.editorControllerLeft.cursorChanged.on((evt) => {
-      this.editorControllerRight.applyCursorChangedEvent(evt);
-    });
-
-    this.editorControllerRight.cursorChanged.on((evt) => {
-      this.editorControllerLeft.applyCursorChangedEvent(evt);
-    });
+    // this.editorControllerRight.cursorChanged.on((evt) => {
+    //   this.editorControllerLeft.applyCursorChangedEvent(evt);
+    // });
 
     this.state = {
       headingContent: "Blocky Editor",
@@ -193,10 +171,10 @@ class App extends Component<unknown, AppState> {
                   onChange={this.handleHeadingChanged}
                 />
               </div>
-              <BlockyEditor
+              {/* <BlockyEditor
                 controller={this.editorControllerRight}
                 ignoreInitEmpty
-              />
+              /> */}
             </div>
           </div>
         </div>
