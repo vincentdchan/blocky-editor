@@ -18,19 +18,18 @@ function makeBulletListPlugin(): IPlugin {
   const turnTextBlockIntoBulletList = (
     editor: Editor,
     blockId: string,
-    textModel: BlockyTextModel,
     textElement: BlockElement
   ) => {
     new Changeset(editor.state)
       .setAttribute(textElement, {
         textType: TextType.Bulleted,
       })
-      .textEdit(textModel, () => new Delta().delete(2))
+      .textEdit(textElement, "textContent", () => new Delta().delete(2))
       .setCursorState(CursorState.collapse(blockId, 0))
       .apply();
   };
   const handleTextInputEvent = (editor: Editor) => (evt: TextInputEvent) => {
-    const { beforeDelta, textModel } = evt;
+    const { beforeDelta, blockElement } = evt;
     let index = 0;
     for (const op of evt.applyDelta.ops) {
       if (isString(op.insert)) {
@@ -42,12 +41,7 @@ function makeBulletListPlugin(): IPlugin {
             return prev;
           }, "");
           if (before === "-") {
-            turnTextBlockIntoBulletList(
-              editor,
-              evt.blockElement.id,
-              textModel,
-              evt.blockElement
-            );
+            turnTextBlockIntoBulletList(editor, blockElement.id, blockElement);
           }
           break;
         }
@@ -80,7 +74,7 @@ function makeBulletListPlugin(): IPlugin {
     if (textType !== TextType.Bulleted) {
       return;
     }
-    const textModel = textElement.firstChild as BlockyTextModel | undefined;
+    const textModel = textElement.getAttribute<BlockyTextModel>("textContent");
     if (!textModel) {
       return;
     }

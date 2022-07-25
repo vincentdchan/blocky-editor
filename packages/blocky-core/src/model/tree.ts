@@ -4,7 +4,7 @@
  * It will cause strange compilation errors by Vite.
  */
 import { isUndefined } from "lodash-es";
-import Delta, { Op } from "quill-delta-es";
+import Delta from "quill-delta-es";
 import { type WithState, WithStateSlot } from "@pkg/helper/withStateSlot";
 import type { ElementChangedEvent } from "./events";
 import type { State } from "./state";
@@ -14,11 +14,11 @@ export interface DeltaChangedEvent {
   newDelta: Delta;
 }
 
+export const metaKey = "#meta";
 export const symSetAttribute = Symbol("setAttribute");
 export const symInsertChildAt = Symbol("insertChildAt");
 export const symApplyDelta = Symbol("applyDelta");
 export const symDeleteChildrenAt = Symbol("deleteChildrenAt");
-export const DocNodeName = "document";
 
 export interface AttributesObject {
   [key: string]: any;
@@ -27,7 +27,7 @@ export interface AttributesObject {
 export interface JSONNode {
   nodeName: string;
   id?: string;
-  textContent?: Op[];
+  ["#meta"]?: AttributesObject;
   attributes?: AttributesObject;
   children?: JSONChild[];
 }
@@ -49,25 +49,12 @@ export interface BlockyNode {
   toJSON(): JSONNode;
 }
 
-export class BlockyTextModel implements BlockyNode, WithState {
+export class BlockyTextModel {
   #delta = new Delta();
   #cachedString: string | undefined;
-  state?: State;
-  parent: BlockyElement | null = null;
-  nextSibling: BlockyNode | null = null;
-  prevSibling: BlockyNode | null = null;
-  readonly changed: WithStateSlot<DeltaChangedEvent> = new WithStateSlot(this);
 
   constructor(delta?: Delta) {
     this.#delta = delta ?? new Delta();
-  }
-
-  get childrenLength(): number {
-    return 0;
-  }
-
-  get nodeName(): string {
-    return "#text";
   }
 
   get delta(): Delta {
@@ -79,7 +66,7 @@ export class BlockyTextModel implements BlockyNode, WithState {
     const newDelta = oldDelta.compose(v);
     this.#delta = newDelta;
     this.#cachedString = undefined;
-    this.changed.emit({ oldDelta, newDelta });
+    // this.changed.emit({ oldDelta, newDelta });
   }
 
   toString(): string {
@@ -102,23 +89,8 @@ export class BlockyTextModel implements BlockyNode, WithState {
     return this.#delta.length();
   }
 
-  get firstChild(): BlockyNode | null {
-    return null;
-  }
-
-  get lastChild(): BlockyNode | null {
-    return null;
-  }
-
   clone(): BlockyTextModel {
     return new BlockyTextModel(this.#delta.slice());
-  }
-
-  toJSON(): JSONNode {
-    return {
-      nodeName: "#text",
-      textContent: this.#delta.ops,
-    };
   }
 }
 
@@ -129,7 +101,7 @@ const bannedAttributesName: Set<string> = new Set([
 ]);
 
 interface InternAttributes {
-  [key: string]: string;
+  [key: string]: any;
 }
 
 export class BlockyElement implements BlockyNode, WithState {
@@ -345,7 +317,7 @@ export class BlockyElement implements BlockyNode, WithState {
     });
   }
 
-  getAttribute(name: string): string | undefined {
+  getAttribute<T = any>(name: string): T | undefined {
     return this.#attributes[name];
   }
 
@@ -452,16 +424,22 @@ export class BlockyElement implements BlockyNode, WithState {
       nodeName: this.nodeName,
     };
 
+    const meta: any = {};
+    let hasMeta = false;
     const attributes = this.getAttributes();
     for (const key in attributes) {
-      if (key === "nodeName") {
-        continue;
-      }
-      if (key === "type") {
+      if (key === "nodeName" || key === "type" || key === "children") {
         continue;
       }
       const value = attributes[key];
-      if (value) {
+      if (value === null || isUndefined(value)) {
+        continue;
+      }
+      if (value instanceof BlockyTextModel) {
+        hasMeta = true;
+        meta[key] = "rich-text";
+        (result as any)[key] = value.delta.ops;
+      } else {
         (result as any)[key] = value;
       }
     }
@@ -481,6 +459,10 @@ export class BlockyElement implements BlockyNode, WithState {
       }
 
       result.children = children;
+    }
+
+    if (hasMeta) {
+      result[metaKey] = meta;
     }
 
     return result;
@@ -530,7 +512,7 @@ export class BlockElement extends BlockyElement {
       return Number.MAX_SAFE_INTEGER;
     }
 
-    if (parentNode.nodeName === DocNodeName) {
+    if (parentNode.nodeName === "document") {
       return 0;
     }
 
@@ -553,5 +535,33 @@ export class BlockElement extends BlockyElement {
     }
 
     return new BlockElement(this.nodeName, this.id, attribs, children);
+  }
+}
+
+export interface DocumentInitProps {
+  head?: BlockyElement;
+  body?: BlockyElement;
+  bodyChildren: BlockyNode[];
+}
+
+export class BlockyDocument extends BlockyElement {
+  readonly head: BlockyElement;
+  readonly body: BlockyElement;
+
+  constructor(props?: Partial<DocumentInitProps>) {
+    const head = props?.head ?? new BlockyElement("head");
+    const body =
+      props?.body ??
+      new BlockyElement("body", undefined, props?.bodyChildren ?? []);
+    super("document", undefined, [head, body]);
+
+    this.head = head;
+    this.body = body;
+  }
+
+  override handleMountToBlock(state?: State) {
+    this.state = state;
+    this.head.handleMountToBlock(state);
+    this.body.handleMountToBlock(state);
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "blocky-core",
-  "version": "1.11.0",
+  "version": "2.0.0",
   "description": "The core of the blocky editor",
   "main": "dist/index.js",
   "scripts": {
@@ -27,7 +27,7 @@
     "vitest": "^0.14.1"
   },
   "dependencies": {
-    "blocky-common": "workspace:>=1.11.0",
+    "blocky-common": "workspace:>=2.0.0",
     "is-hotkey": "^0.2.0",
     "lodash-es": "^4.17.21",
     "quill-delta-es": "^5.0.2"

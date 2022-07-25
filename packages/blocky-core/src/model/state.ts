@@ -1,7 +1,8 @@
-import { isObject } from "lodash-es";
+import { isUndefined } from "lodash-es";
 import Delta from "quill-delta-es";
 import { isUpperCase } from "blocky-common/es/character";
 import { removeNode } from "blocky-common/es/dom";
+import { hashIntArrays } from "blocky-common/es/hash";
 import { Slot } from "blocky-common/es/events";
 import {
   type AttributesObject,
@@ -9,14 +10,14 @@ import {
   type JSONNode,
   BlockElement,
   BlockyElement,
+  BlockyDocument,
   BlockyTextModel,
-  DocNodeName,
   symSetAttribute,
   symInsertChildAt,
   symDeleteChildrenAt,
   symApplyDelta,
 } from "./tree";
-import { blockyNodeFromJsonNode } from "@pkg/model/deserialize";
+import { blockyNodeFromJsonNode } from "./deserialize";
 import { Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { TextBlockName } from "@pkg/block/textBlock";
@@ -32,8 +33,11 @@ import type {
 
 export class NodeLocation {
   static equals(a: NodeLocation, b: NodeLocation): boolean {
-    // optimize: cached the hash
     if (a.length !== b.length) {
+      return false;
+    }
+
+    if (a.hashCode !== b.hashCode) {
       return false;
     }
 
@@ -45,6 +49,7 @@ export class NodeLocation {
 
     return true;
   }
+  #hashCode: number | undefined;
   readonly path: readonly number[];
   constructor(path: number[]) {
     this.path = Object.freeze(path);
@@ -54,6 +59,12 @@ export class NodeLocation {
   }
   toString() {
     return "[" + this.path.join(", ") + "]";
+  }
+  get hashCode() {
+    if (isUndefined(this.#hashCode)) {
+      this.#hashCode = hashIntArrays(this.path);
+    }
+    return this.#hashCode;
   }
 }
 
@@ -85,30 +96,6 @@ export interface CursorStateUpdateEvent {
  *
  */
 export class State {
-  static fromMarkup(
-    doc: JSONNode,
-    blockRegistry: BlockRegistry,
-    idHelper: IdGenerator
-  ): State {
-    if (doc.nodeName !== "document") {
-      throw new Error("the root nodeName is expected to 'document'");
-    }
-
-    const children: BlockyNode[] = [];
-    doc.children?.forEach((child) => {
-      if (isObject(child)) {
-        const block = blockyNodeFromJsonNode(child);
-        children.push(block);
-      }
-    });
-
-    const rootNode = new BlockyElement(DocNodeName, undefined, children);
-    const state = new State(rootNode, blockRegistry, idHelper);
-    rootNode.state = state;
-
-    return state;
-  }
-
   readonly idMap: Map<string, BlockyElement> = new Map();
   readonly domMap: Map<string, Node> = new Map();
   readonly blocks: Map<string, Block> = new Map();
@@ -118,6 +105,8 @@ export class State {
   readonly changesetApplied: Slot<FinalizedChangeset> = new Slot();
   readonly cursorStateChanged: Slot<CursorStateUpdateEvent> = new Slot();
   #cursorState: CursorState | null = null;
+  #versionAccumulator = 0;
+  #appliedVersion = -1;
   silent = false;
 
   get cursorState(): CursorState | null {
@@ -125,17 +114,15 @@ export class State {
   }
 
   constructor(
-    readonly root: BlockyElement,
+    readonly document: BlockyDocument,
     readonly blockRegistry: BlockRegistry,
     readonly idHelper: IdGenerator
   ) {
-    let ptr = root.firstChild;
-    while (ptr) {
-      if (ptr instanceof BlockyElement) {
-        ptr.handleMountToBlock(this);
-      }
-      ptr = ptr.nextSibling;
-    }
+    document.handleMountToBlock(this);
+  }
+
+  nextVersion(): number {
+    return this.#versionAccumulator++;
   }
 
   [symSetCursorState](
@@ -160,6 +147,9 @@ export class State {
   }
 
   apply(changeset: FinalizedChangeset) {
+    if (this.#appliedVersion >= changeset.version) {
+      return;
+    }
     this.beforeChangesetApply.emit(changeset);
 
     for (const op of changeset.operations) {
@@ -184,6 +174,7 @@ export class State {
     }
 
     this.changesetApplied.emit(changeset);
+    this.#appliedVersion = changeset.version;
   }
 
   #applyInsertOperation(insertOperation: InsertNodeOperation) {
@@ -191,7 +182,7 @@ export class State {
     let { index } = insertOperation;
     const parent = this.findNodeByLocation(parentLoc) as BlockyElement;
     for (const child of children) {
-      parent[symInsertChildAt](index++, child);
+      parent[symInsertChildAt](index++, blockyNodeFromJsonNode(child));
     }
   }
   #applyUpdateOperation(updateOperation: UpdateNodeOperation) {
@@ -209,7 +200,10 @@ export class State {
   }
   #applyTextEditOperation(textEditOperation: TextEditOperation) {
     const { location, delta } = textEditOperation;
-    const textNode = this.findNodeByLocation(location) as BlockyTextModel;
+    const node = this.findNodeByLocation(location) as BlockyElement;
+    const textNode = node.getAttribute(
+      textEditOperation.key
+    ) as BlockyTextModel;
     textNode[symApplyDelta](delta);
   }
 
@@ -217,12 +211,16 @@ export class State {
     delta?: Delta | undefined,
     attributes?: AttributesObject
   ): BlockElement {
-    const textModel = new BlockyTextModel(delta);
+    if (isUndefined(attributes)) {
+      attributes = {};
+    }
+    if (isUndefined(attributes.textContent)) {
+      attributes.textContent = new BlockyTextModel(delta);
+    }
     return new BlockElement(
       TextBlockName,
       this.idHelper.mkBlockId(),
-      attributes,
-      [textModel]
+      attributes
     );
   }
 
@@ -275,7 +273,13 @@ export class State {
   }
 
   #insertElement(element: BlockElement) {
-    if (this.idMap.has(element.id)) {
+    const { id } = element;
+    if (isUndefined(id)) {
+      throw new Error(
+        `id could NOT be undefined for a BlockElement: ${element.nodeName}`
+      );
+    }
+    if (this.idMap.has(id)) {
       throw new Error(`duplicated id: ${element.id}`);
     }
     this.idMap.set(element.id, element);
@@ -283,7 +287,7 @@ export class State {
 
   findNodeByLocation(location: NodeLocation): BlockyNode {
     const { path } = location;
-    let ptr: BlockyNode = this.root;
+    let ptr: BlockyNode = this.document;
     for (let i = 0, len = path.length; i < len; i++) {
       const index = path[i];
       if (!(ptr instanceof BlockyElement)) {
@@ -300,7 +304,7 @@ export class State {
   }
 
   getLocationOfNode(node: BlockyNode, acc: number[] = []): NodeLocation {
-    if (this.root === node) {
+    if (this.document === node) {
       return new NodeLocation(acc.reverse());
     }
     const parent = node.parent;
@@ -324,7 +328,7 @@ export class State {
       nodeName: "document",
     };
 
-    let ptr = this.root.firstChild;
+    let ptr = this.document.firstChild;
 
     // empty
     if (!ptr) {

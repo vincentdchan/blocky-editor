@@ -1,5 +1,4 @@
 export * from "./view/editor";
-export * as markup from "./model/markup";
 export * from "./view/controller";
 export * from "./block/basic";
 export { makeDefaultIdGenerator, type IdGenerator } from "./helper/idHelper";
@@ -21,8 +20,8 @@ export {
   type BlockyNode,
   BlockyTextModel,
   BlockyElement,
+  BlockyDocument,
   TextType,
-  DocNodeName,
   Changeset,
   BlockElement,
   NodeLocation,

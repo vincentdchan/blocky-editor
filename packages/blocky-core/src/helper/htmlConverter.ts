@@ -7,7 +7,9 @@ import type { IdGenerator } from "@pkg/helper/idHelper";
 
 function createTextElement(id: string, content: string): BlockElement {
   const textModel = new BlockyTextModel(new Delta().insert(content));
-  return new BlockElement(TextBlockName, id, undefined, [textModel]);
+  return new BlockElement(TextBlockName, id, {
+    textContent: textModel,
+  });
 }
 
 function isLeafElement(node: Node): node is HTMLElement {

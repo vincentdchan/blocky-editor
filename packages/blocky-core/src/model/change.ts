@@ -4,6 +4,7 @@ import {
   type BlockyTextModel,
   type AttributesObject,
   type BlockyNode,
+  JSONNode,
 } from "@pkg/model/tree";
 import { type State, NodeLocation } from "./state";
 import type { Operation } from "./operations";
@@ -24,11 +25,13 @@ const defaultApplyOptions: ChangesetApplyOptions = {
 };
 
 export class Changeset {
+  readonly version: number;
   operations: Operation[] = [];
   beforeCursor: CursorState | null = null;
   afterCursor?: CursorState | null;
   forceUpdate = false;
   constructor(readonly state: State) {
+    this.version = state.nextVersion();
     this.beforeCursor = state.cursorState;
   }
   setAttribute(node: BlockyElement, attributes: AttributesObject): Changeset {
@@ -57,7 +60,7 @@ export class Changeset {
       type: "op-insert-node",
       index,
       parentLoc,
-      children: [child],
+      children: [child.toJSON()],
     });
     return this;
   }
@@ -68,7 +71,7 @@ export class Changeset {
       type: "op-remove-node",
       parentLoc,
       index,
-      children: [child],
+      children: [child.toJSON()],
     });
     return this;
   }
@@ -87,9 +90,9 @@ export class Changeset {
       return this;
     }
 
-    const children: BlockyNode[] = [];
+    const children: JSONNode[] = [];
     while (child && count > 0) {
-      children.push(child);
+      children.push(child.toJSON());
       child = child.nextSibling;
       count--;
     }
@@ -116,7 +119,7 @@ export class Changeset {
       type: "op-insert-node",
       parentLoc,
       index,
-      children,
+      children: children.map((child) => child.toJSON()),
     });
     return this;
   }
@@ -130,40 +133,54 @@ export class Changeset {
       type: "op-insert-node",
       index,
       parentLoc,
-      children,
+      children: children.map((child) => child.toJSON()),
     });
     return this;
   }
-  textEdit(textNode: BlockyTextModel, delta: () => Delta): Changeset {
+  textEdit(
+    node: BlockyElement,
+    propName: string,
+    delta: () => Delta
+  ): Changeset {
     const d = delta();
     if (d.ops.length === 0) {
       return this;
     }
-    const oldDelta = textNode.delta;
-    const location = this.state.getLocationOfNode(textNode);
+    const location = this.state.getLocationOfNode(node);
+    const textModel = node.getAttribute(propName) as BlockyTextModel;
+
+    const oldDelta = textModel.delta;
     const invert = d.invert(oldDelta);
     this.push({
       type: "op-text-edit",
+      location,
+      key: propName,
       delta: d,
       invert,
-      location,
     });
     return this;
   }
-  textConcat(textNode: BlockyTextModel, delta: () => Delta): Changeset {
+  textConcat(
+    node: BlockyElement,
+    propName: string,
+    delta: () => Delta
+  ): Changeset {
     let d = delta();
     if (d.ops.length === 0) {
       return this;
     }
-    const oldDelta = textNode.delta;
+    const location = this.state.getLocationOfNode(node);
+    const textModel = node.getAttribute(propName) as BlockyTextModel;
+    const oldDelta = textModel.delta;
+
     d = new Delta().retain(oldDelta.length()).concat(d);
-    const location = this.state.getLocationOfNode(textNode);
     const invert = d.invert(oldDelta);
     this.push({
       type: "op-text-edit",
+      location,
+      key: propName,
       delta: d,
       invert,
-      location,
     });
     return this;
   }
@@ -202,6 +219,7 @@ export class Changeset {
   }
   finalize(options?: Partial<ChangesetApplyOptions>): FinalizedChangeset {
     const result: FinalizedChangeset = {
+      version: this.version,
       operations: this.operations,
       beforeCursor: this.beforeCursor,
       afterCursor: this.afterCursor,
@@ -217,6 +235,7 @@ export class Changeset {
 }
 
 export interface FinalizedChangeset {
+  version: number;
   operations: Operation[];
   beforeCursor: CursorState | null;
   afterCursor?: CursorState | null;
