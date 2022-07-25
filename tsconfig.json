@@ -1,6 +1,7 @@
 {
   "files": [],
   "references": [
+    { "path": "./packages/blocky-core" },
     { "path": "./packages/blocky-preact" },
   ]
 }

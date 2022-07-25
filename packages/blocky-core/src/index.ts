@@ -25,5 +25,6 @@ export {
   DocNodeName,
   Changeset,
   BlockElement,
+  NodeLocation,
 } from "./model";
 export { TextBlockName } from "./block/textBlock";
