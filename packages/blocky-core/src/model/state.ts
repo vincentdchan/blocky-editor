@@ -1,4 +1,4 @@
-import { isObject, isUndefined } from "lodash-es";
+import { isObject } from "lodash-es";
 import Delta from "quill-delta-es";
 import { isUpperCase } from "blocky-common/es/character";
 import { removeNode } from "blocky-common/es/dom";
@@ -30,9 +30,31 @@ import type {
   TextEditOperation,
 } from "./operations";
 
-export interface NodeLocation {
-  id?: string;
-  path: number[];
+export class NodeLocation {
+  static equals(a: NodeLocation, b: NodeLocation): boolean {
+    // optimize: cached the hash
+    if (a.length !== b.length) {
+      return false;
+    }
+
+    for (let i = 0, len = a.length; i < len; i++) {
+      if (a.path[i] !== b.path[i]) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+  readonly path: readonly number[];
+  constructor(path: number[]) {
+    this.path = Object.freeze(path);
+  }
+  get length() {
+    return this.path.length;
+  }
+  toString() {
+    return "[" + this.path.join(", ") + "]";
+  }
 }
 
 export const symSetCursorState = Symbol("setCursorState");
@@ -260,45 +282,41 @@ export class State {
   }
 
   findNodeByLocation(location: NodeLocation): BlockyNode {
-    let baseNode: BlockyElement;
-    if (isUndefined(location.id)) {
-      baseNode = this.root;
-    } else {
-      const block = this.idMap.get(location.id);
-      if (!block) {
-        throw new Error(`id doesn't exist: ${location.id}`);
-      }
-      baseNode = block;
-    }
-
-    return this.#findPathInNode(location.id, baseNode, location.path);
-  }
-
-  #findPathInNode(
-    id: string | undefined,
-    baseNode: BlockyElement,
-    path: number[]
-  ): BlockyNode {
-    let ptr: BlockyNode = baseNode;
+    const { path } = location;
+    let ptr: BlockyNode = this.root;
     for (let i = 0, len = path.length; i < len; i++) {
       const index = path[i];
       if (!(ptr instanceof BlockyElement)) {
-        throw new Error(
-          `Child is not a BlockyElement at: ${id}, [${path
-            .slice(0, i + 1)
-            .join(", ")}]`
-        );
+        throw new Error(`Child is not a BlockyElement at: ${path.toString()}`);
       }
       const child = ptr.childAt(index);
       if (!child) {
-        throw new Error(
-          `Child not found at: ${id}, [${path.slice(0, i + 1).join(", ")}]`
-        );
+        throw new Error(`Child not found at: ${path.toString()}`);
       }
       ptr = child;
     }
 
     return ptr;
+  }
+
+  getLocationOfNode(node: BlockyNode, acc: number[] = []): NodeLocation {
+    if (this.root === node) {
+      return new NodeLocation(acc.reverse());
+    }
+    const parent = node.parent;
+    if (!parent) {
+      throw new Error(`node have no parent: ${node.nodeName}`);
+    }
+
+    let cnt = 0;
+    let ptr = node.prevSibling;
+    while (ptr) {
+      cnt++;
+      ptr = ptr.prevSibling;
+    }
+
+    acc.push(cnt);
+    return this.getLocationOfNode(parent, acc);
   }
 
   toJSON() {
