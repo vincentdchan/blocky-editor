@@ -65,17 +65,13 @@ importers:
       blocky-common: workspace:*
       blocky-core: workspace:*
       blocky-preact: workspace:*
-      blocky-yjs: workspace:*
       preact: ^10.7.3
       sass: ^1.52.3
       vite: ^2.9.12
-      yjs: ^13.5.39
     dependencies:
       blocky-common: link:../blocky-common
       blocky-core: link:../blocky-core
       blocky-preact: link:../blocky-preact
-      blocky-yjs: link:../blocky-yjs
-      yjs: 13.5.39
     devDependencies:
       '@babel/core': 7.18.6
       '@preact/preset-vite': 2.3.0_owyj5gncrwxzcpyzipbw3bejn4
@@ -1674,6 +1670,7 @@ packages:
 
   /isomorphic.js/0.2.5:
     resolution: {integrity: sha512-PIeMbHqMt4DnUP3MA/Flc0HElYjMXArsw1qwJZcm9sqR8mq3l8NYizFMty0pWwE/tzIGH3EKK5+jes5mAr85yw==}
+    dev: true
 
   /js-tokens/4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -1778,6 +1775,7 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       isomorphic.js: 0.2.5
+    dev: true
 
   /local-pkg/0.4.2:
     resolution: {integrity: sha512-mlERgSPrbxU3BP4qBqAvvwlgW4MTg78iwJdGGnv7kibKjWcJksrG3t6LB5lXI93wXRDvG4NpUgJFmTG4T6rdrg==}
@@ -2501,3 +2499,4 @@ packages:
     resolution: {integrity: sha512-EoVT856l301lomtjjVspgTdSRiFqZ7gNKnmVPX4/V8NHI5EYS39/MdjB9iNv0Mw1weKDZRU8NgxgerqwJ3y2xA==}
     dependencies:
       lib0: 0.2.51
+    dev: true

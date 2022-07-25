@@ -1,7 +1,6 @@
 {
   "files": [],
   "references": [
-    { "path": "./packages/blocky-yjs" },
     { "path": "./packages/blocky-preact" },
   ]
 }
