@@ -18,7 +18,6 @@ export const symSetAttribute = Symbol("setAttribute");
 export const symInsertChildAt = Symbol("insertChildAt");
 export const symApplyDelta = Symbol("applyDelta");
 export const symDeleteChildrenAt = Symbol("deleteChildrenAt");
-export const DocNodeName = "document";
 
 export interface AttributesObject {
   [key: string]: any;
@@ -530,7 +529,7 @@ export class BlockElement extends BlockyElement {
       return Number.MAX_SAFE_INTEGER;
     }
 
-    if (parentNode.nodeName === DocNodeName) {
+    if (parentNode.nodeName === "document") {
       return 0;
     }
 
@@ -553,5 +552,33 @@ export class BlockElement extends BlockyElement {
     }
 
     return new BlockElement(this.nodeName, this.id, attribs, children);
+  }
+}
+
+export interface DocumentInitProps {
+  head?: BlockyElement;
+  body?: BlockyElement;
+  bodyChildren: BlockyNode[];
+}
+
+export class BlockyDocument extends BlockyElement {
+  readonly head: BlockyElement;
+  readonly body: BlockyElement;
+
+  constructor(props?: Partial<DocumentInitProps>) {
+    const head = props?.head ?? new BlockyElement("head");
+    const body =
+      props?.body ??
+      new BlockyElement("body", undefined, props?.bodyChildren ?? []);
+    super("document", undefined, [head, body]);
+
+    this.head = head;
+    this.body = body;
+  }
+
+  override handleMountToBlock(state?: State) {
+    this.state = state;
+    this.head.handleMountToBlock(state);
+    this.body.handleMountToBlock(state);
   }
 }

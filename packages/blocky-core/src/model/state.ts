@@ -10,8 +10,8 @@ import {
   type JSONNode,
   BlockElement,
   BlockyElement,
+  BlockyDocument,
   BlockyTextModel,
-  DocNodeName,
   symSetAttribute,
   symInsertChildAt,
   symDeleteChildrenAt,
@@ -113,9 +113,8 @@ export class State {
       }
     });
 
-    const rootNode = new BlockyElement(DocNodeName, undefined, children);
-    const state = new State(rootNode, blockRegistry, idHelper);
-    rootNode.state = state;
+    const document = new BlockyDocument({ bodyChildren: children });
+    const state = new State(document, blockRegistry, idHelper);
 
     return state;
   }
@@ -136,17 +135,11 @@ export class State {
   }
 
   constructor(
-    readonly root: BlockyElement,
+    readonly document: BlockyDocument,
     readonly blockRegistry: BlockRegistry,
     readonly idHelper: IdGenerator
   ) {
-    let ptr = root.firstChild;
-    while (ptr) {
-      if (ptr instanceof BlockyElement) {
-        ptr.handleMountToBlock(this);
-      }
-      ptr = ptr.nextSibling;
-    }
+    document.handleMountToBlock(this);
   }
 
   [symSetCursorState](
@@ -294,7 +287,7 @@ export class State {
 
   findNodeByLocation(location: NodeLocation): BlockyNode {
     const { path } = location;
-    let ptr: BlockyNode = this.root;
+    let ptr: BlockyNode = this.document;
     for (let i = 0, len = path.length; i < len; i++) {
       const index = path[i];
       if (!(ptr instanceof BlockyElement)) {
@@ -311,7 +304,7 @@ export class State {
   }
 
   getLocationOfNode(node: BlockyNode, acc: number[] = []): NodeLocation {
-    if (this.root === node) {
+    if (this.document === node) {
       return new NodeLocation(acc.reverse());
     }
     const parent = node.parent;
@@ -335,7 +328,7 @@ export class State {
       nodeName: "document",
     };
 
-    let ptr = this.root.firstChild;
+    let ptr = this.document.firstChild;
 
     // empty
     if (!ptr) {

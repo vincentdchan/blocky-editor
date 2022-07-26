@@ -59,12 +59,12 @@ export class DocRenderer {
         "div",
         `${clsPrefix}-documents ${clsPrefix}-default-fonts`
       );
-      this.renderDocument(state.root, newDom);
+      this.renderDocument(state.document.body, newDom);
       return newDom;
     };
 
     if (oldDom && oldDom instanceof HTMLDivElement) {
-      this.renderDocument(state.root, oldDom);
+      this.renderDocument(state.document.body, oldDom);
       return oldDom;
     } else {
       return createNewDocument();
