@@ -59,8 +59,7 @@ export class Changeset {
     const index = node.childrenLength;
     this.push({
       type: "op-insert-node",
-      index,
-      parentLoc,
+      location: new NodeLocation([...parentLoc.path, index]),
       children: [child.toJSON()],
     });
     return this;
@@ -70,8 +69,7 @@ export class Changeset {
     const index = parent.indexOf(child);
     this.push({
       type: "op-remove-node",
-      parentLoc,
-      index,
+      location: new NodeLocation([...parentLoc.path, index]),
       children: [child.toJSON()],
     });
     return this;
@@ -100,8 +98,7 @@ export class Changeset {
 
     this.push({
       type: "op-remove-node",
-      parentLoc,
-      index,
+      location: new NodeLocation([...parentLoc.path, index]),
       children,
     });
     return this;
@@ -118,8 +115,7 @@ export class Changeset {
     }
     this.push({
       type: "op-insert-node",
-      parentLoc,
-      index,
+      location: new NodeLocation([...parentLoc.path, index]),
       children: children.map((child) => child.toJSON()),
     });
     return this;
@@ -132,8 +128,7 @@ export class Changeset {
     const parentLoc = this.state.getLocationOfNode(parent);
     this.push({
       type: "op-insert-node",
-      index,
-      parentLoc,
+      location: new NodeLocation([...parentLoc.path, index]),
       children: children.map((child) => child.toJSON()),
     });
     return this;
@@ -196,18 +191,32 @@ export class Changeset {
    *  - delete 1
    */
   push(operation: Operation) {
+    const indexOfNewOp = operation.location.last;
+    let newIndex = indexOfNewOp;
+    const parentLocOfNewOp = operation.location.slice(
+      0,
+      operation.location.length - 1
+    );
     if (operation.type === "op-remove-node") {
       for (let i = 0, len = this.operations.length; i < len; i++) {
         const op = this.operations[i];
+        const parentLoc = op.location.slice(0, op.location.length - 1);
+        const index = op.location.last;
         if (
           op.type === "op-remove-node" &&
-          NodeLocation.equals(op.parentLoc, operation.parentLoc)
+          NodeLocation.equals(parentLoc, parentLocOfNewOp)
         ) {
-          if (op.index < operation.index) {
-            operation.index -= op.children.length;
+          if (index <= indexOfNewOp) {
+            newIndex -= op.children.length;
           }
         }
       }
+    }
+    if (newIndex !== indexOfNewOp) {
+      operation.location = new NodeLocation([
+        ...parentLocOfNewOp.path,
+        newIndex,
+      ]);
     }
     this.operations.push(operation);
   }
