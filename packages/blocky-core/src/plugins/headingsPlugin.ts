@@ -8,7 +8,7 @@ function makeHeadingsPlugin(): IPlugin {
     name: "headings",
     onInitialized(editor: Editor) {
       editor.textInput.on((evt) => {
-        const { textModel, beforeDelta, blockElement } = evt;
+        const { blockElement, beforeDelta } = evt;
         const { state } = editor;
         const changeset = new Changeset(state);
         const delta = new Delta();
@@ -47,7 +47,7 @@ function makeHeadingsPlugin(): IPlugin {
           }
         }
 
-        changeset.textEdit(textModel, () => delta);
+        changeset.textEdit(blockElement, "textContent", () => delta);
         changeset.apply();
       });
     },

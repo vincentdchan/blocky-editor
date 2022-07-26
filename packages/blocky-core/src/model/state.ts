@@ -1,4 +1,4 @@
-import { isObject, isUndefined } from "lodash-es";
+import { isUndefined } from "lodash-es";
 import Delta from "quill-delta-es";
 import { isUpperCase } from "blocky-common/es/character";
 import { removeNode } from "blocky-common/es/dom";
@@ -17,7 +17,6 @@ import {
   symDeleteChildrenAt,
   symApplyDelta,
 } from "./tree";
-import { blockyNodeFromJsonNode } from "@pkg/model/deserialize";
 import { Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { TextBlockName } from "@pkg/block/textBlock";
@@ -96,29 +95,6 @@ export interface CursorStateUpdateEvent {
  *
  */
 export class State {
-  static fromMarkup(
-    doc: JSONNode,
-    blockRegistry: BlockRegistry,
-    idHelper: IdGenerator
-  ): State {
-    if (doc.nodeName !== "document") {
-      throw new Error("the root nodeName is expected to 'document'");
-    }
-
-    const children: BlockyNode[] = [];
-    doc.children?.forEach((child) => {
-      if (isObject(child)) {
-        const block = blockyNodeFromJsonNode(child);
-        children.push(block);
-      }
-    });
-
-    const document = new BlockyDocument({ bodyChildren: children });
-    const state = new State(document, blockRegistry, idHelper);
-
-    return state;
-  }
-
   readonly idMap: Map<string, BlockyElement> = new Map();
   readonly domMap: Map<string, Node> = new Map();
   readonly blocks: Map<string, Block> = new Map();
@@ -213,7 +189,10 @@ export class State {
   }
   #applyTextEditOperation(textEditOperation: TextEditOperation) {
     const { location, delta } = textEditOperation;
-    const textNode = this.findNodeByLocation(location) as BlockyTextModel;
+    const node = this.findNodeByLocation(location) as BlockyElement;
+    const textNode = node.getAttribute(
+      textEditOperation.key
+    ) as BlockyTextModel;
     textNode[symApplyDelta](delta);
   }
 
@@ -221,12 +200,16 @@ export class State {
     delta?: Delta | undefined,
     attributes?: AttributesObject
   ): BlockElement {
-    const textModel = new BlockyTextModel(delta);
+    if (isUndefined(attributes)) {
+      attributes = {};
+    }
+    if (isUndefined(attributes.textContent)) {
+      attributes.textContent = new BlockyTextModel(delta);
+    }
     return new BlockElement(
       TextBlockName,
       this.idHelper.mkBlockId(),
-      attributes,
-      [textModel]
+      attributes
     );
   }
 

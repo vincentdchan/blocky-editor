@@ -72,15 +72,16 @@ function makeCodeTextPlugin(): IPlugin {
                     const blockElement = editor.state.idMap.get(
                       start.id
                     ) as BlockElement;
-                    const textModel =
-                      blockElement.firstChild as BlockyTextModel;
+                    const textModel = blockElement.getAttribute(
+                      "textContent"
+                    ) as BlockyTextModel;
                     const fullString = textModel.toString();
                     const codeContent = fullString.slice(
                       start.offset + 1,
                       end.offset
                     );
                     new Changeset(editor.state)
-                      .textEdit(textModel, () =>
+                      .textEdit(blockElement, "textContent", () =>
                         new Delta()
                           .retain(start.offset)
                           .delete(end.offset + 1 - start.offset)

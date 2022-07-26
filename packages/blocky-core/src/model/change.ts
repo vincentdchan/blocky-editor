@@ -134,36 +134,50 @@ export class Changeset {
     });
     return this;
   }
-  textEdit(textNode: BlockyTextModel, delta: () => Delta): Changeset {
+  textEdit(
+    node: BlockyElement,
+    propName: string,
+    delta: () => Delta
+  ): Changeset {
     const d = delta();
     if (d.ops.length === 0) {
       return this;
     }
-    const oldDelta = textNode.delta;
-    const location = this.state.getLocationOfNode(textNode);
+    const location = this.state.getLocationOfNode(node);
+    const textModel = node.getAttribute(propName) as BlockyTextModel;
+
+    const oldDelta = textModel.delta;
     const invert = d.invert(oldDelta);
     this.push({
       type: "op-text-edit",
+      location,
+      key: propName,
       delta: d,
       invert,
-      location,
     });
     return this;
   }
-  textConcat(textNode: BlockyTextModel, delta: () => Delta): Changeset {
+  textConcat(
+    node: BlockyElement,
+    propName: string,
+    delta: () => Delta
+  ): Changeset {
     let d = delta();
     if (d.ops.length === 0) {
       return this;
     }
-    const oldDelta = textNode.delta;
+    const location = this.state.getLocationOfNode(node);
+    const textModel = node.getAttribute(propName) as BlockyTextModel;
+    const oldDelta = textModel.delta;
+
     d = new Delta().retain(oldDelta.length()).concat(d);
-    const location = this.state.getLocationOfNode(textNode);
     const invert = d.invert(oldDelta);
     this.push({
       type: "op-text-edit",
+      location,
+      key: propName,
       delta: d,
       invert,
-      location,
     });
     return this;
   }

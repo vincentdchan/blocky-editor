@@ -2,7 +2,10 @@
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
-  ignorePatterns: ["*.js"],
+  ignorePatterns: [
+    "packages/blocky-common/src/hash.ts",
+    "*.js"
+  ],
   plugins: [
     '@typescript-eslint',
   ],

@@ -1,20 +1,17 @@
-import { isUndefined, isArray } from "lodash-es";
+import { isUndefined } from "lodash-es";
 import { isUpperCase } from "blocky-common/es/character";
-import Delta from "quill-delta-es";
+import { BlockyTextModel, metaKey } from "@pkg/model/tree";
 import {
   type BlockyNode,
   type JSONNode,
   BlockElement,
   BlockyElement,
-  BlockyTextModel,
   BlockyDocument,
 } from "@pkg/model";
+import Delta from "quill-delta-es";
 
 export function blockyNodeFromJsonNode(jsonNode: JSONNode): BlockyNode {
   const { nodeName } = jsonNode;
-  if (nodeName === "#text") {
-    return textNodeFromJsonNode(jsonNode);
-  }
   if (nodeName === "document") {
     return documentFromJsonNode(jsonNode);
   }
@@ -39,27 +36,12 @@ export function documentFromJsonNode(jsonNode: JSONNode): BlockyElement {
   return new BlockyDocument({ head, body });
 }
 
-export function textNodeFromJsonNode(jsonNode: JSONNode): BlockyTextModel {
-  const { textContent } = jsonNode;
-  if (!isArray(textContent)) {
-    return new BlockyTextModel();
-  }
-  const delta = new Delta(textContent);
-  return new BlockyTextModel(delta);
-}
-
 export function blockElementFromJsonNode(jsonNode: JSONNode): BlockElement {
   const { nodeName, id, children, ...rest } = jsonNode;
   if (isUndefined(id)) {
     throw new TypeError("id is missing for jsonNode");
   }
-  const attributes = Object.create(null);
-  for (const key in rest) {
-    const value = (rest as any)[key];
-    if (value) {
-      attributes[key] = value;
-    }
-  }
+  const attributes = getAttributesByMeta(rest);
   const childrenNode = children?.map((child) => {
     return blockyNodeFromJsonNode(child);
   });
@@ -68,17 +50,28 @@ export function blockElementFromJsonNode(jsonNode: JSONNode): BlockElement {
 
 export function blockyElementFromJsonNode(jsonNode: JSONNode): BlockyElement {
   const { nodeName, children, ...rest } = jsonNode;
-  const attributes = Object.create(null);
-  for (const key in rest) {
-    const value = (rest as any)[key];
-    if (value) {
-      attributes[key] = value;
-    }
-  }
+  const attributes = getAttributesByMeta(rest);
   const childrenNode: BlockyNode[] =
     children?.map((child) => {
       return blockyNodeFromJsonNode(child);
     }) ?? [];
 
   return new BlockyElement(nodeName, attributes, childrenNode);
+}
+
+function getAttributesByMeta(rest: any): any {
+  const attributes = Object.create(null);
+  const meta = rest[metaKey];
+  for (const key in rest) {
+    const value = (rest as any)[key];
+    if (isUndefined(value) || value === null) {
+      continue;
+    }
+    if (meta && meta[key] === "rich-text") {
+      attributes[key] = new BlockyTextModel(new Delta(value));
+    } else {
+      attributes[key] = value;
+    }
+  }
+  return attributes;
 }

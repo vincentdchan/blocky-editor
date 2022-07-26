@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "engines": {
+    "node": ">=v18.0.0"
+  },
   "scripts": {
     "postinstall": "ts-patch install",
     "prepare": "cp ./README.md ./packages/blocky-core",
