@@ -118,11 +118,14 @@ describe("toJSON()", () => {
 
   test("attribute", () => {
     const element = new BlockyElement("node");
-    element[symSetAttribute]("id", "123");
+    element[symSetAttribute]("name", "123");
     const json = element.toJSON();
+    console.log("json", json);
     expect(json).toEqual({
-      id: "123",
       nodeName: "node",
+      attributes: {
+        name: "123",
+      },
     });
   });
   test("preserved attributes", () => {

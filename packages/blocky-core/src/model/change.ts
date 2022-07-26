@@ -6,7 +6,8 @@ import {
   type BlockyNode,
   JSONNode,
 } from "@pkg/model/tree";
-import { type State, NodeLocation } from "./state";
+import { NodeLocation } from "./location";
+import type { State } from "./state";
 import type { Operation } from "./operations";
 import type { CursorState } from "./cursor";
 

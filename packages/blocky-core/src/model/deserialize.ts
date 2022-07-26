@@ -1,6 +1,6 @@
 import { isUndefined } from "lodash-es";
 import { isUpperCase } from "blocky-common/es/character";
-import { BlockyTextModel, metaKey } from "@pkg/model/tree";
+import { AttributesObject, BlockyTextModel, metaKey } from "@pkg/model/tree";
 import {
   type BlockyNode,
   type JSONNode,
@@ -37,11 +37,11 @@ export function documentFromJsonNode(jsonNode: JSONNode): BlockyElement {
 }
 
 export function blockElementFromJsonNode(jsonNode: JSONNode): BlockElement {
-  const { nodeName, id, children, ...rest } = jsonNode;
+  const { nodeName, id, children, attributes: jsonAttribs } = jsonNode;
   if (isUndefined(id)) {
     throw new TypeError("id is missing for jsonNode");
   }
-  const attributes = getAttributesByMeta(rest);
+  const attributes = getAttributesByMeta(jsonAttribs, jsonNode);
   const childrenNode = children?.map((child) => {
     return blockyNodeFromJsonNode(child);
   });
@@ -49,8 +49,8 @@ export function blockElementFromJsonNode(jsonNode: JSONNode): BlockElement {
 }
 
 export function blockyElementFromJsonNode(jsonNode: JSONNode): BlockyElement {
-  const { nodeName, children, ...rest } = jsonNode;
-  const attributes = getAttributesByMeta(rest);
+  const { nodeName, children, attributes: jsonAttribs } = jsonNode;
+  const attributes = getAttributesByMeta(jsonAttribs, jsonNode);
   const childrenNode: BlockyNode[] =
     children?.map((child) => {
       return blockyNodeFromJsonNode(child);
@@ -59,11 +59,17 @@ export function blockyElementFromJsonNode(jsonNode: JSONNode): BlockyElement {
   return new BlockyElement(nodeName, attributes, childrenNode);
 }
 
-function getAttributesByMeta(rest: any): any {
+function getAttributesByMeta(
+  attribs: any,
+  jsonNode: JSONNode
+): AttributesObject | undefined {
+  if (isUndefined(attribs)) {
+    return undefined;
+  }
   const attributes = Object.create(null);
-  const meta = rest[metaKey];
-  for (const key in rest) {
-    const value = (rest as any)[key];
+  const meta = jsonNode[metaKey];
+  for (const key in attribs) {
+    const value = attribs[key];
     if (isUndefined(value) || value === null) {
       continue;
     }
