@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "engines": {
-    "node": ">=v18.0.0"
+    "node": ">=v16.0.0"
   },
   "scripts": {
     "postinstall": "ts-patch install",
