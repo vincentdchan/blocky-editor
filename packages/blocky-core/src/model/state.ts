@@ -2,7 +2,6 @@ import { isUndefined } from "lodash-es";
 import Delta from "quill-delta-es";
 import { isUpperCase } from "blocky-common/es/character";
 import { removeNode } from "blocky-common/es/dom";
-import { hashIntArrays } from "blocky-common/es/hash";
 import { Slot } from "blocky-common/es/events";
 import {
   type AttributesObject,
@@ -17,6 +16,7 @@ import {
   symDeleteChildrenAt,
   symApplyDelta,
 } from "./tree";
+import { NodeLocation } from "./location";
 import { blockyNodeFromJsonNode } from "./deserialize";
 import { Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
@@ -30,43 +30,6 @@ import type {
   RemoveNodeOperation,
   TextEditOperation,
 } from "./operations";
-
-export class NodeLocation {
-  static equals(a: NodeLocation, b: NodeLocation): boolean {
-    if (a.length !== b.length) {
-      return false;
-    }
-
-    if (a.hashCode !== b.hashCode) {
-      return false;
-    }
-
-    for (let i = 0, len = a.length; i < len; i++) {
-      if (a.path[i] !== b.path[i]) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-  #hashCode: number | undefined;
-  readonly path: readonly number[];
-  constructor(path: number[]) {
-    this.path = Object.freeze(path);
-  }
-  get length() {
-    return this.path.length;
-  }
-  toString() {
-    return "[" + this.path.join(", ") + "]";
-  }
-  get hashCode() {
-    if (isUndefined(this.#hashCode)) {
-      this.#hashCode = hashIntArrays(this.path);
-    }
-    return this.#hashCode;
-  }
-}
 
 export const symSetCursorState = Symbol("setCursorState");
 

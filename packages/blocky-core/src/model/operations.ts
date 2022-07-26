@@ -1,6 +1,6 @@
 import Delta from "quill-delta-es";
 import type { AttributesObject, JSONNode } from "@pkg/model/tree";
-import type { NodeLocation } from "./state";
+import type { NodeLocation } from "./location";
 
 export interface InsertNodeOperation {
   type: "op-insert-node";
