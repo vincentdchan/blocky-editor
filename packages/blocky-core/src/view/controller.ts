@@ -11,12 +11,12 @@ import {
   BlockyNode,
   Changeset,
   BlockElement,
+  BlockyDocument,
 } from "@pkg/model";
 import { symSetCursorState, CursorStateUpdateReason } from "@pkg/model/state";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
-import { MarkupGenerator } from "@pkg/model/markup";
 import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { type BannerFactory } from "@pkg/view/bannerDelegate";
 import { type ToolbarFactory } from "@pkg/view/toolbarDelegate";
@@ -87,7 +87,6 @@ export class EditorController {
   readonly spanRegistry: SpanRegistry;
   readonly blockRegistry: BlockRegistry;
   readonly idGenerator: IdGenerator;
-  readonly m: MarkupGenerator;
   readonly state: State;
   readonly cursorChanged: Slot<CursorChangedEvent> = new Slot();
   readonly beforeApplyCursorChanged: Slot<CursorChangedEvent> = new Slot();
@@ -101,7 +100,6 @@ export class EditorController {
     this.spanRegistry = options?.spanRegistry ?? new SpanRegistry();
     this.blockRegistry = options?.blockRegistry ?? new BlockRegistry();
     this.idGenerator = options?.idGenerator ?? makeDefaultIdGenerator();
-    this.m = new MarkupGenerator(this.idGenerator);
 
     this.#htmlConverter = new HTMLConverter({
       idGenerator: this.idGenerator,
@@ -123,9 +121,8 @@ export class EditorController {
     if (options?.state) {
       this.state = options.state;
     } else {
-      const { m } = this;
-      this.state = State.fromMarkup(
-        m.doc([]),
+      this.state = new State(
+        new BlockyDocument(),
         this.blockRegistry,
         this.idGenerator
       );
@@ -234,9 +231,8 @@ export class EditorController {
     if (!blockElement.firstChild) {
       return;
     }
-    const textModel = blockElement.firstChild as BlockyTextModel;
     new Changeset(this.state)
-      .textEdit(textModel, () =>
+      .textEdit(blockElement, "textContent", () =>
         new Delta().retain(index).retain(length, attribs)
       )
       .setCursorState(new CursorState(blockId, index, blockId, index + length))
@@ -321,11 +317,10 @@ export class EditorController {
         cursorState.id
       ) as BlockElement;
       if (currentBlockElement.nodeName === TextBlockName) {
-        const textModel = currentBlockElement.firstChild as BlockyTextModel;
         const startOffset = cursorState.startOffset;
         const newState = CursorState.collapse(cursorState.id, startOffset);
         new Changeset(this.state)
-          .textEdit(textModel, () =>
+          .textEdit(currentBlockElement, "textContent", () =>
             new Delta()
               .retain(cursorState.startOffset)
               .delete(cursorState.endOffset - cursorState.startOffset)
@@ -394,16 +389,19 @@ export class EditorController {
           currentBlockElement.nodeName === TextBlockName &&
           element.nodeName === TextBlockName
         ) {
-          const prevTextModel =
-            currentBlockElement.firstChild! as BlockyTextModel;
-          const firstTextModel = element.firstChild! as BlockyTextModel;
+          const prevTextModel = currentBlockElement.getAttribute(
+            "textContent"
+          ) as BlockyTextModel;
+          const firstTextModel = element.getAttribute(
+            "textContent"
+          ) as BlockyTextModel;
           if (!prevTextModel || !firstTextModel) {
             continue;
           }
           const offset = this.state.cursorState?.offset ?? prevTextModel.length;
           // only insert text, don NOT need to insert
           if (len === 1) {
-            changeset.textEdit(prevTextModel, () =>
+            changeset.textEdit(currentBlockElement, "textContent", () =>
               new Delta().retain(offset).concat(firstTextModel.delta)
             );
             changeset.setCursorState(
@@ -415,7 +413,7 @@ export class EditorController {
             break;
           }
           appendDelta = prevTextModel.delta.slice(offset);
-          changeset.textEdit(prevTextModel, () =>
+          changeset.textEdit(currentBlockElement, "textContent", () =>
             new Delta()
               .retain(offset)
               .delete(prevTextModel.length - offset)
@@ -434,15 +432,15 @@ export class EditorController {
           const lastChild = insertChildren[
             insertChildren.length - 1
           ] as BlockElement;
-          const textModel = lastChild.firstChild! as BlockyTextModel;
+          const textModel = lastChild.getAttribute(
+            "textContent"
+          ) as BlockyTextModel;
           const prevOffset = textModel.delta.length();
           changeset.setCursorState(
             CursorState.collapse(lastChild.id, prevOffset)
           );
-          const childrenOfChildren: BlockyNode[] = [
-            new BlockyTextModel(textModel.delta.concat(appendDelta)),
-          ];
-          let ptr = textModel.nextSibling;
+          const childrenOfChildren: BlockyNode[] = [];
+          let ptr = lastChild.firstChild;
           while (ptr) {
             childrenOfChildren.push(ptr);
             ptr = ptr.nextSibling;
@@ -450,13 +448,20 @@ export class EditorController {
           const newChild = new BlockElement(
             TextBlockName,
             lastChild.id,
-            lastChild.getAttributes(),
+            {
+              ...lastChild.getAttributes(),
+              textContent: new BlockyTextModel(
+                textModel.delta.concat(appendDelta)
+              ),
+            },
             childrenOfChildren
           );
           insertChildren[insertChildren.length - 1] = newChild;
         } else {
           const appendElement = this.state.createTextElement(appendDelta);
-          const textModel = appendElement.firstChild! as BlockyTextModel;
+          const textModel = appendElement.getAttribute(
+            "textContent"
+          ) as BlockyTextModel;
           changeset.setCursorState(
             CursorState.collapse(appendElement.id, textModel.length)
           );

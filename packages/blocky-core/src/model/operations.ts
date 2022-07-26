@@ -26,6 +26,7 @@ export interface RemoveNodeOperation {
 export interface TextEditOperation {
   type: "op-text-edit";
   location: NodeLocation;
+  key: string;
   delta: Delta;
   invert: Delta;
 }
@@ -50,6 +51,7 @@ export function invertOperation(op: Operation): Operation {
       return {
         type: "op-text-edit",
         location: op.location,
+        key: op.key,
         delta: op.invert,
         invert: op.delta,
       };

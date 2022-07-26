@@ -266,22 +266,24 @@ class TextBlock extends Block {
       ptr = ptr.nextSibling;
     }
 
-    const textModel = this.props.firstChild! as BlockyTextModel;
-
-    const beforeDelta = textModel.delta;
+    const beforeDelta = this.textModel.delta;
 
     const diff = beforeDelta.diff(newDelta, offset);
-    changeset.textEdit(textModel, () => diff);
+    changeset.textEdit(this.props, "textContent", () => diff);
 
     this.editor.textInput.emit(
-      new TextInputEvent(beforeDelta, diff, textModel, blockElement)
+      new TextInputEvent(beforeDelta, diff, blockElement)
     );
+  }
+
+  get textModel(): BlockyTextModel {
+    return this.props.getAttribute<BlockyTextModel>("textContent")!;
   }
 
   override render(container: HTMLElement) {
     this.#container = container;
 
-    const textModel = this.props.firstChild! as BlockyTextModel;
+    const textModel = this.textModel;
     if (!textModel || !(textModel instanceof BlockyTextModel)) {
       console.warn("expected text model, got:", textModel);
       return;
@@ -291,11 +293,7 @@ class TextBlock extends Block {
   }
 
   override renderChildren(): BlockyNode | void | null {
-    const textModel = this.props.firstChild! as BlockyTextModel;
-    if (!textModel) {
-      return;
-    }
-    return textModel.nextSibling;
+    return this.props.firstChild;
   }
 
   private createAnchorNode(href: string): HTMLSpanElement {
@@ -678,12 +676,20 @@ class TextBlockDefinition implements IBlockDefinition {
       attributes.textType = TextType.Bulleted;
     }
 
-    const childrenNode: BlockyNode[] = [textModel];
+    const childrenNode: BlockyNode[] = [];
     if (childrenContainer.length > 0) {
       childrenNode.push(...childrenContainer);
     }
 
-    return new BlockElement(TextBlockName, newId, attributes, childrenNode);
+    return new BlockElement(
+      TextBlockName,
+      newId,
+      {
+        ...attributes,
+        textContent: textModel,
+      },
+      childrenNode
+    );
   }
 }
 

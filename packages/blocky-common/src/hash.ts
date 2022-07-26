@@ -1,7 +1,6 @@
 /**
  * Modified from: https://github.com/jensyt/imurmurhash-js/blob/master/imurmurhash.js
  */
-
 export function hashIntArrays(
   data: number[] | readonly number[],
   seed?: number

@@ -93,7 +93,6 @@ export class TextInputEvent {
   constructor(
     readonly beforeDelta: Delta,
     readonly applyDelta: Delta,
-    readonly textModel: BlockyTextModel,
     readonly blockElement: BlockElement
   ) {}
 }
@@ -780,7 +779,9 @@ export class Editor {
         );
         return;
       }
-      const textModel = blockElement.firstChild! as BlockyTextModel;
+      const textModel = blockElement.getAttribute(
+        "textContent"
+      ) as BlockyTextModel;
 
       const cursorOffset = cursorState.offset;
 
@@ -798,7 +799,7 @@ export class Editor {
       const parentElement = blockElement.parent! as BlockyElement;
       new Changeset(this.state)
         .insertChildrenAfter(parentElement, [newTextElement], blockElement)
-        .textEdit(textModel, () =>
+        .textEdit(blockElement, "textContent", () =>
           new Delta()
             .retain(cursorOffset)
             .delete(textModel.length - cursorOffset)
@@ -929,12 +930,12 @@ export class Editor {
       return true;
     }
 
-    const thisTextModel = node.firstChild as BlockyTextModel;
+    const thisTextModel = node.getAttribute<BlockyTextModel>("textContent")!;
     const prevTextModel = firstChild as BlockyTextModel;
     const originalLength = prevTextModel.length;
 
     new Changeset(this.state)
-      .textConcat(prevTextModel, () => thisTextModel.delta)
+      .textConcat(prevNode, "textContent", () => thisTextModel.delta)
       .removeChild(node.parent!, node)
       .setCursorState(CursorState.collapse(prevNode.id, originalLength))
       .apply();
@@ -988,7 +989,7 @@ export class Editor {
 
   #focusEndOfNode(changeset: Changeset, node: BlockElement) {
     if (node.nodeName === TextBlockName) {
-      const textModel = node.firstChild! as BlockyTextModel;
+      const textModel = node.getAttribute<BlockyTextModel>("textContent")!;
       changeset.setCursorState(CursorState.collapse(node.id, textModel.length));
     } else {
       changeset.setCursorState(CursorState.collapse(node.id, 0));
@@ -1173,9 +1174,8 @@ export class Editor {
     }
 
     const afterOffset = cursorState.offset + text.length;
-    const textModel = textElement.firstChild! as BlockyTextModel;
     new Changeset(this.state)
-      .textEdit(textModel, () =>
+      .textEdit(textElement, "textContent", () =>
         new Delta().retain(cursorState.offset).insert(text, attributes)
       )
       .setCursorState(CursorState.collapse(cursorState.id, afterOffset))
