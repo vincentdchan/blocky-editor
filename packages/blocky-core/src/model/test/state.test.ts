@@ -1,13 +1,14 @@
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { expect, test, describe } from "vitest";
 import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
-import { State, NodeLocation } from "@pkg/model/state";
 import {
+  State,
+  NodeLocation,
   BlockElement,
   BlockyDocument,
   BlockyTextModel,
   JSONNode,
-} from "../tree";
+} from "@pkg/model";
 import Delta from "quill-delta-es";
 
 function makeDefaultUtils() {
@@ -40,33 +41,32 @@ test("serialize", () => {
   const state = new State(doc, blockRegistry, idGenerator);
   const json = state.toJSON();
   removeId(json);
-  console.log(json.children![1]);
-  // expect(json).toEqual({
-  //   nodeName: "document",
-  //   children: [
-  //     {
-  //       nodeName: "head",
-  //     },
-  //     {
-  //       nodeName: "body",
-  //       children: [
-  //         {
-  //           nodeName: "Text",
-  //           attributes: {
-  //             textContent: [
-  //               {
-  //                 insert: "Hello World",
-  //               },
-  //             ],
-  //           },
-  //           "#meta": {
-  //             textContent: "rich-text",
-  //           },
-  //         },
-  //       ],
-  //     },
-  //   ],
-  // });
+  expect(json).toEqual({
+    nodeName: "document",
+    children: [
+      {
+        nodeName: "head",
+      },
+      {
+        nodeName: "body",
+        children: [
+          {
+            nodeName: "Text",
+            attributes: {
+              textContent: [
+                {
+                  insert: "Hello world",
+                },
+              ],
+            },
+            "#meta": {
+              textContent: "rich-text",
+            },
+          },
+        ],
+      },
+    ],
+  });
 });
 
 describe("NodeLocation", () => {

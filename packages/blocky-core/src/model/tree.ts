@@ -114,7 +114,7 @@ export class BlockyElement implements BlockyNode, WithState {
 
   #firstChild: BlockyNode | null = null;
   #lastChild: BlockyNode | null = null;
-  #attributes: InternAttributes = Object.create(null);
+  #attributes: InternAttributes = {};
 
   changed: WithStateSlot<ElementChangedEvent> = new WithStateSlot(this);
 
@@ -425,23 +425,29 @@ export class BlockyElement implements BlockyNode, WithState {
     };
 
     const meta: any = {};
+    const attributes: any = {};
     let hasMeta = false;
-    const attributes = this.getAttributes();
-    for (const key in attributes) {
+    let hasAttributes = false;
+    for (const key in this.#attributes) {
       if (key === "nodeName" || key === "type" || key === "children") {
         continue;
       }
-      const value = attributes[key];
+      const value = this.#attributes[key];
       if (value === null || isUndefined(value)) {
         continue;
       }
+      hasAttributes = true;
       if (value instanceof BlockyTextModel) {
         hasMeta = true;
         meta[key] = "rich-text";
-        (result as any)[key] = value.delta.ops;
+        attributes[key] = value.delta.ops;
       } else {
-        (result as any)[key] = value;
+        attributes[key] = value;
       }
+    }
+
+    if (hasAttributes) {
+      result.attributes = attributes;
     }
 
     let childPtr = this.#firstChild;
@@ -479,14 +485,10 @@ export class BlockyElement implements BlockyNode, WithState {
 export class BlockElement extends BlockyElement {
   constructor(
     blockName: string,
-    id: string,
+    readonly id: string,
     attributes?: AttributesObject,
     children?: BlockyNode[]
   ) {
-    if (isUndefined(attributes)) {
-      attributes = {};
-    }
-    attributes.id = id;
     super(blockName, attributes, children);
   }
 
@@ -496,10 +498,6 @@ export class BlockElement extends BlockyElement {
       throw new TypeError(`${name} is reserved`);
     }
     super[symSetAttribute](name, value);
-  }
-
-  get id(): string {
-    return this.getAttribute("id")!;
   }
 
   /**
@@ -535,6 +533,14 @@ export class BlockElement extends BlockyElement {
     }
 
     return new BlockElement(this.nodeName, this.id, attribs, children);
+  }
+
+  override toJSON(): JSONNode {
+    const prev = super.toJSON();
+    return {
+      ...prev,
+      id: this.id,
+    };
   }
 }
 

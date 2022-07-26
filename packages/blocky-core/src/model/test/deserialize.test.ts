@@ -12,7 +12,7 @@ import { blockyNodeFromJsonNode } from "../deserialize";
 
 const idGenerator = makeDefaultIdGenerator();
 
-test("deserialize BlockElement", () => {
+test.only("deserialize BlockElement", () => {
   const id = idGenerator.mkBlockId();
   const blockElement = new BlockElement("Text", id);
   const json = blockElement.toJSON();
