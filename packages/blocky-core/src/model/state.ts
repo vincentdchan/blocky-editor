@@ -141,9 +141,11 @@ export class State {
   }
 
   #applyInsertOperation(insertOperation: InsertNodeOperation) {
-    const { parentLoc, children } = insertOperation;
-    let { index } = insertOperation;
+    const { location, children } = insertOperation;
+    const parentLoc = location.slice(0, location.length - 1);
+    let index = location.last;
     const parent = this.findNodeByLocation(parentLoc) as BlockyElement;
+    // TODO: optimize insert
     for (const child of children) {
       parent[symInsertChildAt](index++, blockyNodeFromJsonNode(child));
     }
@@ -157,7 +159,9 @@ export class State {
     }
   }
   #applyRemoveOperation(removeOperation: RemoveNodeOperation) {
-    const { parentLoc, index, children } = removeOperation;
+    const { location, children } = removeOperation;
+    const parentLoc = location.slice(0, location.length - 1);
+    const index = location.last;
     const parent = this.findNodeByLocation(parentLoc) as BlockyElement;
     parent[symDeleteChildrenAt](index, children.length);
   }

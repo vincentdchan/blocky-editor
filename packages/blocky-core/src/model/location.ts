@@ -24,6 +24,15 @@ export class NodeLocation {
   constructor(path: number[]) {
     this.path = Object.freeze(path);
   }
+  slice(start: number, end?: number): NodeLocation {
+    return new NodeLocation(this.path.slice(start, end));
+  }
+  get last(): number {
+    if (this.path.length === 0) {
+      throw new Error("Location is empty");
+    }
+    return this.path[this.path.length - 1];
+  }
   get length() {
     return this.path.length;
   }
