@@ -4,8 +4,7 @@ import type { NodeLocation } from "./location";
 
 export interface InsertNodeOperation {
   type: "op-insert-node";
-  parentLoc: NodeLocation;
-  index: number;
+  location: NodeLocation;
   children: JSONNode[];
 }
 
@@ -18,8 +17,7 @@ export interface UpdateNodeOperation {
 
 export interface RemoveNodeOperation {
   type: "op-remove-node";
-  parentLoc: NodeLocation;
-  index: number;
+  location: NodeLocation;
   children: JSONNode[];
 }
 
@@ -42,8 +40,7 @@ export function invertOperation(op: Operation): Operation {
     case "op-insert-node": {
       return {
         type: "op-remove-node",
-        parentLoc: op.parentLoc,
-        index: op.index,
+        location: op.location,
         children: op.children,
       };
     }
@@ -59,8 +56,7 @@ export function invertOperation(op: Operation): Operation {
     case "op-remove-node": {
       return {
         type: "op-insert-node",
-        parentLoc: op.parentLoc,
-        index: op.index,
+        location: op.location,
         children: op.children,
       };
     }
