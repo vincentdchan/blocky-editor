@@ -17,6 +17,7 @@ import {
   symDeleteChildrenAt,
   symApplyDelta,
 } from "./tree";
+import { blockyNodeFromJsonNode } from "./deserialize";
 import { Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { TextBlockName } from "@pkg/block/textBlock";
@@ -104,6 +105,8 @@ export class State {
   readonly changesetApplied: Slot<FinalizedChangeset> = new Slot();
   readonly cursorStateChanged: Slot<CursorStateUpdateEvent> = new Slot();
   #cursorState: CursorState | null = null;
+  #versionAccumulator = 0;
+  #appliedVersion = -1;
   silent = false;
 
   get cursorState(): CursorState | null {
@@ -116,6 +119,10 @@ export class State {
     readonly idHelper: IdGenerator
   ) {
     document.handleMountToBlock(this);
+  }
+
+  nextVersion(): number {
+    return this.#versionAccumulator++;
   }
 
   [symSetCursorState](
@@ -140,6 +147,9 @@ export class State {
   }
 
   apply(changeset: FinalizedChangeset) {
+    if (this.#appliedVersion >= changeset.version) {
+      return;
+    }
     this.beforeChangesetApply.emit(changeset);
 
     for (const op of changeset.operations) {
@@ -164,6 +174,7 @@ export class State {
     }
 
     this.changesetApplied.emit(changeset);
+    this.#appliedVersion = changeset.version;
   }
 
   #applyInsertOperation(insertOperation: InsertNodeOperation) {
@@ -171,7 +182,7 @@ export class State {
     let { index } = insertOperation;
     const parent = this.findNodeByLocation(parentLoc) as BlockyElement;
     for (const child of children) {
-      parent[symInsertChildAt](index++, child);
+      parent[symInsertChildAt](index++, blockyNodeFromJsonNode(child));
     }
   }
   #applyUpdateOperation(updateOperation: UpdateNodeOperation) {
@@ -262,7 +273,13 @@ export class State {
   }
 
   #insertElement(element: BlockElement) {
-    if (this.idMap.has(element.id)) {
+    const { id } = element;
+    if (isUndefined(id)) {
+      throw new Error(
+        `id could NOT be undefined for a BlockElement: ${element.nodeName}`
+      );
+    }
+    if (this.idMap.has(id)) {
       throw new Error(`duplicated id: ${element.id}`);
     }
     this.idMap.set(element.id, element);

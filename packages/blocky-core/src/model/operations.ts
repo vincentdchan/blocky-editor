@@ -1,12 +1,12 @@
 import Delta from "quill-delta-es";
-import type { AttributesObject, BlockyNode } from "@pkg/model/tree";
+import type { AttributesObject, JSONNode } from "@pkg/model/tree";
 import type { NodeLocation } from "./state";
 
 export interface InsertNodeOperation {
   type: "op-insert-node";
   parentLoc: NodeLocation;
   index: number;
-  children: BlockyNode[];
+  children: JSONNode[];
 }
 
 export interface UpdateNodeOperation {
@@ -20,7 +20,7 @@ export interface RemoveNodeOperation {
   type: "op-remove-node";
   parentLoc: NodeLocation;
   index: number;
-  children: BlockyNode[];
+  children: JSONNode[];
 }
 
 export interface TextEditOperation {
