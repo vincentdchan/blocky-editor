@@ -96,22 +96,52 @@ function makeController(): EditorController {
 
 class App extends Component<unknown, AppState> {
   private editorControllerLeft: EditorController;
-  // private editorControllerRight: EditorController;
+  private editorControllerRight: EditorController;
 
   constructor(props: unknown) {
     super(props);
 
     this.editorControllerLeft = makeController();
+
+    this.editorControllerRight = makeController();
+
+    this.editorControllerLeft.state.changesetApplied.on((changeset) => {
+      // simulate the net work
+      setTimeout(() => {
+        this.editorControllerRight.state.apply({
+          ...changeset,
+          afterCursor: undefined,
+          options: {
+            ...changeset.options,
+            updateView: true,
+          },
+        });
+      });
+    });
+
+    this.editorControllerRight.state.changesetApplied.on((changeset) => {
+      setTimeout(() => {
+        this.editorControllerLeft.state.apply({
+          ...changeset,
+          afterCursor: undefined,
+          options: {
+            ...changeset.options,
+            updateView: true,
+          },
+        });
+      });
+    });
+
+    this.editorControllerLeft.cursorChanged.on((evt) => {
+      this.editorControllerRight.applyCursorChangedEvent(evt);
+    });
+
+    this.editorControllerRight.cursorChanged.on((evt) => {
+      this.editorControllerLeft.applyCursorChangedEvent(evt);
+    });
+
     // paste before the editor initialized
     this.editorControllerLeft.pasteHTMLAtCursor(ReadMeContent);
-
-    // this.editorControllerLeft.cursorChanged.on((evt) => {
-    //   this.editorControllerRight.applyCursorChangedEvent(evt);
-    // });
-
-    // this.editorControllerRight.cursorChanged.on((evt) => {
-    //   this.editorControllerLeft.applyCursorChangedEvent(evt);
-    // });
 
     this.state = {
       headingContent: "Blocky Editor",
@@ -171,10 +201,10 @@ class App extends Component<unknown, AppState> {
                   onChange={this.handleHeadingChanged}
                 />
               </div>
-              {/* <BlockyEditor
+              <BlockyEditor
                 controller={this.editorControllerRight}
                 ignoreInitEmpty
-              /> */}
+              />
             </div>
           </div>
         </div>
