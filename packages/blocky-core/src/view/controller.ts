@@ -360,9 +360,9 @@ export class EditorController {
     if (!cursorState) {
       // if the document is empty,
       // insert to the document directly
-      if (!this.state.root.firstChild) {
+      if (!this.state.document.body.firstChild) {
         new Changeset(this.state)
-          .insertChildrenAt(this.state.root, 0, elements)
+          .insertChildrenAt(this.state.document.body, 0, elements)
           .apply();
       }
       return;

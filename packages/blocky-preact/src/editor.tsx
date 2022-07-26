@@ -32,7 +32,7 @@ export class BlockyEditor extends Component<Props> {
       editor.initFirstEmptyBlock();
     }
     editor.render(() => {
-      const firstChild = editor.state.root.firstChild;
+      const firstChild = editor.state.document.body.firstChild;
       if (firstChild) {
         controller.setCursorState(
           CursorState.collapse((firstChild as BlockElement).id, 0)

@@ -852,12 +852,12 @@ export class Editor {
   }
 
   initFirstEmptyBlock() {
-    if (this.state.root.firstChild) {
+    if (this.state.document.body.firstChild) {
       return;
     }
     const empty = this.state.createTextElement();
     new Changeset(this.state)
-      .insertChildrenAt(this.state.root, 0, [empty])
+      .insertChildrenAt(this.state.document.body, 0, [empty])
       .apply({
         recordUndo: false,
       });
