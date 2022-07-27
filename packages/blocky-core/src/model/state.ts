@@ -168,15 +168,23 @@ export class State {
   #applyTextEditOperation(textEditOperation: TextEditOperation) {
     const { location, delta } = textEditOperation;
     const node = this.findNodeByLocation(location) as BlockyElement;
-    const textNode = node.getAttribute(
-      textEditOperation.key
-    ) as BlockyTextModel;
+    const textNode = node.getAttribute(textEditOperation.key) as
+      | BlockyTextModel
+      | undefined;
+    if (isUndefined(textNode)) {
+      throw new Error(
+        `can not get "${textEditOperation.key}" of element <${
+          node.nodeName
+        }>, by location: ${location.toString()}`
+      );
+    }
     textNode[symApplyDelta](delta);
   }
 
   createTextElement(
     delta?: Delta | undefined,
-    attributes?: AttributesObject
+    attributes?: AttributesObject,
+    children?: BlockyNode[]
   ): BlockElement {
     if (isUndefined(attributes)) {
       attributes = {};
@@ -187,7 +195,8 @@ export class State {
     return new BlockElement(
       TextBlockName,
       this.idHelper.mkBlockId(),
-      attributes
+      attributes,
+      children
     );
   }
 

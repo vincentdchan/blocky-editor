@@ -19,6 +19,7 @@ import {
   BlockyElement,
   Changeset,
   BlockElement,
+  BlockyNode,
 } from "@pkg/model";
 import { CursorState } from "@pkg/model/cursor";
 import {
@@ -794,10 +795,21 @@ export class Editor {
         attributes.textType = textType;
       }
 
-      const newTextElement = this.state.createTextElement(slices, attributes);
+      const children: BlockyNode[] = [];
+      let ptr = blockElement.firstChild;
+      while (ptr) {
+        children.push(ptr.clone());
+        ptr = ptr.nextSibling;
+      }
+      const newTextElement = this.state.createTextElement(
+        slices,
+        attributes,
+        children
+      );
 
       const parentElement = blockElement.parent! as BlockyElement;
       new Changeset(this.state)
+        .deleteChildrenAt(blockElement, 0, children.length)
         .insertChildrenAfter(parentElement, [newTextElement], blockElement)
         .textEdit(blockElement, "textContent", () =>
           new Delta()
