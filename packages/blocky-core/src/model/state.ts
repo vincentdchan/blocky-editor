@@ -60,7 +60,7 @@ export interface CursorStateUpdateEvent {
  *
  */
 export class State {
-  #idMap: Map<string, BlockyElement> = new Map();
+  #idMap: Map<string, BlockElement> = new Map();
   readonly domMap: Map<string, Node> = new Map();
   readonly blocks: Map<string, Block> = new Map();
   readonly newBlockCreated: Slot<Block> = new Slot();
@@ -110,7 +110,7 @@ export class State {
     });
   }
 
-  getBlockElementById(id: string): BlockyElement | undefined {
+  getBlockElementById(id: string): BlockElement | undefined {
     return this.#idMap.get(id);
   }
 

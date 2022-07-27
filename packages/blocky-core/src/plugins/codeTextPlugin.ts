@@ -1,9 +1,8 @@
 import {
   type Editor,
   type IPlugin,
-  CursorState,
-  type BlockElement,
   type BlockyTextModel,
+  CursorState,
   Changeset,
 } from "@pkg/index";
 import Delta from "quill-delta-es";
@@ -71,7 +70,7 @@ function makeCodeTextPlugin(): IPlugin {
                   editor.controller.enqueueNextTick(() => {
                     const blockElement = editor.state.getBlockElementById(
                       start.id
-                    ) as BlockElement;
+                    )!;
                     const textModel = blockElement.getAttribute(
                       "textContent"
                     ) as BlockyTextModel;
