@@ -226,9 +226,7 @@ export class EditorController {
       return;
     }
 
-    const blockElement = this.state.getBlockElementById(
-      blockId
-    ) as BlockElement;
+    const blockElement = this.state.getBlockElementById(blockId)!;
 
     const { editor } = this;
     if (!editor) {
@@ -324,7 +322,7 @@ export class EditorController {
     if (cursorState.startId === cursorState.endId) {
       const currentBlockElement = this.state.getBlockElementById(
         cursorState.id
-      ) as BlockElement;
+      )!;
       if (currentBlockElement.nodeName === TextBlockName) {
         const startOffset = cursorState.startOffset;
         const newState = CursorState.collapse(cursorState.id, startOffset);
@@ -377,9 +375,7 @@ export class EditorController {
         return;
       }
     }
-    const currentBlockElement = this.state.getBlockElementById(
-      cursorState.id
-    ) as BlockElement;
+    const currentBlockElement = this.state.getBlockElementById(cursorState.id)!;
 
     // optimize, do NOT do int next tick
     this.enqueueNextTick(() => {

@@ -1,7 +1,9 @@
 import Delta from "quill-delta-es";
 import {
+  type BlockFocusedEvent,
   type BlockContentChangedEvent,
   type BlockDidMountEvent,
+  type CursorDomResult,
   Block,
 } from "./basic";
 import { TextInputEvent } from "@pkg/view/editor";
@@ -32,6 +34,30 @@ export class TitleBlock extends Block {
     this.editor.textInput.emit(
       new TextInputEvent(beforeDelta, diff, blockElement)
     );
+  }
+
+  override blockFocused({ cursor, selection }: BlockFocusedEvent) {
+    const range = document.createRange();
+
+    const firstChild = this.#container?.firstChild;
+    if (!firstChild) {
+      return;
+    }
+
+    range.setStart(firstChild, cursor.offset);
+    range.setEnd(firstChild, cursor.offset);
+    selection.addRange(range);
+  }
+
+  override getCursorDomByOffset(offset: number): CursorDomResult | undefined {
+    const firstChild = this.#container?.firstChild;
+    if (!firstChild) {
+      return undefined;
+    }
+    return {
+      node: firstChild,
+      offset,
+    };
   }
 
   override blockDidMount({ element }: BlockDidMountEvent): void {

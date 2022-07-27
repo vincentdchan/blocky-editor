@@ -401,7 +401,9 @@ export class Editor {
       throw new Error("block id not found: " + blockNode.id);
     }
 
-    return block.findTextOffsetInBlock?.(focusedNode, offsetInNode) ?? 0;
+    return (
+      block.findTextOffsetInBlock?.(focusedNode, offsetInNode) ?? offsetInNode
+    );
   }
 
   #selectionChanged = () => {
@@ -765,9 +767,7 @@ export class Editor {
       return;
     }
     if (cursorState.isCollapsed) {
-      const blockElement = this.state.getBlockElementById(cursorState.id) as
-        | BlockElement
-        | undefined;
+      const blockElement = this.state.getBlockElementById(cursorState.id);
       if (!blockElement) {
         return;
       }
@@ -918,7 +918,7 @@ export class Editor {
       return false;
     }
 
-    const node = this.state.getBlockElementById(id) as BlockElement | undefined;
+    const node = this.state.getBlockElementById(id);
     if (!node) {
       return false;
     }
@@ -968,9 +968,7 @@ export class Editor {
       return;
     }
 
-    return this.state.getBlockElementById(cursorState.id) as
-      | BlockElement
-      | undefined;
+    return this.state.getBlockElementById(cursorState.id);
   }
 
   #deleteBlockOnFocusedCursor(): boolean {
@@ -1201,9 +1199,7 @@ export class Editor {
   }
 
   getTextElementByBlockId(blockId: string): BlockElement | undefined {
-    const treeNode = this.state.getBlockElementById(blockId) as
-      | BlockElement
-      | undefined;
+    const treeNode = this.state.getBlockElementById(blockId);
     if (!treeNode) {
       return;
     }

@@ -80,7 +80,7 @@ export class DocRenderer {
       dom,
       0,
       "div",
-      `${clsPrefix}-editor-title-container`,
+      `${clsPrefix}-editor-title-container ${this.blockClassName}`,
       (elem: HTMLElement) => {
         const { padding } = this.editor;
         const { right, left } = padding;
