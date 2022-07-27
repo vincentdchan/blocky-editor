@@ -1,6 +1,5 @@
 import { DivContainer } from "blocky-common/es/dom";
 import { Slot } from "blocky-common/es/events";
-import { mkUserId } from "@pkg/helper/idHelper";
 
 class ContainerWithCoord extends DivContainer {
   protected _x = 0;
@@ -242,14 +241,12 @@ export class CollaborativeCursor {
 }
 
 export interface CollaborativeCursorOptions {
-  id: string;
   idToName: (id: string) => string;
   idToColor: (id: string) => string;
 }
 
 function makeDefaultOptions(): CollaborativeCursorOptions {
   return {
-    id: mkUserId(),
     idToName: (id: string) => id,
     idToColor: () => "yellow",
   };
@@ -260,7 +257,7 @@ export class CollaborativeCursorManager extends DivContainer {
 
   readonly options: CollaborativeCursorOptions;
 
-  constructor(options?: Partial<CollaborativeCursor>) {
+  constructor(options?: Partial<CollaborativeCursorOptions>) {
     super("blocky-collaborative-cursor-container");
     this.options = {
       ...makeDefaultOptions(),
