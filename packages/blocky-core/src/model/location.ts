@@ -19,6 +19,32 @@ export class NodeLocation {
 
     return true;
   }
+  static transform(
+    base: NodeLocation,
+    location: NodeLocation,
+    delta = 1
+  ): NodeLocation {
+    if (base.length > location.length) {
+      return location;
+    }
+    if (base.length === 0 || location.length === 0) {
+      return location;
+    }
+    for (let i = 0, len = base.length - 1; i < len; i++) {
+      if (base.path[i] !== location.path[i]) {
+        return location;
+      }
+    }
+    const prefix = base.path.slice(0, base.length - 1);
+    const suffix = location.path.slice(base.length);
+    const baseLast = base.path[base.path.length - 1];
+    const offsetAtIndex = location.path[base.length - 1];
+    if (baseLast <= offsetAtIndex) {
+      prefix.push(offsetAtIndex + delta);
+    }
+    prefix.push(...suffix);
+    return new NodeLocation(prefix);
+  }
   #hashCode: number | undefined;
   readonly path: readonly number[];
   constructor(path: number[]) {
