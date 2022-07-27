@@ -28,6 +28,7 @@ import { type Editor } from "./editor";
 import { isUndefined } from "lodash-es";
 
 export interface IEditorControllerOptions {
+  title?: string;
   pluginRegistry?: PluginRegistry;
 
   /**
@@ -126,7 +127,9 @@ export class EditorController {
     } else {
       this.state = new State(
         userId,
-        new BlockyDocument(),
+        new BlockyDocument({
+          title: options?.title,
+        }),
         this.blockRegistry,
         this.idGenerator
       );
@@ -170,7 +173,7 @@ export class EditorController {
   ): string {
     const editor = this.editor!;
 
-    const prevNode = this.state.idMap.get(afterId)!;
+    const prevNode = this.state.getBlockElementById(afterId)!;
     const parentNode = prevNode.parent! as BlockyElement;
 
     const updateState = (): Changeset => {
@@ -223,7 +226,9 @@ export class EditorController {
       return;
     }
 
-    const blockElement = this.state.idMap.get(blockId) as BlockElement;
+    const blockElement = this.state.getBlockElementById(
+      blockId
+    ) as BlockElement;
 
     const { editor } = this;
     if (!editor) {
@@ -257,7 +262,7 @@ export class EditorController {
 
     if (startId === endId) {
       // make a single fragment bolded
-      const blockNode = editor.state.idMap.get(startId);
+      const blockNode = editor.state.getBlockElementById(startId);
       if (!blockNode) {
         console.error(`${startId} not found`);
         return;
@@ -284,7 +289,7 @@ export class EditorController {
       return;
     }
 
-    const blockNode = this.state.idMap.get(id);
+    const blockNode = this.state.getBlockElementById(id);
     if (!blockNode) {
       return;
     }
@@ -317,7 +322,7 @@ export class EditorController {
     cursorState: CursorState
   ): CursorState | null {
     if (cursorState.startId === cursorState.endId) {
-      const currentBlockElement = this.state.idMap.get(
+      const currentBlockElement = this.state.getBlockElementById(
         cursorState.id
       ) as BlockElement;
       if (currentBlockElement.nodeName === TextBlockName) {
@@ -372,7 +377,7 @@ export class EditorController {
         return;
       }
     }
-    const currentBlockElement = this.state.idMap.get(
+    const currentBlockElement = this.state.getBlockElementById(
       cursorState.id
     ) as BlockElement;
 

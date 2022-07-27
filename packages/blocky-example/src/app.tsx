@@ -19,10 +19,6 @@ import "blocky-core/css/bolded-text-plugin.css";
 import "blocky-core/css/blocky-core.css";
 import "./app.scss";
 
-interface AppState {
-  headingContent: string;
-}
-
 function makeEditorPlugins(): IPlugin[] {
   return [
     makeBoldedTextPlugin(),
@@ -39,8 +35,9 @@ const User2Color = "rgb(246 187 80)";
 /**
  * The controller is used to control the editor.
  */
-function makeController(userId: string): EditorController {
+function makeController(userId: string, title: string): EditorController {
   return new EditorController(userId, {
+    title,
     collaborativeCursorOptions: {
       idToName: (id: string) => id,
       idToColor: () => User2Color,
@@ -71,16 +68,16 @@ function makeController(userId: string): EditorController {
   });
 }
 
-class App extends Component<unknown, AppState> {
+class App extends Component<unknown> {
   private editorControllerLeft: EditorController;
   private editorControllerRight: EditorController;
 
   constructor(props: unknown) {
     super(props);
 
-    this.editorControllerLeft = makeController("User-1");
+    this.editorControllerLeft = makeController("User-1", "Blocky Editor");
 
-    this.editorControllerRight = makeController("User-2");
+    this.editorControllerRight = makeController("User-2", "Blocky Editor");
 
     this.editorControllerLeft.state.changesetApplied.on((changeset) => {
       // simulate the net work
@@ -160,23 +157,11 @@ class App extends Component<unknown, AppState> {
               <div className="blocky-example-user">
                 <span style={{ backgroundColor: User1Color }}>User 1</span>
               </div>
-              <div className="blocky-example-title-container">
-                <input
-                  value={this.state.headingContent}
-                  onChange={this.handleHeadingChanged}
-                />
-              </div>
               <BlockyEditor controller={this.editorControllerLeft} />
             </div>
             <div className="blocky-example-editor-container right">
               <div className="blocky-example-user">
                 <span style={{ backgroundColor: User2Color }}>User 2</span>
-              </div>
-              <div className="blocky-example-title-container">
-                <input
-                  value={this.state.headingContent}
-                  onChange={this.handleHeadingChanged}
-                />
               </div>
               <BlockyEditor
                 controller={this.editorControllerRight}

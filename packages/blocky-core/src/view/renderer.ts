@@ -2,9 +2,10 @@ import { elem, removeNode } from "blocky-common/es/dom";
 import { isUndefined } from "lodash-es";
 import { type IBlockDefinition } from "@pkg/block/basic";
 import {
-  type BlockyElement,
+  type BlockyDocument,
   type BlockyNode,
   BlockElement,
+  BlockyTextModel,
 } from "@pkg/model/tree";
 import type { Editor } from "@pkg/view/editor";
 
@@ -59,25 +60,38 @@ export class DocRenderer {
         "div",
         `${clsPrefix}-documents ${clsPrefix}-default-fonts`
       );
-      this.renderDocument(state.document.body, newDom);
+      this.renderDocument(state.document, newDom);
       return newDom;
     };
 
     if (oldDom && oldDom instanceof HTMLDivElement) {
-      this.renderDocument(state.document.body, oldDom);
+      this.renderDocument(state.document, oldDom);
       return oldDom;
     } else {
       return createNewDocument();
     }
   }
 
-  protected renderDocument(model: BlockyElement, dom: HTMLDivElement) {
-    dom._mgNode = model;
+  protected renderDocument(document: BlockyDocument, dom: HTMLDivElement) {
+    dom._mgNode = document;
 
     const { clsPrefix } = this;
-    const blocksContainer = ensureChild(
+    const titleContainer = ensureChild(
       dom,
       0,
+      "div",
+      `${clsPrefix}-editor-title-container`,
+      (elem: HTMLElement) => {
+        const { padding } = this.editor;
+        const { right, left } = padding;
+        elem.style.paddingLeft = `${left}px`;
+        elem.style.paddingRight = `${right}px`;
+      }
+    );
+    this.renderTitle(titleContainer, document.title);
+    const blocksContainer = ensureChild(
+      dom,
+      1,
       "div",
       `${clsPrefix}-editor-blocks-container`,
       (elem: HTMLElement) => {
@@ -89,19 +103,44 @@ export class DocRenderer {
     this.renderBlocks(
       blocksContainer,
       blocksContainer.firstChild,
-      model.firstChild
+      document.body.firstChild
     );
+  }
+
+  protected renderTitle(dom: HTMLElement, titleElement: BlockElement) {
+    if (isUndefined(dom._mgNode)) {
+      dom._mgNode = titleElement;
+      const block = this.editor.state.blocks.get(titleElement.id)!;
+      block.blockDidMount?.({
+        clsPrefix: this.clsPrefix,
+        blockDef: null as any,
+        element: dom,
+        blockElement: titleElement,
+      });
+      this.editor.state.domMap.set(titleElement.id, dom);
+    }
+    const title = titleElement.getAttribute("textContent");
+    if (title instanceof BlockyTextModel) {
+      const titleStr = title.toString();
+      if (dom.innerText !== titleStr) {
+        dom.innerText = titleStr;
+      }
+    } else {
+      if (dom.innerText !== "") {
+        dom.innerText = "";
+      }
+    }
   }
 
   protected createBlockContainer() {
     return elem("div", this.blockClassName);
   }
 
-  private clearDeletedBlock(dom: Node | null): Node | null {
+  #clearDeletedBlock(dom: Node | null): Node | null {
     while (dom?._mgNode) {
       const treeNode = dom?._mgNode as BlockElement;
       const id = treeNode.id;
-      if (!this.editor.state.idMap.has(id)) {
+      if (!this.editor.state.containsBlockElement(id)) {
         const next = dom.nextSibling;
         removeNode(dom);
         dom = next;
@@ -145,7 +184,7 @@ export class DocRenderer {
       const blockDef = this.editor.registry.block.getBlockDefByName(
         blockElement.nodeName
       );
-      domPtr = this.clearDeletedBlock(domPtr);
+      domPtr = this.#clearDeletedBlock(domPtr);
 
       if (!blockDef) {
         throw new Error(`id not found: ${blockElement.nodeName}`);
@@ -172,7 +211,7 @@ export class DocRenderer {
             prevPtr?.nextSibling ?? null
           );
           domPtr = newBlockContainer;
-          this.initBlockContainer(newBlockContainer, blockElement, blockDef);
+          this.#initBlockContainer(newBlockContainer, blockElement, blockDef);
         }
       }
 
@@ -209,7 +248,7 @@ export class DocRenderer {
     }
   }
 
-  private initBlockContainer(
+  #initBlockContainer(
     blockContainer: HTMLElement,
     blockNode: BlockElement,
     blockDef: IBlockDefinition

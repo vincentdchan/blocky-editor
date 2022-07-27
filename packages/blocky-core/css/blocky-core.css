@@ -115,6 +115,13 @@
   flex: 1;
 }
 
+.blocky-editor-title-container {
+  padding-top: 24px;
+  padding-bottom: 8px;
+  font-size: 32px;
+  font-weight: 600;
+}
+
 :root {
   --color-neutral-muted: rgba(175, 184, 193, 0.2);
 }
