@@ -7,8 +7,8 @@ import {
   JSONNode,
 } from "@pkg/model/tree";
 import { NodeLocation } from "./location";
+import { type Operation, transformOperation } from "./operations";
 import type { State } from "./state";
-import type { Operation } from "./operations";
 import type { CursorState } from "./cursor";
 
 export interface ChangesetApplyOptions {
@@ -191,32 +191,9 @@ export class Changeset {
    *  - delete 1
    */
   push(operation: Operation) {
-    const indexOfNewOp = operation.location.last;
-    let newIndex = indexOfNewOp;
-    const parentLocOfNewOp = operation.location.slice(
-      0,
-      operation.location.length - 1
-    );
-    if (operation.type === "op-remove-node") {
-      for (let i = 0, len = this.operations.length; i < len; i++) {
-        const op = this.operations[i];
-        const parentLoc = op.location.slice(0, op.location.length - 1);
-        const index = op.location.last;
-        if (
-          op.type === "op-remove-node" &&
-          NodeLocation.equals(parentLoc, parentLocOfNewOp)
-        ) {
-          if (index <= indexOfNewOp) {
-            newIndex -= op.children.length;
-          }
-        }
-      }
-    }
-    if (newIndex !== indexOfNewOp) {
-      operation.location = new NodeLocation([
-        ...parentLocOfNewOp.path,
-        newIndex,
-      ]);
+    for (let i = 0; i < this.operations.length; i++) {
+      const item = this.operations[i];
+      operation = transformOperation(item, operation);
     }
     this.operations.push(operation);
   }

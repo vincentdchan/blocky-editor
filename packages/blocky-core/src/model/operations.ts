@@ -1,6 +1,6 @@
 import Delta from "quill-delta-es";
+import { NodeLocation } from "./location";
 import type { AttributesObject, JSONNode } from "@pkg/model/tree";
-import type { NodeLocation } from "./location";
 
 export interface InsertNodeOperation {
   type: "op-insert-node";
@@ -69,4 +69,29 @@ export function invertOperation(op: Operation): Operation {
       };
     }
   }
+}
+
+export function transformOperation(a: Operation, b: Operation): Operation {
+  if (a.type === "op-insert-node") {
+    const newLocation = NodeLocation.transform(
+      a.location,
+      b.location,
+      a.children.length
+    );
+    return {
+      ...b,
+      location: newLocation,
+    };
+  } else if (a.type === "op-remove-node") {
+    const newLocation = NodeLocation.transform(
+      a.location,
+      b.location,
+      a.children.length * -1
+    );
+    return {
+      ...b,
+      location: newLocation,
+    };
+  }
+  return b;
 }
