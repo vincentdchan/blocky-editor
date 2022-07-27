@@ -227,8 +227,17 @@ export class BlockyElement implements BlockyNode, WithState {
     }
   }
 
-  #appendChild(node: BlockyNode) {
-    this.#validateChild(node);
+  appendChild(node: BlockyNode) {
+    if (this.state) {
+      throw new Error(
+        "this method could only be called when the node is unmounted"
+      );
+    }
+
+    this.#appendChildImpl(node);
+  }
+
+  #appendChildImpl(node: BlockyNode) {
     if (!this.#firstChild) {
       this.#firstChild = node;
     }
@@ -236,14 +245,18 @@ export class BlockyElement implements BlockyNode, WithState {
     if (this.#lastChild) {
       this.#lastChild.nextSibling = node;
     }
-
-    const insertIndex = this.childrenLength;
-
     node.prevSibling = this.#lastChild;
     node.nextSibling = null;
     node.parent = this;
     this.#lastChild = node;
     this.childrenLength++;
+  }
+
+  #appendChild(node: BlockyNode) {
+    this.#validateChild(node);
+    const insertIndex = this.childrenLength;
+
+    this.#appendChildImpl(node);
 
     if (node instanceof BlockyElement) {
       node.handleMountToBlock(this.state);
@@ -412,7 +425,7 @@ export class BlockyElement implements BlockyNode, WithState {
     let childPtr = this.#firstChild;
 
     while (childPtr) {
-      result.#appendChild(childPtr.clone());
+      result.appendChild(childPtr.clone());
       childPtr = childPtr.nextSibling;
     }
 
