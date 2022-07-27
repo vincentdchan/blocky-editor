@@ -68,8 +68,7 @@ export class State {
   readonly changesetApplied: Slot<FinalizedChangeset> = new Slot();
   readonly cursorStateChanged: Slot<CursorStateUpdateEvent> = new Slot();
   #cursorState: CursorState | null = null;
-  #versionAccumulator = 0;
-  #appliedVersion = -1;
+  #appliedVersion = 0;
   silent = false;
 
   get cursorState(): CursorState | null {
@@ -77,6 +76,7 @@ export class State {
   }
 
   constructor(
+    readonly userId: string,
     readonly document: BlockyDocument,
     readonly blockRegistry: BlockRegistry,
     readonly idHelper: IdGenerator
@@ -84,8 +84,8 @@ export class State {
     document.handleMountToBlock(this);
   }
 
-  nextVersion(): number {
-    return this.#versionAccumulator++;
+  get appliedVersion(): number {
+    return this.#appliedVersion;
   }
 
   [symSetCursorState](
