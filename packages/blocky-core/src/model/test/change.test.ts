@@ -64,6 +64,10 @@ describe("transform path", () => {
         new NodeLocation([0, 1])
       ).path
     ).toEqual([0, 1]);
+    expect(
+      NodeLocation.transform(new NodeLocation([1, 1]), new NodeLocation([1, 0]))
+        .path
+    ).toEqual([1, 0]);
   });
   test("path transform delta", () => {
     expect(
