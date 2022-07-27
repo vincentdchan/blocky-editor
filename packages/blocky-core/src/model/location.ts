@@ -41,6 +41,8 @@ export class NodeLocation {
     const offsetAtIndex = location.path[base.length - 1];
     if (baseLast <= offsetAtIndex) {
       prefix.push(offsetAtIndex + delta);
+    } else {
+      prefix.push(offsetAtIndex);
     }
     prefix.push(...suffix);
     return new NodeLocation(prefix);
