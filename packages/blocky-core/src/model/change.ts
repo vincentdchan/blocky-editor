@@ -32,7 +32,7 @@ export class Changeset {
   afterCursor?: CursorState | null;
   forceUpdate = false;
   constructor(readonly state: State) {
-    this.version = state.nextVersion();
+    this.version = state.appliedVersion + 1;
     this.beforeCursor = state.cursorState;
   }
   setAttribute(node: BlockyElement, attributes: AttributesObject): Changeset {
@@ -206,6 +206,7 @@ export class Changeset {
   }
   finalize(options?: Partial<ChangesetApplyOptions>): FinalizedChangeset {
     const result: FinalizedChangeset = {
+      userId: this.state.userId,
       version: this.version,
       operations: this.operations,
       beforeCursor: this.beforeCursor,
@@ -222,6 +223,7 @@ export class Changeset {
 }
 
 export interface FinalizedChangeset {
+  userId: string;
   version: number;
   operations: Operation[];
   beforeCursor: CursorState | null;

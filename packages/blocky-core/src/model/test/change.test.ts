@@ -16,7 +16,7 @@ test("test delete", () => {
   });
   const blockRegistry = new BlockRegistry();
   const idGenerator = makeDefaultIdGenerator();
-  const state = new State(document, blockRegistry, idGenerator);
+  const state = new State("User-1", document, blockRegistry, idGenerator);
   const change = new Changeset(state);
   change.removeChild(document.body, i1);
   change.removeChild(document.body, i2);

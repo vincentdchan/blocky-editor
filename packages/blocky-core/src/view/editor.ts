@@ -836,8 +836,12 @@ export class Editor {
 
   #handleChangesetApplied = (changeset: FinalizedChangeset) => {
     const { options } = changeset;
+    const isThisUser = changeset.userId === this.controller.userId;
     if (options.updateView || changeset.forceUpdate) {
       this.render(() => {
+        if (!isThisUser) {
+          return;
+        }
         if (!isUndefined(changeset.afterCursor)) {
           this.state[symSetCursorState](
             changeset.afterCursor,
@@ -852,7 +856,7 @@ export class Editor {
       });
     }
 
-    if (options.recordUndo) {
+    if (options.recordUndo && isThisUser) {
       const undoItem = this.undoManager.getAUndoItem();
       undoItem.push(...changeset.operations);
       this.#debouncedSealUndo();
