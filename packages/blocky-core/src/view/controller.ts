@@ -125,6 +125,7 @@ export class EditorController {
       this.state = options.state;
     } else {
       this.state = new State(
+        userId,
         new BlockyDocument(),
         this.blockRegistry,
         this.idGenerator

@@ -38,7 +38,7 @@ test("serialize", () => {
       }),
     ],
   });
-  const state = new State(doc, blockRegistry, idGenerator);
+  const state = new State("User-1", doc, blockRegistry, idGenerator);
   const json = state.toJSON();
   removeId(json);
   expect(json).toEqual({
