@@ -21,6 +21,7 @@ import { blockyNodeFromJsonNode } from "./deserialize";
 import { Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { TextBlockName } from "@pkg/block/textBlock";
+import { TitleBlock } from "@pkg/block/titleBlock";
 import type { FinalizedChangeset } from "@pkg/model/change";
 import type { IdGenerator } from "@pkg/helper/idHelper";
 import type { CursorState } from "@pkg/model/cursor";
@@ -59,7 +60,7 @@ export interface CursorStateUpdateEvent {
  *
  */
 export class State {
-  readonly idMap: Map<string, BlockyElement> = new Map();
+  #idMap: Map<string, BlockyElement> = new Map();
   readonly domMap: Map<string, Node> = new Map();
   readonly blocks: Map<string, Block> = new Map();
   readonly newBlockCreated: Slot<Block> = new Slot();
@@ -107,6 +108,14 @@ export class State {
       state: cursorState,
       reason,
     });
+  }
+
+  getBlockElementById(id: string): BlockyElement | undefined {
+    return this.#idMap.get(id);
+  }
+
+  containsBlockElement(id: string): boolean {
+    return this.#idMap.has(id);
   }
 
   apply(changeset: FinalizedChangeset) {
@@ -208,6 +217,11 @@ export class State {
 
     this.#insertElement(blockElement);
 
+    if (blockElement.nodeName === "Title") {
+      const titleBlock = new TitleBlock(blockElement);
+      this.blocks.set(blockElement.id, titleBlock);
+      return;
+    }
     const blockDef = this.blockRegistry.getBlockDefByName(
       blockElement.nodeName
     );
@@ -234,7 +248,7 @@ export class State {
       removeNode(dom);
     }
 
-    this.idMap.delete(blockId);
+    this.#idMap.delete(blockId);
     this.domMap.delete(blockId);
 
     this.blockDeleted.emit(blockElement);
@@ -255,10 +269,10 @@ export class State {
         `id could NOT be undefined for a BlockElement: ${element.nodeName}`
       );
     }
-    if (this.idMap.has(id)) {
+    if (this.#idMap.has(id)) {
       throw new Error(`duplicated id: ${element.id}`);
     }
-    this.idMap.set(element.id, element);
+    this.#idMap.set(element.id, element);
   }
 
   findNodeByLocation(location: NodeLocation): BlockyNode {

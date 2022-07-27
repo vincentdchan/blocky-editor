@@ -558,22 +558,40 @@ export class BlockElement extends BlockyElement {
 }
 
 export interface DocumentInitProps {
+  title?: string;
   head?: BlockyElement;
   body?: BlockyElement;
   bodyChildren: BlockyNode[];
 }
 
 export class BlockyDocument extends BlockyElement {
+  readonly title: BlockElement;
   readonly head: BlockyElement;
   readonly body: BlockyElement;
 
   constructor(props?: Partial<DocumentInitProps>) {
-    const head = props?.head ?? new BlockyElement("head");
+    let title: BlockElement;
+    let head: BlockyElement | undefined = props?.head;
+    if (isUndefined(head)) {
+      title = new BlockElement("Title", "title", {
+        textContent: props?.title
+          ? new BlockyTextModel(new Delta([{ insert: props.title }]))
+          : new BlockyTextModel(),
+      });
+      head = new BlockyElement("head", {}, [title]);
+    } else {
+      const t = head.firstChild;
+      if (!t || t.nodeName !== "Title") {
+        throw new Error("Title not found for head");
+      }
+      title = t as BlockElement;
+    }
     const body =
       props?.body ??
       new BlockyElement("body", undefined, props?.bodyChildren ?? []);
     super("document", undefined, [head, body]);
 
+    this.title = title;
     this.head = head;
     this.body = body;
   }

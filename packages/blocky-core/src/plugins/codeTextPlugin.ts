@@ -69,7 +69,7 @@ function makeCodeTextPlugin(): IPlugin {
                 editor.state.cursorState,
                 (start: CursorState, end: CursorState) => {
                   editor.controller.enqueueNextTick(() => {
-                    const blockElement = editor.state.idMap.get(
+                    const blockElement = editor.state.getBlockElementById(
                       start.id
                     ) as BlockElement;
                     const textModel = blockElement.getAttribute(

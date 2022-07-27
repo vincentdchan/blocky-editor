@@ -751,7 +751,7 @@ export class Editor {
 
   #insertEmptyTextAfterBlock(parent: BlockyElement, afterId: string) {
     const newTextElement = this.state.createTextElement();
-    const currentBlock = this.state.idMap.get(afterId);
+    const currentBlock = this.state.getBlockElementById(afterId);
 
     new Changeset(this.state)
       .insertChildrenAfter(parent, [newTextElement], currentBlock)
@@ -765,7 +765,7 @@ export class Editor {
       return;
     }
     if (cursorState.isCollapsed) {
-      const blockElement = this.state.idMap.get(cursorState.id) as
+      const blockElement = this.state.getBlockElementById(cursorState.id) as
         | BlockElement
         | undefined;
       if (!blockElement) {
@@ -918,7 +918,7 @@ export class Editor {
       return false;
     }
 
-    const node = this.state.idMap.get(id) as BlockElement | undefined;
+    const node = this.state.getBlockElementById(id) as BlockElement | undefined;
     if (!node) {
       return false;
     }
@@ -968,7 +968,9 @@ export class Editor {
       return;
     }
 
-    return this.state.idMap.get(cursorState.id) as BlockElement | undefined;
+    return this.state.getBlockElementById(cursorState.id) as
+      | BlockElement
+      | undefined;
   }
 
   #deleteBlockOnFocusedCursor(): boolean {
@@ -1199,7 +1201,9 @@ export class Editor {
   }
 
   getTextElementByBlockId(blockId: string): BlockElement | undefined {
-    const treeNode = this.state.idMap.get(blockId) as BlockElement | undefined;
+    const treeNode = this.state.getBlockElementById(blockId) as
+      | BlockElement
+      | undefined;
     if (!treeNode) {
       return;
     }

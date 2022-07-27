@@ -56,7 +56,7 @@ class TextBlock extends Block {
   #contentContainer: HTMLElement | null = null;
   #bulletSpan: HTMLSpanElement | null = null;
 
-  constructor(private def: TextBlockDefinition, props: BlockElement) {
+  constructor(props: BlockElement) {
     super(props);
   }
 
@@ -610,7 +610,7 @@ class TextBlockDefinition implements IBlockDefinition {
   editable = true;
 
   onBlockCreated({ blockElement: data }: BlockCreatedEvent): Block {
-    return new TextBlock(this, data);
+    return new TextBlock(data);
   }
 
   onPaste({
