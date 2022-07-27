@@ -563,9 +563,17 @@ class TextBlock extends Block {
     const parentElement = this.props.parent! as BlockyElement;
 
     const copy = this.props.clone();
+    let ptr = this.props.nextSibling;
+    let deleteCount = 1;
+    while (ptr) {
+      copy.appendChild(ptr.clone());
+      deleteCount++;
+      ptr = ptr.nextSibling;
+    }
 
     const change = new Changeset(this.editor.state);
-    change.removeChild(parentElement, this.props);
+    const index = parentElement.indexOf(this.props);
+    change.deleteChildrenAt(parentElement, index, deleteCount);
 
     const parentOfParentBlockElement = parentBlockElement.parent!;
     change.insertChildrenAfter(
