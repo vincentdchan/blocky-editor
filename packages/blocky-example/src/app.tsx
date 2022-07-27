@@ -39,10 +39,9 @@ const User2Color = "rgb(246 187 80)";
 /**
  * The controller is used to control the editor.
  */
-function makeController(): EditorController {
-  return new EditorController({
+function makeController(userId: string): EditorController {
+  return new EditorController(userId, {
     collaborativeCursorOptions: {
-      id: "User-1",
       idToName: (id: string) => id,
       idToColor: () => User2Color,
     },
@@ -72,28 +71,6 @@ function makeController(): EditorController {
   });
 }
 
-// function makeRightController(doc: Y.Doc): EditorController {
-//   return new EditorController({
-//     plugins: makeEditorPlugins(doc, true),
-//     collaborativeCursorOptions: {
-//       id: "User-2",
-//       idToName: (id: string) => id,
-//       idToColor: () => User1Color,
-//     },
-//     bannerFactory: makePreactBanner(
-//       ({ editorController, focusedNode }: BannerRenderProps) => (
-//         <BannerMenu
-//           editorController={editorController}
-//           focusedNode={focusedNode}
-//         />
-//       )
-//     ),
-//     toolbarFactory: makePreactToolbar((editorController: EditorController) => {
-//       return <ToolbarMenu editorController={editorController} />;
-//     }),
-//   });
-// }
-
 class App extends Component<unknown, AppState> {
   private editorControllerLeft: EditorController;
   private editorControllerRight: EditorController;
@@ -101,9 +78,9 @@ class App extends Component<unknown, AppState> {
   constructor(props: unknown) {
     super(props);
 
-    this.editorControllerLeft = makeController();
+    this.editorControllerLeft = makeController("User-1");
 
-    this.editorControllerRight = makeController();
+    this.editorControllerRight = makeController("User-2");
 
     this.editorControllerLeft.state.changesetApplied.on((changeset) => {
       // simulate the net work

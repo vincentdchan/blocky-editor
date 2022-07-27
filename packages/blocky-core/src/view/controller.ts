@@ -94,7 +94,10 @@ export class EditorController {
   /**
    * A class to control the behavior in the editor
    */
-  constructor(public options?: IEditorControllerOptions) {
+  constructor(
+    readonly userId: string,
+    public options?: IEditorControllerOptions
+  ) {
     this.pluginRegistry =
       options?.pluginRegistry ?? new PluginRegistry(options?.plugins);
     this.spanRegistry = options?.spanRegistry ?? new SpanRegistry();
@@ -137,7 +140,7 @@ export class EditorController {
     }
     const { collaborativeCursorManager } = editor;
     const { id } = evt;
-    if (id === collaborativeCursorManager.options.id) {
+    if (id === this.userId) {
       return;
     }
 
@@ -153,7 +156,7 @@ export class EditorController {
     this.editor = editor;
 
     this.state.cursorStateChanged.on((e) => {
-      const id = editor.collaborativeCursorManager.options.id;
+      const id = this.userId;
       const evt = new CursorChangedEvent(id, e.state);
       this.cursorChanged.emit(evt);
     });
