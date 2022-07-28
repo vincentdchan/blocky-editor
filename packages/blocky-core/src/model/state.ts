@@ -23,14 +23,15 @@ import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { TextBlockName } from "@pkg/block/textBlock";
 import { TitleBlock } from "@pkg/block/titleBlock";
 import { VersionHistory } from "./versionHistory";
-import type { FinalizedChangeset } from "@pkg/model/change";
+import { Changeset, FinalizedChangeset } from "@pkg/model/change";
 import type { IdGenerator } from "@pkg/helper/idHelper";
 import type { CursorState } from "@pkg/model/cursor";
-import type {
+import {
   InsertNodeOperation,
   UpdateNodeOperation,
   RemoveNodeOperation,
   TextEditOperation,
+  transformOperation,
 } from "./operations";
 
 export const symSetCursorState = Symbol("setCursorState");
@@ -150,6 +151,42 @@ export class State {
     this.changesetApplied.emit(changeset);
     this.#appliedVersion = changeset.version;
     this.versionHistory.insert(changeset);
+  }
+
+  rebase(changeset: FinalizedChangeset): FinalizedChangeset {
+    if (changeset.version > this.#appliedVersion) {
+      return changeset;
+    }
+
+    for (let i = changeset.version; i <= this.#appliedVersion; i++) {
+      changeset = this.#rebaseVersion(i, changeset);
+    }
+
+    return changeset;
+  }
+
+  #rebaseVersion(
+    version: number,
+    changeset: FinalizedChangeset
+  ): FinalizedChangeset {
+    const change = new Changeset(this);
+    change.version = version + 1;
+    // TODO: transform position;
+    change.beforeCursor = changeset.beforeCursor;
+    change.afterCursor = changeset.afterCursor;
+    const item = this.versionHistory.get(version)!;
+
+    for (let i = 0; i < changeset.operations.length; i++) {
+      let op = changeset.operations[i];
+
+      for (let j = 0; j < item.operations.length; j++) {
+        op = transformOperation(item.operations[j], op);
+      }
+
+      change.pushWillMerge(op);
+    }
+
+    return change.finalize();
   }
 
   #applyInsertOperation(insertOperation: InsertNodeOperation) {
