@@ -198,7 +198,16 @@ export class Changeset {
     this.pushWillMerge(operation);
   }
   pushWillMerge(operation: Operation) {
-    // TODO: merge
+    // TODO: test
+    const len = this.operations.length;
+    if (len > 0 && operation.type === "op-text-edit") {
+      const last = this.operations[len - 1];
+      if (last.type === "op-text-edit" && operation.id === last.id) {
+        last.delta = last.delta.compose(operation.delta);
+        last.invert = operation.invert.compose(last.invert);
+      }
+      return;
+    }
     this.operations.push(operation);
   }
   apply(options?: Partial<ChangesetApplyOptions>) {
