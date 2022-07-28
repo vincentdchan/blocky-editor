@@ -23,6 +23,7 @@ export {
   BlockyDocument,
   TextType,
   Changeset,
+  ChangesetRecordOption,
   BlockElement,
   NodeLocation,
 } from "./model";

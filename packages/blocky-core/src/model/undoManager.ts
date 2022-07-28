@@ -1,4 +1,9 @@
-import { Changeset, FinalizedChangeset } from "./change";
+import {
+  Changeset,
+  ChangesetApplyOptions,
+  ChangesetRecordOption,
+  FinalizedChangeset,
+} from "./change";
 import { CursorState } from "./cursor";
 import { invertOperation } from "./operations";
 import type { State } from "./state";
@@ -25,18 +30,6 @@ export class HistoryItem {
   seal() {
     this.sealed = true;
   }
-
-  // toChangeset(state: State): Changeset {
-  //   const result = new Changeset(state);
-  //   for (let i = this.operations.length - 1; i >= 0; i--) {
-  //     const item = this.operations[i];
-  //     result.push(invertOperation(item));
-  //   }
-  //   if (!isUndefined(this.cursorState)) {
-  //     result.setCursorState(this.cursorState);
-  //   }
-  //   return result;
-  // }
 }
 
 export class FixedSizeStack {
@@ -137,6 +130,18 @@ export class UndoManager {
     return newItem;
   }
 
+  pushRedoItem(changeset: FinalizedChangeset) {
+    const newItem = new HistoryItem();
+    newItem.cursorState = this.state.cursorState;
+    newItem.startVersion = changeset.version;
+    newItem.length = 1;
+    this.redoStack.push(newItem);
+  }
+
+  clearRedoStack() {
+    this.redoStack.clear();
+  }
+
   seal() {
     const peek = this.undoStack.peek();
     if (peek) {
@@ -164,11 +169,14 @@ export class UndoManager {
     }
 
     changeset.apply({
-      recordUndo: false,
+      record: ChangesetRecordOption.Redo,
     });
   }
 
-  #invertChangeset(changeset: FinalizedChangeset): FinalizedChangeset {
+  #invertChangeset(
+    changeset: FinalizedChangeset,
+    options?: Partial<ChangesetApplyOptions>
+  ): FinalizedChangeset {
     const invertedChange = new Changeset(this.state);
     invertedChange.version = changeset.version + 1;
     invertedChange.afterCursor = changeset.beforeCursor;
@@ -178,8 +186,21 @@ export class UndoManager {
       invertedChange.pushWillMerge(invertOperation(changeset.operations[i]));
     }
 
-    return invertedChange.finalize();
+    return invertedChange.finalize(options);
   }
 
-  redo() {}
+  redo() {
+    const redoItem = this.redoStack.pop();
+    if (!redoItem) {
+      return;
+    }
+    const changeset = this.state.versionHistory.get(redoItem.startVersion)!;
+    let invertedChange = this.#invertChangeset(changeset, {
+      record: ChangesetRecordOption.None,
+    });
+    invertedChange = this.state.rebase(invertedChange, {
+      record: ChangesetRecordOption.None,
+    });
+    this.state.apply(invertedChange);
+  }
 }

@@ -47,7 +47,7 @@ import {
   CollaborativeCursorManager,
 } from "./collaborativeCursors";
 import { isHotkey } from "is-hotkey";
-import { FinalizedChangeset } from "@pkg/model/change";
+import { ChangesetRecordOption, FinalizedChangeset } from "@pkg/model/change";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
@@ -456,46 +456,44 @@ export class Editor {
           CursorStateUpdateReason.contentChanged
         );
       }
-    } else {
-      const endNode = this.#findBlockNodeContainer(endContainer);
-      if (!endNode) {
-        this.state[symSetCursorState](
-          null,
-          CursorStateUpdateReason.contentChanged
-        );
-        return;
-      }
-      const absoluteEndOffset = this.#findTextOffsetInBlock(
-        endNode,
-        endContainer,
-        endOffset
+      return;
+    }
+    const endNode = this.#findBlockNodeContainer(endContainer);
+    if (!endNode) {
+      this.state[symSetCursorState](
+        null,
+        CursorStateUpdateReason.contentChanged
       );
-      const newCursorState = new CursorState(
-        startNode.id,
-        absoluteStartOffset,
-        endNode.id,
-        absoluteEndOffset
+      return;
+    }
+    const absoluteEndOffset = this.#findTextOffsetInBlock(
+      endNode,
+      endContainer,
+      endOffset
+    );
+    const newCursorState = new CursorState(
+      startNode.id,
+      absoluteStartOffset,
+      endNode.id,
+      absoluteEndOffset
+    );
+    if (!areEqualShallow(newCursorState, this.state.cursorState)) {
+      this.state[symSetCursorState](
+        new CursorState(
+          startNode.id,
+          absoluteStartOffset,
+          endNode.id,
+          absoluteEndOffset
+        ),
+        CursorStateUpdateReason.contentChanged
       );
-      if (!areEqualShallow(newCursorState, this.state.cursorState)) {
-        this.state[symSetCursorState](
-          new CursorState(
-            startNode.id,
-            absoluteStartOffset,
-            endNode.id,
-            absoluteEndOffset
-          ),
-          CursorStateUpdateReason.contentChanged
-        );
-      }
     }
 
-    const { toolbarDelegate } = this;
-
-    if (toolbarDelegate.enabled) {
-      if (this.#tryPlaceToolbar(range)) {
-        toolbarDelegate.show();
+    if (this.toolbarDelegate.enabled) {
+      if (newCursorState.startId !== "Title" && this.#tryPlaceToolbar(range)) {
+        this.toolbarDelegate.show();
       } else {
-        toolbarDelegate.hide();
+        this.toolbarDelegate.hide();
       }
     }
   };
@@ -857,7 +855,7 @@ export class Editor {
       });
     }
 
-    if (options.recordUndo && isThisUser) {
+    if (options.record === ChangesetRecordOption.Undo && isThisUser) {
       const undoItem = this.undoManager.getAUndoItem();
       if (undoItem.startVersion < 0) {
         undoItem.startVersion = changeset.version;
@@ -865,8 +863,12 @@ export class Editor {
       } else {
         undoItem.length = 1 + (changeset.version - undoItem.startVersion);
       }
+      this.undoManager.clearRedoStack();
       this.#debouncedSealUndo();
+    } else if (options.record === ChangesetRecordOption.Redo && isThisUser) {
+      this.undoManager.pushRedoItem(changeset);
     } else {
+      // applying changeset from another user
       this.undoManager.seal();
     }
   };
@@ -884,7 +886,7 @@ export class Editor {
     new Changeset(this.state)
       .insertChildrenAt(this.state.document.body, 0, [empty])
       .apply({
-        recordUndo: false,
+        record: ChangesetRecordOption.None,
       });
   }
 

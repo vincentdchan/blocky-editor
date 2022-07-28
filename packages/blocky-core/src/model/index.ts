@@ -6,6 +6,6 @@ export {
 export { NodeLocation } from "./location";
 export { CursorState } from "./cursor";
 export { TextType } from "./text";
-export { Changeset } from "./change";
+export { Changeset, ChangesetRecordOption } from "./change";
 export * from "./tree";
 export * from "./events";
