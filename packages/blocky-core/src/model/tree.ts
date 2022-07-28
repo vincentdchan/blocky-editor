@@ -161,6 +161,17 @@ export class BlockyElement implements BlockyNode, WithState {
     return null;
   }
 
+  queryChildByName(nodeName: string): BlockyNode | void {
+    let ptr = this.#firstChild;
+
+    while (ptr) {
+      if (ptr.nodeName === nodeName) {
+        return ptr;
+      }
+      ptr = ptr.nextSibling;
+    }
+  }
+
   #symInsertAfter(node: BlockyNode, after?: BlockyNode) {
     if (after && after.parent !== this) {
       throw new TypeError("after node is a child of this node");
@@ -580,8 +591,8 @@ export class BlockyDocument extends BlockyElement {
       });
       head = new BlockyElement("head", {}, [title]);
     } else {
-      const t = head.firstChild;
-      if (!t || t.nodeName !== "Title") {
+      const t = head.queryChildByName("Title");
+      if (!t) {
         throw new Error("Title not found for head");
       }
       title = t as BlockElement;

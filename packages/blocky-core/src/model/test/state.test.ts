@@ -46,6 +46,17 @@ test("serialize", () => {
     children: [
       {
         nodeName: "head",
+        children: [
+          {
+            nodeName: "Title",
+            attributes: {
+              textContent: [],
+            },
+            "#meta": {
+              textContent: "rich-text",
+            },
+          },
+        ],
       },
       {
         nodeName: "body",
