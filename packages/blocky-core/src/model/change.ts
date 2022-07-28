@@ -25,6 +25,9 @@ const defaultApplyOptions: ChangesetApplyOptions = {
   refreshCursor: false,
 };
 
+/*
+ * Changeset can be applied repeatedly.
+ */
 export class Changeset {
   readonly version: number;
   operations: Operation[] = [];

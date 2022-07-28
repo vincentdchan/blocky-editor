@@ -92,45 +92,4 @@ editor.render();
 
 ## Collaborative editing
 
-Blocky editor can be edited collaboratively through [yjs](https://github.com/yjs/yjs).
-
-You can simply enable collaborative editing through the yjs plugin.
-
-### Install the plugin
-
-```shell
-npm install --save blocky-yjs
-```
-
-### Use the plugin
-
-Create pass the doc to the plugin:
-
-```tsx
-import * as Y from "yjs";
-import { makeYjsPlugin } from "blocky-yjs";
-
-function makeController(doc: Y.Doc): EditorController {
-  return new EditorController({
-    collaborativeCursorOptions: {
-      id: "User-1",
-      idToName: (id: string) => id,
-      idToColor: () => "orange",
-    },
-    /**
-     * Define the plugins to implement customize features.
-     */
-    plugins: [
-      makeYjsPlugin({
-        doc,
-        allowInit,
-      }),
-      // ...
-    ],
-    // ...
-  });
-}
-
-const doc = new Y.Doc();
-const controller = makeController(doc);
-```
+[Collaborative editing](./data-manipulation.md#collaborative-editing).

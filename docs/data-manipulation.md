@@ -71,16 +71,11 @@ Example:
 ```xml
 <document>
   <head>
-    <title>
-      <blocky-text/>
-    </title>
+    <Title />
   </head>
   <body>
-    <Text>
-      <blocky-text/>
-    </Text>
-    <Text>
-      <blocky-text />
+    <Text />
+    <Text />
       <Image src="" />
     </Text>
   </body>
@@ -126,8 +121,37 @@ changeset.textEdit(() => new Delta().retain(4).delete(1)).apply(); // delete 1 c
 
 ## Collaborative editing
 
-The document tree of BlockyNode corresponds to the XMLElement in [Yjs](https://github.com/yjs/yjs).
+The document tree of BlockyEditor supports collaborative editing naturally.
+What you need is to transfer the changeset betweens users.
+Changeset can be applied repeatedly. But they must be applied in order.
 
-All the changes committed to the document will be synced to the Yjs's doc automatically.
+Example:
 
-If you don't want to use yjs, it's not hard to adapt the BlockyNode model to other syncing models such as OT or [automerge](https://github.com/automerge/automerge).
+```typescript
+this.editorControllerLeft.state.changesetApplied.on((changeset) => {
+  // simulate the net work
+  setTimeout(() => {
+    this.editorControllerRight.state.apply({
+      ...changeset,
+      afterCursor: undefined,
+      options: {
+        ...changeset.options,
+        updateView: true,
+      },
+    });
+  });
+});
+
+this.editorControllerRight.state.changesetApplied.on((changeset) => {
+  setTimeout(() => {
+    this.editorControllerLeft.state.apply({
+      ...changeset,
+      afterCursor: undefined,
+      options: {
+        ...changeset.options,
+        updateView: true,
+      },
+    });
+  });
+});
+```

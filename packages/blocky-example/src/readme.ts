@@ -24,7 +24,7 @@ export const ReadMeContent = `
   <li>
     Example(this page): The example to demonstrate how to use the editor.
     <ul>
-      <li>Gzipped size: ~62kb (one-time loading)</li>
+      <li>Gzipped size: ~43kb (one-time loading)</li>
     </ul>
   </li>
 </ul>
