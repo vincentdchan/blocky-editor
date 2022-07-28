@@ -329,6 +329,7 @@ export class Editor {
       $on(newDom, "compositionstart", this.#handleCompositionStart);
       $on(newDom, "compositionend", this.#handleCompositionEnd);
       $on(newDom, "keydown", this.#handleKeyDown);
+      $on(newDom, "copy", this.#handleCopy);
       $on(newDom, "paste", this.#handlePaste);
 
       this.#renderedDom = newDom;
@@ -1139,6 +1140,39 @@ export class Editor {
 
     this.#lastFocusedId = undefined;
   }
+
+  #handleCopy = (e: ClipboardEvent) => {
+    const { cursorState } = this.state;
+    if (!cursorState) {
+      return;
+    }
+
+    const blockElement = this.state.getBlockElementById(cursorState.id);
+    if (!blockElement) {
+      return;
+    }
+
+    if (
+      blockElement.nodeName === TextBlockName ||
+      blockElement.nodeName === "Title"
+    ) {
+      return;
+    }
+
+    const blockData = blockElement.toJSON();
+    console.log(JSON.stringify(blockData).replace(/"/g, '\\"'));
+    e.clipboardData?.clearData();
+    e.clipboardData?.setData(
+      "text/html",
+      `<div data-id="${blockElement.id}" data-type="${
+        blockElement.nodeName
+      }" data-content="${JSON.stringify(blockData).replace(
+        /"/g,
+        "&quot;"
+      )}"></div>`
+    );
+    e.preventDefault();
+  };
 
   #handlePaste = (e: ClipboardEvent) => {
     e.preventDefault(); // take over the paste event

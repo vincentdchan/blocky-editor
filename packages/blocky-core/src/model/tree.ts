@@ -545,6 +545,10 @@ export class BlockElement extends BlockyElement {
   }
 
   override clone(): BlockElement {
+    return this.cloneWithId(this.id);
+  }
+
+  cloneWithId(id: string): BlockElement {
     const attribs = this.getAttributes();
     delete attribs.id;
 
@@ -556,7 +560,7 @@ export class BlockElement extends BlockyElement {
       childPtr = childPtr.nextSibling;
     }
 
-    return new BlockElement(this.nodeName, this.id, attribs, children);
+    return new BlockElement(this.nodeName, id, attribs, children);
   }
 
   override toJSON(): JSONNode {
