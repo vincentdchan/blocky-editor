@@ -859,7 +859,12 @@ export class Editor {
 
     if (options.recordUndo && isThisUser) {
       const undoItem = this.undoManager.getAUndoItem();
-      undoItem.push(...changeset.operations);
+      if (undoItem.startVersion < 0) {
+        undoItem.startVersion = changeset.version;
+        undoItem.length = 1;
+      } else {
+        undoItem.length = 1 + (changeset.version - undoItem.startVersion);
+      }
       this.#debouncedSealUndo();
     } else {
       this.undoManager.seal();
