@@ -32,6 +32,7 @@ import {
   RemoveNodeOperation,
   TextEditOperation,
   transformOperation,
+  transformCursorState,
 } from "./operations";
 
 export const symSetCursorState = Symbol("setCursorState");
@@ -169,11 +170,9 @@ export class State {
     version: number,
     changeset: FinalizedChangeset
   ): FinalizedChangeset {
-    const change = new Changeset(this);
-    change.version = version + 1;
-    // TODO: transform position;
-    change.beforeCursor = changeset.beforeCursor;
-    change.afterCursor = changeset.afterCursor;
+    const rebasedChange = new Changeset(this);
+    rebasedChange.version = version + 1;
+    let { beforeCursor, afterCursor } = changeset;
     const item = this.versionHistory.get(version)!;
 
     for (let i = 0; i < changeset.operations.length; i++) {
@@ -183,10 +182,20 @@ export class State {
         op = transformOperation(item.operations[j], op);
       }
 
-      change.pushWillMerge(op);
+      rebasedChange.pushWillMerge(op);
     }
 
-    return change.finalize();
+    for (let j = 0; j < item.operations.length; j++) {
+      beforeCursor = transformCursorState(item.operations[j], beforeCursor);
+      if (!isUndefined(afterCursor)) {
+        afterCursor = transformCursorState(item.operations[j], afterCursor);
+      }
+    }
+
+    rebasedChange.beforeCursor = beforeCursor;
+    rebasedChange.afterCursor = afterCursor;
+
+    return rebasedChange.finalize();
   }
 
   #applyInsertOperation(insertOperation: InsertNodeOperation) {

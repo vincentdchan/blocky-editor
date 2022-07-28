@@ -4,6 +4,7 @@ import {
   type BlockyTextModel,
   type AttributesObject,
   type BlockyNode,
+  type BlockElement,
   JSONNode,
 } from "@pkg/model/tree";
 import { NodeLocation } from "./location";
@@ -137,7 +138,7 @@ export class Changeset {
     return this;
   }
   textEdit(
-    node: BlockyElement,
+    node: BlockElement,
     propName: string,
     delta: () => Delta
   ): Changeset {
@@ -153,6 +154,7 @@ export class Changeset {
     this.push({
       type: "op-text-edit",
       location,
+      id: node.id,
       key: propName,
       delta: d,
       invert,
@@ -160,7 +162,7 @@ export class Changeset {
     return this;
   }
   textConcat(
-    node: BlockyElement,
+    node: BlockElement,
     propName: string,
     delta: () => Delta
   ): Changeset {
@@ -177,6 +179,7 @@ export class Changeset {
     this.push({
       type: "op-text-edit",
       location,
+      id: node.id,
       key: propName,
       delta: d,
       invert,
