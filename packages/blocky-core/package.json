@@ -11,7 +11,9 @@
   "homepage": "https://github.com/vincentdchan/blocky-editor",
   "keywords": [
     "editor",
-    "notion"
+    "notion",
+    "wysiwyg",
+    "wysiwyg-editor"
   ],
   "author": "Vincent Chan <okcdz@diverse.space>",
   "license": "MIT",
