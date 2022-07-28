@@ -22,6 +22,7 @@ import { Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { TextBlockName } from "@pkg/block/textBlock";
 import { TitleBlock } from "@pkg/block/titleBlock";
+import { VersionHistory } from "./versionHistory";
 import type { FinalizedChangeset } from "@pkg/model/change";
 import type { IdGenerator } from "@pkg/helper/idHelper";
 import type { CursorState } from "@pkg/model/cursor";
@@ -68,6 +69,7 @@ export class State {
   readonly beforeChangesetApply: Slot<FinalizedChangeset> = new Slot();
   readonly changesetApplied: Slot<FinalizedChangeset> = new Slot();
   readonly cursorStateChanged: Slot<CursorStateUpdateEvent> = new Slot();
+  readonly versionHistory = new VersionHistory();
   #cursorState: CursorState | null = null;
   #appliedVersion = 0;
   silent = false;
@@ -147,6 +149,7 @@ export class State {
 
     this.changesetApplied.emit(changeset);
     this.#appliedVersion = changeset.version;
+    this.versionHistory.insert(changeset);
   }
 
   #applyInsertOperation(insertOperation: InsertNodeOperation) {

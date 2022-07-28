@@ -4,8 +4,9 @@ import { test, expect, describe } from "vitest";
 import { Changeset } from "../change";
 import { State } from "../state";
 import { NodeLocation } from "../location";
-import { transformOperation } from "../operations";
+import { type TextEditOperation, transformOperation } from "../operations";
 import { BlockyDocument, BlockyElement } from "../tree";
+import Delta from "quill-delta-es";
 
 test("test delete", () => {
   const i1 = new BlockyElement("item");
@@ -110,5 +111,32 @@ describe("transform operation", () => {
       }
     );
     expect(t.location.path).toEqual([0, 1]);
+  });
+  test("edit + edit", () => {
+    const base = new Delta([{ insert: "Hello World" }]);
+    const delta = new Delta().retain(6).insert(" ooo ");
+    const invert = delta.invert(base);
+    expect(invert.ops).toEqual([{ retain: 6 }, { delete: 5 }]);
+    const delta2 = new Delta().insert("Title: ");
+    const invert2 = delta2.invert(new Delta());
+    const t = transformOperation(
+      {
+        type: "op-text-edit",
+        location: new NodeLocation([1, 0]),
+        key: "textContent",
+        delta: delta2,
+        invert: invert2,
+      },
+      {
+        type: "op-text-edit",
+        location: new NodeLocation([1, 0]),
+        key: "textContent",
+        delta,
+        invert,
+      }
+    ) as TextEditOperation;
+    expect(t.type).toBe("op-text-edit");
+    expect(t.delta.ops).toEqual([{ retain: 13 }, { insert: " ooo " }]);
+    expect(t.invert.ops).toEqual([{ retain: 13 }, { delete: 5 }]);
   });
 });

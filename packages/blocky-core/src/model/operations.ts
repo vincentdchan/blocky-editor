@@ -92,6 +92,14 @@ export function transformOperation(a: Operation, b: Operation): Operation {
       ...b,
       location: newLocation,
     };
+  } else if (a.type === "op-text-edit" && b.type === "op-text-edit") {
+    if (NodeLocation.equals(a.location, b.location) && a.key === b.key) {
+      return {
+        ...b,
+        delta: a.delta.transform(b.delta),
+        invert: a.delta.transform(b.invert),
+      };
+    }
   }
   return b;
 }

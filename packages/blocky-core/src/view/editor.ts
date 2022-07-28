@@ -861,6 +861,8 @@ export class Editor {
       const undoItem = this.undoManager.getAUndoItem();
       undoItem.push(...changeset.operations);
       this.#debouncedSealUndo();
+    } else {
+      this.undoManager.seal();
     }
   };
 
