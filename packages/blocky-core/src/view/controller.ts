@@ -26,6 +26,7 @@ import { TextBlockName } from "@pkg/block/textBlock";
 import { type CollaborativeCursorOptions } from "./collaborativeCursors";
 import { type Editor } from "./editor";
 import { isUndefined } from "lodash-es";
+import { blockyNodeFromJsonNode } from "@pkg/model/deserialize";
 
 export interface IEditorControllerOptions {
   title?: string;
@@ -510,6 +511,15 @@ export class EditorController {
     const blockDef = this.blockRegistry.getBlockDefByName(dataType);
     if (!blockDef) {
       return;
+    }
+
+    const jsonData = element.getAttribute("data-content");
+    if (jsonData) {
+      const data = JSON.parse(jsonData);
+      const node = blockyNodeFromJsonNode(data);
+      if (node instanceof BlockElement) {
+        return node.cloneWithId(this.idGenerator.mkBlockId());
+      }
     }
 
     const pasteHandler = blockDef?.onPaste;

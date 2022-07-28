@@ -280,4 +280,8 @@ export class ContentBlock extends Block {
       );
     }
   }
+
+  override findTextOffsetInBlock(): number {
+    return 0;
+  }
 }
