@@ -29,7 +29,7 @@ const defaultApplyOptions: ChangesetApplyOptions = {
  * Changeset can be applied repeatedly.
  */
 export class Changeset {
-  readonly version: number;
+  version: number;
   operations: Operation[] = [];
   beforeCursor: CursorState | null = null;
   afterCursor?: CursorState | null;
@@ -184,20 +184,18 @@ export class Changeset {
     return this;
   }
   /**
-   * There is some merge mechanism there,
-   * If there is
-   *  - delete 1
-   *  - delete 2
-   *
-   * Then the second op should be transformed, so we got:
-   *  - delete 1
-   *  - delete 1
+   * This method will transform path.
+   * If you don't want to transform path, call [pushWillMerge].
    */
   push(operation: Operation) {
     for (let i = 0; i < this.operations.length; i++) {
       const item = this.operations[i];
       operation = transformOperation(item, operation);
     }
+    this.pushWillMerge(operation);
+  }
+  pushWillMerge(operation: Operation) {
+    // TODO: merge
     this.operations.push(operation);
   }
   apply(options?: Partial<ChangesetApplyOptions>) {
@@ -222,6 +220,15 @@ export class Changeset {
     };
     this.operations = [];
     return result;
+  }
+  /**
+   * @param that Can be either a [Changeset] or a [FinalizedChangeset]
+   */
+  append(that: Changeset | FinalizedChangeset) {
+    // do NOT call `this.push` because the operations do NOT need changes.
+    // TODO: add a method to merge
+    that.operations.forEach((op) => this.pushWillMerge(op));
+    this.afterCursor = that.afterCursor;
   }
 }
 
