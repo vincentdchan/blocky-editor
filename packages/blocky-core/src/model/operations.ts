@@ -1,6 +1,7 @@
 import Delta from "quill-delta-es";
 import { NodeLocation } from "./location";
 import type { AttributesObject, JSONNode } from "@pkg/model/tree";
+import { CursorState } from "./cursor";
 
 export interface InsertNodeOperation {
   type: "op-insert-node";
@@ -24,6 +25,7 @@ export interface RemoveNodeOperation {
 export interface TextEditOperation {
   type: "op-text-edit";
   location: NodeLocation;
+  id: string;
   key: string;
   delta: Delta;
   invert: Delta;
@@ -48,6 +50,7 @@ export function invertOperation(op: Operation): Operation {
       return {
         type: "op-text-edit",
         location: op.location,
+        id: op.id,
         key: op.key,
         delta: op.invert,
         invert: op.delta,
@@ -102,4 +105,28 @@ export function transformOperation(a: Operation, b: Operation): Operation {
     }
   }
   return b;
+}
+
+export function transformCursorState(
+  base: Operation,
+  cursorState: CursorState | null
+): CursorState | null {
+  if (cursorState === null) {
+    return cursorState;
+  }
+
+  if (
+    base.type === "op-text-edit" &&
+    cursorState.isCollapsed &&
+    cursorState.endId == base.id
+  ) {
+    const transformedOffset = base.delta.transformPosition(
+      cursorState.endOffset
+    );
+    if (transformedOffset !== cursorState.endOffset) {
+      return CursorState.collapse(cursorState.endId, transformedOffset);
+    }
+  }
+
+  return cursorState;
 }

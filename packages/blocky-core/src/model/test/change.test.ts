@@ -123,6 +123,7 @@ describe("transform operation", () => {
       {
         type: "op-text-edit",
         location: new NodeLocation([1, 0]),
+        id: "title",
         key: "textContent",
         delta: delta2,
         invert: invert2,
@@ -130,6 +131,7 @@ describe("transform operation", () => {
       {
         type: "op-text-edit",
         location: new NodeLocation([1, 0]),
+        id: "title",
         key: "textContent",
         delta,
         invert,
