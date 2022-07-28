@@ -1,4 +1,4 @@
-import { Component, JSX } from "preact";
+import { Component } from "preact";
 import { EditorController, type IPlugin } from "blocky-core";
 import {
   BlockyEditor,
@@ -116,17 +116,7 @@ class App extends Component<unknown> {
 
     // paste before the editor initialized
     this.editorControllerLeft.pasteHTMLAtCursor(ReadMeContent);
-
-    this.state = {
-      headingContent: "Blocky Editor",
-    };
   }
-
-  private handleHeadingChanged = (e: JSX.TargetedEvent<HTMLInputElement>) => {
-    this.setState({
-      headingContent: (e.target! as HTMLInputElement).value,
-    });
-  };
 
   render() {
     return (
