@@ -456,46 +456,44 @@ export class Editor {
           CursorStateUpdateReason.contentChanged
         );
       }
-    } else {
-      const endNode = this.#findBlockNodeContainer(endContainer);
-      if (!endNode) {
-        this.state[symSetCursorState](
-          null,
-          CursorStateUpdateReason.contentChanged
-        );
-        return;
-      }
-      const absoluteEndOffset = this.#findTextOffsetInBlock(
-        endNode,
-        endContainer,
-        endOffset
+      return;
+    }
+    const endNode = this.#findBlockNodeContainer(endContainer);
+    if (!endNode) {
+      this.state[symSetCursorState](
+        null,
+        CursorStateUpdateReason.contentChanged
       );
-      const newCursorState = new CursorState(
-        startNode.id,
-        absoluteStartOffset,
-        endNode.id,
-        absoluteEndOffset
+      return;
+    }
+    const absoluteEndOffset = this.#findTextOffsetInBlock(
+      endNode,
+      endContainer,
+      endOffset
+    );
+    const newCursorState = new CursorState(
+      startNode.id,
+      absoluteStartOffset,
+      endNode.id,
+      absoluteEndOffset
+    );
+    if (!areEqualShallow(newCursorState, this.state.cursorState)) {
+      this.state[symSetCursorState](
+        new CursorState(
+          startNode.id,
+          absoluteStartOffset,
+          endNode.id,
+          absoluteEndOffset
+        ),
+        CursorStateUpdateReason.contentChanged
       );
-      if (!areEqualShallow(newCursorState, this.state.cursorState)) {
-        this.state[symSetCursorState](
-          new CursorState(
-            startNode.id,
-            absoluteStartOffset,
-            endNode.id,
-            absoluteEndOffset
-          ),
-          CursorStateUpdateReason.contentChanged
-        );
-      }
     }
 
-    const { toolbarDelegate } = this;
-
-    if (toolbarDelegate.enabled) {
-      if (this.#tryPlaceToolbar(range)) {
-        toolbarDelegate.show();
+    if (this.toolbarDelegate.enabled) {
+      if (newCursorState.startId !== "Title" && this.#tryPlaceToolbar(range)) {
+        this.toolbarDelegate.show();
       } else {
-        toolbarDelegate.hide();
+        this.toolbarDelegate.hide();
       }
     }
   };
