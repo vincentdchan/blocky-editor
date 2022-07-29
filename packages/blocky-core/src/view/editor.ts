@@ -47,7 +47,7 @@ import {
   CollaborativeCursorManager,
 } from "./collaborativeCursors";
 import { isHotkey } from "is-hotkey";
-import { FinalizedChangeset } from "@pkg/model/change";
+import { ChangesetRecordOption, FinalizedChangeset } from "@pkg/model/change";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
@@ -857,7 +857,7 @@ export class Editor {
       });
     }
 
-    if (options.recordUndo && isThisUser) {
+    if (options.record === ChangesetRecordOption.Undo && isThisUser) {
       const undoItem = this.undoManager.getAUndoItem();
       if (undoItem.startVersion < 0) {
         undoItem.startVersion = changeset.version;
@@ -865,8 +865,12 @@ export class Editor {
       } else {
         undoItem.length = 1 + (changeset.version - undoItem.startVersion);
       }
+      this.undoManager.clearRedoStack();
       this.#debouncedSealUndo();
+    } else if (options.record === ChangesetRecordOption.Redo && isThisUser) {
+      this.undoManager.pushRedoItem(changeset);
     } else {
+      // applying changeset from another user
       this.undoManager.seal();
     }
   };
@@ -884,7 +888,7 @@ export class Editor {
     new Changeset(this.state)
       .insertChildrenAt(this.state.document.body, 0, [empty])
       .apply({
-        recordUndo: false,
+        record: ChangesetRecordOption.None,
       });
   }
 

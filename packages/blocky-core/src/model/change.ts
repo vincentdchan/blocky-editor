@@ -12,22 +12,32 @@ import { type Operation, transformOperation } from "./operations";
 import type { State } from "./state";
 import type { CursorState } from "./cursor";
 
+export enum ChangesetRecordOption {
+  Undo = 0,
+  Redo = 1,
+  None = 2,
+}
+
 export interface ChangesetApplyOptions {
   updateView: boolean;
   ignoreCursor: boolean;
-  recordUndo: boolean;
+  record: ChangesetRecordOption;
   refreshCursor: boolean;
 }
 
 const defaultApplyOptions: ChangesetApplyOptions = {
   updateView: true,
   ignoreCursor: false,
-  recordUndo: true,
+  record: ChangesetRecordOption.Undo,
   refreshCursor: false,
 };
 
-/*
- * Changeset can be applied repeatedly.
+/**
+ * Changeset is a collection of changes which can be
+ * applied to the document's state.
+ *
+ * Each changeset has it's own ID.
+ * So it can be applied repeatedly.
  */
 export class Changeset {
   version: number;

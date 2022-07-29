@@ -23,7 +23,11 @@ import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { TextBlockName } from "@pkg/block/textBlock";
 import { TitleBlock } from "@pkg/block/titleBlock";
 import { VersionHistory } from "./versionHistory";
-import { Changeset, FinalizedChangeset } from "@pkg/model/change";
+import {
+  Changeset,
+  FinalizedChangeset,
+  type ChangesetApplyOptions,
+} from "@pkg/model/change";
 import type { IdGenerator } from "@pkg/helper/idHelper";
 import type { CursorState } from "@pkg/model/cursor";
 import {
@@ -154,13 +158,16 @@ export class State {
     this.versionHistory.insert(changeset);
   }
 
-  rebase(changeset: FinalizedChangeset): FinalizedChangeset {
+  rebase(
+    changeset: FinalizedChangeset,
+    options?: Partial<ChangesetApplyOptions>
+  ): FinalizedChangeset {
     if (changeset.version > this.#appliedVersion) {
       return changeset;
     }
 
     for (let i = changeset.version; i <= this.#appliedVersion; i++) {
-      changeset = this.#rebaseVersion(i, changeset);
+      changeset = this.#rebaseVersion(i, changeset, options);
     }
 
     return changeset;
@@ -168,7 +175,8 @@ export class State {
 
   #rebaseVersion(
     version: number,
-    changeset: FinalizedChangeset
+    changeset: FinalizedChangeset,
+    options?: Partial<ChangesetApplyOptions>
   ): FinalizedChangeset {
     const rebasedChange = new Changeset(this);
     rebasedChange.version = version + 1;
@@ -195,7 +203,7 @@ export class State {
     rebasedChange.beforeCursor = beforeCursor;
     rebasedChange.afterCursor = afterCursor;
 
-    return rebasedChange.finalize();
+    return rebasedChange.finalize(options);
   }
 
   #applyInsertOperation(insertOperation: InsertNodeOperation) {
