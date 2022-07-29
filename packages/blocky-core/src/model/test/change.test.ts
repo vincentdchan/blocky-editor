@@ -5,7 +5,12 @@ import { Changeset } from "../change";
 import { State } from "../state";
 import { NodeLocation } from "../location";
 import { type TextEditOperation, transformOperation } from "../operations";
-import { BlockyDocument, BlockyElement } from "../tree";
+import {
+  BlockElement,
+  BlockyDocument,
+  BlockyElement,
+  BlockyTextModel,
+} from "../tree";
 import Delta from "quill-delta-es";
 
 test("test delete", () => {
@@ -140,5 +145,27 @@ describe("transform operation", () => {
     expect(t.type).toBe("op-text-edit");
     expect(t.delta.ops).toEqual([{ retain: 13 }, { insert: " ooo " }]);
     expect(t.invert.ops).toEqual([{ retain: 13 }, { delete: 5 }]);
+  });
+});
+
+describe("merge", () => {
+  test("pushWillMerge", () => {
+    const idGenerator = makeDefaultIdGenerator();
+    const textBlock = new BlockElement("Text", idGenerator.mkBlockId(), {
+      textContent: new BlockyTextModel(),
+    });
+    const document = new BlockyDocument({
+      bodyChildren: [textBlock],
+    });
+    const blockRegistry = new BlockRegistry();
+    const state = new State("User-1", document, blockRegistry, idGenerator);
+    const change = new Changeset(state);
+    change.textEdit(textBlock, "textContent", () => new Delta().insert("a"));
+    change.textEdit(textBlock, "textContent", () => new Delta().insert("b"));
+    const finalizedChangeset = change.finalize();
+    expect(finalizedChangeset.operations.length).toBe(1);
+    const first = finalizedChangeset.operations[0] as TextEditOperation;
+    expect(first.type).toBe("op-text-edit");
+    expect(first.delta.ops).toEqual([{ insert: "ba" }]);
   });
 });
