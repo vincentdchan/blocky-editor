@@ -23,7 +23,7 @@ import { type ToolbarFactory } from "@pkg/view/toolbarDelegate";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { BlockPasteEvent, TryParsePastedDOMEvent } from "@pkg/block/basic";
 import { TextBlockName } from "@pkg/block/textBlock";
-import { type CollaborativeCursorOptions } from "./collaborativeCursors";
+import { type CollaborativeCursorFactory } from "./collaborativeCursors";
 import { type Editor } from "./editor";
 import { isUndefined } from "lodash-es";
 import { blockyNodeFromJsonNode } from "@pkg/model/deserialize";
@@ -54,7 +54,7 @@ export interface IEditorControllerOptions {
 
   bannerXOffset?: number;
 
-  collaborativeCursorOptions?: CollaborativeCursorOptions;
+  collaborativeCursorFactory?: CollaborativeCursorFactory;
 }
 
 export interface IInsertOptions {
@@ -143,18 +143,12 @@ export class EditorController {
     if (!editor) {
       return;
     }
-    const { collaborativeCursorManager } = editor;
     const { id } = evt;
     if (id === this.userId) {
       return;
     }
 
-    const { options } = collaborativeCursorManager;
-
-    const name = options.idToName(id);
-    const color = options.idToColor(id);
-
-    editor.drawCollaborativeCursor(id, name, color, evt.state);
+    editor.drawCollaborativeCursor(id, evt.state);
   }
 
   mount(editor: Editor) {

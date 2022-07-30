@@ -90,7 +90,14 @@ export class CollaborativeCursor {
 
   private initTimeout: any;
 
-  constructor(public id: string, private parent: HTMLElement) {}
+  constructor(
+    public id: string,
+    readonly client: CollaborativeCursorClient,
+    private parent: HTMLElement
+  ) {
+    this.color = client.color;
+    this.name = client.name;
+  }
 
   get height() {
     return this.#height;
@@ -232,6 +239,7 @@ export class CollaborativeCursor {
   }
 
   dispose(): void {
+    this.client.dispose?.();
     this.#label?.dispose();
     for (const rect of this.#rects) {
       rect.dispose();
@@ -240,29 +248,33 @@ export class CollaborativeCursor {
   }
 }
 
-export interface CollaborativeCursorOptions {
-  idToName: (id: string) => string;
-  idToColor: (id: string) => string;
+export interface CollaborativeCursorClient {
+  get name(): string;
+  get color(): string;
+  dispose?(): void;
 }
 
-function makeDefaultOptions(): CollaborativeCursorOptions {
-  return {
-    idToName: (id: string) => id,
-    idToColor: () => "yellow",
-  };
-}
+export type CollaborativeCursorFactory = (
+  id: string
+) => CollaborativeCursorClient;
+
+const defaultFactory: CollaborativeCursorFactory = (id: string) => ({
+  get name() {
+    return id;
+  },
+  get color() {
+    return "yellow";
+  },
+});
 
 export class CollaborativeCursorManager extends DivContainer {
   #cursors: Map<string, CollaborativeCursor> = new Map();
 
-  readonly options: CollaborativeCursorOptions;
+  readonly factory: CollaborativeCursorFactory;
 
-  constructor(options?: Partial<CollaborativeCursorOptions>) {
+  constructor(factory?: CollaborativeCursorFactory) {
     super("blocky-collaborative-cursor-container");
-    this.options = {
-      ...makeDefaultOptions(),
-      ...options,
-    };
+    this.factory = factory ?? defaultFactory;
   }
 
   #insert(cursor: CollaborativeCursor) {
@@ -279,7 +291,8 @@ export class CollaborativeCursorManager extends DivContainer {
       return test;
     }
 
-    const newCursor = new CollaborativeCursor(id, this.container);
+    const client = this.factory(id);
+    const newCursor = new CollaborativeCursor(id, client, this.container);
 
     this.#insert(newCursor);
 

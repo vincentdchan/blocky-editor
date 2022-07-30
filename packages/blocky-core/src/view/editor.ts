@@ -43,8 +43,8 @@ import type { EditorController } from "./controller";
 import { Block } from "@pkg/block/basic";
 import { getTextTypeForTextBlock } from "@pkg/block/textBlock";
 import {
-  type CollaborativeCursorOptions,
   CollaborativeCursorManager,
+  type CollaborativeCursorFactory,
 } from "./collaborativeCursors";
 import { isHotkey } from "is-hotkey";
 import { ChangesetRecordOption, FinalizedChangeset } from "@pkg/model/change";
@@ -73,7 +73,7 @@ export interface IEditorOptions {
   toolbarFactory?: ToolbarFactory;
   padding?: Partial<Padding>;
   bannerXOffset?: number;
-  collaborativeCursorOptions?: CollaborativeCursorOptions;
+  collaborativeCursorFactory?: CollaborativeCursorFactory;
 }
 
 enum MineType {
@@ -152,8 +152,8 @@ export class Editor {
       toolbarFactory: controller.options?.toolbarFactory,
       padding: controller.options?.padding,
       bannerXOffset: controller.options?.bannerXOffset,
-      collaborativeCursorOptions:
-        controller.options?.collaborativeCursorOptions,
+      collaborativeCursorFactory:
+        controller.options?.collaborativeCursorFactory,
     });
     controller.mount(editor);
     return editor;
@@ -169,7 +169,7 @@ export class Editor {
       toolbarFactory,
       padding,
       bannerXOffset,
-      collaborativeCursorOptions,
+      collaborativeCursorFactory,
     } = options;
     this.state = state;
     this.registry = registry;
@@ -183,7 +183,7 @@ export class Editor {
     this.bannerXOffset = bannerXOffset ?? 24;
 
     this.collaborativeCursorManager = new CollaborativeCursorManager(
-      collaborativeCursorOptions
+      collaborativeCursorFactory
     );
     this.collaborativeCursorManager.mount(this.#container);
 
@@ -230,20 +230,13 @@ export class Editor {
     this.state.newBlockCreated.pipe(this.onEveryBlock);
   }
 
-  drawCollaborativeCursor(
-    id: string,
-    name: string,
-    color: string,
-    state: CursorState | null
-  ) {
+  drawCollaborativeCursor(id: string, state: CursorState | null) {
     setTimeout(() => {
       if (!state) {
         this.collaborativeCursorManager.deleteById(id);
         return;
       }
       const cursor = this.collaborativeCursorManager.getOrInit(id);
-      cursor.color = color;
-      cursor.name = name;
 
       const containerRect = this.#container.getBoundingClientRect();
       if (state.isCollapsed) {

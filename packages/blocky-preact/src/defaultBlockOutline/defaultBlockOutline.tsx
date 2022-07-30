@@ -61,13 +61,9 @@ class DefaultBlockOutlineInternal extends Component<
       return;
     }
     if (shouldShowOutline) {
-      const { collaborativeCursorManager } = editor;
-
-      const { id } = evt;
-      const color = collaborativeCursorManager.options.idToColor(id);
-
+      const cursor = editor.collaborativeCursorManager.getOrInit(evt.id);
       this.setState({
-        collaborativeOutlineColor: color,
+        collaborativeOutlineColor: cursor.client.color,
       });
     } else {
       this.setState({

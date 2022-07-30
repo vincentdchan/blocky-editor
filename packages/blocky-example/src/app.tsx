@@ -38,10 +38,14 @@ const User2Color = "rgb(246 187 80)";
 function makeController(userId: string, title: string): EditorController {
   return new EditorController(userId, {
     title,
-    collaborativeCursorOptions: {
-      idToName: (id: string) => id,
-      idToColor: () => User2Color,
-    },
+    collaborativeCursorFactory: (id: string) => ({
+      get name() {
+        return id;
+      },
+      get color() {
+        return User2Color;
+      },
+    }),
     /**
      * Define the plugins to implement customize features.
      */
