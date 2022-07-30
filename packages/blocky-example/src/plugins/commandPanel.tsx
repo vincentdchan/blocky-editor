@@ -54,7 +54,6 @@ class CommandPanel extends PureComponent<CommandPanelProps, CommandPanelState> {
   }
   #handleEditorKeydown = (e: KeyboardEvent) => {
     let currentIndex = this.state.selectedIndex;
-    console.log(e.key);
     if (e.key === "ArrowDown") {
       e.preventDefault();
       currentIndex++;
