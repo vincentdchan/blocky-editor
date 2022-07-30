@@ -18,8 +18,12 @@
 .blocky-command-item {
   border-radius: 4px;
   padding: 4px;
+  cursor: pointer;
 
   &:hover {
+    background-color: rgb(178, 178, 178);
+  }
+  &.selected {
     background-color: rgb(178, 178, 178);
   }
 }

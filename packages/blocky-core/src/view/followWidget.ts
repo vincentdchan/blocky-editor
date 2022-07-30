@@ -20,11 +20,12 @@ import { Slot } from "blocky-common/src/events";
 export class FollowWidget extends ContainerWithCoord {
   protected editingValue = "";
   protected disposables: IDisposable[] = [];
-  public startCursorState: CursorState | undefined;
+  startCursorState: CursorState | undefined;
   readonly disposing: Slot = new Slot();
   #controller: EditorController | undefined;
   constructor() {
     super("blocky-follow-widget");
+    this.container.contentEditable = "false";
     this.disposables.push(this.disposing);
   }
   setEditingValue(value: string) {
@@ -60,14 +61,8 @@ export class FollowWidget extends ContainerWithCoord {
       this.startCursorState.offset,
       evt.state.offset
     );
-    console.log("value:", editingValue);
     this.setEditingValue(editingValue);
   };
-  handleKeyDown(e: KeyboardEvent): void {
-    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
-      e.preventDefault();
-    }
-  }
   dispose() {
     this.disposing.emit();
     flattenDisposable(this.disposables).dispose();
