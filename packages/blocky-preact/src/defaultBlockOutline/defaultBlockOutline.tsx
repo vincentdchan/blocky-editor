@@ -45,12 +45,12 @@ class DefaultBlockOutlineInternal extends Component<
     );
     this.disposables.push(
       editorController.beforeApplyCursorChanged.on(
-        this.handleeApplyCursorChangedEvent
+        this.handleApplyCursorChangedEvent
       )
     );
   }
 
-  private handleeApplyCursorChangedEvent = (evt: CursorChangedEvent) => {
+  private handleApplyCursorChangedEvent = (evt: CursorChangedEvent) => {
     const { state } = evt;
     const shouldShowOutline =
       state !== null && state.isCollapsed && state.id === this.props.blockId;

@@ -45,11 +45,15 @@ export enum CursorStateUpdateReason {
   /**
    * The user changed the cursor manually through the changeset
    */
-  setByUser = "setByUser",
+  changeset = "changeset",
   /**
    * handled by the browser, when the "input" event is trigger.
    */
   contentChanged = "contentChanged",
+  /**
+   * UI Event
+   */
+  uiEvent = "uiEvent",
 }
 
 export interface CursorStateUpdateEvent {
