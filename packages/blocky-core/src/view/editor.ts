@@ -197,7 +197,7 @@ export class Editor {
     this.toolbarDelegate.mount(this.#container);
     this.disposables.push(this.toolbarDelegate);
 
-    document.addEventListener("selectionchange", this.#selectionChanged);
+    document.addEventListener("selectionchange", this.#selectionChangedHandler);
 
     state.cursorStateChanged.on(this.handleCursorStateChanged);
 
@@ -333,7 +333,7 @@ export class Editor {
     if (done) {
       done();
     } else {
-      this.#selectionChanged();
+      this.#handleSelectionChanged(CursorStateUpdateReason.contentChanged);
     }
 
     this.controller.emitNextTicks();
@@ -357,7 +357,7 @@ export class Editor {
 
       this.state[symSetCursorState](
         CursorState.collapse(node.id, 0),
-        CursorStateUpdateReason.setByUser
+        CursorStateUpdateReason.changeset
       );
 
       return true;
@@ -368,7 +368,7 @@ export class Editor {
 
   #handleTreeNodeNotFound(startContainer: Node) {
     if (!this.#trySelectOnParent(startContainer)) {
-      this.state[symSetCursorState](null, CursorStateUpdateReason.setByUser);
+      this.state[symSetCursorState](null, CursorStateUpdateReason.changeset);
     }
   }
 
@@ -402,7 +402,11 @@ export class Editor {
     );
   }
 
-  #selectionChanged = () => {
+  #selectionChangedHandler = () => {
+    this.#handleSelectionChanged(CursorStateUpdateReason.uiEvent);
+  };
+
+  #handleSelectionChanged(reason: CursorStateUpdateReason) {
     const sel = window.getSelection();
     if (!sel) {
       return;
@@ -421,10 +425,7 @@ export class Editor {
 
     // not a dom in this editor, ignore it.
     if (!isContainNode(startContainer, this.#container)) {
-      this.state[symSetCursorState](
-        null,
-        CursorStateUpdateReason.contentChanged
-      );
+      this.state[symSetCursorState](null, reason);
       return;
     }
 
@@ -448,7 +449,7 @@ export class Editor {
       if (!areEqualShallow(newCursorState, this.state.cursorState)) {
         this.state[symSetCursorState](
           CursorState.collapse(startNode.id, absoluteStartOffset),
-          CursorStateUpdateReason.contentChanged
+          reason
         );
       }
 
@@ -461,10 +462,7 @@ export class Editor {
 
     const endNode = this.#findBlockNodeContainer(endContainer);
     if (!endNode) {
-      this.state[symSetCursorState](
-        null,
-        CursorStateUpdateReason.contentChanged
-      );
+      this.state[symSetCursorState](null, reason);
       return;
     }
     const absoluteEndOffset = this.#findTextOffsetInBlock(
@@ -486,7 +484,7 @@ export class Editor {
           endNode.id,
           absoluteEndOffset
         ),
-        CursorStateUpdateReason.contentChanged
+        reason
       );
     }
 
@@ -502,7 +500,7 @@ export class Editor {
       this.#followWidget.dispose();
       this.#followWidget = undefined;
     }
-  };
+  }
 
   #tryPlaceToolbar(range: Range): boolean {
     const { cursorState } = this.state;
@@ -597,13 +595,13 @@ export class Editor {
    */
   #handleOpenCursorContentChanged() {
     this.#checkNodesChanged();
-    this.#selectionChanged();
+    this.#handleSelectionChanged(CursorStateUpdateReason.contentChanged);
     const storedCursorState = this.state.cursorState;
-    this.state[symSetCursorState](null, CursorStateUpdateReason.setByUser);
+    this.state[symSetCursorState](null, CursorStateUpdateReason.changeset);
     this.render(() => {
       this.state[symSetCursorState](
         storedCursorState,
-        CursorStateUpdateReason.setByUser
+        CursorStateUpdateReason.changeset
       );
     });
   }
@@ -630,7 +628,7 @@ export class Editor {
     });
     // this is essential because the cursor will change
     // after the user typing.
-    this.#selectionChanged();
+    this.#handleSelectionChanged(CursorStateUpdateReason.contentChanged);
     this.#debouncedSealUndo();
   };
 
@@ -838,7 +836,7 @@ export class Editor {
   #handleBeforeChangesetApply = (changeset: FinalizedChangeset) => {
     const { afterCursor, options } = changeset;
     if (!isUndefined(afterCursor) || options.refreshCursor) {
-      this.state[symSetCursorState](null, CursorStateUpdateReason.setByUser);
+      this.state[symSetCursorState](null, CursorStateUpdateReason.changeset);
     }
   };
 
@@ -853,12 +851,12 @@ export class Editor {
         if (!isUndefined(changeset.afterCursor)) {
           this.state[symSetCursorState](
             changeset.afterCursor,
-            CursorStateUpdateReason.setByUser
+            CursorStateUpdateReason.changeset
           );
         } else if (options.refreshCursor) {
           this.state[symSetCursorState](
             changeset.beforeCursor,
-            CursorStateUpdateReason.setByUser
+            CursorStateUpdateReason.changeset
           );
         }
       });
@@ -1265,7 +1263,11 @@ export class Editor {
     this.#followWidget?.dispose();
     this.#followWidget = widget;
     this.#container.insertBefore(widget.container, this.#container.firstChild);
-    this.#followWidget.widgetMounted?.(this.controller);
+    widget.startCursorState = this.state.cursorState!;
+    widget.disposing.on(() => {
+      this.#followWidget = undefined;
+    });
+    widget.widgetMounted(this.controller);
 
     this.#placeFollowWidgetUnderCursor(widget);
   }
@@ -1297,7 +1299,10 @@ export class Editor {
   dispose() {
     this.#followWidget?.dispose();
     this.#followWidget = undefined;
-    document.removeEventListener("selectionchange", this.#selectionChanged);
+    document.removeEventListener(
+      "selectionchange",
+      this.#selectionChangedHandler
+    );
     flattenDisposable(this.disposables).dispose();
   }
 }
