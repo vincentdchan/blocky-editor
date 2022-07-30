@@ -1,34 +1,5 @@
-import { DivContainer } from "blocky-common/es/dom";
+import { ContainerWithCoord, DivContainer } from "blocky-common/es/dom";
 import { Slot } from "blocky-common/es/events";
-
-class ContainerWithCoord extends DivContainer {
-  protected _x = 0;
-  protected _y = 0;
-
-  get x() {
-    return this._x;
-  }
-
-  set x(v: number) {
-    if (v === this._x) {
-      return;
-    }
-    this.container.style.left = v + "px";
-    this._x = v;
-  }
-
-  get y() {
-    return this._y;
-  }
-
-  set y(v: number) {
-    if (v === this._y) {
-      return;
-    }
-    this.container.style.top = v + "px";
-    this._y = v;
-  }
-}
 
 class CursorLabel extends ContainerWithCoord {
   static Height = 12;
