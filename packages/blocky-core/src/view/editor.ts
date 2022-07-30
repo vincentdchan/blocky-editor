@@ -39,7 +39,8 @@ import { BannerDelegate, type BannerFactory } from "./bannerDelegate";
 import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import { UndoManager } from "@pkg/model/undoManager";
-import type { EditorController } from "./controller";
+import { EditorController } from "./controller";
+import { type FollowWidget } from "./followWidget";
 import { Block } from "@pkg/block/basic";
 import { getTextTypeForTextBlock } from "@pkg/block/textBlock";
 import {
@@ -101,7 +102,7 @@ export class TextInputEvent {
 /**
  * The internal view layer object of the editor.
  * It's not recommended to manipulate this class by the user.
- * The user should use `EditorController` to manipulate the editor.
+ * The user should use {@link EditorController} to manipulate the editor.
  *
  * This class is designed to used internally. This class can be
  * used by the plugins to do something internally.
@@ -111,6 +112,7 @@ export class Editor {
   #renderedDom: HTMLDivElement | undefined;
   #renderer: DocRenderer;
   #lastFocusedId: string | undefined;
+  #followWidget: FollowWidget | undefined;
 
   readonly onEveryBlock: Slot<Block> = new Slot();
 
@@ -687,6 +689,9 @@ export class Editor {
 
   #handleKeyDown = (e: KeyboardEvent) => {
     this.keyDown.emit(e);
+
+    this.#followWidget?.handleKeyDown(e);
+
     if (e.defaultPrevented) {
       return;
     }
@@ -1245,7 +1250,16 @@ export class Editor {
     }
   }
 
+  insertFollowWidget(widget: FollowWidget) {
+    this.#followWidget?.dispose();
+    this.#followWidget = widget;
+    this.#container.insertBefore(widget.container, this.#container.firstChild);
+    this.#followWidget.widgetMounted?.(this.controller);
+  }
+
   dispose() {
+    this.#followWidget?.dispose();
+    this.#followWidget = undefined;
     document.removeEventListener("selectionchange", this.#selectionChanged);
     flattenDisposable(this.disposables).dispose();
   }

@@ -122,6 +122,10 @@
   font-weight: 600;
 }
 
+.blocky-follow-widget {
+  position: absolute;
+}
+
 :root {
   --color-neutral-muted: rgba(175, 184, 193, 0.2);
 }
