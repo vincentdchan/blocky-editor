@@ -555,7 +555,7 @@ export class EditorController {
   setCursorState(cursorState: CursorState | null) {
     this.state[symSetCursorState](
       cursorState,
-      CursorStateUpdateReason.setByUser
+      CursorStateUpdateReason.changeset
     );
   }
 

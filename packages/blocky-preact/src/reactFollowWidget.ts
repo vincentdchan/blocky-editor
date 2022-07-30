@@ -18,6 +18,7 @@ export class PreactFollowWidget extends FollowWidget {
   }
 
   override widgetMounted(controller: EditorController): void {
+    super.widgetMounted(controller);
     render(
       this.#renderer({ controller, editingValue: this.editingValue }),
       this.container
