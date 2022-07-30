@@ -326,6 +326,7 @@ export class Editor {
       $on(newDom, "keydown", this.#handleKeyDown);
       $on(newDom, "copy", this.#handleCopy);
       $on(newDom, "paste", this.#handlePaste);
+      $on(newDom, "blur", this.#handleEditorBlur);
 
       this.#renderedDom = newDom;
     }
@@ -338,6 +339,10 @@ export class Editor {
 
     this.controller.emitNextTicks();
   }
+
+  #handleEditorBlur = () => {
+    this.state[symSetCursorState](null, CursorStateUpdateReason.uiEvent);
+  };
 
   #trySelectOnParent(startContainer: Node): boolean {
     const parent = startContainer.parentNode;
@@ -694,9 +699,6 @@ export class Editor {
 
   #handleKeyDown = (e: KeyboardEvent) => {
     this.keyDown.emit(e);
-
-    this.#followWidget?.handleKeyDown(e);
-
     if (e.defaultPrevented) {
       return;
     }
@@ -1026,7 +1028,10 @@ export class Editor {
   }
 
   handleCursorStateChanged = (evt: CursorStateUpdateEvent) => {
-    if (evt.reason === CursorStateUpdateReason.contentChanged) {
+    if (
+      evt.reason === CursorStateUpdateReason.contentChanged ||
+      evt.reason === CursorStateUpdateReason.uiEvent
+    ) {
       return;
     }
 
