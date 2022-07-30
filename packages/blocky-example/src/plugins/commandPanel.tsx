@@ -78,6 +78,15 @@ class CommandPanel extends PureComponent<CommandPanelProps, CommandPanelState> {
       e.preventDefault();
       // TODO: confirm
       return;
+    } else if (e.key === "Escape") {
+      // Chrome/Edge will go into this branch.
+      // Because they will trigger the "blur" events and make
+      // the the editor blur.
+      // But Safari won't, it will give the editor a "Escape" key.
+      // So we close the widget here for Safari.
+      e.preventDefault();
+      this.props.closeWidget();
+      return;
     }
   };
   override componentWillUnmount() {
