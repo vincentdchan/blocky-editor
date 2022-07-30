@@ -24,7 +24,8 @@ import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { BlockPasteEvent, TryParsePastedDOMEvent } from "@pkg/block/basic";
 import { TextBlockName } from "@pkg/block/textBlock";
 import { type CollaborativeCursorFactory } from "./collaborativeCursors";
-import { type Editor } from "./editor";
+import { Editor } from "./editor";
+import { type FollowWidget } from "./followWidget";
 import { isUndefined } from "lodash-es";
 import { blockyNodeFromJsonNode } from "@pkg/model/deserialize";
 
@@ -69,13 +70,13 @@ export class CursorChangedEvent {
 }
 
 /**
- * The [EditorController] is focused on the data manipulation.
+ * The {@link EditorController} is focused on the data manipulation.
  * It doesn't cared about the changes on UI.
  *
- * The UI details are handled in [Editor] class.
- * If you want to modify the state easily, use the [EditorController].
+ * The UI details are handled in {@link Editor} class.
+ * If you want to modify the state easily, use the {@link EditorController}.
  *
- * Another use of [EditorController] is to manipulate the document
+ * Another use of {@link EditorController} is to manipulate the document
  * before the Editor is created.
  * For example, insert text to the document before
  * the editor is created.
@@ -556,5 +557,16 @@ export class EditorController {
       cursorState,
       CursorStateUpdateReason.setByUser
     );
+  }
+
+  insertFollowWidget(widget: FollowWidget) {
+    this.editor?.insertFollowWidget(widget);
+  }
+
+  getBlockElementAtCursor(): BlockElement | null {
+    if (this.state.cursorState === null) {
+      return null;
+    }
+    return this.state.getBlockElementById(this.state.cursorState.id)!;
   }
 }

@@ -11,6 +11,7 @@ import makeCodeTextPlugin from "blocky-core/dist/plugins/codeTextPlugin";
 import makeBulletListPlugin from "blocky-core/dist/plugins/bulletListPlugin";
 import makeHeadingsPlugin from "blocky-core/dist/plugins/headingsPlugin";
 import { makeImageBlockPlugin } from "./plugins/imageBlock";
+import { makeCommandPanelPlugin } from "./plugins/commandPanel";
 import BannerMenu from "./bannerMenu";
 import ToolbarMenu from "./toolbarMenu";
 import TianShuiWeiImage from "./tianshuiwei.jpg";
@@ -26,6 +27,7 @@ function makeEditorPlugins(): IPlugin[] {
     makeBulletListPlugin(),
     makeHeadingsPlugin(),
     makeImageBlockPlugin(),
+    makeCommandPanelPlugin(),
   ];
 }
 

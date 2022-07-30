@@ -4,6 +4,7 @@ export * from "./block/basic";
 export { makeDefaultIdGenerator, type IdGenerator } from "./helper/idHelper";
 export { type BannerFactory, type BannerInstance } from "./view/bannerDelegate";
 export { type ToolbarFactory } from "./view/toolbarDelegate";
+export { FollowWidget } from "./view/followWidget";
 export {
   CollaborativeCursor,
   type CollaborativeCursorFactory,
