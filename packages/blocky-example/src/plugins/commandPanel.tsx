@@ -76,7 +76,10 @@ class CommandPanel extends PureComponent<CommandPanelProps, CommandPanelState> {
       return;
     } else if (e.key === "Enter") {
       e.preventDefault();
-      // TODO: confirm
+      if (this.state.selectedIndex === 0) {
+        alert("Command");
+      }
+      this.props.closeWidget();
       return;
     } else if (e.key === "Escape") {
       // Chrome/Edge will go into this branch.
@@ -102,7 +105,7 @@ class CommandPanel extends PureComponent<CommandPanelProps, CommandPanelState> {
           Command: {commandContent.length === 0 ? "Empty" : commandContent}
         </div>
         <div className="blocky-commands-container">
-          <CommandItem selected={selectedIndex === 0}>Checkbox</CommandItem>
+          <CommandItem selected={selectedIndex === 0}>Alert</CommandItem>
         </div>
       </div>
     );
