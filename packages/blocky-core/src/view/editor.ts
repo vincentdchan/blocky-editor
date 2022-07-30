@@ -451,8 +451,14 @@ export class Editor {
           CursorStateUpdateReason.contentChanged
         );
       }
+
+      if (this.#followWidget) {
+        // TODO: set editing value;
+        this.#placeFollowWidgetUnderCursor(this.#followWidget);
+      }
       return;
     }
+
     const endNode = this.#findBlockNodeContainer(endContainer);
     if (!endNode) {
       this.state[symSetCursorState](
@@ -490,6 +496,11 @@ export class Editor {
       } else {
         this.toolbarDelegate.hide();
       }
+    }
+
+    if (this.#followWidget) {
+      this.#followWidget.dispose();
+      this.#followWidget = undefined;
     }
   };
 
@@ -1255,6 +1266,32 @@ export class Editor {
     this.#followWidget = widget;
     this.#container.insertBefore(widget.container, this.#container.firstChild);
     this.#followWidget.widgetMounted?.(this.controller);
+
+    this.#placeFollowWidgetUnderCursor(widget);
+  }
+
+  #placeFollowWidgetUnderCursor(followWidget: FollowWidget) {
+    const selection = window.getSelection();
+    if (!selection) {
+      return;
+    }
+    if (selection.rangeCount === 0) {
+      return;
+    }
+    const range = selection.getRangeAt(0);
+    const rects = range.getClientRects();
+    const last = rects.item(rects.length - 1)!;
+    let x = last.x;
+    let y = last.y;
+
+    const containerRect = this.#container.getBoundingClientRect();
+    x -= containerRect.x;
+    y -= containerRect.y;
+
+    y += 20;
+
+    followWidget.x = x;
+    followWidget.y = y;
   }
 
   dispose() {

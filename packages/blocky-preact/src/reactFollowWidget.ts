@@ -1,10 +1,13 @@
 import { type EditorController, FollowWidget } from "blocky-core";
-import { ComponentChild, render } from "preact";
+import { type ComponentChild, render } from "preact";
 import { unmountComponentAtNode } from "preact/compat";
 
-export type FollowWidgetRenderer = (
-  controller: EditorController
-) => ComponentChild;
+export interface FollowWidgetProps {
+  controller: EditorController;
+  editingValue: string;
+}
+
+export type FollowWidgetRenderer = (props: FollowWidgetProps) => ComponentChild;
 
 export class PreactFollowWidget extends FollowWidget {
   #renderer: FollowWidgetRenderer;
@@ -15,7 +18,10 @@ export class PreactFollowWidget extends FollowWidget {
   }
 
   override widgetMounted(controller: EditorController): void {
-    render(this.#renderer(controller), this.container);
+    render(
+      this.#renderer({ controller, editingValue: this.editingValue }),
+      this.container
+    );
   }
 
   override dispose(): void {
