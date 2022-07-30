@@ -165,3 +165,38 @@ export function observeMutation(
     },
   };
 }
+
+export class ContainerWithCoord extends DivContainer {
+  protected _x = 0;
+  protected _y = 0;
+
+  constructor(clsName?: string) {
+    super(clsName);
+    this.container.style.left = "0px";
+    this.container.style.top = "0px";
+  }
+
+  get x() {
+    return this._x;
+  }
+
+  set x(v: number) {
+    if (v === this._x) {
+      return;
+    }
+    this.container.style.left = v + "px";
+    this._x = v;
+  }
+
+  get y() {
+    return this._y;
+  }
+
+  set y(v: number) {
+    if (v === this._y) {
+      return;
+    }
+    this.container.style.top = v + "px";
+    this._y = v;
+  }
+}

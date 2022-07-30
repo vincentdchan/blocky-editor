@@ -1,4 +1,4 @@
-import { DivContainer } from "blocky-common/src/dom";
+import { ContainerWithCoord } from "blocky-common/src/dom";
 import type { EditorController } from "./controller";
 
 /**
@@ -6,9 +6,13 @@ import type { EditorController } from "./controller";
  * Usually, this widget is used to implement a
  * command panel.
  */
-export abstract class FollowWidget extends DivContainer {
+export abstract class FollowWidget extends ContainerWithCoord {
+  protected editingValue = "";
   constructor() {
     super("blocky-follow-widget");
+  }
+  setEditingValue(value: string) {
+    this.editingValue = value;
   }
   widgetMounted?(controller: EditorController): void;
   handleKeyDown(e: KeyboardEvent): void {
