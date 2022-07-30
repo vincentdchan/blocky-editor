@@ -7,6 +7,7 @@ import type { EditorController } from "./controller";
 import {
   CursorState,
   CursorStateUpdateReason,
+  type BlockyTextModel,
   type CursorStateUpdateEvent,
 } from "@pkg/model";
 import { Slot } from "blocky-common/src/events";
@@ -21,6 +22,7 @@ export class FollowWidget extends ContainerWithCoord {
   protected disposables: IDisposable[] = [];
   public startCursorState: CursorState | undefined;
   readonly disposing: Slot = new Slot();
+  #controller: EditorController | undefined;
   constructor() {
     super("blocky-follow-widget");
     this.disposables.push(this.disposing);
@@ -29,6 +31,7 @@ export class FollowWidget extends ContainerWithCoord {
     this.editingValue = value;
   }
   widgetMounted(controller: EditorController): void {
+    this.#controller = controller;
     this.disposables.push(
       controller.state.cursorStateChanged.on(this.#cursorUpdateHandler)
     );
@@ -38,6 +41,27 @@ export class FollowWidget extends ContainerWithCoord {
       this.dispose();
       return;
     }
+    if (!evt.state || evt.state.id !== this.startCursorState?.id) {
+      this.dispose();
+      return;
+    }
+    if (evt.state.offset < this.startCursorState.offset) {
+      this.dispose();
+      return;
+    }
+    const blockElement = this.#controller!.state.getBlockElementById(
+      evt.state.id
+    )!;
+    const textModel = blockElement.getAttribute(
+      "textContent"
+    ) as BlockyTextModel;
+    const textContent = textModel.toString();
+    const editingValue = textContent.slice(
+      this.startCursorState.offset,
+      evt.state.offset
+    );
+    console.log("value:", editingValue);
+    this.setEditingValue(editingValue);
   };
   handleKeyDown(e: KeyboardEvent): void {
     if (e.key === "ArrowUp" || e.key === "ArrowDown") {

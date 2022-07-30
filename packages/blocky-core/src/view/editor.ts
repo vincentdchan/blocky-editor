@@ -453,10 +453,6 @@ export class Editor {
         );
       }
 
-      if (this.#followWidget) {
-        // TODO: set editing value;
-        this.#placeFollowWidgetUnderCursor(this.#followWidget);
-      }
       return;
     }
 
