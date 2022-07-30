@@ -43,6 +43,9 @@ function makeController(userId: string, title: string): EditorController {
         return id;
       },
       get color() {
+        if (id === "User-1") {
+          return User1Color;
+        }
         return User2Color;
       },
     }),
