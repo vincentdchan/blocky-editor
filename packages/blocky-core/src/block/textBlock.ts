@@ -653,23 +653,21 @@ class TextBlockDefinition implements IBlockDefinition {
 
       while (childPtr) {
         if (childPtr instanceof Text) {
-          const content = childPtr.textContent ?? "";
-          delta.insert(content);
+          delta.insert(normalizeString(childPtr.textContent));
         } else if (childPtr instanceof HTMLElement) {
           if (converter.isContainerElement(childPtr)) {
             const childElements = converter.parseContainerElement(childPtr);
             childrenContainer.push(...childElements);
           } else {
-            const content = childPtr.textContent ?? "";
             const attributes = editorController.getAttributesBySpan(childPtr);
-            delta.insert(content, attributes);
+            delta.insert(normalizeString(childPtr.textContent), attributes);
           }
         }
 
         childPtr = childPtr.nextSibling;
       }
     } else {
-      delta.insert(node.textContent ?? "");
+      delta.insert(normalizeString(node.textContent));
     }
     const textModel = new BlockyTextModel(delta);
 
@@ -744,4 +742,15 @@ export function makeTextBlockDefinition(): IBlockDefinition {
 
 export function getTextTypeForTextBlock(blockElement: BlockElement): TextType {
   return parseInt(blockElement.getAttribute("textType") || "0", 10);
+}
+
+// TODO: optimize
+function normalizeString(content: string | null): string {
+  if (content === null) {
+    return "";
+  }
+  return content
+    .replaceAll(/^(\s|\t)+/g, "")
+    .replaceAll(/[\s\t]+$/g, "") // trailing spaces
+    .replaceAll(/\\n/g, "");
 }
