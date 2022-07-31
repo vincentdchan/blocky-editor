@@ -25,7 +25,7 @@ import { BlockPasteEvent, TryParsePastedDOMEvent } from "@pkg/block/basic";
 import { TextBlockName } from "@pkg/block/textBlock";
 import { type CollaborativeCursorFactory } from "./collaborativeCursors";
 import { Editor } from "./editor";
-import { type FollowWidget } from "./followWidget";
+import { type FollowerWidget } from "./followerWidget";
 import { isUndefined } from "lodash-es";
 import { blockyNodeFromJsonNode } from "@pkg/model/deserialize";
 
@@ -559,8 +559,8 @@ export class EditorController {
     );
   }
 
-  insertFollowWidget(widget: FollowWidget) {
-    this.editor?.insertFollowWidget(widget);
+  insertFollowerWidget(widget: FollowerWidget) {
+    this.editor?.insertFollowerWidget(widget);
   }
 
   getBlockElementAtCursor(): BlockElement | null {

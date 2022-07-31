@@ -40,7 +40,7 @@ import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlockName } from "@pkg/block/textBlock";
 import { UndoManager } from "@pkg/model/undoManager";
 import { EditorController } from "./controller";
-import { type FollowWidget } from "./followWidget";
+import { type FollowerWidget } from "./followerWidget";
 import { Block } from "@pkg/block/basic";
 import { getTextTypeForTextBlock } from "@pkg/block/textBlock";
 import {
@@ -112,7 +112,7 @@ export class Editor {
   #renderedDom: HTMLDivElement | undefined;
   #renderer: DocRenderer;
   #lastFocusedId: string | undefined;
-  #followWidget: FollowWidget | undefined;
+  #followerWidget: FollowerWidget | undefined;
 
   readonly onEveryBlock: Slot<Block> = new Slot();
 
@@ -497,9 +497,9 @@ export class Editor {
       }
     }
 
-    if (this.#followWidget) {
-      this.#followWidget.dispose();
-      this.#followWidget = undefined;
+    if (this.#followerWidget) {
+      this.#followerWidget.dispose();
+      this.#followerWidget = undefined;
     }
   }
 
@@ -1260,20 +1260,20 @@ export class Editor {
     }
   }
 
-  insertFollowWidget(widget: FollowWidget) {
-    this.#followWidget?.dispose();
-    this.#followWidget = widget;
+  insertFollowerWidget(widget: FollowerWidget) {
+    this.#followerWidget?.dispose();
+    this.#followerWidget = widget;
     this.#container.insertBefore(widget.container, this.#container.firstChild);
     widget.startCursorState = this.state.cursorState!;
     widget.disposing.on(() => {
-      this.#followWidget = undefined;
+      this.#followerWidget = undefined;
     });
     widget.widgetMounted(this.controller);
 
     this.#placeFollowWidgetUnderCursor(widget);
   }
 
-  #placeFollowWidgetUnderCursor(followWidget: FollowWidget) {
+  #placeFollowWidgetUnderCursor(followWidget: FollowerWidget) {
     const selection = window.getSelection();
     if (!selection) {
       return;
@@ -1298,8 +1298,8 @@ export class Editor {
   }
 
   dispose() {
-    this.#followWidget?.dispose();
-    this.#followWidget = undefined;
+    this.#followerWidget?.dispose();
+    this.#followerWidget = undefined;
     document.removeEventListener(
       "selectionchange",
       this.#selectionChangedHandler

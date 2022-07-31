@@ -5,7 +5,7 @@ import {
 
 export * from "./editor";
 export * from "./reactBlock";
-export * from "./reactFollowWidget";
+export * from "./reactFollowerWidget";
 export {
   makePreactBanner,
   type RenderProps as BannerRenderProps,
