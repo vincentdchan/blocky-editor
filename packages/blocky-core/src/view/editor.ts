@@ -948,9 +948,10 @@ export class Editor {
     }
 
     if (prevNode.nodeName !== TextBlockName) {
-      new Changeset(this.state)
-        .setCursorState(CursorState.collapse(prevNode.id, 0))
-        .apply();
+      this.state[symSetCursorState](
+        CursorState.collapse(prevNode.id, 0),
+        CursorStateUpdateReason.changeset
+      );
       return true;
     }
 
