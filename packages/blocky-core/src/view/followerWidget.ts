@@ -1,8 +1,8 @@
-import { ContainerWithCoord } from "blocky-common/src/dom";
+import { ContainerWithCoord } from "blocky-common/es/dom";
 import {
   type IDisposable,
   flattenDisposable,
-} from "blocky-common/src/disposable";
+} from "blocky-common/es/disposable";
 import type { EditorController } from "./controller";
 import {
   CursorState,
@@ -10,7 +10,7 @@ import {
   type BlockyTextModel,
   type CursorStateUpdateEvent,
 } from "@pkg/model";
-import { Slot } from "blocky-common/src/events";
+import { Slot } from "blocky-common/es/events";
 
 /**
  * {@link FollowerWidget} is a widget can follow the cursor.
