@@ -13,11 +13,11 @@ import {
 import { Slot } from "blocky-common/src/events";
 
 /**
- * {@link FollowWidget} is a widget can follow the cursor.
+ * {@link FollowerWidget} is a widget can follow the cursor.
  * Usually, this widget is used to implement a
  * command panel.
  */
-export class FollowWidget extends ContainerWithCoord {
+export class FollowerWidget extends ContainerWithCoord {
   protected editingValue = "";
   protected disposables: IDisposable[] = [];
   startCursorState: CursorState | undefined;

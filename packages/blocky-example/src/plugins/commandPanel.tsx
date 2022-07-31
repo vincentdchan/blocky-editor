@@ -1,6 +1,6 @@
 import { ComponentChild } from "preact";
 import { PureComponent } from "preact/compat";
-import { makePreactFollowWidget } from "blocky-preact";
+import { makePreactFollowerWidget } from "blocky-preact";
 import {
   type IDisposable,
   flattenDisposable,
@@ -126,8 +126,8 @@ export function makeCommandPanelPlugin(): IPlugin {
         if (blockElement.nodeName !== TextBlockName) {
           return;
         }
-        editor.insertFollowWidget(
-          makePreactFollowWidget(
+        editor.insertFollowerWidget(
+          makePreactFollowerWidget(
             ({ controller, editingValue, closeWidget }) => (
               <CommandPanel
                 controller={controller}

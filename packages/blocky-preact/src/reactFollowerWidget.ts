@@ -1,20 +1,22 @@
-import { type EditorController, FollowWidget } from "blocky-core";
+import { type EditorController, FollowerWidget } from "blocky-core";
 import { type ComponentChild, render } from "preact";
 import { unmountComponentAtNode } from "preact/compat";
 
-export interface FollowWidgetProps {
+export interface FollowerWidgetProps {
   controller: EditorController;
   editingValue: string;
   closeWidget: () => void;
 }
 
-export type FollowWidgetRenderer = (props: FollowWidgetProps) => ComponentChild;
+export type FollowerWidgetRenderer = (
+  props: FollowerWidgetProps
+) => ComponentChild;
 
-export class PreactFollowWidget extends FollowWidget {
-  #renderer: FollowWidgetRenderer;
+export class PreactFollowWidget extends FollowerWidget {
+  #renderer: FollowerWidgetRenderer;
   #controller: EditorController | undefined;
 
-  constructor(renderer: FollowWidgetRenderer) {
+  constructor(renderer: FollowerWidgetRenderer) {
     super();
     this.#renderer = renderer;
   }
@@ -47,8 +49,8 @@ export class PreactFollowWidget extends FollowWidget {
   }
 }
 
-export function makePreactFollowWidget(
-  renderer: FollowWidgetRenderer
-): FollowWidget {
+export function makePreactFollowerWidget(
+  renderer: FollowerWidgetRenderer
+): FollowerWidget {
   return new PreactFollowWidget(renderer);
 }
