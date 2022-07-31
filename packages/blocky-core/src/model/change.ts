@@ -215,8 +215,8 @@ export class Changeset {
       if (last.type === "op-text-edit" && operation.id === last.id) {
         last.delta = last.delta.compose(operation.delta);
         last.invert = operation.invert.compose(last.invert);
+        return;
       }
-      return;
     }
     this.operations.push(operation);
   }
