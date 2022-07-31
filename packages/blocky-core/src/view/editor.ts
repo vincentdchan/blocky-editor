@@ -458,6 +458,7 @@ export class Editor {
         );
       }
 
+      this.#showToolbarByCursorState(newCursorState, range);
       return;
     }
 
@@ -489,17 +490,21 @@ export class Editor {
       );
     }
 
+    this.#showToolbarByCursorState(newCursorState, range);
+
+    if (this.#followerWidget) {
+      this.#followerWidget.dispose();
+      this.#followerWidget = undefined;
+    }
+  }
+
+  #showToolbarByCursorState(newCursorState: CursorState, range: Range) {
     if (this.toolbarDelegate.enabled) {
       if (newCursorState.startId !== "Title" && this.#tryPlaceToolbar(range)) {
         this.toolbarDelegate.show();
       } else {
         this.toolbarDelegate.hide();
       }
-    }
-
-    if (this.#followerWidget) {
-      this.#followerWidget.dispose();
-      this.#followerWidget = undefined;
     }
   }
 
