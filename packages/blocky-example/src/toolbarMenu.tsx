@@ -27,7 +27,7 @@ interface ToolbarMenuState {
 
 class ToolbarMenu extends Component<ToolbarMenuProps, ToolbarMenuState> {
   #containerRef: RefObject<HTMLDivElement> = createRef();
-  #cursorState: CursorState | undefined;
+  #cursorState: CursorState | null = null;
 
   constructor(props: ToolbarMenuProps) {
     super(props);
@@ -39,6 +39,7 @@ class ToolbarMenu extends Component<ToolbarMenuProps, ToolbarMenuState> {
   }
 
   private handleBold = () => {
+    console.log("bold");
     const { editorController } = this.props;
     editorController.formatTextOnSelectedText({
       bold: true,
@@ -55,7 +56,7 @@ class ToolbarMenu extends Component<ToolbarMenuProps, ToolbarMenuState> {
   private handleLinkClicked = () => {
     const { editorController } = this.props;
     // save the cursor state
-    this.#cursorState = editorController.editor?.state.cursorState;
+    this.#cursorState = editorController.editor!.state.cursorState;
 
     const container = this.#containerRef.current!;
     const rect = container.getBoundingClientRect();
@@ -179,7 +180,7 @@ class AnchorToolbar extends Component<AnchorToolbarProps, AnchorToolbarState> {
       }
       this.handleConfirmed();
     }
-  }
+  };
 
   override componentDidMount() {
     this.#inputRef.current?.focus();
@@ -200,7 +201,9 @@ class AnchorToolbar extends Component<AnchorToolbarProps, AnchorToolbarState> {
           onChange={this.handleContentChanged}
           onKeyDown={this.handleKeydown}
         />
-        <Button disabled={!state.valid} onClick={this.handleConfirmed}>Confirm</Button>
+        <Button disabled={!state.valid} onClick={this.handleConfirmed}>
+          Confirm
+        </Button>
       </div>
     );
   }

@@ -341,7 +341,7 @@ export class Editor {
   }
 
   #handleEditorBlur = () => {
-    this.state[symSetCursorState](null, CursorStateUpdateReason.uiEvent);
+    this.#handleSelectionChanged(CursorStateUpdateReason.uiEvent);
   };
 
   #trySelectOnParent(startContainer: Node): boolean {
@@ -428,7 +428,6 @@ export class Editor {
     const range = sel.getRangeAt(0);
     const { startContainer, endContainer, startOffset, endOffset } = range;
 
-    // not a dom in this editor, ignore it.
     if (!isContainNode(startContainer, this.#container)) {
       this.state[symSetCursorState](null, reason);
       return;
