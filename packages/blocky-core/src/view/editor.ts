@@ -953,16 +953,10 @@ export class Editor {
         .apply();
       return true;
     }
-    const firstChild = prevNode.firstChild;
-    if (!firstChild || !(firstChild instanceof BlockyTextModel)) {
-      return true;
-    }
-    if (!node.firstChild) {
-      return true;
-    }
 
     const thisTextModel = node.getAttribute<BlockyTextModel>("textContent")!;
-    const prevTextModel = firstChild as BlockyTextModel;
+    const prevTextModel =
+      prevNode.getAttribute<BlockyTextModel>("textContent")!;
     const originalLength = prevTextModel.length;
 
     new Changeset(this.state)
