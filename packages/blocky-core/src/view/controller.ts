@@ -229,17 +229,15 @@ export class EditorController {
       return;
     }
 
-    // prevent the cursor from jumping around
-
-    if (!blockElement.firstChild) {
-      return;
-    }
     new Changeset(this.state)
       .textEdit(blockElement, "textContent", () =>
         new Delta().retain(index).retain(length, attribs)
       )
       .setCursorState(new CursorState(blockId, index, blockId, index + length))
-      .apply();
+      .apply({
+        // prevent the cursor from jumping around
+        refreshCursor: true,
+      });
   }
 
   formatTextOnCursor(cursorState: CursorState, attribs?: AttributesObject) {
