@@ -912,6 +912,21 @@ export class Editor {
   }
 
   /**
+   * Technically, prevSibling is not the previous element.
+   * The answer is the bottom most element.
+   */
+  #findPreviousElement(node: BlockElement): BlockElement | undefined {
+    let ptr = node.prevSibling as BlockElement | undefined;
+    if (!ptr) {
+      return ptr;
+    }
+    while (ptr.lastChild) {
+      ptr = ptr!.lastChild as BlockElement;
+    }
+    return ptr;
+  }
+
+  /**
    * If the focusing line is TextLine,
    * try to merge to previous line.
    *
@@ -942,7 +957,7 @@ export class Editor {
       return false;
     }
 
-    const prevNode = node.prevSibling as BlockElement | undefined;
+    const prevNode = this.#findPreviousElement(node);
     if (!prevNode) {
       return true;
     }
@@ -986,7 +1001,7 @@ export class Editor {
     if (!node) {
       return false;
     }
-    const prevNode = node.prevSibling as BlockElement;
+    const prevNode = this.#findPreviousElement(node);
 
     const blockDef = this.registry.block.getBlockDefByName(node.nodeName)!;
 
