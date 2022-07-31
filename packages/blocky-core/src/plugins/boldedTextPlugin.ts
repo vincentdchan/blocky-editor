@@ -23,7 +23,6 @@ function makeBoldedTextPlugin(): IPlugin {
       editor.keyDown.on((e: KeyboardEvent) => {
         if (isHotkey("mod+b", e)) {
           e.preventDefault();
-          console.log("format");
           editor.controller.formatTextOnSelectedText({
             bold: true,
           });
