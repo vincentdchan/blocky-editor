@@ -80,14 +80,19 @@
 }
 
 .blocky-editor-block {
+  margin-top: 2px;
   display: flex;
+}
+
+.blocky-content {
+  width: 100%;
 }
 
 .blocky-left-pad {
   display: flex;
   justify-content: center;
-  width: 24px;
-  min-width: 24px;
+  width: 26px;
+  min-width: 26px;
 }
 
 .blocky-bullet-content::before {
@@ -124,6 +129,24 @@
 
 .blocky-follow-widget {
   position: absolute;
+}
+
+.blocky-checkbox {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 12px;
+  box-shadow: 0px 0px 0px 1px black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.blocky-checkbox-center {
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  border-radius: 50%;
+  background-color: rgb(239, 169, 41);
 }
 
 :root {
