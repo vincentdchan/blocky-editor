@@ -92,11 +92,23 @@ function makeDefaultPadding(): Padding {
 }
 
 export class TextInputEvent {
+  #beforeString: string | undefined;
   constructor(
     readonly beforeDelta: Delta,
     readonly applyDelta: Delta,
     readonly blockElement: BlockElement
   ) {}
+  get beforeString(): string {
+    if (isUndefined(this.#beforeString)) {
+      this.#beforeString = this.beforeDelta.reduce((prev, item) => {
+        if (typeof item.insert === "string") {
+          return prev + item.insert;
+        }
+        return prev;
+      }, "");
+    }
+    return this.#beforeString;
+  }
 }
 
 /**
@@ -113,6 +125,11 @@ export class Editor {
   #renderer: DocRenderer;
   #lastFocusedId: string | undefined;
   #followerWidget: FollowerWidget | undefined;
+  /**
+   * Input events will be fired after the changeset applied.
+   * So we need an array to store them.
+   */
+  #stagedInput: TextInputEvent[] = [];
 
   readonly onEveryBlock: Slot<Block> = new Slot();
 
@@ -216,6 +233,26 @@ export class Editor {
     this.state.changesetApplied.on(this.#handleChangesetApplied);
 
     this.undoManager = new UndoManager(state);
+  }
+
+  addStagedInput(inputEvent: TextInputEvent) {
+    this.#stagedInput.push(inputEvent);
+  }
+
+  /**
+   * There will be new input event added to stagedInput.
+   * So we need to swap the array.
+   */
+  #emitStagedInput() {
+    if (this.#stagedInput.length === 0) {
+      return;
+    }
+    const newInput: TextInputEvent[] = [];
+    const oldInput = this.#stagedInput;
+    this.#stagedInput = newInput;
+    for (let i = 0; i < oldInput.length; i++) {
+      this.textInput.emit(oldInput[i]);
+    }
   }
 
   #initBlockCreated() {
@@ -880,6 +917,8 @@ export class Editor {
       // applying changeset from another user
       this.undoManager.seal();
     }
+
+    this.#emitStagedInput();
   };
 
   openExternalLink(link: string) {

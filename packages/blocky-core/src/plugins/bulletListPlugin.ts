@@ -29,17 +29,12 @@ function makeBulletListPlugin(): IPlugin {
       .apply();
   };
   const handleTextInputEvent = (editor: Editor) => (evt: TextInputEvent) => {
-    const { beforeDelta, blockElement } = evt;
+    const { blockElement, beforeString } = evt;
     let index = 0;
     for (const op of evt.applyDelta.ops) {
       if (isString(op.insert)) {
         if (index === 1 && isWhiteSpace(op.insert)) {
-          const before = beforeDelta.slice(0, index).reduce((prev, item) => {
-            if (typeof item.insert === "string") {
-              return prev + item.insert;
-            }
-            return prev;
-          }, "");
+          const before = beforeString.slice(0, index);
           if (before === "-") {
             turnTextBlockIntoBulletList(editor, blockElement.id, blockElement);
           }

@@ -271,7 +271,7 @@ class TextBlock extends Block {
     const diff = beforeDelta.diff(newDelta, offset);
     changeset.textEdit(this.props, "textContent", () => diff);
 
-    this.editor.textInput.emit(
+    this.editor.addStagedInput(
       new TextInputEvent(beforeDelta, diff, blockElement)
     );
   }

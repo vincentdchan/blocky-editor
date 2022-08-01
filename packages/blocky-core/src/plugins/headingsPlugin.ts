@@ -8,7 +8,7 @@ function makeHeadingsPlugin(): IPlugin {
     name: "headings",
     onInitialized(editor: Editor) {
       editor.textInput.on((evt) => {
-        const { blockElement, beforeDelta } = evt;
+        const { beforeString, blockElement } = evt;
         const { state } = editor;
         const changeset = new Changeset(state);
         const delta = new Delta();
@@ -16,12 +16,7 @@ function makeHeadingsPlugin(): IPlugin {
         let index = 0;
         for (const op of evt.applyDelta.ops) {
           if (isString(op.insert)) {
-            const before = beforeDelta.slice(0, index).reduce((prev, item) => {
-              if (typeof item.insert === "string") {
-                return prev + item.insert;
-              }
-              return prev;
-            }, "");
+            const before = beforeString.slice(0, index);
             if (isWhiteSpace(op.insert)) {
               if (before === "#") {
                 delta.delete(2);
