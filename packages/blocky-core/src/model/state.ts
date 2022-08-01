@@ -157,8 +157,8 @@ export class State {
       }
     }
 
-    this.changesetApplied.emit(changeset);
     this.#appliedVersion = changeset.version;
+    this.changesetApplied.emit(changeset);
     this.versionHistory.insert(changeset);
   }
 
