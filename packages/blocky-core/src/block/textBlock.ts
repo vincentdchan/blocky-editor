@@ -1,6 +1,6 @@
 import { isString } from "lodash-es";
 import Delta, { Op } from "quill-delta-es";
-import { elem, removeNode } from "blocky-common/es/dom";
+import { elem, removeNode, $on } from "blocky-common/es/dom";
 import {
   type IBlockDefinition,
   type BlockCreatedEvent,
@@ -19,6 +19,7 @@ import {
   BlockyNode,
   Changeset,
   BlockElement,
+  State,
 } from "@pkg/model";
 import { TextInputEvent, type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";
@@ -48,8 +49,56 @@ function textTypeCanIndent(textType: TextType): boolean {
 
 class LeftPadRenderer {
   constructor(readonly container: HTMLDivElement) {}
+  render() {}
   dispose(): void {
     removeNode(this.container);
+  }
+}
+
+const checkedColor = "rgb(240, 153, 56)";
+
+class CheckboxRenderer extends LeftPadRenderer {
+  #checkboxContainer: HTMLDivElement;
+  #centerElement: HTMLDivElement;
+  #checked = false;
+  constructor(
+    container: HTMLDivElement,
+    private state: State,
+    private blockElement: BlockElement
+  ) {
+    super(container);
+    this.#checkboxContainer = elem("div", "blocky-checkbox");
+    container.append(this.#checkboxContainer);
+
+    this.#centerElement = elem("div", "blocky-checkbox-center");
+    this.#centerElement.style.backgroundColor = checkedColor;
+    this.#checkboxContainer.appendChild(this.#centerElement);
+    this.#centerElement.style.visibility = "hidden";
+    this.#checkboxContainer.style.boxShadow = `0px 0px 0px 1px gray`;
+
+    $on(this.#checkboxContainer, "click", this.#handleClick);
+  }
+  #handleClick = () => {
+    const checked = !!this.blockElement.getAttribute("checked");
+    new Changeset(this.state)
+      .setAttribute(this.blockElement, { checked: !checked })
+      .apply({
+        refreshCursor: true,
+      });
+  };
+  override render(): void {
+    const checked = !!this.blockElement.getAttribute("checked");
+    if (checked == this.#checked) {
+      return;
+    }
+    if (checked) {
+      this.#centerElement.style.visibility = "";
+      this.#checkboxContainer.style.boxShadow = `0px 0px 0px 1px ${checkedColor}`;
+    } else {
+      this.#centerElement.style.visibility = "hidden";
+      this.#checkboxContainer.style.boxShadow = `0px 0px 0px 1px gray`;
+    }
+    this.#checked = checked;
   }
 }
 
@@ -366,12 +415,10 @@ class TextBlock extends Block {
   #createCheckboxRenderer(): LeftPadRenderer {
     const container = this.#createLeftPadContainer();
 
-    const checkboxContainer = elem("div", "blocky-checkbox");
-    container.append(checkboxContainer);
-
-    return new LeftPadRenderer(container);
+    return new CheckboxRenderer(container, this.editor.state, this.props);
   }
 
+  // TODO: dispatch through plugin
   #forceRenderContentStyle(
     blockContainer: HTMLElement,
     contentContainer: HTMLElement,
@@ -411,6 +458,9 @@ class TextBlock extends Block {
     }
   }
 
+  /**
+   * If textType changed, force update the style and create new LeftPad renderer.
+   */
   #ensureContentContainerStyle(
     blockContainer: HTMLElement,
     contentContainer: HTMLElement
@@ -490,6 +540,7 @@ class TextBlock extends Block {
       blockContainer,
       this.#contentContainer!
     );
+    this.#leftPadRenderer?.render();
 
     let domPtr: Node | null = contentContainer.firstChild;
     let prevDom: Node | null = null;

@@ -139,6 +139,9 @@ class BannerMenu extends Component<BannerProps, BannerState> {
         <MenuItem onClick={this.insertText(TextType.Heading3)}>
           Heading3
         </MenuItem>
+        <MenuItem onClick={this.insertText(TextType.Checkbox)}>
+          Checkbox
+        </MenuItem>
         <MenuItem onClick={this.insertImage}>Image</MenuItem>
         {showDelete && (
           <>
