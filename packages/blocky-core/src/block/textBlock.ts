@@ -289,14 +289,14 @@ class TextBlock extends Block {
       return;
     }
 
-    this.renderBlockTextContent(container, textModel);
+    this.#renderBlockTextContent(container, textModel);
   }
 
   override renderChildren(): BlockyNode | void | null {
     return this.props.firstChild;
   }
 
-  private createAnchorNode(href: string): HTMLSpanElement {
+  #createAnchorNode(href: string): HTMLSpanElement {
     const e = elem("span");
     e.classList.add(this.editor.anchorSpanClass);
     e.setAttribute(DataRefKey, href);
@@ -309,14 +309,14 @@ class TextBlock extends Block {
     return e;
   }
 
-  private createDomByOp(op: Op, editor: Editor): Node {
+  #createDomByOp(op: Op, editor: Editor): Node {
     if (op.attributes) {
       let d: HTMLElement;
 
       const { href, ...restAttr } = op.attributes;
 
       if (isString(href)) {
-        d = this.createAnchorNode(href);
+        d = this.#createAnchorNode(href);
       } else {
         d = elem("span");
       }
@@ -365,6 +365,45 @@ class TextBlock extends Block {
     return container;
   }
 
+  #forceRenderContentStyle(
+    blockContainer: HTMLElement,
+    contentContainer: HTMLElement,
+    textType: TextType
+  ) {
+    contentContainer.setAttribute("data-type", textType.toString());
+    switch (textType) {
+      case TextType.Checkbox: {
+        this.#bulletSpan = this.#createCheckbox();
+        blockContainer.insertBefore(
+          this.#bulletSpan,
+          blockContainer.firstChild
+        );
+        return;
+      }
+
+      case TextType.Bulleted: {
+        this.#bulletSpan = this.#createBulletSpan();
+        blockContainer.insertBefore(
+          this.#bulletSpan,
+          blockContainer.firstChild
+        );
+        return;
+      }
+
+      case TextType.Heading1:
+      case TextType.Heading2:
+      case TextType.Heading3: {
+        contentContainer.classList.add(`blocky-heading${textType}`);
+        break;
+      }
+    }
+
+    if (this.#bulletSpan) {
+      removeNode(this.#bulletSpan);
+      this.#bulletSpan = null;
+    }
+  }
+
   #ensureContentContainerStyle(
     blockContainer: HTMLElement,
     contentContainer: HTMLElement
@@ -372,46 +411,8 @@ class TextBlock extends Block {
     const renderedType = contentContainer.getAttribute("data-type");
     const textType = this.getTextType();
 
-    const forceRenderContentStyle = (
-      contentContainer: HTMLElement,
-      textType: TextType
-    ) => {
-      contentContainer.setAttribute("data-type", textType.toString());
-      switch (textType) {
-        case TextType.Checkbox: {
-          this.#bulletSpan = this.#createCheckbox();
-          blockContainer.insertBefore(
-            this.#bulletSpan,
-            blockContainer.firstChild
-          );
-          return;
-        }
-
-        case TextType.Bulleted: {
-          this.#bulletSpan = this.#createBulletSpan();
-          blockContainer.insertBefore(
-            this.#bulletSpan,
-            blockContainer.firstChild
-          );
-          return;
-        }
-
-        case TextType.Heading1:
-        case TextType.Heading2:
-        case TextType.Heading3: {
-          contentContainer.classList.add(`blocky-heading${textType}`);
-          break;
-        }
-      }
-
-      if (this.#bulletSpan) {
-        removeNode(this.#bulletSpan);
-        this.#bulletSpan = null;
-      }
-    };
-
     if (!renderedType) {
-      forceRenderContentStyle(contentContainer, textType);
+      this.#forceRenderContentStyle(blockContainer, contentContainer, textType);
       return contentContainer;
     }
 
@@ -423,7 +424,7 @@ class TextBlock extends Block {
       this.#bodyContainer?.insertBefore(newContainer, null);
       this.#contentContainer = newContainer;
 
-      forceRenderContentStyle(newContainer, textType);
+      this.#forceRenderContentStyle(blockContainer, newContainer, textType);
 
       return newContainer;
     }
@@ -439,7 +440,7 @@ class TextBlock extends Block {
     return this.#contentContainer;
   }
 
-  private isNodeMatch(op: Op, dom: Node): boolean {
+  #isNodeMatch(op: Op, dom: Node): boolean {
     if (op.attributes) {
       if (isString(op.attributes.href)) {
         return (
@@ -451,14 +452,14 @@ class TextBlock extends Block {
         return false;
       }
 
-      return this.isAttributesMatch(dom, op.attributes);
+      return this.#isAttributesMatch(dom, op.attributes);
     }
 
     return dom instanceof Text;
   }
 
   // TODO: optimize this method
-  private isAttributesMatch(
+  #isAttributesMatch(
     span: HTMLSpanElement,
     attributes: AttributesObject
   ): boolean {
@@ -474,7 +475,7 @@ class TextBlock extends Block {
     return true;
   }
 
-  private renderBlockTextContent(
+  #renderBlockTextContent(
     blockContainer: HTMLElement,
     textModel: BlockyTextModel
   ) {
@@ -492,13 +493,13 @@ class TextBlock extends Block {
         continue;
       }
       if (!domPtr) {
-        domPtr = this.createDomByOp(op, this.editor);
+        domPtr = this.#createDomByOp(op, this.editor);
         contentContainer.insertBefore(domPtr, prevDom?.nextSibling ?? null);
       } else {
         // is old
-        if (!this.isNodeMatch(op, domPtr)) {
+        if (!this.#isNodeMatch(op, domPtr)) {
           const oldDom = domPtr;
-          const newNode = this.createDomByOp(op, this.editor);
+          const newNode = this.#createDomByOp(op, this.editor);
 
           prevDom = domPtr;
           domPtr = domPtr.nextSibling;
@@ -531,10 +532,10 @@ class TextBlock extends Block {
     if (!prevElement) {
       return;
     }
-    this.makeThisTextBlockIndent(prevElement);
+    this.#makeThisTextBlockIndent(prevElement);
   }
 
-  private makeThisTextBlockIndent(prevElement: BlockyElement) {
+  #makeThisTextBlockIndent(prevElement: BlockyElement) {
     if (prevElement.nodeName !== TextBlockName) {
       return;
     }
