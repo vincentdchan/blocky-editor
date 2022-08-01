@@ -20,17 +20,17 @@ function makeHeadingsPlugin(): IPlugin {
             if (isWhiteSpace(op.insert)) {
               if (before === "#") {
                 delta.delete(2);
-                changeset.setAttribute(blockElement, {
+                changeset.updateAttributes(blockElement, {
                   textType: TextType.Heading1,
                 });
               } else if (before === "##") {
                 delta.delete(3);
-                changeset.setAttribute(blockElement, {
+                changeset.updateAttributes(blockElement, {
                   textType: TextType.Heading2,
                 });
               } else if (before === "###") {
                 delta.delete(4);
-                changeset.setAttribute(blockElement, {
+                changeset.updateAttributes(blockElement, {
                   textType: TextType.Heading3,
                 });
               }

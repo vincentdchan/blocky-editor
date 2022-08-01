@@ -53,8 +53,6 @@ export interface IEditorControllerOptions {
    */
   padding?: Partial<Padding>;
 
-  bannerXOffset?: number;
-
   collaborativeCursorFactory?: CollaborativeCursorFactory;
 }
 
@@ -212,34 +210,6 @@ export class EditorController {
     this.#nextTick.push(fn);
   }
 
-  formatText(
-    blockId: string,
-    index: number,
-    length: number,
-    attribs?: AttributesObject
-  ) {
-    if (length === 0) {
-      return;
-    }
-
-    const blockElement = this.state.getBlockElementById(blockId)!;
-
-    const { editor } = this;
-    if (!editor) {
-      return;
-    }
-
-    new Changeset(this.state)
-      .textEdit(blockElement, "textContent", () =>
-        new Delta().retain(index).retain(length, attribs)
-      )
-      .setCursorState(new CursorState(blockId, index, blockId, index + length))
-      .apply({
-        // prevent the cursor from jumping around
-        refreshCursor: true,
-      });
-  }
-
   formatTextOnCursor(cursorState: CursorState, attribs?: AttributesObject) {
     const editor = this.editor;
     if (!editor) {
@@ -250,17 +220,21 @@ export class EditorController {
       return;
     }
 
-    const { startId, endId, startOffset, endOffset } = cursorState;
+    const changeset = new Changeset(this.state);
+    const states = this.state.splitCursorStateByBlocks(cursorState);
 
-    if (startId === endId) {
-      // make a single fragment bolded
-      const blockNode = editor.state.getBlockElementById(startId);
-      if (!blockNode) {
-        console.error(`${startId} not found`);
-        return;
-      }
-      this.formatText(startId, startOffset, endOffset - startOffset, attribs);
+    for (const state of states) {
+      const blockElement = this.state.getBlockElementById(state.endId)!;
+      changeset.textEdit(blockElement, "textContent", () =>
+        new Delta()
+          .retain(state.startOffset)
+          .retain(state.endOffset - state.startOffset, attribs)
+      );
     }
+
+    changeset.apply({
+      refreshCursor: true,
+    });
   }
 
   formatTextOnSelectedText(attribs?: AttributesObject) {

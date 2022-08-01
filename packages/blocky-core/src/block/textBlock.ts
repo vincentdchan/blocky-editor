@@ -81,7 +81,7 @@ class CheckboxRenderer extends LeftPadRenderer {
   #handleClick = () => {
     const checked = !!this.blockElement.getAttribute("checked");
     new Changeset(this.state)
-      .setAttribute(this.blockElement, { checked: !checked })
+      .updateAttributes(this.blockElement, { checked: !checked })
       .apply({
         refreshCursor: true,
       });
@@ -829,8 +829,5 @@ function normalizeString(content: string | null): string {
   if (content === null) {
     return "";
   }
-  return content
-    .replaceAll(/^(\s|\t)+/g, "")
-    .replaceAll(/[\s\t]+$/g, "") // trailing spaces
-    .replaceAll(/\\n/g, "");
+  return content.replaceAll(/(\\r\\n|\t)/g, "");
 }

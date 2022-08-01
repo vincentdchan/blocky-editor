@@ -29,7 +29,7 @@ import {
   type ChangesetApplyOptions,
 } from "@pkg/model/change";
 import type { IdGenerator } from "@pkg/helper/idHelper";
-import type { CursorState } from "@pkg/model/cursor";
+import { CursorState } from "@pkg/model/cursor";
 import {
   InsertNodeOperation,
   UpdateNodeOperation,
@@ -136,22 +136,22 @@ export class State {
     }
     this.beforeChangesetApply.emit(changeset);
 
-    for (const op of changeset.operations) {
-      switch (op.type) {
-        case "op-insert-node": {
-          this.#applyInsertOperation(op);
+    for (const operation of changeset.operations) {
+      switch (operation.op) {
+        case "insert-nodes": {
+          this.#applyInsertOperation(operation);
           break;
         }
-        case "op-update-node": {
-          this.#applyUpdateOperation(op);
+        case "update-attributes": {
+          this.#applyUpdateOperation(operation);
           break;
         }
-        case "op-remove-node": {
-          this.#applyRemoveOperation(op);
+        case "remove-nodes": {
+          this.#applyRemoveOperation(operation);
           break;
         }
-        case "op-text-edit": {
-          this.#applyTextEditOperation(op);
+        case "text-edit": {
+          this.#applyTextEditOperation(operation);
           break;
         }
       }
@@ -336,6 +336,58 @@ export class State {
     this.#idMap.set(element.id, element);
   }
 
+  /**
+   * Split cursor states into multiple states crossing the document.
+   */
+  splitCursorStateByBlocks(state: CursorState): CursorState[] {
+    if (state.isCollapsed) {
+      return [state];
+    }
+    if (state.startId === state.endId) {
+      return [state];
+    }
+    const startNode = this.#idMap.get(state.startId)!;
+    const endNode = this.#idMap.get(state.endId)!;
+    const traverser = new NodeTraverser(this, startNode);
+    const result: CursorState[] = [];
+
+    while (traverser.peek()) {
+      const currentNode = traverser.next()!;
+      if (currentNode instanceof BlockElement) {
+        let startOffset = 0;
+        let endOffset = 0;
+        if (currentNode.nodeName === TextBlockName) {
+          const textModel = currentNode.getAttribute(
+            "textContent"
+          ) as BlockyTextModel;
+
+          if (currentNode === startNode) {
+            startOffset = state.startOffset;
+          }
+
+          if (currentNode === endNode) {
+            endOffset = state.endOffset;
+          } else {
+            endOffset = textModel.length;
+          }
+        }
+        result.push(
+          new CursorState(
+            currentNode.id,
+            startOffset,
+            currentNode.id,
+            endOffset
+          )
+        );
+      }
+      if (currentNode === endNode) {
+        break;
+      }
+    }
+
+    return result;
+  }
+
   findNodeByLocation(location: NodeLocation): BlockyNode {
     const { path } = location;
     let ptr: BlockyNode = this.document;
@@ -395,5 +447,46 @@ export class State {
 
     result.children = children;
     return result;
+  }
+}
+
+class NodeTraverser {
+  #node: BlockyNode | null;
+  constructor(readonly state: State, beginNode: BlockyNode) {
+    this.#node = beginNode;
+  }
+
+  peek(): BlockyNode | null {
+    return this.#node;
+  }
+
+  next() {
+    const current = this.#node;
+    if (current === null) {
+      return current;
+    }
+
+    if (current.firstChild) {
+      this.#node = this.#findLeadingChildOfNode(current);
+    } else if (current.nextSibling) {
+      this.#node = current.nextSibling;
+    } else {
+      const parent = current.parent!;
+      const nextOfParent = parent.nextSibling;
+      if (nextOfParent === null) {
+        this.#node = null;
+      } else {
+        this.#node = this.#findLeadingChildOfNode(nextOfParent);
+      }
+    }
+
+    return current;
+  }
+
+  #findLeadingChildOfNode(node: BlockyNode): BlockyNode {
+    while (node.firstChild !== null) {
+      node = node.firstChild;
+    }
+    return node;
   }
 }

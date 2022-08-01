@@ -2,13 +2,13 @@ import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { expect, test, describe } from "vitest";
 import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import {
-  State,
   NodeLocation,
   BlockElement,
   BlockyDocument,
   BlockyTextModel,
   JSONNode,
 } from "@pkg/model";
+import { State } from "../state";
 import Delta from "quill-delta-es";
 
 function makeDefaultUtils() {

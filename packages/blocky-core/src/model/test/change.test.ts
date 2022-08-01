@@ -90,12 +90,12 @@ describe("transform operation", () => {
   test("insert + insert", () => {
     const t = transformOperation(
       {
-        type: "op-insert-node",
+        op: "insert-nodes",
         location: new NodeLocation([0, 1]),
         children: [new BlockyElement("node"), new BlockyElement("node")],
       },
       {
-        type: "op-insert-node",
+        op: "insert-nodes",
         location: new NodeLocation([0, 1]),
         children: [new BlockyElement("node")],
       }
@@ -105,12 +105,12 @@ describe("transform operation", () => {
   test("delete + delete", () => {
     const t = transformOperation(
       {
-        type: "op-remove-node",
+        op: "remove-nodes",
         location: new NodeLocation([0, 1]),
         children: [new BlockyElement("node"), new BlockyElement("node")],
       },
       {
-        type: "op-remove-node",
+        op: "remove-nodes",
         location: new NodeLocation([0, 3]),
         children: [new BlockyElement("node")],
       }
@@ -126,7 +126,7 @@ describe("transform operation", () => {
     const invert2 = delta2.invert(new Delta());
     const t = transformOperation(
       {
-        type: "op-text-edit",
+        op: "text-edit",
         location: new NodeLocation([1, 0]),
         id: "title",
         key: "textContent",
@@ -134,7 +134,7 @@ describe("transform operation", () => {
         invert: invert2,
       },
       {
-        type: "op-text-edit",
+        op: "text-edit",
         location: new NodeLocation([1, 0]),
         id: "title",
         key: "textContent",
@@ -142,7 +142,7 @@ describe("transform operation", () => {
         invert,
       }
     ) as TextEditOperation;
-    expect(t.type).toBe("op-text-edit");
+    expect(t.op).toBe("text-edit");
     expect(t.delta.ops).toEqual([{ retain: 13 }, { insert: " ooo " }]);
     expect(t.invert.ops).toEqual([{ retain: 13 }, { delete: 5 }]);
   });
@@ -165,7 +165,7 @@ describe("merge", () => {
     const finalizedChangeset = change.finalize();
     expect(finalizedChangeset.operations.length).toBe(1);
     const first = finalizedChangeset.operations[0] as TextEditOperation;
-    expect(first.type).toBe("op-text-edit");
+    expect(first.op).toBe("text-edit");
     expect(first.delta.ops).toEqual([{ insert: "ba" }]);
   });
   test("testWillNotMerge", () => {

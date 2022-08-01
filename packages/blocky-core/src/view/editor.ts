@@ -73,7 +73,6 @@ export interface IEditorOptions {
   bannerFactory?: BannerFactory;
   toolbarFactory?: ToolbarFactory;
   padding?: Partial<Padding>;
-  bannerXOffset?: number;
   collaborativeCursorFactory?: CollaborativeCursorFactory;
 }
 
@@ -150,7 +149,6 @@ export class Editor {
   readonly collaborativeCursorManager: CollaborativeCursorManager;
 
   readonly padding: Padding;
-  private bannerXOffset: number;
 
   composing = false;
   private disposables: IDisposable[] = [];
@@ -170,7 +168,6 @@ export class Editor {
       bannerFactory: controller.options?.bannerFactory,
       toolbarFactory: controller.options?.toolbarFactory,
       padding: controller.options?.padding,
-      bannerXOffset: controller.options?.bannerXOffset,
       collaborativeCursorFactory:
         controller.options?.collaborativeCursorFactory,
     });
@@ -187,7 +184,6 @@ export class Editor {
       bannerFactory,
       toolbarFactory,
       padding,
-      bannerXOffset,
       collaborativeCursorFactory,
     } = options;
     this.state = state;
@@ -199,7 +195,6 @@ export class Editor {
       ...makeDefaultPadding(),
       ...padding,
     };
-    this.bannerXOffset = bannerXOffset ?? 24;
 
     this.collaborativeCursorManager = new CollaborativeCursorManager(
       collaborativeCursorFactory
@@ -682,11 +677,11 @@ export class Editor {
 
     let { x, y } = this.#getRelativeOffsetByDom(blockContainer);
 
-    x = this.bannerXOffset;
-
     const offset = block.getBannerOffset();
     x += offset.x;
     y += offset.y;
+
+    x -= this.bannerDelegate.width;
 
     this.bannerDelegate.focusedNode = node;
     this.bannerDelegate.show();
@@ -1288,18 +1283,73 @@ export class Editor {
       return null;
     }
 
+    const lines = text.split("\n").map((t) => t.replaceAll(/\\r/g, ""));
+
+    if (lines.length === 0) {
+      return;
+    } else if (lines.length === 1) {
+      const textElement = this.getTextElementByBlockId(cursorState.id);
+      if (!textElement) {
+        return null;
+      }
+      const firstLine = lines[lines.length - 1];
+      const afterOffset = cursorState.offset + text.length;
+      new Changeset(this.state)
+        .textEdit(textElement, "textContent", () =>
+          new Delta().retain(cursorState.offset).insert(firstLine, attributes)
+        )
+        .setCursorState(CursorState.collapse(cursorState.id, afterOffset))
+        .apply();
+    } else {
+      this.#insertMultipleLinesAt(cursorState, lines);
+    }
+  }
+
+  #insertMultipleLinesAt(cursorState: CursorState, lines: string[]) {
+    if (lines.length <= 1) {
+      return;
+    }
+    const changeset = new Changeset(this.state);
     const textElement = this.getTextElementByBlockId(cursorState.id);
     if (!textElement) {
-      return null;
+      return;
+    }
+    const firstLineModel = textElement.getAttribute(
+      "textContent"
+    ) as BlockyTextModel;
+    const firstLineRemains = firstLineModel.delta.slice(cursorState.offset);
+    const remainLength = firstLineModel.length - cursorState.offset;
+    changeset.textEdit(textElement, "textContent", () =>
+      new Delta()
+        .retain(cursorState.offset)
+        .delete(remainLength)
+        .insert(lines[0])
+    );
+    const appendElements: BlockElement[] = [];
+    for (let i = 1; i < lines.length; i++) {
+      const lineContent = lines[i];
+      let delta: Delta = new Delta().insert(lineContent);
+      if (i === lines.length - 1) {
+        const lineOriginalLen = delta.length();
+        delta = delta.concat(firstLineRemains);
+        const newTextElement = this.state.createTextElement(delta);
+        changeset.setCursorState(
+          CursorState.collapse(newTextElement.id, lineOriginalLen)
+        );
+        appendElements.push(newTextElement);
+      } else {
+        const newTextElement = this.state.createTextElement(delta);
+        appendElements.push(newTextElement);
+      }
     }
 
-    const afterOffset = cursorState.offset + text.length;
-    new Changeset(this.state)
-      .textEdit(textElement, "textContent", () =>
-        new Delta().retain(cursorState.offset).insert(text, attributes)
-      )
-      .setCursorState(CursorState.collapse(cursorState.id, afterOffset))
-      .apply();
+    changeset.insertChildrenAfter(
+      textElement.parent!,
+      appendElements,
+      textElement
+    );
+
+    changeset.apply();
   }
 
   getTextElementByBlockId(blockId: string): BlockElement | undefined {

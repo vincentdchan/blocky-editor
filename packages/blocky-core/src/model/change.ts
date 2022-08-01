@@ -49,7 +49,10 @@ export class Changeset {
     this.version = state.appliedVersion + 1;
     this.beforeCursor = state.cursorState;
   }
-  setAttribute(node: BlockyElement, attributes: AttributesObject): Changeset {
+  updateAttributes(
+    node: BlockyElement,
+    attributes: AttributesObject
+  ): Changeset {
     const oldAttributes = Object.create(null);
     for (const key in attributes) {
       const oldValue = node.getAttribute(key);
@@ -57,7 +60,7 @@ export class Changeset {
     }
     const location = this.state.getLocationOfNode(node);
     this.push({
-      type: "op-update-node",
+      op: "update-attributes",
       attributes,
       oldAttributes,
       location,
@@ -72,7 +75,7 @@ export class Changeset {
     const parentLoc = this.state.getLocationOfNode(node);
     const index = node.childrenLength;
     this.push({
-      type: "op-insert-node",
+      op: "insert-nodes",
       location: new NodeLocation([...parentLoc.path, index]),
       children: [child.toJSON()],
     });
@@ -82,7 +85,7 @@ export class Changeset {
     const parentLoc = this.state.getLocationOfNode(parent);
     const index = parent.indexOf(child);
     this.push({
-      type: "op-remove-node",
+      op: "remove-nodes",
       location: new NodeLocation([...parentLoc.path, index]),
       children: [child.toJSON()],
     });
@@ -111,7 +114,7 @@ export class Changeset {
     }
 
     this.push({
-      type: "op-remove-node",
+      op: "remove-nodes",
       location: new NodeLocation([...parentLoc.path, index]),
       children,
     });
@@ -128,7 +131,7 @@ export class Changeset {
       index = parent.indexOf(after) + 1;
     }
     this.push({
-      type: "op-insert-node",
+      op: "insert-nodes",
       location: new NodeLocation([...parentLoc.path, index]),
       children: children.map((child) => child.toJSON()),
     });
@@ -141,7 +144,7 @@ export class Changeset {
   ): Changeset {
     const parentLoc = this.state.getLocationOfNode(parent);
     this.push({
-      type: "op-insert-node",
+      op: "insert-nodes",
       location: new NodeLocation([...parentLoc.path, index]),
       children: children.map((child) => child.toJSON()),
     });
@@ -162,7 +165,7 @@ export class Changeset {
     const oldDelta = textModel.delta;
     const invert = d.invert(oldDelta);
     this.push({
-      type: "op-text-edit",
+      op: "text-edit",
       location,
       id: node.id,
       key: propName,
@@ -187,7 +190,7 @@ export class Changeset {
     d = new Delta().retain(oldDelta.length()).concat(d);
     const invert = d.invert(oldDelta);
     this.push({
-      type: "op-text-edit",
+      op: "text-edit",
       location,
       id: node.id,
       key: propName,
@@ -210,9 +213,9 @@ export class Changeset {
   pushWillMerge(operation: Operation) {
     // TODO: test
     const len = this.operations.length;
-    if (len > 0 && operation.type === "op-text-edit") {
+    if (len > 0 && operation.op === "text-edit") {
       const last = this.operations[len - 1];
-      if (last.type === "op-text-edit" && operation.id === last.id) {
+      if (last.op === "text-edit" && operation.id === last.id) {
         last.delta = last.delta.compose(operation.delta);
         last.invert = operation.invert.compose(last.invert);
         return;

@@ -4,26 +4,26 @@ import type { AttributesObject, JSONNode } from "@pkg/model/tree";
 import { CursorState } from "./cursor";
 
 export interface InsertNodeOperation {
-  type: "op-insert-node";
+  op: "insert-nodes";
   location: NodeLocation;
   children: JSONNode[];
 }
 
 export interface UpdateNodeOperation {
-  type: "op-update-node";
+  op: "update-attributes";
   location: NodeLocation;
   attributes: AttributesObject;
   oldAttributes: AttributesObject;
 }
 
 export interface RemoveNodeOperation {
-  type: "op-remove-node";
+  op: "remove-nodes";
   location: NodeLocation;
   children: JSONNode[];
 }
 
 export interface TextEditOperation {
-  type: "op-text-edit";
+  op: "text-edit";
   location: NodeLocation;
   id: string;
   key: string;
@@ -37,45 +37,45 @@ export type Operation =
   | RemoveNodeOperation
   | TextEditOperation;
 
-export function invertOperation(op: Operation): Operation {
-  switch (op.type) {
-    case "op-insert-node": {
+export function invertOperation(operation: Operation): Operation {
+  switch (operation.op) {
+    case "insert-nodes": {
       return {
-        type: "op-remove-node",
-        location: op.location,
-        children: op.children,
+        op: "remove-nodes",
+        location: operation.location,
+        children: operation.children,
       };
     }
-    case "op-text-edit": {
+    case "text-edit": {
       return {
-        type: "op-text-edit",
-        location: op.location,
-        id: op.id,
-        key: op.key,
-        delta: op.invert,
-        invert: op.delta,
+        op: "text-edit",
+        location: operation.location,
+        id: operation.id,
+        key: operation.key,
+        delta: operation.invert,
+        invert: operation.delta,
       };
     }
-    case "op-remove-node": {
+    case "remove-nodes": {
       return {
-        type: "op-insert-node",
-        location: op.location,
-        children: op.children,
+        op: "insert-nodes",
+        location: operation.location,
+        children: operation.children,
       };
     }
-    case "op-update-node": {
+    case "update-attributes": {
       return {
-        type: "op-update-node",
-        location: op.location,
-        attributes: op.oldAttributes,
-        oldAttributes: op.attributes,
+        op: "update-attributes",
+        location: operation.location,
+        attributes: operation.oldAttributes,
+        oldAttributes: operation.attributes,
       };
     }
   }
 }
 
 export function transformOperation(a: Operation, b: Operation): Operation {
-  if (a.type === "op-insert-node") {
+  if (a.op === "insert-nodes") {
     const newLocation = NodeLocation.transform(
       a.location,
       b.location,
@@ -85,7 +85,7 @@ export function transformOperation(a: Operation, b: Operation): Operation {
       ...b,
       location: newLocation,
     };
-  } else if (a.type === "op-remove-node") {
+  } else if (a.op === "remove-nodes") {
     const newLocation = NodeLocation.transform(
       a.location,
       b.location,
@@ -95,7 +95,7 @@ export function transformOperation(a: Operation, b: Operation): Operation {
       ...b,
       location: newLocation,
     };
-  } else if (a.type === "op-text-edit" && b.type === "op-text-edit") {
+  } else if (a.op === "text-edit" && b.op === "text-edit") {
     if (NodeLocation.equals(a.location, b.location) && a.key === b.key) {
       return {
         ...b,
@@ -116,7 +116,7 @@ export function transformCursorState(
   }
 
   if (
-    base.type === "op-text-edit" &&
+    base.op === "text-edit" &&
     cursorState.isCollapsed &&
     cursorState.endId == base.id
   ) {
