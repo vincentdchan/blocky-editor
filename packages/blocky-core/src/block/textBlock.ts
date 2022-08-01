@@ -46,6 +46,13 @@ function textTypeCanIndent(textType: TextType): boolean {
   return textType === TextType.Normal || textType === TextType.Bulleted;
 }
 
+class LeftPadRenderer {
+  constructor(readonly container: HTMLDivElement) {}
+  dispose(): void {
+    removeNode(this.container);
+  }
+}
+
 /**
  * TextBlock is a very special block in the editor.
  * It's handling all the editable element.
@@ -54,7 +61,7 @@ class TextBlock extends Block {
   #container: HTMLElement | undefined;
   #bodyContainer: HTMLElement | null = null;
   #contentContainer: HTMLElement | null = null;
-  #bulletSpan: HTMLSpanElement | null = null;
+  #leftPadRenderer: LeftPadRenderer | null = null;
 
   constructor(props: BlockElement) {
     super(props);
@@ -347,22 +354,22 @@ class TextBlock extends Block {
     return container;
   }
 
-  #createBulletSpan(): HTMLDivElement {
+  #createBulletRenderer(): LeftPadRenderer {
     const container = this.#createLeftPadContainer();
 
     const bulletContent = elem("div", "blocky-bullet-content");
     container.appendChild(bulletContent);
 
-    return container;
+    return new LeftPadRenderer(container);
   }
 
-  #createCheckbox(): HTMLDivElement {
+  #createCheckboxRenderer(): LeftPadRenderer {
     const container = this.#createLeftPadContainer();
 
     const checkboxContainer = elem("div", "blocky-checkbox");
     container.append(checkboxContainer);
 
-    return container;
+    return new LeftPadRenderer(container);
   }
 
   #forceRenderContentStyle(
@@ -373,18 +380,18 @@ class TextBlock extends Block {
     contentContainer.setAttribute("data-type", textType.toString());
     switch (textType) {
       case TextType.Checkbox: {
-        this.#bulletSpan = this.#createCheckbox();
+        this.#leftPadRenderer = this.#createCheckboxRenderer();
         blockContainer.insertBefore(
-          this.#bulletSpan,
+          this.#leftPadRenderer.container,
           blockContainer.firstChild
         );
         return;
       }
 
       case TextType.Bulleted: {
-        this.#bulletSpan = this.#createBulletSpan();
+        this.#leftPadRenderer = this.#createBulletRenderer();
         blockContainer.insertBefore(
-          this.#bulletSpan,
+          this.#leftPadRenderer.container,
           blockContainer.firstChild
         );
         return;
@@ -398,9 +405,9 @@ class TextBlock extends Block {
       }
     }
 
-    if (this.#bulletSpan) {
-      removeNode(this.#bulletSpan);
-      this.#bulletSpan = null;
+    if (this.#leftPadRenderer) {
+      this.#leftPadRenderer.dispose();
+      this.#leftPadRenderer = null;
     }
   }
 
