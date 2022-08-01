@@ -341,9 +341,14 @@ class TextBlock extends Block {
     }
   }
 
-  private createBulletSpan() {
-    const container = elem("div", "blocky-bullet");
+  #createLeftPadContainer(): HTMLDivElement {
+    const container = elem("div", "blocky-left-pad");
     container.contentEditable = "false";
+    return container;
+  }
+
+  #createBulletSpan(): HTMLDivElement {
+    const container = this.#createLeftPadContainer();
 
     const bulletContent = elem("div", "blocky-bullet-content");
     container.appendChild(bulletContent);
@@ -351,7 +356,16 @@ class TextBlock extends Block {
     return container;
   }
 
-  private ensureContentContainerStyle(
+  #createCheckbox(): HTMLDivElement {
+    const container = this.#createLeftPadContainer();
+
+    const checkboxContainer = elem("div", "blocky-checkbox");
+    container.append(checkboxContainer);
+
+    return container;
+  }
+
+  #ensureContentContainerStyle(
     blockContainer: HTMLElement,
     contentContainer: HTMLElement
   ): HTMLElement {
@@ -364,14 +378,21 @@ class TextBlock extends Block {
     ) => {
       contentContainer.setAttribute("data-type", textType.toString());
       switch (textType) {
-        case TextType.Bulleted: {
-          this.#bulletSpan = this.createBulletSpan();
+        case TextType.Checkbox: {
+          this.#bulletSpan = this.#createCheckbox();
           blockContainer.insertBefore(
             this.#bulletSpan,
             blockContainer.firstChild
           );
+          return;
+        }
 
-          contentContainer.classList.add("blocky-bulleted");
+        case TextType.Bulleted: {
+          this.#bulletSpan = this.#createBulletSpan();
+          blockContainer.insertBefore(
+            this.#bulletSpan,
+            blockContainer.firstChild
+          );
           return;
         }
 
@@ -457,7 +478,7 @@ class TextBlock extends Block {
     blockContainer: HTMLElement,
     textModel: BlockyTextModel
   ) {
-    const contentContainer = this.ensureContentContainerStyle(
+    const contentContainer = this.#ensureContentContainerStyle(
       blockContainer,
       this.#contentContainer!
     );
