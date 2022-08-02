@@ -53,8 +53,6 @@ export interface IEditorControllerOptions {
    */
   padding?: Partial<Padding>;
 
-  bannerXOffset?: number;
-
   collaborativeCursorFactory?: CollaborativeCursorFactory;
 }
 

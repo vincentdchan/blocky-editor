@@ -73,7 +73,6 @@ export interface IEditorOptions {
   bannerFactory?: BannerFactory;
   toolbarFactory?: ToolbarFactory;
   padding?: Partial<Padding>;
-  bannerXOffset?: number;
   collaborativeCursorFactory?: CollaborativeCursorFactory;
 }
 
@@ -150,7 +149,6 @@ export class Editor {
   readonly collaborativeCursorManager: CollaborativeCursorManager;
 
   readonly padding: Padding;
-  private bannerXOffset: number;
 
   composing = false;
   private disposables: IDisposable[] = [];
@@ -170,7 +168,6 @@ export class Editor {
       bannerFactory: controller.options?.bannerFactory,
       toolbarFactory: controller.options?.toolbarFactory,
       padding: controller.options?.padding,
-      bannerXOffset: controller.options?.bannerXOffset,
       collaborativeCursorFactory:
         controller.options?.collaborativeCursorFactory,
     });
@@ -187,7 +184,6 @@ export class Editor {
       bannerFactory,
       toolbarFactory,
       padding,
-      bannerXOffset,
       collaborativeCursorFactory,
     } = options;
     this.state = state;
@@ -199,7 +195,6 @@ export class Editor {
       ...makeDefaultPadding(),
       ...padding,
     };
-    this.bannerXOffset = bannerXOffset ?? 24;
 
     this.collaborativeCursorManager = new CollaborativeCursorManager(
       collaborativeCursorFactory
@@ -682,11 +677,11 @@ export class Editor {
 
     let { x, y } = this.#getRelativeOffsetByDom(blockContainer);
 
-    x = this.bannerXOffset;
-
     const offset = block.getBannerOffset();
     x += offset.x;
     y += offset.y;
+
+    x -= this.bannerDelegate.width;
 
     this.bannerDelegate.focusedNode = node;
     this.bannerDelegate.show();
