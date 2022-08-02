@@ -136,22 +136,22 @@ export class State {
     }
     this.beforeChangesetApply.emit(changeset);
 
-    for (const op of changeset.operations) {
-      switch (op.type) {
-        case "op-insert-node": {
-          this.#applyInsertOperation(op);
+    for (const operation of changeset.operations) {
+      switch (operation.op) {
+        case "insert-nodes": {
+          this.#applyInsertOperation(operation);
           break;
         }
-        case "op-update-node": {
-          this.#applyUpdateOperation(op);
+        case "update-attributes": {
+          this.#applyUpdateOperation(operation);
           break;
         }
-        case "op-remove-node": {
-          this.#applyRemoveOperation(op);
+        case "remove-nodes": {
+          this.#applyRemoveOperation(operation);
           break;
         }
-        case "op-text-edit": {
-          this.#applyTextEditOperation(op);
+        case "text-edit": {
+          this.#applyTextEditOperation(operation);
           break;
         }
       }

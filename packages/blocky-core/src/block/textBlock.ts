@@ -81,7 +81,7 @@ class CheckboxRenderer extends LeftPadRenderer {
   #handleClick = () => {
     const checked = !!this.blockElement.getAttribute("checked");
     new Changeset(this.state)
-      .setAttribute(this.blockElement, { checked: !checked })
+      .updateAttributes(this.blockElement, { checked: !checked })
       .apply({
         refreshCursor: true,
       });

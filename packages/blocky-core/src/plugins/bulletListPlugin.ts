@@ -21,7 +21,7 @@ function makeBulletListPlugin(): IPlugin {
     textElement: BlockElement
   ) => {
     new Changeset(editor.state)
-      .setAttribute(textElement, {
+      .updateAttributes(textElement, {
         textType: TextType.Bulleted,
       })
       .textEdit(textElement, "textContent", () => new Delta().delete(2))
@@ -76,7 +76,7 @@ function makeBulletListPlugin(): IPlugin {
     if (textModel.length === 0) {
       e.preventDefault();
       new Changeset(editor.state)
-        .setAttribute(textElement, {
+        .updateAttributes(textElement, {
           textType: TextType.Normal,
         })
         .setCursorState(CursorState.collapse(id, 0))
@@ -117,7 +117,7 @@ function makeBulletListPlugin(): IPlugin {
     if (textType === TextType.Bulleted) {
       e.preventDefault();
       new Changeset(editor.state)
-        .setAttribute(textElement, {
+        .updateAttributes(textElement, {
           textType: TextType.Normal,
         })
         .setCursorState(CursorState.collapse(id, 0))
