@@ -829,8 +829,5 @@ function normalizeString(content: string | null): string {
   if (content === null) {
     return "";
   }
-  return content
-    .replaceAll(/^(\s|\t)+/g, "")
-    .replaceAll(/[\s\t]+$/g, "") // trailing spaces
-    .replaceAll(/\\n/g, "");
+  return content.replaceAll(/(\\r\\n|\t)/g, "");
 }
