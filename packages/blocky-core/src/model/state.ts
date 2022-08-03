@@ -29,7 +29,7 @@ import {
   type ChangesetApplyOptions,
 } from "@pkg/model/change";
 import type { IdGenerator } from "@pkg/helper/idHelper";
-import type { CursorState } from "@pkg/model/cursor";
+import { CursorState } from "@pkg/model/cursor";
 import {
   InsertNodeOperation,
   UpdateNodeOperation,
@@ -348,14 +348,43 @@ export class State {
     }
     const startNode = this.#idMap.get(state.startId)!;
     const endNode = this.#idMap.get(state.endId)!;
-    const startPath = this.getLocationOfNode(startNode);
-    const endPath = this.getLocationOfNode(endNode);
-    const minCommonLen = minCommonPrefixLen<number>(
-      startPath.path,
-      endPath.path
-    );
+    const traverser = new NodeTraverser(this, startNode);
     const result: CursorState[] = [];
-    // const minCommonPrefix = startPath.slice(0, minCommonLen);
+
+    while (traverser.peek()) {
+      const currentNode = traverser.next()!;
+      if (currentNode instanceof BlockElement) {
+        let startOffset = 0;
+        let endOffset = 0;
+        if (currentNode.nodeName === TextBlockName) {
+          const textModel = currentNode.getAttribute(
+            "textContent"
+          ) as BlockyTextModel;
+
+          if (currentNode === startNode) {
+            startOffset = state.startOffset;
+          }
+
+          if (currentNode === endNode) {
+            endOffset = state.endOffset;
+          } else {
+            endOffset = textModel.length;
+          }
+        }
+        result.push(
+          new CursorState(
+            currentNode.id,
+            startOffset,
+            currentNode.id,
+            endOffset
+          )
+        );
+      }
+      if (currentNode === endNode) {
+        break;
+      }
+    }
+
     return result;
   }
 
@@ -437,7 +466,9 @@ class NodeTraverser {
       return current;
     }
 
-    if (current.nextSibling) {
+    if (current.firstChild) {
+      this.#node = this.#findLeadingChildOfNode(current);
+    } else if (current.nextSibling) {
       this.#node = current.nextSibling;
     } else {
       const parent = current.parent!;
