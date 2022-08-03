@@ -472,6 +472,11 @@ export class NodeTraverser {
       return current;
     }
 
+    if (current.nodeName === TitleBlock.Name) {
+      this.#node = this.state.document.body.firstChild;
+      return current;
+    }
+
     if (current.firstChild) {
       this.#node = this.#findLeadingChildOfNode(current);
     } else if (current.nextSibling) {

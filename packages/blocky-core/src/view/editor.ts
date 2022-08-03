@@ -49,6 +49,7 @@ import {
 } from "./collaborativeCursors";
 import { isHotkey } from "is-hotkey";
 import { ChangesetRecordOption, FinalizedChangeset } from "@pkg/model/change";
+import { TitleBlock } from "@pkg/block/titleBlock";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
@@ -799,63 +800,71 @@ export class Editor {
   }
 
   #commitNewLine() {
-    const { cursorState } = this.state;
+    let { cursorState } = this.state;
     if (!cursorState) {
       return;
     }
-    if (cursorState.isCollapsed) {
-      const blockElement = this.state.getBlockElementById(cursorState.id);
-      if (!blockElement) {
-        return;
-      }
-
-      if (blockElement.nodeName !== TextBlock.Name) {
-        // default behavior
-        this.#insertEmptyTextAfterBlock(
-          blockElement.parent! as BlockyElement,
-          cursorState.id
-        );
-        return;
-      }
-      const textModel = blockElement.getTextModel("textContent")!;
-
-      const cursorOffset = cursorState.offset;
-
-      const slices = textModel.delta.slice(cursorOffset);
-
-      const textType = getTextTypeForTextBlock(blockElement);
-      const attributes = Object.create(null);
-      if (this.preservedTextType.has(textType)) {
-        // preserved data type
-        attributes.textType = textType;
-      }
-
-      const children: BlockyNode[] = [];
-      let ptr = blockElement.firstChild;
-      while (ptr) {
-        children.push(ptr.clone());
-        ptr = ptr.nextSibling;
-      }
-      const newTextElement = this.state.createTextElement(
-        slices,
-        attributes,
-        children
-      );
-
-      const parentElement = blockElement.parent! as BlockyElement;
-      new Changeset(this.state)
-        .deleteChildrenAt(blockElement, 0, children.length)
-        .insertChildrenAfter(parentElement, [newTextElement], blockElement)
-        .textEdit(blockElement, "textContent", () =>
-          new Delta()
-            .retain(cursorOffset)
-            .delete(textModel.length - cursorOffset)
-        )
-        .setCursorState(CursorState.collapse(newTextElement.id, 0))
-        .apply();
-    } else {
-      console.error("unhandled");
+    if (!cursorState.isCollapsed) {
+      this.controller.deleteContentInsideInSelection(cursorState);
+      cursorState = this.state.cursorState;
     }
+    if (!cursorState) {
+      return;
+    }
+    const blockElement = this.state.getBlockElementById(cursorState.id);
+    if (!blockElement) {
+      return;
+    }
+
+    if (!this.state.isTextLike(blockElement)) {
+      // default behavior
+      this.#insertEmptyTextAfterBlock(
+        blockElement.parent! as BlockyElement,
+        cursorState.id
+      );
+      return;
+    }
+    const textModel = blockElement.getTextModel("textContent")!;
+
+    const cursorOffset = cursorState.offset;
+
+    const slices = textModel.delta.slice(cursorOffset);
+
+    const textType = getTextTypeForTextBlock(blockElement);
+    const attributes = Object.create(null);
+    if (this.preservedTextType.has(textType)) {
+      // preserved data type
+      attributes.textType = textType;
+    }
+
+    const children: BlockyNode[] = [];
+    let ptr = blockElement.firstChild;
+    while (ptr) {
+      children.push(ptr.clone());
+      ptr = ptr.nextSibling;
+    }
+    const newTextElement = this.state.createTextElement(
+      slices,
+      attributes,
+      children
+    );
+    const changeset = new Changeset(this.state);
+    changeset.textEdit(blockElement, "textContent", () =>
+      new Delta().retain(cursorOffset).delete(textModel.length - cursorOffset)
+    );
+
+    if (blockElement.nodeName === TitleBlock.Name) {
+      changeset.insertChildrenAfter(this.state.document.body, [newTextElement]);
+    } else {
+      const parentElement = blockElement.parent! as BlockyElement;
+      changeset
+        .deleteChildrenAt(blockElement, 0, children.length)
+        .insertChildrenAfter(parentElement, [newTextElement], blockElement);
+    }
+
+    changeset
+      .setCursorState(CursorState.collapse(newTextElement.id, 0))
+      .apply();
   }
 
   #debouncedSealUndo = debounce(() => {
