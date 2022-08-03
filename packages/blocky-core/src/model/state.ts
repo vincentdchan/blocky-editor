@@ -450,7 +450,7 @@ export class State {
   }
 }
 
-class NodeTraverser {
+export class NodeTraverser {
   #node: BlockyNode | null;
   constructor(readonly state: State, beginNode: BlockyNode) {
     this.#node = beginNode;
