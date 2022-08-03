@@ -1,5 +1,7 @@
 import Delta from "quill-delta-es";
 import {
+  type IBlockDefinition,
+  type BlockCreatedEvent,
   type BlockFocusedEvent,
   type BlockContentChangedEvent,
   type BlockDidMountEvent,
@@ -10,6 +12,7 @@ import { TextInputEvent } from "@pkg/view/editor";
 import { BlockyTextModel, BlockElement } from "@pkg/model";
 
 export class TitleBlock extends Block {
+  static Name = "Title";
   #container: HTMLElement | undefined;
 
   constructor(props: BlockElement) {
@@ -66,5 +69,14 @@ export class TitleBlock extends Block {
 
   get textModel(): BlockyTextModel {
     return this.props.getAttribute<BlockyTextModel>("textContent")!;
+  }
+}
+
+export class TitleBlockDefinition implements IBlockDefinition {
+  name: string = TitleBlock.Name;
+  editable = true;
+
+  onBlockCreated({ blockElement: data }: BlockCreatedEvent): Block {
+    return new TitleBlock(data);
   }
 }

@@ -130,6 +130,12 @@ export class State {
     return this.#idMap.has(id);
   }
 
+  isTextLike(node: BlockyNode) {
+    return (
+      node.nodeName === TextBlock.Name || node.nodeName === TitleBlock.Name
+    );
+  }
+
   apply(changeset: FinalizedChangeset) {
     if (this.#appliedVersion >= changeset.version) {
       return;

@@ -7,6 +7,7 @@ import type {
 import type { BlockElement } from "@pkg/model";
 import { Registry } from "./registry";
 import { makeTextBlockDefinition, TextBlock } from "@pkg/block/textBlock";
+import { TitleBlockDefinition, TitleBlock } from "@pkg/block/titleBlock";
 
 export class BlockRegistry extends Registry<IBlockDefinition> {
   #types: IBlockDefinition[];
@@ -14,8 +15,9 @@ export class BlockRegistry extends Registry<IBlockDefinition> {
 
   constructor() {
     super();
-    this.#types = [makeTextBlockDefinition()];
+    this.#types = [makeTextBlockDefinition(), new TitleBlockDefinition()];
     this.#nameMap.set(TextBlock.Name, 0);
+    this.#nameMap.set(TitleBlock.Name, 1);
   }
 
   register(blockType: IBlockDefinition): number {

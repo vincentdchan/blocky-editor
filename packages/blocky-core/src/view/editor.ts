@@ -1038,7 +1038,10 @@ export class Editor {
     }
     const prevNode = this.#findPreviousElement(node);
 
-    const blockDef = this.registry.block.getBlockDefByName(node.nodeName)!;
+    const blockDef = this.registry.block.getBlockDefByName(node.nodeName);
+    if (isUndefined(blockDef)) {
+      throw new Error(`definition not found for ${node.nodeName}`);
+    }
 
     if (blockDef.editable !== false) {
       return false;
