@@ -336,6 +336,29 @@ export class State {
     this.#idMap.set(element.id, element);
   }
 
+  /**
+   * Split cursor states into multiple states crossing the document.
+   */
+  splitCursorStateByBlocks(state: CursorState): CursorState[] {
+    if (state.isCollapsed) {
+      return [state];
+    }
+    if (state.startId === state.endId) {
+      return [state];
+    }
+    const startNode = this.#idMap.get(state.startId)!;
+    const endNode = this.#idMap.get(state.endId)!;
+    const startPath = this.getLocationOfNode(startNode);
+    const endPath = this.getLocationOfNode(endNode);
+    const minCommonLen = minCommonPrefixLen<number>(
+      startPath.path,
+      endPath.path
+    );
+    const result: CursorState[] = [];
+    // const minCommonPrefix = startPath.slice(0, minCommonLen);
+    return result;
+  }
+
   findNodeByLocation(location: NodeLocation): BlockyNode {
     const { path } = location;
     let ptr: BlockyNode = this.document;
@@ -396,4 +419,60 @@ export class State {
     result.children = children;
     return result;
   }
+}
+
+class NodeTraverser {
+  #node: BlockyNode | null;
+  constructor(readonly state: State, beginNode: BlockyNode) {
+    this.#node = beginNode;
+  }
+
+  peek(): BlockyNode | null {
+    return this.#node;
+  }
+
+  next() {
+    const current = this.#node;
+    if (current === null) {
+      return current;
+    }
+
+    if (current.nextSibling) {
+      this.#node = current.nextSibling;
+    } else {
+      const parent = current.parent!;
+      const nextOfParent = parent.nextSibling;
+      if (nextOfParent === null) {
+        this.#node = null;
+      } else {
+        this.#node = this.#findLeadingChildOfNode(nextOfParent);
+      }
+    }
+
+    return current;
+  }
+
+  #findLeadingChildOfNode(node: BlockyNode): BlockyNode {
+    while (node.firstChild !== null) {
+      node = node.firstChild;
+    }
+    return node;
+  }
+}
+
+export function minCommonPrefixLen<T>(
+  a: readonly T[],
+  b: readonly T[]
+): number {
+  let result = 0;
+  const len = Math.min(a.length, b.length);
+
+  for (let i = 0; i < len; i++) {
+    if (a[i] !== b[i]) {
+      break;
+    }
+    result++;
+  }
+
+  return result;
 }
