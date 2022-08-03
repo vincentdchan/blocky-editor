@@ -28,5 +28,6 @@ export {
   ChangesetRecordOption,
   BlockElement,
   NodeLocation,
+  NodeTraverser,
 } from "./model";
 export { TextBlockName } from "./block/textBlock";

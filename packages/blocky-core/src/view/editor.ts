@@ -1261,25 +1261,20 @@ export class Editor {
 
     const plainText = clipboardData.getData(MineType.PlainText);
     if (plainText) {
-      this.#pastePlainTextOnCursor(plainText);
+      this.#insertTextAtCursor(plainText);
       return;
     }
   };
 
-  #pastePlainTextOnCursor(text: string) {
-    this.#insertTextAt(this.state.cursorState, text);
-  }
+  #insertTextAtCursor(text: string, attributes?: AttributesObject) {
+    let { cursorState } = this.state;
 
-  #insertTextAt(
-    cursorState: CursorState | null,
-    text: string,
-    attributes?: AttributesObject
-  ) {
-    if (!cursorState) {
-      return null;
+    if (cursorState?.isOpen) {
+      this.controller.deleteContentInsideInSelection(cursorState);
+      cursorState = this.state.cursorState;
     }
 
-    if (cursorState.isOpen) {
+    if (!cursorState) {
       return null;
     }
 
@@ -1296,7 +1291,7 @@ export class Editor {
       const afterOffset = cursorState.offset + text.length;
       new Changeset(this.state)
         .textEdit(textElement, "textContent", () =>
-          new Delta().retain(cursorState.offset).insert(firstLine, attributes)
+          new Delta().retain(cursorState!.offset).insert(firstLine, attributes)
         )
         .setCursorState(CursorState.collapse(cursorState.id, afterOffset))
         .apply();
