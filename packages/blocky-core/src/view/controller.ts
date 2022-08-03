@@ -236,6 +236,9 @@ export class EditorController {
 
     for (const state of states) {
       const blockElement = this.state.getBlockElementById(state.endId)!;
+      if (blockElement.nodeName !== TextBlock.Name) {
+        continue;
+      }
       changeset.textEdit(blockElement, "textContent", () =>
         new Delta()
           .retain(state.startOffset)

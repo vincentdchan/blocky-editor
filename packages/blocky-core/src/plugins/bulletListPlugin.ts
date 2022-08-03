@@ -29,9 +29,6 @@ function makeBulletListPlugin(): IPlugin {
   };
   const handleTextInputEvent = (editor: Editor) => (evt: TextInputEvent) => {
     const { blockElement, beforeString } = evt;
-    if (blockElement.nodeName !== TextBlock.Name) {
-      return;
-    }
     let index = 0;
     for (const op of evt.applyDelta.ops) {
       if (isString(op.insert)) {
@@ -129,7 +126,9 @@ function makeBulletListPlugin(): IPlugin {
   return {
     name: "bullet-list",
     onInitialized(editor: Editor) {
-      editor.textInput.on(handleTextInputEvent(editor));
+      editor.textInput
+        .filter((evt) => evt.blockElement.nodeName === TextBlock.Name) // don't apply on Title block
+        .on(handleTextInputEvent(editor));
       editor.keyDown.on(handleKeydown(editor));
     },
   };
