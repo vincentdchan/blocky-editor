@@ -13,13 +13,15 @@ export {
 export { type IPlugin } from "./registry/pluginRegistry";
 export { getTextTypeForTextBlock } from "./block/textBlock";
 export {
-  State as DocumentState,
-  CursorState,
-  CursorStateUpdateReason,
   type CursorStateUpdateEvent,
   type AttributesObject,
   type ElementChangedEvent,
   type BlockyNode,
+  type FinalizedChangeset,
+  type JSONNode,
+  State as DocumentState,
+  CursorState,
+  CursorStateUpdateReason,
   BlockyTextModel,
   BlockyElement,
   BlockyDocument,
