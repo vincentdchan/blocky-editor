@@ -339,9 +339,7 @@ export class EditorController {
         const item = nodeTraverser.next()!;
 
         if (startNode === item && this.state.isTextLike(startNode)) {
-          const textModel = (item as BlockElement).getAttribute(
-            "textContent"
-          ) as BlockyTextModel;
+          const textModel = (item as BlockElement).getTextModel("textContent")!;
           changeset.textEdit(item as BlockElement, "textContent", () =>
             new Delta()
               .retain(cursorState.startOffset)
@@ -354,9 +352,7 @@ export class EditorController {
             )
           );
         } else if (endNode === item && this.state.isTextLike(endNode)) {
-          const textModel = (item as BlockElement).getAttribute(
-            "textContent"
-          ) as BlockyTextModel;
+          const textModel = (item as BlockElement).getTextModel("textContent")!;
           const tail = textModel.delta.slice(cursorState.endOffset);
           changeset.textEdit(startNode, "textContent", () =>
             new Delta().retain(cursorState.startOffset).concat(tail)
@@ -415,12 +411,8 @@ export class EditorController {
         this.state.isTextLike(currentBlockElement) &&
         this.state.isTextLike(element)
       ) {
-        const prevTextModel = currentBlockElement.getAttribute(
-          "textContent"
-        ) as BlockyTextModel;
-        const firstTextModel = element.getAttribute(
-          "textContent"
-        ) as BlockyTextModel;
+        const prevTextModel = currentBlockElement.getTextModel("textContent")!;
+        const firstTextModel = element.getTextModel("textContent");
         if (!prevTextModel || !firstTextModel) {
           continue;
         }
@@ -458,9 +450,7 @@ export class EditorController {
         const lastChild = insertChildren[
           insertChildren.length - 1
         ] as BlockElement;
-        const textModel = lastChild.getAttribute(
-          "textContent"
-        ) as BlockyTextModel;
+        const textModel = lastChild.getTextModel("textContent")!;
         const prevOffset = textModel.delta.length();
         changeset.setCursorState(
           CursorState.collapse(lastChild.id, prevOffset)
@@ -485,9 +475,7 @@ export class EditorController {
         insertChildren[insertChildren.length - 1] = newChild;
       } else {
         const appendElement = this.state.createTextElement(appendDelta);
-        const textModel = appendElement.getAttribute(
-          "textContent"
-        ) as BlockyTextModel;
+        const textModel = appendElement.getTextModel("textContent")!;
         changeset.setCursorState(
           CursorState.collapse(appendElement.id, textModel.length)
         );

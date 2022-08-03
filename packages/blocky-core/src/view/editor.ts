@@ -817,9 +817,7 @@ export class Editor {
         );
         return;
       }
-      const textModel = blockElement.getAttribute(
-        "textContent"
-      ) as BlockyTextModel;
+      const textModel = blockElement.getTextModel("textContent")!;
 
       const cursorOffset = cursorState.offset;
 
@@ -1065,7 +1063,7 @@ export class Editor {
 
   #focusEndOfNode(changeset: Changeset, node: BlockElement) {
     if (node.nodeName === TextBlock.Name) {
-      const textModel = node.getAttribute<BlockyTextModel>("textContent")!;
+      const textModel = node.getTextModel("textContent")!;
       changeset.setCursorState(CursorState.collapse(node.id, textModel.length));
     } else {
       changeset.setCursorState(CursorState.collapse(node.id, 0));
@@ -1306,9 +1304,7 @@ export class Editor {
     if (!textElement) {
       return;
     }
-    const firstLineModel = textElement.getAttribute(
-      "textContent"
-    ) as BlockyTextModel;
+    const firstLineModel = textElement.getTextModel("textContent")!;
     const firstLineRemains = firstLineModel.delta.slice(cursorState.offset);
     const remainLength = firstLineModel.length - cursorState.offset;
     changeset.textEdit(textElement, "textContent", () =>

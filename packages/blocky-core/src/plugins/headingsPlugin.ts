@@ -1,5 +1,11 @@
 import { isWhiteSpace } from "blocky-common/es/text";
-import { type Editor, type IPlugin, TextType, Changeset } from "@pkg/index";
+import {
+  type Editor,
+  type IPlugin,
+  TextType,
+  Changeset,
+  TextBlock,
+} from "@pkg/index";
 import Delta from "quill-delta-es";
 import { isNumber, isString } from "lodash-es";
 
@@ -9,6 +15,9 @@ function makeHeadingsPlugin(): IPlugin {
     onInitialized(editor: Editor) {
       editor.textInput.on((evt) => {
         const { beforeString, blockElement } = evt;
+        if (blockElement.nodeName !== TextBlock.Name) {
+          return;
+        }
         const { state } = editor;
         const changeset = new Changeset(state);
         const delta = new Delta();
