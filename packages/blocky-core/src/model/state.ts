@@ -490,20 +490,3 @@ class NodeTraverser {
     return node;
   }
 }
-
-export function minCommonPrefixLen<T>(
-  a: readonly T[],
-  b: readonly T[]
-): number {
-  let result = 0;
-  const len = Math.min(a.length, b.length);
-
-  for (let i = 0; i < len; i++) {
-    if (a[i] !== b[i]) {
-      break;
-    }
-    result++;
-  }
-
-  return result;
-}
