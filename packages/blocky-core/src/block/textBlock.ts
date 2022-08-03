@@ -605,15 +605,10 @@ class TextBlock extends Block {
 
     const prevCursorState = this.editor.state.cursorState;
 
-    const parentElement = this.props.parent;
-    if (!parentElement) {
-      return;
-    }
-
     const copy = this.props.clone();
 
     const change = new Changeset(this.editor.state);
-    change.removeChild(parentElement, this.props);
+    change.removeNode(this.props);
 
     const prevBlockyElement = prevElement as BlockElement;
 

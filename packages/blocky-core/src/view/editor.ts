@@ -577,10 +577,7 @@ export class Editor {
 
       this.destructBlockNode(node);
 
-      const parent = treeNode.parent;
-      if (parent) {
-        changeset.removeChild(parent, treeNode);
-      }
+      changeset.removeNode(treeNode);
       return;
     }
 
@@ -1015,7 +1012,7 @@ export class Editor {
 
     new Changeset(this.state)
       .textConcat(prevNode, "textContent", () => thisTextModel.delta)
-      .removeChild(node.parent!, node)
+      .removeNode(node)
       .setCursorState(CursorState.collapse(prevNode.id, originalLength))
       .apply();
 
@@ -1048,11 +1045,8 @@ export class Editor {
     }
 
     const changeset = new Changeset(this.state);
-    const parent = node.parent;
 
-    if (parent) {
-      changeset.removeChild(parent, node).apply();
-    }
+    changeset.removeNode(node);
 
     if (prevNode) {
       changeset.setCursorState(CursorState.collapse(prevNode.id, 0));

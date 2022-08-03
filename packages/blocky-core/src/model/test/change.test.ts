@@ -24,9 +24,9 @@ test("test delete", () => {
   const idGenerator = makeDefaultIdGenerator();
   const state = new State("User-1", document, blockRegistry, idGenerator);
   const change = new Changeset(state);
-  change.removeChild(document.body, i1);
-  change.removeChild(document.body, i2);
-  change.removeChild(document.body, i3);
+  change.removeNode(i1);
+  change.removeNode(i2);
+  change.removeNode(i3);
   const finalizedChangeset = change.finalize();
   expect(finalizedChangeset.operations.length).toBe(3);
   expect(finalizedChangeset.operations[0].location.last).toBe(1);

@@ -137,6 +137,11 @@ export class EditorController {
     }
   }
 
+  /**
+   * Apply cursor changed event from another users.
+   * The renderer will draw the collaborative cursor
+   * from another user.
+   */
   applyCursorChangedEvent(evt: CursorChangedEvent) {
     this.beforeApplyCursorChanged.emit(evt);
     const { editor } = this;
@@ -161,6 +166,11 @@ export class EditorController {
     });
   }
 
+  /**
+   * Insert a block in a element after id.
+   * This method will apply a changeset to the state and
+   * trigger the rendering process of the editor.
+   */
   insertBlockAfterId(
     element: BlockElement,
     afterId: string,
@@ -250,6 +260,9 @@ export class EditorController {
     this.formatTextOnCursor(cursorState, attribs);
   }
 
+  /**
+   * Delete the block by id
+   */
   deleteBlock(id: string) {
     const { editor } = this;
     if (!editor) {
@@ -265,8 +278,7 @@ export class EditorController {
       return;
     }
 
-    const parent = blockNode.parent! as BlockyElement;
-    new Changeset(this.state).removeChild(parent, blockNode).apply({
+    new Changeset(this.state).removeNode(blockNode).apply({
       refreshCursor: true,
     });
   }
@@ -349,9 +361,9 @@ export class EditorController {
           changeset.textEdit(startNode, "textContent", () =>
             new Delta().retain(cursorState.startOffset).concat(tail)
           );
-          changeset.removeChild(item.parent!, item);
+          changeset.removeNode(item);
         } else {
-          changeset.removeChild(item.parent!, item);
+          changeset.removeNode(item);
         }
 
         if (item === endNode) {
@@ -563,6 +575,11 @@ export class EditorController {
     return attributes;
   }
 
+  /**
+   * Force set the cursor state.
+   *
+   * Using the changeset is a recommended way to update the cursor.
+   */
   setCursorState(cursorState: CursorState | null) {
     this.state[symSetCursorState](
       cursorState,
@@ -570,6 +587,9 @@ export class EditorController {
     );
   }
 
+  /**
+   * Insert the {@link FollowerWidget} at the position of the current cursor.
+   */
   insertFollowerWidget(widget: FollowerWidget) {
     this.editor?.insertFollowerWidget(widget);
   }
