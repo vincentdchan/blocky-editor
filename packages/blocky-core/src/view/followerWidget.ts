@@ -7,7 +7,6 @@ import type { EditorController } from "./controller";
 import {
   CursorState,
   CursorStateUpdateReason,
-  type BlockyTextModel,
   type CursorStateUpdateEvent,
 } from "@pkg/model";
 import { Slot } from "blocky-common/es/events";
@@ -53,9 +52,7 @@ export class FollowerWidget extends ContainerWithCoord {
     const blockElement = this.#controller!.state.getBlockElementById(
       evt.state.id
     )!;
-    const textModel = blockElement.getAttribute(
-      "textContent"
-    ) as BlockyTextModel;
+    const textModel = blockElement.getTextModel("textContent")!;
     const textContent = textModel.toString();
     const editingValue = textContent.slice(
       this.startCursorState.offset,

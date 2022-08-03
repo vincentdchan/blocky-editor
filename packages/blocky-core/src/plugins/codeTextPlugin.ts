@@ -1,9 +1,9 @@
 import {
   type Editor,
   type IPlugin,
-  type BlockyTextModel,
   CursorState,
   Changeset,
+  TextBlock,
 } from "@pkg/index";
 import Delta from "quill-delta-es";
 import { isHotkey } from "is-hotkey";
@@ -71,9 +71,10 @@ function makeCodeTextPlugin(): IPlugin {
                     const blockElement = editor.state.getBlockElementById(
                       start.id
                     )!;
-                    const textModel = blockElement.getAttribute(
-                      "textContent"
-                    ) as BlockyTextModel;
+                    if (blockElement.nodeName !== TextBlock.Name) {
+                      return;
+                    }
+                    const textModel = blockElement.getTextModel("textContent")!;
                     const fullString = textModel.toString();
                     const codeContent = fullString.slice(
                       start.offset + 1,

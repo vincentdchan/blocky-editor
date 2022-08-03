@@ -2,7 +2,6 @@ import { isWhiteSpace } from "blocky-common/es/text";
 import Delta from "quill-delta-es";
 import { isNumber, isString } from "lodash-es";
 import {
-  BlockyTextModel,
   TextType,
   getTextTypeForTextBlock,
   BlockElement,
@@ -30,6 +29,9 @@ function makeBulletListPlugin(): IPlugin {
   };
   const handleTextInputEvent = (editor: Editor) => (evt: TextInputEvent) => {
     const { blockElement, beforeString } = evt;
+    if (blockElement.nodeName !== TextBlock.Name) {
+      return;
+    }
     let index = 0;
     for (const op of evt.applyDelta.ops) {
       if (isString(op.insert)) {
@@ -69,7 +71,7 @@ function makeBulletListPlugin(): IPlugin {
     if (textType !== TextType.Bulleted) {
       return;
     }
-    const textModel = textElement.getAttribute<BlockyTextModel>("textContent");
+    const textModel = textElement.getTextModel("textContent");
     if (!textModel) {
       return;
     }
