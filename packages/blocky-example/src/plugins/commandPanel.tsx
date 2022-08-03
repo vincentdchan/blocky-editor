@@ -5,11 +5,7 @@ import {
   type IDisposable,
   flattenDisposable,
 } from "blocky-common/es/disposable";
-import {
-  type EditorController,
-  type IPlugin,
-  TextBlockName,
-} from "blocky-core";
+import { type EditorController, type IPlugin, TextBlock } from "blocky-core";
 import "./commandPanel.scss";
 
 interface CommandItemProps {
@@ -118,7 +114,7 @@ export function makeCommandPanelPlugin(): IPlugin {
         if (!blockElement) {
           return;
         }
-        if (blockElement.nodeName !== TextBlockName) {
+        if (blockElement.nodeName !== TextBlock.Name) {
           return;
         }
         editor.insertFollowerWidget(

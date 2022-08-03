@@ -349,6 +349,10 @@ export class BlockyElement implements BlockyNode, WithState {
     return { ...this.#attributes };
   }
 
+  getTextModel(name: string): BlockyTextModel | undefined {
+    return this.getAttribute<BlockyTextModel>(name);
+  }
+
   [symDeleteChildrenAt](index: number, count: number) {
     let ptr = this.#firstChild;
 

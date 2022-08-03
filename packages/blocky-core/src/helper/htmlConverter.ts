@@ -1,13 +1,13 @@
 import { isObject } from "lodash-es";
 import Delta from "quill-delta-es";
 import { BlockElement } from "@pkg/index";
-import { TextBlockName } from "@pkg/block/textBlock";
+import { TextBlock } from "@pkg/block/textBlock";
 import { BlockyTextModel } from "@pkg/model/tree";
 import type { IdGenerator } from "@pkg/helper/idHelper";
 
 function createTextElement(id: string, content: string): BlockElement {
   const textModel = new BlockyTextModel(new Delta().insert(content));
-  return new BlockElement(TextBlockName, id, {
+  return new BlockElement(TextBlock.Name, id, {
     textContent: textModel,
   });
 }

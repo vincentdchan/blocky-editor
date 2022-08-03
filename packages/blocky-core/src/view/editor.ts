@@ -37,7 +37,7 @@ import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { BannerDelegate, type BannerFactory } from "./bannerDelegate";
 import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
-import { TextBlockName } from "@pkg/block/textBlock";
+import { TextBlock } from "@pkg/block/textBlock";
 import { UndoManager } from "@pkg/model/undoManager";
 import { EditorController } from "./controller";
 import { type FollowerWidget } from "./followerWidget";
@@ -809,7 +809,7 @@ export class Editor {
         return;
       }
 
-      if (blockElement.nodeName !== TextBlockName) {
+      if (blockElement.nodeName !== TextBlock.Name) {
         // default behavior
         this.#insertEmptyTextAfterBlock(
           blockElement.parent! as BlockyElement,
@@ -988,7 +988,7 @@ export class Editor {
       return false;
     }
 
-    if (node.nodeName !== TextBlockName) {
+    if (node.nodeName !== TextBlock.Name) {
       return false;
     }
 
@@ -997,7 +997,7 @@ export class Editor {
       return true;
     }
 
-    if (prevNode.nodeName !== TextBlockName) {
+    if (prevNode.nodeName !== TextBlock.Name) {
       this.state[symSetCursorState](
         CursorState.collapse(prevNode.id, 0),
         CursorStateUpdateReason.changeset
@@ -1061,7 +1061,7 @@ export class Editor {
   }
 
   #focusEndOfNode(changeset: Changeset, node: BlockElement) {
-    if (node.nodeName === TextBlockName) {
+    if (node.nodeName === TextBlock.Name) {
       const textModel = node.getAttribute<BlockyTextModel>("textContent")!;
       changeset.setCursorState(CursorState.collapse(node.id, textModel.length));
     } else {
@@ -1117,7 +1117,7 @@ export class Editor {
       targetNode instanceof HTMLDivElement &&
       targetNode.classList.contains(this.#renderer.blockClassName)
     ) {
-      if (targetNode.nodeName !== TextBlockName) {
+      if (targetNode.nodeName !== TextBlock.Name) {
         sel.removeAllRanges();
       }
       this.#focusBlock(sel, targetNode, collapsedCursor);
@@ -1212,7 +1212,7 @@ export class Editor {
     }
 
     if (
-      blockElement.nodeName === TextBlockName ||
+      blockElement.nodeName === TextBlock.Name ||
       blockElement.nodeName === "Title"
     ) {
       return;
@@ -1347,7 +1347,7 @@ export class Editor {
       return;
     }
 
-    if (treeNode.nodeName === TextBlockName) {
+    if (treeNode.nodeName === TextBlock.Name) {
       return treeNode;
     }
   }
