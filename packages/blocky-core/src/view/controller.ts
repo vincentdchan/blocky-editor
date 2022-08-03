@@ -302,7 +302,7 @@ export class EditorController {
       const currentBlockElement = this.state.getBlockElementById(
         cursorState.id
       )!;
-      if (currentBlockElement.nodeName === TextBlock.Name) {
+      if (this.state.isTextLike(currentBlockElement)) {
         const startOffset = cursorState.startOffset;
         const newState = CursorState.collapse(cursorState.id, startOffset);
         new Changeset(this.state)
@@ -338,7 +338,7 @@ export class EditorController {
       while (nodeTraverser.peek()) {
         const item = nodeTraverser.next()!;
 
-        if (startNode === item && startNode.nodeName === TextBlock.Name) {
+        if (startNode === item && this.state.isTextLike(startNode)) {
           const textModel = (item as BlockElement).getAttribute(
             "textContent"
           ) as BlockyTextModel;
@@ -353,7 +353,7 @@ export class EditorController {
               cursorState.startOffset
             )
           );
-        } else if (endNode === item && endNode.nodeName === TextBlock.Name) {
+        } else if (endNode === item && this.state.isTextLike(endNode)) {
           const textModel = (item as BlockElement).getAttribute(
             "textContent"
           ) as BlockyTextModel;
@@ -412,8 +412,8 @@ export class EditorController {
       // first item, try to merge text
       if (
         i === 0 &&
-        currentBlockElement.nodeName === TextBlock.Name &&
-        element.nodeName === TextBlock.Name
+        this.state.isTextLike(currentBlockElement) &&
+        this.state.isTextLike(element)
       ) {
         const prevTextModel = currentBlockElement.getAttribute(
           "textContent"
@@ -452,7 +452,7 @@ export class EditorController {
     if (!isUndefined(appendDelta)) {
       if (
         insertChildren.length > 0 &&
-        insertChildren[insertChildren.length - 1].nodeName === TextBlock.Name
+        this.state.isTextLike(insertChildren[insertChildren.length - 1])
       ) {
         // append to previous element
         const lastChild = insertChildren[
