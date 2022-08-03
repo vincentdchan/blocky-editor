@@ -91,6 +91,9 @@ export class Changeset {
     });
     return this;
   }
+  removeNode(node: BlockyNode): Changeset {
+    return this.removeChild(node.parent!, node);
+  }
   deleteChildrenAt(
     parent: BlockyElement,
     index: number,
