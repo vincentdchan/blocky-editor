@@ -8,7 +8,7 @@ import {
   BlockyTextModel,
   JSONNode,
 } from "@pkg/model";
-import { State, minCommonPrefixLen } from "../state";
+import { State } from "../state";
 import Delta from "quill-delta-es";
 
 function makeDefaultUtils() {
@@ -92,11 +92,4 @@ describe("NodeLocation", () => {
     const l5 = new NodeLocation([1, 2, 3, 4]);
     expect(l2.hashCode).not.equal(l5.hashCode);
   });
-});
-
-test("minCommonPrefixLen", () => {
-  expect(minCommonPrefixLen([], [])).toBe(0);
-  expect(minCommonPrefixLen([1, 1], [1, 2])).toBe(1);
-  expect(minCommonPrefixLen([1, 1, 1], [1, 1, 2])).toBe(2);
-  expect(minCommonPrefixLen([1, 1, 1], [1])).toBe(1);
 });
