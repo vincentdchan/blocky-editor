@@ -6,7 +6,7 @@ import {
   TextType,
   getTextTypeForTextBlock,
   BlockElement,
-  TextBlockName,
+  TextBlock,
   Changeset,
   CursorState,
   type TextInputEvent,
@@ -61,7 +61,7 @@ function makeBulletListPlugin(): IPlugin {
     }
 
     const textElement = editor.getTextElementByBlockId(id);
-    if (!textElement || textElement.nodeName !== TextBlockName) {
+    if (!textElement || textElement.nodeName !== TextBlock.Name) {
       return;
     }
 

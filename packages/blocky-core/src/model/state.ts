@@ -20,7 +20,7 @@ import { NodeLocation } from "./location";
 import { blockyNodeFromJsonNode } from "./deserialize";
 import { Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
-import { TextBlockName } from "@pkg/block/textBlock";
+import { TextBlock } from "@pkg/block/textBlock";
 import { TitleBlock } from "@pkg/block/titleBlock";
 import { VersionHistory } from "./versionHistory";
 import {
@@ -263,7 +263,7 @@ export class State {
       attributes.textContent = new BlockyTextModel(delta);
     }
     return new BlockElement(
-      TextBlockName,
+      TextBlock.Name,
       this.idHelper.mkBlockId(),
       attributes,
       children
@@ -356,7 +356,7 @@ export class State {
       if (currentNode instanceof BlockElement) {
         let startOffset = 0;
         let endOffset = 0;
-        if (currentNode.nodeName === TextBlockName) {
+        if (currentNode.nodeName === TextBlock.Name) {
           const textModel = currentNode.getAttribute(
             "textContent"
           ) as BlockyTextModel;

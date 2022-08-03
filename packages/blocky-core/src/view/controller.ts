@@ -23,7 +23,7 @@ import { type BannerFactory } from "@pkg/view/bannerDelegate";
 import { type ToolbarFactory } from "@pkg/view/toolbarDelegate";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { BlockPasteEvent, TryParsePastedDOMEvent } from "@pkg/block/basic";
-import { TextBlockName } from "@pkg/block/textBlock";
+import { TextBlock } from "@pkg/block/textBlock";
 import { type CollaborativeCursorFactory } from "./collaborativeCursors";
 import { Editor } from "./editor";
 import { type FollowerWidget } from "./followerWidget";
@@ -302,7 +302,7 @@ export class EditorController {
       const currentBlockElement = this.state.getBlockElementById(
         cursorState.id
       )!;
-      if (currentBlockElement.nodeName === TextBlockName) {
+      if (currentBlockElement.nodeName === TextBlock.Name) {
         const startOffset = cursorState.startOffset;
         const newState = CursorState.collapse(cursorState.id, startOffset);
         new Changeset(this.state)
@@ -338,7 +338,7 @@ export class EditorController {
       while (nodeTraverser.peek()) {
         const item = nodeTraverser.next()!;
 
-        if (startNode === item && startNode.nodeName === TextBlockName) {
+        if (startNode === item && startNode.nodeName === TextBlock.Name) {
           const textModel = (item as BlockElement).getAttribute(
             "textContent"
           ) as BlockyTextModel;
@@ -353,7 +353,7 @@ export class EditorController {
               cursorState.startOffset
             )
           );
-        } else if (endNode === item && endNode.nodeName === TextBlockName) {
+        } else if (endNode === item && endNode.nodeName === TextBlock.Name) {
           const textModel = (item as BlockElement).getAttribute(
             "textContent"
           ) as BlockyTextModel;
@@ -412,8 +412,8 @@ export class EditorController {
       // first item, try to merge text
       if (
         i === 0 &&
-        currentBlockElement.nodeName === TextBlockName &&
-        element.nodeName === TextBlockName
+        currentBlockElement.nodeName === TextBlock.Name &&
+        element.nodeName === TextBlock.Name
       ) {
         const prevTextModel = currentBlockElement.getAttribute(
           "textContent"
@@ -452,7 +452,7 @@ export class EditorController {
     if (!isUndefined(appendDelta)) {
       if (
         insertChildren.length > 0 &&
-        insertChildren[insertChildren.length - 1].nodeName === TextBlockName
+        insertChildren[insertChildren.length - 1].nodeName === TextBlock.Name
       ) {
         // append to previous element
         const lastChild = insertChildren[
@@ -472,7 +472,7 @@ export class EditorController {
           ptr = ptr.nextSibling;
         }
         const newChild = new BlockElement(
-          TextBlockName,
+          TextBlock.Name,
           lastChild.id,
           {
             ...lastChild.getAttributes(),
@@ -508,7 +508,7 @@ export class EditorController {
       return testElement;
     }
 
-    const blockDef = this.blockRegistry.getBlockDefByName(TextBlockName);
+    const blockDef = this.blockRegistry.getBlockDefByName(TextBlock.Name);
     const pasteHandler = blockDef?.onPaste;
     const evt = new BlockPasteEvent({
       node: node as HTMLElement,

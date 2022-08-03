@@ -26,8 +26,6 @@ import { type Position } from "blocky-common/es/position";
 import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { EditorController } from "..";
 
-export const TextBlockName = "Text";
-
 const TextContentClass = "blocky-block-text-content";
 
 const DataRefKey = "data-href";
@@ -106,7 +104,9 @@ class CheckboxRenderer extends LeftPadRenderer {
  * TextBlock is a very special block in the editor.
  * It's handling all the editable element.
  */
-class TextBlock extends Block {
+export class TextBlock extends Block {
+  static Name = "Text";
+
   #container: HTMLElement | undefined;
   #bodyContainer: HTMLElement | null = null;
   #contentContainer: HTMLElement | null = null;
@@ -594,7 +594,7 @@ class TextBlock extends Block {
   }
 
   #makeThisTextBlockIndent(prevElement: BlockyElement) {
-    if (prevElement.nodeName !== TextBlockName) {
+    if (prevElement.nodeName !== TextBlock.Name) {
       return;
     }
 
@@ -681,7 +681,7 @@ function clearNodeAttributes(node: Node) {
 }
 
 class TextBlockDefinition implements IBlockDefinition {
-  name: string = TextBlockName;
+  name: string = TextBlock.Name;
   editable = true;
 
   onBlockCreated({ blockElement: data }: BlockCreatedEvent): Block {
@@ -763,7 +763,7 @@ class TextBlockDefinition implements IBlockDefinition {
     }
 
     return new BlockElement(
-      TextBlockName,
+      TextBlock.Name,
       newId,
       {
         ...attributes,

@@ -6,7 +6,7 @@ import type {
 } from "@pkg/block/basic";
 import type { BlockElement } from "@pkg/model";
 import { Registry } from "./registry";
-import { makeTextBlockDefinition, TextBlockName } from "@pkg/block/textBlock";
+import { makeTextBlockDefinition, TextBlock } from "@pkg/block/textBlock";
 
 export class BlockRegistry extends Registry<IBlockDefinition> {
   #types: IBlockDefinition[];
@@ -15,7 +15,7 @@ export class BlockRegistry extends Registry<IBlockDefinition> {
   constructor() {
     super();
     this.#types = [makeTextBlockDefinition()];
-    this.#nameMap.set(TextBlockName, 0);
+    this.#nameMap.set(TextBlock.Name, 0);
   }
 
   register(blockType: IBlockDefinition): number {

@@ -30,4 +30,4 @@ export {
   NodeLocation,
   NodeTraverser,
 } from "./model";
-export { TextBlockName } from "./block/textBlock";
+export { TextBlock } from "./block/textBlock";
