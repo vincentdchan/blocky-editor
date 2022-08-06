@@ -10,10 +10,6 @@ import {
   BlockyElement,
   BlockyDocument,
   BlockyTextModel,
-  symSetAttribute,
-  symInsertChildAt,
-  symDeleteChildrenAt,
-  symApplyDelta,
   traverseNode,
 } from "blocky-data";
 import { NodeLocation } from "./location";
@@ -234,7 +230,7 @@ export class State {
     const parent = this.findNodeByLocation(parentLoc) as BlockyElement;
     // TODO: optimize insert
     for (const child of children) {
-      parent[symInsertChildAt](index++, blockyNodeFromJsonNode(child));
+      parent.__insertChildAt(index++, blockyNodeFromJsonNode(child));
     }
   }
   #applyUpdateOperation(updateOperation: UpdateNodeOperation) {
@@ -242,7 +238,7 @@ export class State {
     const node = this.findNodeByLocation(location) as BlockyElement;
     for (const key in attributes) {
       const value = attributes[key];
-      node[symSetAttribute](key, value);
+      node.__setAttribute(key, value);
     }
   }
   #applyRemoveOperation(removeOperation: RemoveNodeOperation) {
@@ -250,7 +246,7 @@ export class State {
     const parentLoc = location.slice(0, location.length - 1);
     const index = location.last;
     const parent = this.findNodeByLocation(parentLoc) as BlockyElement;
-    parent[symDeleteChildrenAt](index, children.length);
+    parent.__deleteChildrenAt(index, children.length);
   }
   #applyTextEditOperation(textEditOperation: TextEditOperation) {
     const { location, delta } = textEditOperation;
@@ -265,7 +261,7 @@ export class State {
         }>, by location: ${location.toString()}`
       );
     }
-    textNode[symApplyDelta](delta);
+    textNode.__applyDelta(delta);
   }
 
   createTextElement(
