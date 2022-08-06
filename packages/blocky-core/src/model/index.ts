@@ -12,5 +12,3 @@ export {
   ChangesetRecordOption,
   type FinalizedChangeset,
 } from "./change";
-export * from "./tree";
-export * from "./events";

@@ -1,8 +1,7 @@
 import { isObject } from "lodash-es";
 import Delta from "quill-delta-es";
-import { BlockElement } from "@pkg/index";
+import { BlockElement, BlockyTextModel } from "blocky-data";
 import { TextBlock } from "@pkg/block/textBlock";
-import { BlockyTextModel } from "@pkg/model/tree";
 import type { IdGenerator } from "@pkg/helper/idHelper";
 
 function createTextElement(id: string, content: string): BlockElement {

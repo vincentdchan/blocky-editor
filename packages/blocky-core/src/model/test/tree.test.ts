@@ -4,7 +4,7 @@ import {
   symSetAttribute,
   symInsertChildAt,
   symDeleteChildrenAt,
-} from "@pkg/model/tree";
+} from "blocky-data";
 
 test("tree append", () => {
   const parent = new BlockyElement("block");

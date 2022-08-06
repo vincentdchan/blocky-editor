@@ -1,5 +1,5 @@
 import { Registry } from "./registry";
-import type { AttributesObject } from "@pkg/model";
+import type { AttributesObject } from "blocky-data";
 
 export type SpanRenderer = (
   element: HTMLSpanElement,

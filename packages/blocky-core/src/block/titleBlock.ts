@@ -9,7 +9,7 @@ import {
   Block,
 } from "./basic";
 import { TextInputEvent } from "@pkg/view/editor";
-import { BlockyTextModel, BlockElement } from "@pkg/model";
+import { BlockyTextModel, BlockElement } from "blocky-data";
 
 export class TitleBlock extends Block {
   static Name = "Title";

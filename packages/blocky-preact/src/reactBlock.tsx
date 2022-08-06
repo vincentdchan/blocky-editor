@@ -1,8 +1,8 @@
+import type { BlockElement } from "blocky-data";
 import {
   type IBlockDefinition,
   type EditorController,
   type BlockCreatedEvent,
-  type BlockElement,
   type Block,
   ContentBlock,
   TryParsePastedDOMEvent,
