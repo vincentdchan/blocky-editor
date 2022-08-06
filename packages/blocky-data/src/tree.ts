@@ -14,10 +14,6 @@ export interface DeltaChangedEvent {
 }
 
 export const metaKey = "#meta";
-export const symSetAttribute = Symbol("setAttribute");
-export const symInsertChildAt = Symbol("insertChildAt");
-export const symApplyDelta = Symbol("applyDelta");
-export const symDeleteChildrenAt = Symbol("deleteChildrenAt");
 
 export interface AttributesObject {
   [key: string]: any;
@@ -60,7 +56,12 @@ export class BlockyTextModel {
     return this.#delta;
   }
 
-  [symApplyDelta](v: Delta) {
+  /**
+   * Used internally.
+   * If you want to modify the state of the document and
+   * notify the editor to update, apply a changeset.
+   */
+  __applyDelta(v: Delta) {
     const oldDelta = this.#delta;
     const newDelta = oldDelta.compose(v);
     this.#delta = newDelta;
@@ -287,7 +288,12 @@ export class BlockyElement implements BlockyNode {
     return ptr;
   }
 
-  [symInsertChildAt](index: number, node: BlockyNode) {
+  /**
+   * Used internally.
+   * If you want to modify the state of the document and
+   * notify the editor to update, apply a changeset.
+   */
+  __insertChildAt(index: number, node: BlockyNode) {
     if (index === this.childrenLength) {
       this.#appendChild(node);
       return;
@@ -308,7 +314,12 @@ export class BlockyElement implements BlockyNode {
     this.#symInsertAfter(node, ptr ?? undefined);
   }
 
-  [symSetAttribute](name: string, value: string) {
+  /**
+   * Used internally.
+   * If you want to modify the state of the document and
+   * notify the editor to update, apply a changeset.
+   */
+  __setAttribute(name: string, value: string) {
     if (bannedAttributesName.has(name)) {
       throw new Error(`'${name}' is preserved`);
     }
@@ -335,7 +346,12 @@ export class BlockyElement implements BlockyNode {
     return this.getAttribute<BlockyTextModel>(name);
   }
 
-  [symDeleteChildrenAt](index: number, count: number) {
+  /**
+   * Used internally.
+   * If you want to modify the state of the document and
+   * notify the editor to update, apply a changeset.
+   */
+  __deleteChildrenAt(index: number, count: number) {
     let ptr = this.#firstChild;
 
     while (index > 0) {
@@ -402,7 +418,7 @@ export class BlockyElement implements BlockyNode {
     for (const key in attribs) {
       const value = attribs[key];
       if (value) {
-        result[symSetAttribute](key, value);
+        result.__setAttribute(key, value);
       }
     }
 
@@ -489,12 +505,17 @@ export class BlockElement extends BlockyElement {
     super(blockName, attributes, children);
   }
 
-  // validate this in changeset
-  override [symSetAttribute](name: string, value: string) {
+  /**
+   * Used internally.
+   * If you want to modify the state of the document and
+   * notify the editor to update, apply a changeset.
+   */
+  override __setAttribute(name: string, value: string) {
+    // TODO: validate this in changeset
     if (name === "id") {
       throw new TypeError(`${name} is reserved`);
     }
-    super[symSetAttribute](name, value);
+    super.__setAttribute(name, value);
   }
 
   /**
