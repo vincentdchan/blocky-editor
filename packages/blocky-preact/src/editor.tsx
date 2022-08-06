@@ -18,16 +18,13 @@ export interface Props {
 }
 
 export class BlockyEditor extends Component<Props> {
-  #editor: Editor | undefined;
-  #containerRef: RefObject<HTMLDivElement> = createRef();
+  private editor: Editor | undefined;
+  private containerRef: RefObject<HTMLDivElement> = createRef();
 
   override componentDidMount() {
     const { controller } = this.props;
-    this.#editor = Editor.fromController(
-      this.#containerRef.current!,
-      controller
-    );
-    const editor = this.#editor;
+    this.editor = Editor.fromController(this.containerRef.current!, controller);
+    const editor = this.editor;
     if (this.props.ignoreInitEmpty !== true) {
       editor.initFirstEmptyBlock();
     }
@@ -42,13 +39,13 @@ export class BlockyEditor extends Component<Props> {
   }
 
   override componentWillUnmount() {
-    this.#editor?.dispose();
-    this.#editor = undefined;
+    this.editor?.dispose();
+    this.editor = undefined;
   }
 
   render() {
     return (
-      <div className="blocky-editor-container" ref={this.#containerRef}></div>
+      <div className="blocky-editor-container" ref={this.containerRef}></div>
     );
   }
 }

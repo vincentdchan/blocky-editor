@@ -20,7 +20,7 @@ interface ImageBlockState {
 }
 
 class ImageBlock extends PureComponent<ImageBlockProps, ImageBlockState> {
-  #selectorRef: RefObject<HTMLInputElement> = createRef();
+  private selectorRef: RefObject<HTMLInputElement> = createRef();
 
   constructor(props: ImageBlockProps) {
     super(props);
@@ -31,11 +31,11 @@ class ImageBlock extends PureComponent<ImageBlockProps, ImageBlockState> {
   }
 
   private handleUpload = () => {
-    this.#selectorRef.current!.click();
+    this.selectorRef.current!.click();
   };
 
   private handleSelectedFileChanged = () => {
-    const files = this.#selectorRef.current!.files;
+    const files = this.selectorRef.current!.files;
     if (!files || files.length === 0) {
       return;
     }
@@ -59,7 +59,7 @@ class ImageBlock extends PureComponent<ImageBlockProps, ImageBlockState> {
             accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*"
             className="blocky-image-block-file-selector"
             onChange={this.handleSelectedFileChanged}
-            ref={this.#selectorRef}
+            ref={this.selectorRef}
           />
         </>
       );
