@@ -42,6 +42,7 @@
     "src"
   ],
   "references": [
-    { "path": "../blocky-common" }
+    { "path": "../blocky-common" },
+    { "path": "../blocky-data" },
   ]
 }
