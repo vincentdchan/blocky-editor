@@ -5,6 +5,9 @@
   "homepage": "https://github.com/vincentdchan/blocky-editor",
   "author": "Vincent Chan <okcdz@diverse.space>",
   "license": "MIT",
+  "devDependencies": {
+    "@types/lodash-es": "^4.17.6"
+  },
   "dependencies": {
     "blocky-common": "workspace:>=2.3.0",
     "lodash-es": "^4.17.21",

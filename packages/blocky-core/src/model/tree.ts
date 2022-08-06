@@ -4,10 +4,9 @@
  * It will cause strange compilation errors by Vite.
  */
 import { isUndefined } from "lodash-es";
+import { Slot } from "blocky-common/es/events";
 import Delta from "quill-delta-es";
-import { type WithState, WithStateSlot } from "@pkg/helper/withStateSlot";
 import type { ElementChangedEvent } from "./events";
-import type { State } from "./state";
 
 export interface DeltaChangedEvent {
   oldDelta: Delta;
@@ -35,7 +34,7 @@ export interface JSONNode {
 export type JSONChild = JSONNode;
 
 export interface BlockyNode {
-  state?: State;
+  doc?: BlockyDocument;
 
   nodeName: string;
   parent: BlockyElement | null;
@@ -104,8 +103,8 @@ interface InternAttributes {
   [key: string]: any;
 }
 
-export class BlockyElement implements BlockyNode, WithState {
-  state?: State;
+export class BlockyElement implements BlockyNode {
+  doc?: BlockyDocument;
   parent: BlockyElement | null = null;
   nextSibling: BlockyNode | null = null;
   prevSibling: BlockyNode | null = null;
@@ -116,7 +115,7 @@ export class BlockyElement implements BlockyNode, WithState {
   #lastChild: BlockyNode | null = null;
   #attributes: InternAttributes = {};
 
-  changed: WithStateSlot<ElementChangedEvent> = new WithStateSlot(this);
+  changed: Slot<ElementChangedEvent> = new Slot();
 
   constructor(
     public nodeName: string,
@@ -216,9 +215,7 @@ export class BlockyElement implements BlockyNode, WithState {
       }
     }
 
-    if (node instanceof BlockyElement) {
-      node.handleMountToBlock(this.state);
-    }
+    this.doc?.reportBlockyNodeInserted(node);
 
     this.changed.emit({
       type: "element-insert-child",
@@ -239,7 +236,7 @@ export class BlockyElement implements BlockyNode, WithState {
   }
 
   appendChild(node: BlockyNode) {
-    if (this.state) {
+    if (this.doc) {
       throw new Error(
         "this method could only be called when the node is unmounted"
       );
@@ -269,9 +266,7 @@ export class BlockyElement implements BlockyNode, WithState {
 
     this.#appendChildImpl(node);
 
-    if (node instanceof BlockyElement) {
-      node.handleMountToBlock(this.state);
-    }
+    this.doc?.reportBlockyNodeInserted(node);
 
     this.changed.emit({
       type: "element-insert-child",
@@ -279,19 +274,6 @@ export class BlockyElement implements BlockyNode, WithState {
       child: node,
       index: insertIndex,
     });
-  }
-
-  handleMountToBlock(state?: State) {
-    this.state = state;
-    this.state?.handleNewBlockMounted(this);
-
-    let ptr = this.firstChild;
-    while (ptr) {
-      if (ptr instanceof BlockyElement) {
-        ptr.handleMountToBlock(state);
-      }
-      ptr = ptr.nextSibling;
-    }
   }
 
   childAt(index: number): BlockyNode | null {
@@ -403,9 +385,7 @@ export class BlockyElement implements BlockyNode, WithState {
     node.nextSibling = null;
     this.childrenLength--;
 
-    if (node instanceof BlockyElement) {
-      node.handleUnmount();
-    }
+    this.doc?.reportBlockyNodeRemoved(node);
 
     this.changed.emit({
       type: "element-remove-child",
@@ -413,17 +393,6 @@ export class BlockyElement implements BlockyNode, WithState {
       child: node,
       index: ptr,
     });
-  }
-
-  handleUnmount() {
-    this.state?.unmountBlock(this);
-    let ptr = this.#firstChild;
-    while (ptr) {
-      if (ptr instanceof BlockyElement) {
-        ptr.handleMountToBlock();
-      }
-      ptr = ptr.nextSibling;
-    }
   }
 
   clone(): BlockyElement {
@@ -588,6 +557,9 @@ export class BlockyDocument extends BlockyElement {
   readonly head: BlockyElement;
   readonly body: BlockyElement;
 
+  readonly blockElementAdded = new Slot<BlockElement>();
+  readonly blockElementRemoved = new Slot<BlockElement>();
+
   constructor(props?: Partial<DocumentInitProps>) {
     let title: BlockElement;
     let head: BlockyElement | undefined = props?.head;
@@ -613,11 +585,41 @@ export class BlockyDocument extends BlockyElement {
     this.title = title;
     this.head = head;
     this.body = body;
+
+    this.reportBlockyNodeInserted(this.head);
+    this.reportBlockyNodeInserted(this.body);
   }
 
-  override handleMountToBlock(state?: State) {
-    this.state = state;
-    this.head.handleMountToBlock(state);
-    this.body.handleMountToBlock(state);
+  reportBlockyNodeInserted(blockyNode: BlockyNode) {
+    traverseNode(blockyNode, (item: BlockyNode) => {
+      item.doc = this;
+      if (item instanceof BlockElement) {
+        this.blockElementAdded.emit(item);
+      }
+    });
+  }
+
+  reportBlockyNodeRemoved(blockyNode: BlockyNode) {
+    traverseNode(blockyNode, (item: BlockyNode) => {
+      item.doc = undefined;
+      if (item instanceof BlockElement) {
+        this.blockElementRemoved.emit(item);
+      }
+    });
+  }
+}
+
+export function traverseNode(
+  node: BlockyNode,
+  fun: (node: BlockyNode) => void
+) {
+  fun(node);
+
+  if (node instanceof BlockyElement) {
+    let ptr = node.firstChild;
+    while (ptr) {
+      traverseNode(ptr, fun);
+      ptr = ptr.nextSibling;
+    }
   }
 }
