@@ -1,6 +1,6 @@
 import { type IDisposable } from "blocky-common/es/disposable";
 import type { EditorController } from "@pkg/view/controller";
-import type { BlockElement } from "@pkg/model";
+import type { BlockElement } from "blocky-data";
 import { UIDelegate } from "./uiDelegate";
 
 export interface BannerInstance extends IDisposable {

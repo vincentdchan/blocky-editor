@@ -7,7 +7,7 @@ import {
   BlockyDocument,
   BlockyElement,
   BlockyTextModel,
-} from "@pkg/model/tree";
+} from "blocky-data";
 import { blockyNodeFromJsonNode } from "../deserialize";
 
 const idGenerator = makeDefaultIdGenerator();

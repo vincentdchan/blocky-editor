@@ -10,7 +10,7 @@ import {
   BlockyDocument,
   BlockyElement,
   BlockyTextModel,
-} from "../tree";
+} from "blocky-data";
 import Delta from "quill-delta-es";
 
 test("test delete", () => {

@@ -16,6 +16,7 @@
   "dependencies": {
     "blocky-common": "workspace:*",
     "blocky-core": "workspace:*",
+    "blocky-data": "workspace:*",
     "blocky-preact": "workspace:*"
   },
   "devDependencies": {

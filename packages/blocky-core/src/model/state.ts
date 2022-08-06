@@ -1,6 +1,5 @@
 import { isUndefined } from "lodash-es";
 import Delta from "quill-delta-es";
-import { isUpperCase } from "blocky-common/es/character";
 import { removeNode } from "blocky-common/es/dom";
 import { Slot } from "blocky-common/es/events";
 import {
@@ -16,7 +15,7 @@ import {
   symDeleteChildrenAt,
   symApplyDelta,
   traverseNode,
-} from "./tree";
+} from "blocky-data";
 import { NodeLocation } from "./location";
 import { blockyNodeFromJsonNode } from "./deserialize";
 import { Block } from "@pkg/block/basic";

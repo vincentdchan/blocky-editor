@@ -1,8 +1,5 @@
-import {
-  type TryParsePastedDOMEvent,
-  type IPlugin,
-  BlockElement,
-} from "blocky-core";
+import { BlockElement } from "blocky-data";
+import { type TryParsePastedDOMEvent, type IPlugin } from "blocky-core";
 import { makeReactBlock, DefaultBlockOutline } from "blocky-preact";
 import { type RefObject, createRef } from "preact";
 import { PureComponent } from "preact/compat";

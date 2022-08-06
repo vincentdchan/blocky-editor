@@ -6,7 +6,7 @@ import {
   type BlockyNode,
   BlockElement,
   BlockyTextModel,
-} from "@pkg/model/tree";
+} from "blocky-data";
 import type { Editor } from "@pkg/view/editor";
 
 function ensureChild<K extends keyof HTMLElementTagNameMap>(

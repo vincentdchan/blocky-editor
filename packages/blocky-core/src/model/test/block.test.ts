@@ -1,10 +1,6 @@
 import { test, expect } from "vitest";
 import "@pkg/index";
-import {
-  BlockyDocument,
-  BlockElement,
-  symInsertChildAt,
-} from "@pkg/model/tree";
+import { BlockyDocument, BlockElement, symInsertChildAt } from "blocky-data";
 import { TextBlock } from "@pkg/block/textBlock";
 
 test("block level 0", () => {
