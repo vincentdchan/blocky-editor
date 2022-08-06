@@ -32,6 +32,7 @@ importers:
       '@types/lodash-es': ^4.17.6
       '@types/node': ^17.0.41
       blocky-common: workspace:>=2.3.0
+      blocky-data: workspace:>=2.4.0
       is-hotkey: ^0.2.0
       jsdom: ^20.0.0
       lodash-es: ^4.17.21
@@ -43,6 +44,7 @@ importers:
       vitest: ^0.14.1
     dependencies:
       blocky-common: link:../blocky-common
+      blocky-data: link:../blocky-data
       is-hotkey: 0.2.0
       lodash-es: 4.17.21
       quill-delta-es: 5.0.2
@@ -56,6 +58,16 @@ importers:
       typescript: 4.7.3
       vite: 2.9.14
       vitest: 0.14.2_jsdom@20.0.0
+
+  packages/blocky-data:
+    specifiers:
+      blocky-common: workspace:>=2.3.0
+      lodash-es: ^4.17.21
+      quill-delta-es: ^5.0.2
+    dependencies:
+      blocky-common: link:../blocky-common
+      lodash-es: 4.17.21
+      quill-delta-es: 5.0.2
 
   packages/blocky-example:
     specifiers:
@@ -98,21 +110,6 @@ importers:
       blocky-core: link:../blocky-core
       preact: 10.9.0
       typescript: 4.7.3
-
-  packages/blocky-yjs:
-    specifiers:
-      blocky-common: workspace:*
-      blocky-core: workspace:*
-      quill-delta-es: ^5.0.2
-      typescript: ^4.7.3
-      yjs: ^13.5.39
-    dependencies:
-      quill-delta-es: 5.0.2
-    devDependencies:
-      blocky-common: link:../blocky-common
-      blocky-core: link:../blocky-core
-      typescript: 4.7.3
-      yjs: 13.5.39
 
 packages:
 
@@ -1668,10 +1665,6 @@ packages:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
     dev: true
 
-  /isomorphic.js/0.2.5:
-    resolution: {integrity: sha512-PIeMbHqMt4DnUP3MA/Flc0HElYjMXArsw1qwJZcm9sqR8mq3l8NYizFMty0pWwE/tzIGH3EKK5+jes5mAr85yw==}
-    dev: true
-
   /js-tokens/4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
     dev: true
@@ -1768,13 +1761,6 @@ packages:
     dependencies:
       prelude-ls: 1.2.1
       type-check: 0.4.0
-    dev: true
-
-  /lib0/0.2.51:
-    resolution: {integrity: sha512-05Erb3465CxJa38LQlMz4EbetNvRna1S3BzqEjC0/pmp5cQuQSfNNmeS0722Wev1dRlMUp2Cql0gQ55krSXf2Q==}
-    engines: {node: '>=12'}
-    dependencies:
-      isomorphic.js: 0.2.5
     dev: true
 
   /local-pkg/0.4.2:
@@ -2493,10 +2479,4 @@ packages:
 
   /yallist/4.0.0:
     resolution: {integrity: sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==}
-    dev: true
-
-  /yjs/13.5.39:
-    resolution: {integrity: sha512-EoVT856l301lomtjjVspgTdSRiFqZ7gNKnmVPX4/V8NHI5EYS39/MdjB9iNv0Mw1weKDZRU8NgxgerqwJ3y2xA==}
-    dependencies:
-      lib0: 0.2.51
     dev: true
