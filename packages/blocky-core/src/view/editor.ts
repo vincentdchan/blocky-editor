@@ -11,16 +11,14 @@ import { type Position } from "blocky-common/es/position";
 import { debounce, isUndefined } from "lodash-es";
 import Delta from "quill-delta-es";
 import { DocRenderer } from "@pkg/view/renderer";
+import { State as DocumentState, TextType, Changeset } from "@pkg/model";
 import {
   type AttributesObject,
-  State as DocumentState,
-  TextType,
   BlockyTextModel,
   BlockyElement,
-  Changeset,
   BlockElement,
   BlockyNode,
-} from "@pkg/model";
+} from "blocky-data";
 import { CursorState } from "@pkg/model/cursor";
 import {
   symSetCursorState,

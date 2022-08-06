@@ -1,6 +1,11 @@
 import { render, type ComponentChild } from "preact";
 import { unmountComponentAtNode } from "preact/compat";
-import { type BlockElement, type BannerFactory, type EditorController, type BannerInstance } from "blocky-core";
+import type { BlockElement } from "blocky-data";
+import type {
+  BannerFactory,
+  EditorController,
+  BannerInstance,
+} from "blocky-core";
 
 export interface RenderProps {
   editorController: EditorController;
@@ -17,7 +22,7 @@ export function makePreactBanner(renderer: Renderer): BannerFactory {
     let focusedNode: BlockElement | undefined;
     const renderFn = () => {
       render(renderer({ editorController, focusedNode }), container);
-    }
+    };
     renderFn();
     return {
       onFocusedNodeChanged(n: BlockElement) {

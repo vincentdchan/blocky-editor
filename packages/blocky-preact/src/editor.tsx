@@ -1,10 +1,6 @@
 import { Component, createRef, type RefObject } from "preact";
-import {
-  CursorState,
-  Editor,
-  type BlockElement,
-  type EditorController,
-} from "blocky-core";
+import { type BlockElement } from "blocky-data";
+import { CursorState, Editor, type EditorController } from "blocky-core";
 
 export interface Props {
   controller: EditorController;

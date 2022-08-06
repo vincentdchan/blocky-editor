@@ -11,16 +11,14 @@ import {
   type CursorDomResult,
   Block,
 } from "./basic";
+import { TextType, Changeset, State } from "@pkg/model";
 import {
   type AttributesObject,
-  TextType,
   BlockyTextModel,
   BlockyElement,
   BlockyNode,
-  Changeset,
   BlockElement,
-  State,
-} from "@pkg/model";
+} from "blocky-data";
 import { TextInputEvent, type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";
 import { HTMLConverter } from "@pkg/helper/htmlConverter";

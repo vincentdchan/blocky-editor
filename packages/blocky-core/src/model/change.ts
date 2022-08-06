@@ -6,7 +6,7 @@ import {
   type BlockyNode,
   type BlockElement,
   JSONNode,
-} from "@pkg/model/tree";
+} from "blocky-data";
 import { NodeLocation } from "./location";
 import { type Operation, transformOperation } from "./operations";
 import type { State } from "./state";

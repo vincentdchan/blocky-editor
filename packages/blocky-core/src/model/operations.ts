@@ -1,6 +1,6 @@
 import Delta from "quill-delta-es";
 import { NodeLocation } from "./location";
-import type { AttributesObject, JSONNode } from "@pkg/model/tree";
+import type { AttributesObject, JSONNode } from "blocky-data";
 import { CursorState } from "./cursor";
 
 export interface InsertNodeOperation {
