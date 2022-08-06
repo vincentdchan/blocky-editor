@@ -15,6 +15,7 @@ import {
   symInsertChildAt,
   symDeleteChildrenAt,
   symApplyDelta,
+  traverseNode,
 } from "./tree";
 import { NodeLocation } from "./location";
 import { blockyNodeFromJsonNode } from "./deserialize";
@@ -94,7 +95,18 @@ export class State {
     readonly blockRegistry: BlockRegistry,
     readonly idHelper: IdGenerator
   ) {
-    document.handleMountToBlock(this);
+    traverseNode(document, (node: BlockyNode) => {
+      if (node instanceof BlockElement) {
+        this.#handleNewBlockMounted(node);
+      }
+    });
+
+    document.blockElementAdded.on((blockElement: BlockElement) =>
+      this.#handleNewBlockMounted(blockElement)
+    );
+    document.blockElementRemoved.on((blockElement: BlockElement) =>
+      this.#unmountBlock(blockElement)
+    );
   }
 
   get appliedVersion(): number {
@@ -276,12 +288,7 @@ export class State {
     );
   }
 
-  handleNewBlockMounted(child: BlockyNode) {
-    if (!isUpperCase(child.nodeName)) {
-      return;
-    }
-    const blockElement = child as BlockElement;
-
+  #handleNewBlockMounted(blockElement: BlockElement) {
     this.#insertElement(blockElement);
 
     if (blockElement.nodeName === "Title") {
@@ -303,11 +310,7 @@ export class State {
     this.newBlockCreated.emit(block);
   }
 
-  unmountBlock(child: BlockyNode): boolean {
-    if (!isUpperCase(child.nodeName)) {
-      return false;
-    }
-    const blockElement = child as BlockElement;
+  #unmountBlock(blockElement: BlockElement): boolean {
     const blockId = blockElement.id;
 
     const dom = this.domMap.get(blockId);

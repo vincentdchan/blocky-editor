@@ -30,8 +30,7 @@ const BannerIcon = `
 `;
 
 class BannerMenu extends Component<BannerProps, BannerState> {
-  #bannerRef: RefObject<HTMLDivElement> = createRef();
-
+  private bannerRef: RefObject<HTMLDivElement> = createRef();
   private disposables: IDisposable[] = [];
 
   constructor(props: BannerProps) {
@@ -54,7 +53,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
 
     this.handleBlocksChanged();
 
-    this.#bannerRef.current!.innerHTML = BannerIcon;
+    this.bannerRef.current!.innerHTML = BannerIcon;
   }
 
   override componentWillUnmount() {
@@ -74,7 +73,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
   };
 
   private handleClick = () => {
-    const rect = this.#bannerRef.current!.getBoundingClientRect();
+    const rect = this.bannerRef.current!.getBoundingClientRect();
     this.setState({
       showDropdown: true,
       menuX: rect.x,
@@ -167,7 +166,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
         onMaskClicked={this.handleMaskClicked}
       >
         <div
-          ref={this.#bannerRef}
+          ref={this.bannerRef}
           className="blocky-example-banner-button"
           onClick={this.handleClick}
         ></div>

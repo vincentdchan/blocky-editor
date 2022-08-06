@@ -26,8 +26,8 @@ interface ToolbarMenuState {
 }
 
 class ToolbarMenu extends Component<ToolbarMenuProps, ToolbarMenuState> {
-  #containerRef: RefObject<HTMLDivElement> = createRef();
-  #cursorState: CursorState | null = null;
+  private containerRef: RefObject<HTMLDivElement> = createRef();
+  private cursorState: CursorState | null = null;
 
   constructor(props: ToolbarMenuProps) {
     super(props);
@@ -56,9 +56,9 @@ class ToolbarMenu extends Component<ToolbarMenuProps, ToolbarMenuState> {
   private handleLinkClicked = () => {
     const { editorController } = this.props;
     // save the cursor state
-    this.#cursorState = editorController.editor!.state.cursorState;
+    this.cursorState = editorController.editor!.state.cursorState;
 
-    const container = this.#containerRef.current!;
+    const container = this.containerRef.current!;
     const rect = container.getBoundingClientRect();
     this.setState({
       showAnchorToolbar: true,
@@ -79,11 +79,11 @@ class ToolbarMenu extends Component<ToolbarMenuProps, ToolbarMenuState> {
         showAnchorToolbar: false,
       },
       () => {
-        if (!this.#cursorState) {
+        if (!this.cursorState) {
           return;
         }
         const { editorController } = this.props;
-        editorController.formatTextOnCursor(this.#cursorState, {
+        editorController.formatTextOnCursor(this.cursorState, {
           href: link,
         });
       }
@@ -95,7 +95,7 @@ class ToolbarMenu extends Component<ToolbarMenuProps, ToolbarMenuState> {
     return (
       <>
         <div
-          ref={this.#containerRef}
+          ref={this.containerRef}
           className="blocky-example-toolbar-container"
         >
           <ToolbarMenuItem className="bold rect" onClick={this.handleBold}>
@@ -145,7 +145,7 @@ function isUrl(text: string): boolean {
 }
 
 class AnchorToolbar extends Component<AnchorToolbarProps, AnchorToolbarState> {
-  #inputRef: RefObject<HTMLInputElement> = createRef();
+  private inputRef: RefObject<HTMLInputElement> = createRef();
 
   constructor(props: AnchorToolbarProps) {
     super(props);
@@ -183,7 +183,7 @@ class AnchorToolbar extends Component<AnchorToolbarProps, AnchorToolbarState> {
   };
 
   override componentDidMount() {
-    this.#inputRef.current?.focus();
+    this.inputRef.current?.focus();
   }
 
   override render(props: AnchorToolbarProps, state: AnchorToolbarState) {
@@ -195,7 +195,7 @@ class AnchorToolbar extends Component<AnchorToolbarProps, AnchorToolbarState> {
         className="blocky-example-toolbar-container blocky-example-anchor-toolbar"
       >
         <input
-          ref={this.#inputRef}
+          ref={this.inputRef}
           placeholder="Link"
           value={state.content}
           onChange={this.handleContentChanged}
