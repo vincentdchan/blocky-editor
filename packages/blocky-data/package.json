@@ -2,12 +2,19 @@
   "name": "blocky-data",
   "version": "2.4.0",
   "main": "dist/index.js",
+  "module": "dist/index.js",
   "homepage": "https://github.com/vincentdchan/blocky-editor",
   "author": "Vincent Chan <okcdz@diverse.space>",
   "license": "MIT",
   "type": "module",
+  "scripts": {
+    "test": "vitest",
+    "test:prod": "vitest --run"
+  },
   "devDependencies": {
-    "@types/lodash-es": "^4.17.6"
+    "@types/lodash-es": "^4.17.6",
+    "vite": "^2.9.12",
+    "vitest": "^0.14.2"
   },
   "dependencies": {
     "blocky-common": "workspace:>=2.3.0",

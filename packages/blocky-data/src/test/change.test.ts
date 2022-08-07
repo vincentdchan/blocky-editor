@@ -1,7 +1,4 @@
-import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
-import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { test, expect, describe } from "vitest";
-import { EditorState } from "../editorState";
 import {
   BlockElement,
   BlockyDocument,
@@ -10,8 +7,9 @@ import {
   NodeLocation,
   transformOperation,
   Changeset,
+  State,
   type TextEditOperation,
-} from "blocky-data";
+} from "..";
 import Delta from "quill-delta-es";
 
 test("test delete", () => {
@@ -21,9 +19,7 @@ test("test delete", () => {
   const document = new BlockyDocument({
     bodyChildren: [new BlockyElement("item"), i1, i2, i3],
   });
-  const blockRegistry = new BlockRegistry();
-  const idGenerator = makeDefaultIdGenerator();
-  const state = new EditorState("User-1", document, blockRegistry, idGenerator);
+  const state = new State("User-1", document);
   const change = new Changeset(state);
   change.removeNode(i1);
   change.removeNode(i2);
@@ -151,20 +147,13 @@ describe("transform operation", () => {
 
 describe("merge", () => {
   test("pushWillMerge", () => {
-    const idGenerator = makeDefaultIdGenerator();
-    const textBlock = new BlockElement("Text", idGenerator.mkBlockId(), {
+    const textBlock = new BlockElement("Text", "Blk-text1", {
       textContent: new BlockyTextModel(),
     });
     const document = new BlockyDocument({
       bodyChildren: [textBlock],
     });
-    const blockRegistry = new BlockRegistry();
-    const state = new EditorState(
-      "User-1",
-      document,
-      blockRegistry,
-      idGenerator
-    );
+    const state = new State("User-1", document);
     const change = new Changeset(state);
     change.textEdit(textBlock, "textContent", () => new Delta().insert("a"));
     change.textEdit(textBlock, "textContent", () => new Delta().insert("b"));
@@ -175,23 +164,16 @@ describe("merge", () => {
     expect(first.delta.ops).toEqual([{ insert: "ba" }]);
   });
   test("testWillNotMerge", () => {
-    const idGenerator = makeDefaultIdGenerator();
-    const textBlock1 = new BlockElement("Text", idGenerator.mkBlockId(), {
+    const textBlock1 = new BlockElement("Text", "Blk-text1", {
       textContent: new BlockyTextModel(),
     });
-    const textBlock2 = new BlockElement("Text", idGenerator.mkBlockId(), {
+    const textBlock2 = new BlockElement("Text", "Blk-text2", {
       textContent: new BlockyTextModel(),
     });
     const document = new BlockyDocument({
       bodyChildren: [textBlock1, textBlock2],
     });
-    const blockRegistry = new BlockRegistry();
-    const state = new EditorState(
-      "User-1",
-      document,
-      blockRegistry,
-      idGenerator
-    );
+    const state = new State("User-1", document);
     const change = new Changeset(state);
     change.deleteChildrenAt(document, 0, 1);
     change.textEdit(textBlock2, "textContent", () => new Delta().insert("a"));

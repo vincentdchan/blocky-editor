@@ -28,5 +28,5 @@ jobs:
       - run: pnpm install
       - run: pnpm run build
       - run: pnpm run lint
-      - run: cd packages/blocky-core && pnpm run test:prod
+      - run: pnpm -r --if-present run test:prod
       - run: chmod +x ./bundle_size.sh && ./bundle_size.sh

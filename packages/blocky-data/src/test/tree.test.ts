@@ -1,5 +1,5 @@
 import { test, expect, describe } from "vitest";
-import { BlockyElement } from "blocky-data";
+import { BlockyElement } from "..";
 
 test("tree append", () => {
   const parent = new BlockyElement("block");
