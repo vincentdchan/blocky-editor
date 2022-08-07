@@ -2,7 +2,7 @@ import { isUpperCase } from "blocky-common/es/character";
 import { Slot } from "blocky-common/es/events";
 import { type Padding } from "blocky-common/es/dom";
 import Delta from "quill-delta-es";
-import { State, NodeTraverser, Changeset } from "@pkg/model";
+import { EditorState, NodeTraverser, Changeset } from "@pkg/model";
 import {
   AttributesObject,
   BlockyElement,
@@ -12,7 +12,10 @@ import {
   BlockyDocument,
   CursorState,
 } from "blocky-data";
-import { symSetCursorState, CursorStateUpdateReason } from "@pkg/model/state";
+import {
+  symSetCursorState,
+  CursorStateUpdateReason,
+} from "@pkg/model/editorState";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
@@ -42,7 +45,7 @@ export interface IEditorControllerOptions {
 
   spanRegistry?: SpanRegistry;
   blockRegistry?: BlockRegistry;
-  state?: State;
+  state?: EditorState;
   idGenerator?: IdGenerator;
   bannerFactory?: BannerFactory;
   toolbarFactory?: ToolbarFactory;
@@ -87,7 +90,7 @@ export class EditorController {
   readonly spanRegistry: SpanRegistry;
   readonly blockRegistry: BlockRegistry;
   readonly idGenerator: IdGenerator;
-  readonly state: State;
+  readonly state: EditorState;
   readonly cursorChanged: Slot<CursorChangedEvent> = new Slot();
   readonly beforeApplyCursorChanged: Slot<CursorChangedEvent> = new Slot();
 
@@ -124,7 +127,7 @@ export class EditorController {
     if (options?.state) {
       this.state = options.state;
     } else {
-      this.state = new State(
+      this.state = new EditorState(
         userId,
         new BlockyDocument({
           title: options?.title,

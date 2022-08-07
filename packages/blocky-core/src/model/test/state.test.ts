@@ -8,7 +8,7 @@ import {
   JSONNode,
   NodeLocation,
 } from "blocky-data";
-import { State } from "../state";
+import { EditorState } from "../editorState";
 import Delta from "quill-delta-es";
 
 function makeDefaultUtils() {
@@ -38,7 +38,7 @@ test("serialize", () => {
       }),
     ],
   });
-  const state = new State("User-1", doc, blockRegistry, idGenerator);
+  const state = new EditorState("User-1", doc, blockRegistry, idGenerator);
   const json = state.toJSON();
   removeId(json);
   expect(json).toEqual({

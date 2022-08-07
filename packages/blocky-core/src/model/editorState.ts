@@ -29,6 +29,7 @@ import { VersionHistory } from "./versionHistory";
 import {
   Changeset,
   FinalizedChangeset,
+  type ChangesetStateLogger,
   type ChangesetApplyOptions,
 } from "@pkg/model/change";
 import type { IdGenerator } from "@pkg/helper/idHelper";
@@ -64,7 +65,7 @@ export interface CursorStateUpdateEvent {
  * - Instances of blocks
  *
  */
-export class State {
+export class EditorState implements ChangesetStateLogger {
   #idMap: Map<string, BlockElement> = new Map();
   readonly domMap: Map<string, Node> = new Map();
   readonly blocks: Map<string, Block> = new Map();
@@ -454,7 +455,7 @@ export class State {
 
 export class NodeTraverser {
   #node: BlockyNode | null;
-  constructor(readonly state: State, beginNode: BlockyNode) {
+  constructor(readonly state: EditorState, beginNode: BlockyNode) {
     this.#node = beginNode;
   }
 

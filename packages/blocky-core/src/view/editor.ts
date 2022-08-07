@@ -11,7 +11,7 @@ import { type Position } from "blocky-common/es/position";
 import { debounce, isUndefined } from "lodash-es";
 import Delta from "quill-delta-es";
 import { DocRenderer } from "@pkg/view/renderer";
-import { State as DocumentState, TextType, Changeset } from "@pkg/model";
+import { EditorState, TextType, Changeset } from "@pkg/model";
 import {
   type AttributesObject,
   BlockyTextModel,
@@ -24,7 +24,7 @@ import {
   symSetCursorState,
   CursorStateUpdateReason,
   type CursorStateUpdateEvent,
-} from "@pkg/model/state";
+} from "@pkg/model/editorState";
 import {
   IPlugin,
   PluginRegistry,
@@ -65,7 +65,7 @@ export function makeDefaultEditorEntry(plugins?: IPlugin[]) {
 }
 
 export interface IEditorOptions {
-  state: DocumentState;
+  state: EditorState;
   registry: EditorRegistry;
   container: HTMLDivElement;
   idGenerator?: IdGenerator;
@@ -138,7 +138,7 @@ export class Editor {
   readonly anchorSpanClass: string = "blocky-text-anchor";
   readonly undoManager: UndoManager;
 
-  readonly state: DocumentState;
+  readonly state: EditorState;
   readonly registry: EditorRegistry;
   readonly keyDown = new Slot<KeyboardEvent>();
   readonly textInput = new Slot<TextInputEvent>();

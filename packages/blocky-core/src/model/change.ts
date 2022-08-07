@@ -10,7 +10,6 @@ import {
   NodeLocation,
   transformOperation,
 } from "blocky-data";
-import type { State } from "./state";
 import type { CursorState } from "blocky-data/src/cursor";
 
 export enum ChangesetRecordOption {
@@ -33,6 +32,14 @@ const defaultApplyOptions: ChangesetApplyOptions = {
   refreshCursor: false,
 };
 
+export interface ChangesetStateLogger {
+  userId: string;
+  appliedVersion: number;
+  get cursorState(): CursorState | null;
+  getLocationOfNode(node: BlockyNode): NodeLocation;
+  apply(changeset: FinalizedChangeset): void;
+}
+
 /**
  * Changeset is a collection of changes which can be
  * applied to the document's state.
@@ -46,7 +53,7 @@ export class Changeset {
   beforeCursor: CursorState | null = null;
   afterCursor?: CursorState | null;
   forceUpdate = false;
-  constructor(readonly state: State) {
+  constructor(readonly state: ChangesetStateLogger) {
     this.version = state.appliedVersion + 1;
     this.beforeCursor = state.cursorState;
   }
