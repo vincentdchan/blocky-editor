@@ -3,13 +3,14 @@ import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { test, expect, describe } from "vitest";
 import { Changeset } from "../change";
 import { State } from "../state";
-import { NodeLocation } from "../location";
-import { type TextEditOperation, transformOperation } from "../operations";
 import {
   BlockElement,
   BlockyDocument,
   BlockyElement,
   BlockyTextModel,
+  NodeLocation,
+  transformOperation,
+  type TextEditOperation,
 } from "blocky-data";
 import Delta from "quill-delta-es";
 

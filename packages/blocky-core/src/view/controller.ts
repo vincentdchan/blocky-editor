@@ -2,7 +2,7 @@ import { isUpperCase } from "blocky-common/es/character";
 import { Slot } from "blocky-common/es/events";
 import { type Padding } from "blocky-common/es/dom";
 import Delta from "quill-delta-es";
-import { CursorState, State, NodeTraverser, Changeset } from "@pkg/model";
+import { State, NodeTraverser, Changeset } from "@pkg/model";
 import {
   AttributesObject,
   BlockyElement,
@@ -10,6 +10,7 @@ import {
   BlockyNode,
   BlockElement,
   BlockyDocument,
+  CursorState,
 } from "blocky-data";
 import { symSetCursorState, CursorStateUpdateReason } from "@pkg/model/state";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";

@@ -16,12 +16,10 @@ export {
   type CursorStateUpdateEvent,
   type FinalizedChangeset,
   State as DocumentState,
-  CursorState,
   CursorStateUpdateReason,
   TextType,
   Changeset,
   ChangesetRecordOption,
-  NodeLocation,
   NodeTraverser,
 } from "./model";
 export { TextBlock } from "./block/textBlock";
