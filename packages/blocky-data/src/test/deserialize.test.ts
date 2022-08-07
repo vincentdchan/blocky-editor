@@ -1,25 +1,21 @@
 import { expect, test } from "vitest";
 import "@pkg/index";
 import Delta from "quill-delta-es";
-import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import {
   BlockElement,
   BlockyDocument,
   BlockyElement,
   BlockyTextModel,
   blockyNodeFromJsonNode,
-} from "blocky-data";
-
-const idGenerator = makeDefaultIdGenerator();
+} from "..";
 
 test("deserialize BlockElement", () => {
-  const id = idGenerator.mkBlockId();
-  const blockElement = new BlockElement("Text", id);
+  const blockElement = new BlockElement("Text", "Blk-text-1");
   const json = blockElement.toJSON();
   const back = blockyNodeFromJsonNode(json) as BlockElement;
   expect(back instanceof BlockElement).toBeTruthy();
   expect(back.nodeName).toBe("Text");
-  expect(back.id).toBe(id);
+  expect(back.id).toBe("Blk-text-1");
 });
 
 test("deserialize BlockyTextModel", () => {
@@ -36,8 +32,7 @@ test("deserialize BlockyTextModel", () => {
 });
 
 test("deserialize document", () => {
-  const id = idGenerator.mkBlockId();
-  const blockElement = new BlockElement("Text", id);
+  const blockElement = new BlockElement("Text", "Blk-text-1");
   const document = new BlockyDocument({
     bodyChildren: [blockElement],
   });

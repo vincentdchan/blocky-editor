@@ -4,8 +4,7 @@
   "description": "The common utilities for the blocky editor.",
   "module": "./es",
   "scripts": {
-    "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc"
   },
   "homepage": "https://github.com/vincentdchan/blocky-editor",
   "keywords": [],

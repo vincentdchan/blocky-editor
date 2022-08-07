@@ -3,6 +3,8 @@
   "version": "2.4.0",
   "description": "The core of the blocky editor",
   "main": "dist/index.js",
+  "module": "dist/index.js",
+  "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
     "test": "vitest",
