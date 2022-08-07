@@ -1,13 +1,12 @@
 import { isWhiteSpace } from "blocky-common/es/text";
 import Delta from "quill-delta-es";
 import { isNumber, isString } from "lodash-es";
-import { BlockElement } from "blocky-data";
+import { BlockElement, CursorState } from "blocky-data";
 import {
   TextType,
   getTextTypeForTextBlock,
   TextBlock,
   Changeset,
-  CursorState,
   type TextInputEvent,
   type IPlugin,
   type Editor,

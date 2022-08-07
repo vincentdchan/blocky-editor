@@ -18,8 +18,8 @@ import {
   BlockyElement,
   BlockElement,
   BlockyNode,
+  CursorState,
 } from "blocky-data";
-import { CursorState } from "@pkg/model/cursor";
 import {
   symSetCursorState,
   CursorStateUpdateReason,

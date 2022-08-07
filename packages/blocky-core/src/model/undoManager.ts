@@ -4,8 +4,7 @@ import {
   ChangesetRecordOption,
   FinalizedChangeset,
 } from "./change";
-import { CursorState } from "./cursor";
-import { invertOperation } from "./operations";
+import { CursorState, invertOperation } from "blocky-data";
 import type { State } from "./state";
 
 /**

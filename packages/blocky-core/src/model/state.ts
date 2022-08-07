@@ -11,8 +11,15 @@ import {
   BlockyDocument,
   BlockyTextModel,
   traverseNode,
+  CursorState,
+  NodeLocation,
+  InsertNodeOperation,
+  UpdateNodeOperation,
+  RemoveNodeOperation,
+  TextEditOperation,
+  transformOperation,
+  transformCursorState,
 } from "blocky-data";
-import { NodeLocation } from "./location";
 import { blockyNodeFromJsonNode } from "./deserialize";
 import { Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
@@ -25,15 +32,6 @@ import {
   type ChangesetApplyOptions,
 } from "@pkg/model/change";
 import type { IdGenerator } from "@pkg/helper/idHelper";
-import { CursorState } from "@pkg/model/cursor";
-import {
-  InsertNodeOperation,
-  UpdateNodeOperation,
-  RemoveNodeOperation,
-  TextEditOperation,
-  transformOperation,
-  transformCursorState,
-} from "./operations";
 
 export const symSetCursorState = Symbol("setCursorState");
 
