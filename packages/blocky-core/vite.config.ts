@@ -15,7 +15,7 @@ export default defineConfig(() => {
     test: {
       environment: "jsdom",
       deps: {
-        inline: ["quill-delta-es"],
+        inline: ["quill-delta-es", "blocky-data"],
       },
     },
   };
