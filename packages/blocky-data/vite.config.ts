@@ -13,9 +13,8 @@ export default defineConfig(() => {
       "@pkg": resolveByProjectRootDir("src"),
     },
     test: {
-      environment: "jsdom",
       deps: {
-        inline: true,
+        inline: ["quill-delta-es"],
       },
     },
   };
