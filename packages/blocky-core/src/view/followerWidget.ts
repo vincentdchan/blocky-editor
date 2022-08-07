@@ -5,11 +5,11 @@ import {
 } from "blocky-common/es/disposable";
 import { Slot } from "blocky-common/es/events";
 import type { EditorController } from "./controller";
-import { CursorState } from "blocky-data";
 import {
+  CursorState,
   CursorStateUpdateReason,
   type CursorStateUpdateEvent,
-} from "@pkg/model";
+} from "blocky-data";
 
 /**
  * {@link FollowerWidget} is a widget can follow the cursor.

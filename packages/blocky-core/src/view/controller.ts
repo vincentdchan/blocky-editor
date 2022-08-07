@@ -12,11 +12,9 @@ import {
   BlockyDocument,
   CursorState,
   Changeset,
-} from "blocky-data";
-import {
-  symSetCursorState,
+  blockyNodeFromJsonNode,
   CursorStateUpdateReason,
-} from "@pkg/model/editorState";
+} from "blocky-data";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
@@ -30,7 +28,6 @@ import { type CollaborativeCursorFactory } from "./collaborativeCursors";
 import { Editor } from "./editor";
 import { type FollowerWidget } from "./followerWidget";
 import { isUndefined } from "lodash-es";
-import { blockyNodeFromJsonNode } from "@pkg/model/deserialize";
 
 export interface IEditorControllerOptions {
   title?: string;
@@ -574,10 +571,7 @@ export class EditorController {
    * Using the changeset is a recommended way to update the cursor.
    */
   setCursorState(cursorState: CursorState | null) {
-    this.state[symSetCursorState](
-      cursorState,
-      CursorStateUpdateReason.changeset
-    );
+    this.state.__setCursorState(cursorState, CursorStateUpdateReason.changeset);
   }
 
   /**

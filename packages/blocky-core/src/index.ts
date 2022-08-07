@@ -12,11 +12,5 @@ export {
 } from "./view/collaborativeCursors";
 export { type IPlugin } from "./registry/pluginRegistry";
 export { getTextTypeForTextBlock } from "./block/textBlock";
-export {
-  type CursorStateUpdateEvent,
-  EditorState,
-  CursorStateUpdateReason,
-  TextType,
-  NodeTraverser,
-} from "./model";
+export { EditorState, TextType, NodeTraverser } from "./model";
 export { TextBlock } from "./block/textBlock";

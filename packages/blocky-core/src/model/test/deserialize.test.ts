@@ -7,8 +7,8 @@ import {
   BlockyDocument,
   BlockyElement,
   BlockyTextModel,
+  blockyNodeFromJsonNode,
 } from "blocky-data";
-import { blockyNodeFromJsonNode } from "../deserialize";
 
 const idGenerator = makeDefaultIdGenerator();
 
