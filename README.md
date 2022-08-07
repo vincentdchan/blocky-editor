@@ -22,7 +22,7 @@ Blocky Editor is an editor which supports the concept of blocks. It can help you
 - Preact(![npm](https://img.shields.io/npm/v/blocky-preact)): Wrap the editor in [Preact](https://preactjs.com/). Provide the UI facilities such as
   toolbar and banner.
 - [Example](https://blocky-editor.dev/): The example to demonstrate how to use the editor.
-  - Gzipped size: ~43kb (one-time loading)
+  - Gzipped size: ~46kb (one-time loading)
 
 ## Resources
 
