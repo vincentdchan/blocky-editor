@@ -1,9 +1,9 @@
 export {
-  State,
+  EditorState,
   CursorStateUpdateReason,
   NodeTraverser,
   type CursorStateUpdateEvent,
-} from "./state";
+} from "./editorState";
 export { TextType } from "./text";
 export {
   Changeset,

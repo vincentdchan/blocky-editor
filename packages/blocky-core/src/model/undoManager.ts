@@ -5,7 +5,7 @@ import {
   FinalizedChangeset,
 } from "./change";
 import { CursorState, invertOperation } from "blocky-data";
-import type { State } from "./state";
+import type { EditorState } from "./editorState";
 
 /**
  * A stack item is used to store
@@ -113,7 +113,7 @@ export class UndoManager {
   readonly undoStack: FixedSizeStack;
   readonly redoStack: FixedSizeStack;
 
-  constructor(readonly state: State, stackSize = 20) {
+  constructor(readonly state: EditorState, stackSize = 20) {
     this.undoStack = new FixedSizeStack(stackSize);
     this.redoStack = new FixedSizeStack(stackSize);
   }

@@ -15,7 +15,7 @@ export { getTextTypeForTextBlock } from "./block/textBlock";
 export {
   type CursorStateUpdateEvent,
   type FinalizedChangeset,
-  State as DocumentState,
+  EditorState,
   CursorStateUpdateReason,
   TextType,
   Changeset,
