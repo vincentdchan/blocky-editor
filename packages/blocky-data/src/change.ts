@@ -33,7 +33,7 @@ const defaultApplyOptions: ChangesetApplyOptions = {
 
 export interface ChangesetStateLogger {
   userId: string;
-  appliedVersion: number;
+  get appliedVersion(): number;
   get cursorState(): CursorState | null;
   getLocationOfNode(node: BlockyNode): NodeLocation;
   apply(changeset: FinalizedChangeset): void;

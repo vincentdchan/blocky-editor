@@ -14,6 +14,7 @@ import { DocRenderer } from "@pkg/view/renderer";
 import { EditorState, TextType } from "@pkg/model";
 import {
   type AttributesObject,
+  type CursorStateUpdateEvent,
   BlockyTextModel,
   BlockyElement,
   BlockElement,
@@ -22,12 +23,8 @@ import {
   ChangesetRecordOption,
   Changeset,
   FinalizedChangeset,
-} from "blocky-data";
-import {
-  symSetCursorState,
   CursorStateUpdateReason,
-  type CursorStateUpdateEvent,
-} from "@pkg/model/editorState";
+} from "blocky-data";
 import {
   IPlugin,
   PluginRegistry,
@@ -393,7 +390,7 @@ export class Editor {
         return false;
       }
 
-      this.state[symSetCursorState](
+      this.state.__setCursorState(
         CursorState.collapse(node.id, 0),
         CursorStateUpdateReason.changeset
       );
@@ -406,7 +403,7 @@ export class Editor {
 
   #handleTreeNodeNotFound(startContainer: Node) {
     if (!this.#trySelectOnParent(startContainer)) {
-      this.state[symSetCursorState](null, CursorStateUpdateReason.changeset);
+      this.state.__setCursorState(null, CursorStateUpdateReason.changeset);
     }
   }
 
@@ -462,7 +459,7 @@ export class Editor {
     const { startContainer, endContainer, startOffset, endOffset } = range;
 
     if (!isContainNode(startContainer, this.#container)) {
-      this.state[symSetCursorState](null, reason);
+      this.state.__setCursorState(null, reason);
       return;
     }
 
@@ -484,7 +481,7 @@ export class Editor {
         absoluteStartOffset
       );
       if (!areEqualShallow(newCursorState, this.state.cursorState)) {
-        this.state[symSetCursorState](
+        this.state.__setCursorState(
           CursorState.collapse(startNode.id, absoluteStartOffset),
           reason
         );
@@ -496,7 +493,7 @@ export class Editor {
 
     const endNode = this.#findBlockNodeContainer(endContainer);
     if (!endNode) {
-      this.state[symSetCursorState](null, reason);
+      this.state.__setCursorState(null, reason);
       return;
     }
     const absoluteEndOffset = this.#findTextOffsetInBlock(
@@ -511,7 +508,7 @@ export class Editor {
       absoluteEndOffset
     );
     if (!areEqualShallow(newCursorState, this.state.cursorState)) {
-      this.state[symSetCursorState](
+      this.state.__setCursorState(
         new CursorState(
           startNode.id,
           absoluteStartOffset,
@@ -632,9 +629,9 @@ export class Editor {
     this.#checkNodesChanged();
     this.#handleSelectionChanged(CursorStateUpdateReason.contentChanged);
     const storedCursorState = this.state.cursorState;
-    this.state[symSetCursorState](null, CursorStateUpdateReason.changeset);
+    this.state.__setCursorState(null, CursorStateUpdateReason.changeset);
     this.render(() => {
-      this.state[symSetCursorState](
+      this.state.__setCursorState(
         storedCursorState,
         CursorStateUpdateReason.changeset
       );
@@ -874,7 +871,7 @@ export class Editor {
   #handleBeforeChangesetApply = (changeset: FinalizedChangeset) => {
     const { afterCursor, options } = changeset;
     if (!isUndefined(afterCursor) || options.refreshCursor) {
-      this.state[symSetCursorState](null, CursorStateUpdateReason.changeset);
+      this.state.__setCursorState(null, CursorStateUpdateReason.changeset);
     }
   };
 
@@ -887,12 +884,12 @@ export class Editor {
           return;
         }
         if (!isUndefined(changeset.afterCursor)) {
-          this.state[symSetCursorState](
+          this.state.__setCursorState(
             changeset.afterCursor,
             CursorStateUpdateReason.changeset
           );
         } else if (options.refreshCursor) {
-          this.state[symSetCursorState](
+          this.state.__setCursorState(
             changeset.beforeCursor,
             CursorStateUpdateReason.changeset
           );
@@ -1005,7 +1002,7 @@ export class Editor {
     }
 
     if (prevNode.nodeName !== TextBlock.Name) {
-      this.state[symSetCursorState](
+      this.state.__setCursorState(
         CursorState.collapse(prevNode.id, 0),
         CursorStateUpdateReason.changeset
       );
