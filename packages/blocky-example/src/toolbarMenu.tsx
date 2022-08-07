@@ -1,4 +1,5 @@
-import { CursorState, type EditorController } from "blocky-core";
+import type { EditorController } from "blocky-core";
+import { CursorState } from "blocky-data";
 import { Component, JSX, createRef, RefObject } from "preact";
 import { memo } from "preact/compat";
 import Mask from "@pkg/components/mask";

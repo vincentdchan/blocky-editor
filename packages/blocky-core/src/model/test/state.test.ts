@@ -6,8 +6,8 @@ import {
   BlockyDocument,
   BlockyTextModel,
   JSONNode,
+  NodeLocation,
 } from "blocky-data";
-import { NodeLocation } from "@pkg/model";
 import { State } from "../state";
 import Delta from "quill-delta-es";
 
