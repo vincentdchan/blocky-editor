@@ -6,6 +6,8 @@ import {
   type AttributesObject,
   type BlockyNode,
   type JSONNode,
+  type ChangesetStateLogger,
+  type ChangesetApplyOptions,
   BlockElement,
   BlockyElement,
   BlockyDocument,
@@ -19,6 +21,8 @@ import {
   TextEditOperation,
   transformOperation,
   transformCursorState,
+  Changeset,
+  FinalizedChangeset,
 } from "blocky-data";
 import { blockyNodeFromJsonNode } from "./deserialize";
 import { Block } from "@pkg/block/basic";
@@ -26,12 +30,6 @@ import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { TextBlock } from "@pkg/block/textBlock";
 import { TitleBlock } from "@pkg/block/titleBlock";
 import { VersionHistory } from "./versionHistory";
-import {
-  Changeset,
-  FinalizedChangeset,
-  type ChangesetStateLogger,
-  type ChangesetApplyOptions,
-} from "@pkg/model/change";
 import type { IdGenerator } from "@pkg/helper/idHelper";
 
 export const symSetCursorState = Symbol("setCursorState");

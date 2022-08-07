@@ -14,12 +14,9 @@ export { type IPlugin } from "./registry/pluginRegistry";
 export { getTextTypeForTextBlock } from "./block/textBlock";
 export {
   type CursorStateUpdateEvent,
-  type FinalizedChangeset,
   EditorState,
   CursorStateUpdateReason,
   TextType,
-  Changeset,
-  ChangesetRecordOption,
   NodeTraverser,
 } from "./model";
 export { TextBlock } from "./block/textBlock";
