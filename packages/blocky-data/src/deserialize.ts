@@ -9,7 +9,7 @@ import {
   AttributesObject,
   BlockyTextModel,
   metaKey,
-} from "blocky-data";
+} from "./tree";
 import Delta from "quill-delta-es";
 
 export function blockyNodeFromJsonNode(jsonNode: JSONNode): BlockyNode {

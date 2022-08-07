@@ -4,12 +4,8 @@ import {
   type IDisposable,
   flattenDisposable,
 } from "blocky-common/es/disposable";
-import { CursorState } from "blocky-data";
-import type {
-  EditorController,
-  CursorChangedEvent,
-  CursorStateUpdateEvent,
-} from "blocky-core";
+import { CursorState, type CursorStateUpdateEvent } from "blocky-data";
+import type { EditorController, CursorChangedEvent } from "blocky-core";
 
 interface DefaultBlockOutlineInternalProps {
   editorController: EditorController;

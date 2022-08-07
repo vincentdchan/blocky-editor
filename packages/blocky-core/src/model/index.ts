@@ -1,7 +1,2 @@
-export {
-  EditorState,
-  CursorStateUpdateReason,
-  NodeTraverser,
-  type CursorStateUpdateEvent,
-} from "./editorState";
+export { EditorState, NodeTraverser } from "./editorState";
 export { TextType } from "./text";
