@@ -5,6 +5,7 @@
   "homepage": "https://github.com/vincentdchan/blocky-editor",
   "author": "Vincent Chan <okcdz@diverse.space>",
   "license": "MIT",
+  "type": "module",
   "devDependencies": {
     "@types/lodash-es": "^4.17.6"
   },
