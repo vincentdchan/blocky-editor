@@ -11,7 +11,7 @@ import {
   type CursorDomResult,
   Block,
 } from "./basic";
-import { TextType, Changeset, State } from "@pkg/model";
+import { TextType, Changeset, EditorState } from "@pkg/model";
 import {
   type AttributesObject,
   BlockyTextModel,
@@ -59,7 +59,7 @@ class CheckboxRenderer extends LeftPadRenderer {
   #checked = false;
   constructor(
     container: HTMLDivElement,
-    private state: State,
+    private state: EditorState,
     private blockElement: BlockElement
   ) {
     super(container);

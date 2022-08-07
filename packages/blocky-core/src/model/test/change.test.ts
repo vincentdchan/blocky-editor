@@ -2,7 +2,7 @@ import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { test, expect, describe } from "vitest";
 import { Changeset } from "../change";
-import { State } from "../state";
+import { EditorState } from "../editorState";
 import {
   BlockElement,
   BlockyDocument,
@@ -23,7 +23,7 @@ test("test delete", () => {
   });
   const blockRegistry = new BlockRegistry();
   const idGenerator = makeDefaultIdGenerator();
-  const state = new State("User-1", document, blockRegistry, idGenerator);
+  const state = new EditorState("User-1", document, blockRegistry, idGenerator);
   const change = new Changeset(state);
   change.removeNode(i1);
   change.removeNode(i2);
@@ -159,7 +159,12 @@ describe("merge", () => {
       bodyChildren: [textBlock],
     });
     const blockRegistry = new BlockRegistry();
-    const state = new State("User-1", document, blockRegistry, idGenerator);
+    const state = new EditorState(
+      "User-1",
+      document,
+      blockRegistry,
+      idGenerator
+    );
     const change = new Changeset(state);
     change.textEdit(textBlock, "textContent", () => new Delta().insert("a"));
     change.textEdit(textBlock, "textContent", () => new Delta().insert("b"));
@@ -181,7 +186,12 @@ describe("merge", () => {
       bodyChildren: [textBlock1, textBlock2],
     });
     const blockRegistry = new BlockRegistry();
-    const state = new State("User-1", document, blockRegistry, idGenerator);
+    const state = new EditorState(
+      "User-1",
+      document,
+      blockRegistry,
+      idGenerator
+    );
     const change = new Changeset(state);
     change.deleteChildrenAt(document, 0, 1);
     change.textEdit(textBlock2, "textContent", () => new Delta().insert("a"));
