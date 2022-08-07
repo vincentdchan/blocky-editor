@@ -5,12 +5,11 @@ import {
   type AttributesObject,
   type BlockyNode,
   type BlockElement,
-  type Operation,
   JSONNode,
-  NodeLocation,
-  transformOperation,
-} from "blocky-data";
-import type { CursorState } from "blocky-data/src/cursor";
+} from "./tree";
+import { type Operation, transformOperation } from "./operations";
+import { NodeLocation } from "./location";
+import type { CursorState } from "./cursor";
 
 export enum ChangesetRecordOption {
   Undo = 0,

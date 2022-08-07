@@ -1,4 +1,4 @@
-import { FinalizedChangeset } from "./change";
+import { FinalizedChangeset } from "blocky-data";
 
 export class VersionHistory {
   #baseVersion: number;

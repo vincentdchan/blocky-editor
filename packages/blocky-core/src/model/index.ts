@@ -5,8 +5,3 @@ export {
   type CursorStateUpdateEvent,
 } from "./editorState";
 export { TextType } from "./text";
-export {
-  Changeset,
-  ChangesetRecordOption,
-  type FinalizedChangeset,
-} from "./change";
