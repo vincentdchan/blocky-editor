@@ -1,5 +1,5 @@
-import { type Editor, type IPlugin, Changeset, TextBlock } from "@pkg/index";
-import { CursorState } from "blocky-data";
+import { type Editor, type IPlugin, TextBlock } from "@pkg/index";
+import { CursorState, Changeset } from "blocky-data";
 import Delta from "quill-delta-es";
 import { isHotkey } from "is-hotkey";
 import { isUndefined } from "lodash-es";

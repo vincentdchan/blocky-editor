@@ -6,11 +6,11 @@ import {
   BlockElement,
   BlockyElement,
   CursorState,
+  Changeset,
 } from "blocky-data";
 import { type Editor } from "@pkg/view/editor";
 import { type EditorController } from "@pkg/view/controller";
 import { elem } from "blocky-common/es/dom";
-import { Changeset } from "@pkg/model/change";
 import Delta from "quill-delta-es";
 
 export interface BlockDidMountEvent {

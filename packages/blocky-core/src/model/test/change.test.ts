@@ -1,7 +1,6 @@
 import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { test, expect, describe } from "vitest";
-import { Changeset } from "../change";
 import { EditorState } from "../editorState";
 import {
   BlockElement,
@@ -10,6 +9,7 @@ import {
   BlockyTextModel,
   NodeLocation,
   transformOperation,
+  Changeset,
   type TextEditOperation,
 } from "blocky-data";
 import Delta from "quill-delta-es";

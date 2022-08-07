@@ -1,10 +1,11 @@
 import {
+  CursorState,
+  invertOperation,
   Changeset,
   ChangesetApplyOptions,
   ChangesetRecordOption,
   FinalizedChangeset,
-} from "./change";
-import { CursorState, invertOperation } from "blocky-data";
+} from "blocky-data";
 import type { EditorState } from "./editorState";
 
 /**

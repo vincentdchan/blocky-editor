@@ -11,7 +11,7 @@ import { type Position } from "blocky-common/es/position";
 import { debounce, isUndefined } from "lodash-es";
 import Delta from "quill-delta-es";
 import { DocRenderer } from "@pkg/view/renderer";
-import { EditorState, TextType, Changeset } from "@pkg/model";
+import { EditorState, TextType } from "@pkg/model";
 import {
   type AttributesObject,
   BlockyTextModel,
@@ -19,6 +19,9 @@ import {
   BlockElement,
   BlockyNode,
   CursorState,
+  ChangesetRecordOption,
+  Changeset,
+  FinalizedChangeset,
 } from "blocky-data";
 import {
   symSetCursorState,
@@ -46,7 +49,6 @@ import {
   type CollaborativeCursorFactory,
 } from "./collaborativeCursors";
 import { isHotkey } from "is-hotkey";
-import { ChangesetRecordOption, FinalizedChangeset } from "@pkg/model/change";
 import { TitleBlock } from "@pkg/block/titleBlock";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
