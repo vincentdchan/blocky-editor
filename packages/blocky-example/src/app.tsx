@@ -156,7 +156,7 @@ class App extends Component<unknown> {
               <div className="blocky-example-user">
                 <span style={{ backgroundColor: User1Color }}>User 1</span>
               </div>
-              <BlockyEditor controller={this.editorControllerLeft} />
+              <BlockyEditor controller={this.editorControllerLeft} autoFocus />
             </div>
             <div className="blocky-example-editor-container right">
               <div className="blocky-example-user">
