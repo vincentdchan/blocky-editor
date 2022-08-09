@@ -35,7 +35,7 @@ export class TitleBlock extends Block {
     changeset.textEdit(this.props, "textContent", () => diff);
 
     // the browser will automatically insert a <br /> tag.
-    // don't know way, just force update to remove it.
+    // don't know why, just force update to remove it.
     if (newDelta.length() === 0) {
       changeset.forceUpdate = true;
     }
