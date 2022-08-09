@@ -46,15 +46,21 @@ export class TitleBlock extends Block {
   }
 
   override blockFocused({ cursor, selection }: BlockFocusedEvent) {
-    const range = document.createRange();
-
-    const firstChild = this.#container?.firstChild;
-    if (!firstChild) {
+    if (!this.#container) {
       return;
     }
 
-    range.setStart(firstChild, cursor.offset);
-    range.setEnd(firstChild, cursor.offset);
+    const range = document.createRange();
+
+    const firstChild = this.#container.firstChild;
+    if (firstChild) {
+      range.setStart(firstChild, cursor.offset);
+      range.setEnd(firstChild, cursor.offset);
+    } else {
+      range.setStart(this.#container, 0);
+      range.setEnd(this.#container, 0);
+    }
+
     selection.addRange(range);
   }
 
