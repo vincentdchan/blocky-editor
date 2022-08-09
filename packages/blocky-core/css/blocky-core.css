@@ -39,6 +39,11 @@
   color: gray;
 }
 
+.blocky-editor-title-container:empty::before {
+  content: attr(placeholder);
+  color: gray;
+}
+
 .blocky-text-anchor {
   cursor: pointer;
   color: rgb(52, 184, 220);

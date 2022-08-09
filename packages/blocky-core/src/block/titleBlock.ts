@@ -34,6 +34,12 @@ export class TitleBlock extends Block {
     const diff = beforeDelta.diff(newDelta, offset);
     changeset.textEdit(this.props, "textContent", () => diff);
 
+    // the browser will automatically insert a <br /> tag.
+    // don't know way, just force update to remove it.
+    if (newDelta.length() === 0) {
+      changeset.forceUpdate = true;
+    }
+
     this.editor.textInput.emit(
       new TextInputEvent(beforeDelta, diff, blockElement)
     );
@@ -65,6 +71,7 @@ export class TitleBlock extends Block {
 
   override blockDidMount({ element }: BlockDidMountEvent): void {
     this.#container = element;
+    element.setAttribute("placeholder", "Untitled document");
   }
 
   get textModel(): BlockyTextModel {
