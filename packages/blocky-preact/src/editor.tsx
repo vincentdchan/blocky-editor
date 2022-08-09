@@ -1,5 +1,5 @@
 import { Component, createRef, type RefObject } from "preact";
-import { type BlockElement, CursorState } from "blocky-data";
+import { CursorState } from "blocky-data";
 import { Editor, type EditorController } from "blocky-core";
 
 export interface Props {
@@ -11,6 +11,8 @@ export interface Props {
    * block automatically when the editor is created.
    */
   ignoreInitEmpty?: boolean;
+
+  autoFocus?: boolean;
 }
 
 export class BlockyEditor extends Component<Props> {
@@ -18,18 +20,15 @@ export class BlockyEditor extends Component<Props> {
   private containerRef: RefObject<HTMLDivElement> = createRef();
 
   override componentDidMount() {
-    const { controller } = this.props;
+    const { controller, autoFocus } = this.props;
     this.editor = Editor.fromController(this.containerRef.current!, controller);
     const editor = this.editor;
     if (this.props.ignoreInitEmpty !== true) {
       editor.initFirstEmptyBlock();
     }
     editor.render(() => {
-      const firstChild = editor.state.document.body.firstChild;
-      if (firstChild) {
-        controller.setCursorState(
-          CursorState.collapse((firstChild as BlockElement).id, 0)
-        );
+      if (autoFocus) {
+        controller.setCursorState(CursorState.collapse("title", 0));
       }
     });
   }
