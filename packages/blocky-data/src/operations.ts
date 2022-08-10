@@ -130,3 +130,51 @@ export function transformCursorState(
 
   return cursorState;
 }
+
+export interface InsertNodeOperationMessage {
+  op: "insert-nodes";
+  location: number[];
+  children: JSONNode[];
+}
+
+export interface UpdateNodeOperationMessage {
+  op: "update-attributes";
+  location: number[];
+  attributes: AttributesObject;
+  oldAttributes: AttributesObject;
+}
+
+export interface RemoveNodeOperationMessage {
+  op: "remove-nodes";
+  location: number[];
+  children: JSONNode[];
+}
+
+export interface TextEditOperationMessage {
+  op: "text-edit";
+  location: number[];
+  id: string;
+  key: string;
+  delta: Delta;
+  invert: Delta;
+}
+
+export type OperationMessage =
+  | InsertNodeOperationMessage
+  | UpdateNodeOperationMessage
+  | RemoveNodeOperationMessage
+  | TextEditOperationMessage;
+
+export function operationToMessage(op: Operation): OperationMessage {
+  return {
+    ...op,
+    location: [...op.location.path],
+  };
+}
+
+export function operationFromMessage(msg: OperationMessage): Operation {
+  return {
+    ...msg,
+    location: new NodeLocation(msg.location),
+  };
+}
