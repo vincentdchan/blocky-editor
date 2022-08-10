@@ -7,7 +7,13 @@ import {
   type BlockElement,
   JSONNode,
 } from "./tree";
-import { type Operation, transformOperation } from "./operations";
+import {
+  type Operation,
+  transformOperation,
+  type OperationMessage,
+  operationToMessage,
+  operationFromMessage,
+} from "./operations";
 import { NodeLocation } from "./location";
 import type { CursorState } from "./cursor";
 
@@ -275,4 +281,32 @@ export interface FinalizedChangeset {
   afterCursor?: CursorState | null;
   forceUpdate: boolean;
   options: ChangesetApplyOptions;
+}
+
+export interface ChangesetMessage {
+  userId: string;
+  version: number;
+  operations: OperationMessage[];
+  beforeCursor: CursorState | null;
+  afterCursor?: CursorState | null;
+  forceUpdate: boolean;
+  options: ChangesetApplyOptions;
+}
+
+export function changesetToMessage(
+  changeset: FinalizedChangeset
+): ChangesetMessage {
+  return {
+    ...changeset,
+    operations: changeset.operations.map(operationToMessage),
+  };
+}
+
+export function changesetFromMessage(
+  msg: ChangesetMessage
+): FinalizedChangeset {
+  return {
+    ...msg,
+    operations: msg.operations.map(operationFromMessage),
+  };
 }
