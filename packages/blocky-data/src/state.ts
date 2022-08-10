@@ -104,9 +104,9 @@ export class State implements ChangesetStateLogger {
     return this.getLocationOfNode(parent, acc);
   }
 
-  apply(changeset: FinalizedChangeset) {
+  apply(changeset: FinalizedChangeset): boolean {
     if (this.#appliedVersion >= changeset.version) {
-      return;
+      return false;
     }
     this.beforeChangesetApply.emit(changeset);
 
@@ -134,6 +134,7 @@ export class State implements ChangesetStateLogger {
     this.#appliedVersion = changeset.version;
     this.changesetApplied.emit(changeset);
     this.versionHistory.insert(changeset);
+    return true;
   }
 
   rebase(

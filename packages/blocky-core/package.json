@@ -1,6 +1,6 @@
 {
   "name": "blocky-core",
-  "version": "2.4.2",
+  "version": "2.4.3",
   "description": "The core of the blocky editor",
   "main": "dist/index.js",
   "module": "dist/index.js",
