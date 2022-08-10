@@ -154,13 +154,6 @@ export class BlockyElement implements BlockyNode {
     return cnt;
   }
 
-  get textContent(): BlockyTextModel | null {
-    if (this.#firstChild instanceof BlockyTextModel) {
-      return this.#firstChild;
-    }
-    return null;
-  }
-
   queryChildByName(nodeName: string): BlockyNode | void {
     let ptr = this.#firstChild;
 

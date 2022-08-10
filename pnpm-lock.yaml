@@ -32,7 +32,7 @@ importers:
       '@types/lodash-es': ^4.17.6
       '@types/node': ^17.0.41
       blocky-common: workspace:>=2.3.0
-      blocky-data: workspace:>=2.4.4
+      blocky-data: workspace:>=2.4.7
       is-hotkey: ^0.2.0
       jsdom: ^20.0.0
       lodash-es: ^4.17.21
