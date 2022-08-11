@@ -1,6 +1,6 @@
 import { Component, type RefObject, createRef } from "preact";
-import { type EditorController, TextType } from "blocky-core";
-import { BlockElement } from "blocky-data";
+import { type EditorController } from "blocky-core";
+import { BlockElement, TextType } from "blocky-data";
 import {
   type IDisposable,
   flattenDisposable,
