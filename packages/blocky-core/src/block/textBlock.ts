@@ -11,7 +11,7 @@ import {
   type CursorDomResult,
   Block,
 } from "./basic";
-import { TextType, EditorState } from "@pkg/model";
+import { EditorState } from "@pkg/model";
 import {
   type AttributesObject,
   BlockyTextModel,
@@ -19,6 +19,7 @@ import {
   BlockyNode,
   BlockElement,
   Changeset,
+  TextType,
 } from "blocky-data";
 import { TextInputEvent, type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";

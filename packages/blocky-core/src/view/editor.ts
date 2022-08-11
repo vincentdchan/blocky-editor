@@ -11,7 +11,7 @@ import { type Position } from "blocky-common/es/position";
 import { debounce, isUndefined } from "lodash-es";
 import Delta from "quill-delta-es";
 import { DocRenderer } from "@pkg/view/renderer";
-import { EditorState, TextType } from "@pkg/model";
+import { EditorState } from "@pkg/model";
 import {
   type AttributesObject,
   type CursorStateUpdateEvent,
@@ -24,6 +24,7 @@ import {
   Changeset,
   FinalizedChangeset,
   CursorStateUpdateReason,
+  TextType,
 } from "blocky-data";
 import {
   IPlugin,
