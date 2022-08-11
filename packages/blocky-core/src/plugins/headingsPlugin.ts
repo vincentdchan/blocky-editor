@@ -1,6 +1,6 @@
 import { isWhiteSpace } from "blocky-common/es/text";
-import { type Editor, type IPlugin, TextType, TextBlock } from "@pkg/index";
-import { Changeset } from "blocky-data";
+import { type Editor, type IPlugin, TextBlock } from "@pkg/index";
+import { Changeset, TextType } from "blocky-data";
 import Delta from "quill-delta-es";
 import { isNumber, isString } from "lodash-es";
 
