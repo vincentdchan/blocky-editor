@@ -41,6 +41,7 @@ export enum CursorStateUpdateReason {
 }
 
 export interface CursorStateUpdateEvent {
+  prevState: CursorState | null;
   state: CursorState | null;
   reason: CursorStateUpdateReason;
 }
@@ -77,8 +78,10 @@ export class State implements ChangesetStateLogger {
     ) {
       return;
     }
+    const prevState = this.#cursorState;
     this.#cursorState = cursorState;
     this.cursorStateChanged.emit({
+      prevState,
       state: cursorState,
       reason,
     });
