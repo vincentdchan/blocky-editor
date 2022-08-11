@@ -1,4 +1,4 @@
-import { Component } from "preact";
+import { Component, createRef } from "preact";
 import { EditorController, type IPlugin } from "blocky-core";
 import {
   BlockyEditor,
@@ -37,7 +37,11 @@ const User2Color = "rgb(246 187 80)";
 /**
  * The controller is used to control the editor.
  */
-function makeController(userId: string, title: string): EditorController {
+function makeController(
+  userId: string,
+  title: string,
+  scrollContainer: () => HTMLElement
+): EditorController {
   return new EditorController(userId, {
     title,
     collaborativeCursorFactory: (id: string) => ({
@@ -74,19 +78,30 @@ function makeController(userId: string, title: string): EditorController {
     toolbarFactory: makePreactToolbar((editorController: EditorController) => {
       return <ToolbarMenu editorController={editorController} />;
     }),
+
+    scrollContainer,
   });
 }
 
 class App extends Component<unknown> {
   private editorControllerLeft: EditorController;
   private editorControllerRight: EditorController;
+  private containerRef = createRef<HTMLDivElement>();
 
   constructor(props: unknown) {
     super(props);
 
-    this.editorControllerLeft = makeController("User-1", "Blocky Editor");
+    this.editorControllerLeft = makeController(
+      "User-1",
+      "Blocky Editor",
+      () => this.containerRef.current!
+    );
 
-    this.editorControllerRight = makeController("User-2", "Blocky Editor");
+    this.editorControllerRight = makeController(
+      "User-2",
+      "Blocky Editor",
+      () => this.containerRef.current!
+    );
 
     this.editorControllerLeft.state.changesetApplied.on((changeset) => {
       // simulate the net work
@@ -130,7 +145,7 @@ class App extends Component<unknown> {
   render() {
     return (
       <div className="blocky-example-app-window">
-        <div className="blocky-example-container">
+        <div ref={this.containerRef} className="blocky-example-container">
           <div className="blocky-example-image">
             <img src={TianShuiWeiImage} />
           </div>

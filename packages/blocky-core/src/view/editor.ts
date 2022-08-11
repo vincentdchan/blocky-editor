@@ -8,7 +8,7 @@ import {
   flattenDisposable,
 } from "blocky-common/es/disposable";
 import { type Position } from "blocky-common/es/position";
-import { debounce, isUndefined } from "lodash-es";
+import { debounce, isFunction, isUndefined } from "lodash-es";
 import Delta from "quill-delta-es";
 import { DocRenderer } from "@pkg/view/renderer";
 import { EditorState } from "@pkg/model";
@@ -863,6 +863,43 @@ export class Editor {
     changeset
       .setCursorState(CursorState.collapse(newTextElement.id, 0))
       .apply();
+
+    window.requestAnimationFrame(() => this.#scrollInViewIfNeed());
+  }
+
+  #scrollInViewIfNeed() {
+    const scrollContainerGetter = this.controller.options?.scrollContainer;
+    if (isUndefined(scrollContainerGetter)) {
+      return;
+    }
+    let scrollContainer: HTMLElement;
+    if (isFunction(scrollContainerGetter)) {
+      scrollContainer = scrollContainerGetter();
+    } else {
+      scrollContainer = scrollContainerGetter;
+    }
+    if (isUndefined(scrollContainer)) {
+      return;
+    }
+    const selection = window.getSelection()!;
+    if (selection.rangeCount === 0) {
+      return;
+    }
+    const range = selection.getRangeAt(0);
+
+    if (!isContainNode(range.startContainer, this.#container)) {
+      return;
+    }
+
+    const rects = range.getClientRects();
+    if (!rects || rects.length === 0) {
+      return;
+    }
+    const lastRect = rects.item(rects.length - 1)!;
+
+    if (lastRect.y > window.innerHeight * 0.8) {
+      scrollContainer.scrollTop += lastRect.y - window.innerHeight * 0.8;
+    }
   }
 
   #debouncedSealUndo = debounce(() => {
