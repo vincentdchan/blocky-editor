@@ -10,13 +10,23 @@ import { isHotkey } from "is-hotkey";
  * After all, this plugin handles the hotkey to make selected text bolded.
  *
  */
-function makeBoldedTextPlugin(): IPlugin {
+function makeStyledTextPlugin(): IPlugin {
   return {
     name: "bolded-text",
     spans: [
       {
         name: "bold",
         className: "blocky-bold-text",
+      },
+      {
+        name: "italic",
+        className: "blocky-italic-text",
+      },
+      {
+        name: "underline",
+        onSpanCreated(elem: HTMLElement) {
+          elem.style.textDecoration = "underline";
+        },
       },
     ],
     onInitialized(editor: Editor) {
@@ -26,11 +36,20 @@ function makeBoldedTextPlugin(): IPlugin {
           editor.controller.formatTextOnSelectedText({
             bold: true,
           });
-          return;
+        } else if (isHotkey("mod+i", e)) {
+          e.preventDefault();
+          editor.controller.formatTextOnSelectedText({
+            italic: true,
+          });
+        } else if (isHotkey("mod+u", e)) {
+          e.preventDefault();
+          editor.controller.formatTextOnSelectedText({
+            underline: true,
+          });
         }
       });
     },
   };
 }
 
-export default makeBoldedTextPlugin;
+export default makeStyledTextPlugin;

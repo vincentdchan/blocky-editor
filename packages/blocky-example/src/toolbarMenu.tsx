@@ -47,12 +47,19 @@ class ToolbarMenu extends Component<ToolbarMenuProps, ToolbarMenuState> {
     });
   };
 
-  // private handleItalic = () => {
-  //   const { editorController } = this.props;
-  //   editorController.formatTextOnSelectedText({
-  //     italic: true,
-  //   });
-  // };
+  private handleItalic = () => {
+    const { editorController } = this.props;
+    editorController.formatTextOnSelectedText({
+      italic: true,
+    });
+  };
+
+  private handleUnderline = () => {
+    const { editorController } = this.props;
+    editorController.formatTextOnSelectedText({
+      underline: true,
+    });
+  };
 
   private handleLinkClicked = () => {
     const { editorController } = this.props;
@@ -102,9 +109,15 @@ class ToolbarMenu extends Component<ToolbarMenuProps, ToolbarMenuState> {
           <ToolbarMenuItem className="bold rect" onClick={this.handleBold}>
             B
           </ToolbarMenuItem>
-          {/* <ToolbarMenuItem className="italic rect" onClick={this.handleItalic}>
+          <ToolbarMenuItem className="italic rect" onClick={this.handleItalic}>
             I
-          </ToolbarMenuItem> */}
+          </ToolbarMenuItem>
+          <ToolbarMenuItem
+            className="underline rect"
+            onClick={this.handleUnderline}
+          >
+            U
+          </ToolbarMenuItem>
           <ToolbarMenuItem onClick={this.handleLinkClicked}>
             Link
           </ToolbarMenuItem>
