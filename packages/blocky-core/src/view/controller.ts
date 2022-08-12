@@ -27,6 +27,7 @@ import { TextBlock } from "@pkg/block/textBlock";
 import { type CollaborativeCursorFactory } from "./collaborativeCursors";
 import { Editor } from "./editor";
 import { type FollowerWidget } from "./followerWidget";
+import type { ThemeData } from "@pkg/model/theme";
 import { isUndefined } from "lodash-es";
 
 export interface IEditorControllerOptions {
@@ -139,6 +140,16 @@ export class EditorController {
         this.blockRegistry,
         this.idGenerator
       );
+    }
+  }
+
+  get themeData(): ThemeData | undefined {
+    return this.editor?.themeData;
+  }
+
+  set themeData(themeData: ThemeData | undefined) {
+    if (this.editor) {
+      this.editor.themeData = themeData;
     }
   }
 

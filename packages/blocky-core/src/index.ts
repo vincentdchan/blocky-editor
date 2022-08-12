@@ -12,5 +12,11 @@ export {
 } from "./view/collaborativeCursors";
 export { type IPlugin } from "./registry/pluginRegistry";
 export { getTextTypeForTextBlock } from "./block/textBlock";
-export { EditorState, NodeTraverser } from "./model";
+export {
+  EditorState,
+  NodeTraverser,
+  type ThemeData,
+  type ParagraphStyle,
+  darkTheme,
+} from "./model";
 export { TextBlock } from "./block/textBlock";

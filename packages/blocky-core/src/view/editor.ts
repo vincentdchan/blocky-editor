@@ -8,7 +8,7 @@ import {
   flattenDisposable,
 } from "blocky-common/es/disposable";
 import { type Position } from "blocky-common/es/position";
-import { debounce, isFunction, isUndefined } from "lodash-es";
+import { debounce, isFunction, isUndefined, isString } from "lodash-es";
 import Delta from "quill-delta-es";
 import { DocRenderer } from "@pkg/view/renderer";
 import { EditorState } from "@pkg/model";
@@ -48,6 +48,7 @@ import {
 } from "./collaborativeCursors";
 import { isHotkey } from "is-hotkey";
 import { TitleBlock } from "@pkg/block/titleBlock";
+import type { ThemeData } from "@pkg/model/theme";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
@@ -128,6 +129,7 @@ export class Editor {
    * So we need an array to store them.
    */
   #stagedInput: TextInputEvent[] = [];
+  #themeData?: ThemeData;
 
   readonly onEveryBlock: Slot<Block> = new Slot();
 
@@ -227,6 +229,23 @@ export class Editor {
     this.state.changesetApplied.on(this.#handleChangesetApplied);
 
     this.undoManager = new UndoManager(state);
+  }
+
+  get themeData(): ThemeData | undefined {
+    return this.#themeData;
+  }
+
+  set themeData(themeData: ThemeData | undefined) {
+    this.#themeData = themeData;
+
+    if (isString(themeData?.primary?.color)) {
+      this.#container.style.setProperty(
+        "--blocky-primary-color",
+        themeData!.primary!.color
+      );
+    } else {
+      this.#container.style.setProperty("--blocky-primary-color", null);
+    }
   }
 
   addStagedInput(inputEvent: TextInputEvent) {

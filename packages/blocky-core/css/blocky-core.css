@@ -9,6 +9,8 @@
 
 .blocky-editor-container {
   position: relative;
+  --color-neutral-muted: rgba(175, 184, 193, 0.2);
+  --blocky-primary-color: black;
 }
 
 .blocky-editor-banner-delegate {
@@ -32,11 +34,16 @@
 
 .blocky-block-text-content {
   margin-bottom: 4px;
+  color: var(--blocky-primary-color);
 }
 
 .blocky-block-text-content:empty::before {
   content: attr(placeholder);
   color: gray;
+}
+
+.blocky-editor-title-container {
+  color: var(--blocky-primary-color);
 }
 
 .blocky-editor-title-container:empty::before {
@@ -102,6 +109,7 @@
 
 .blocky-bullet-content::before {
   content: "•";
+  color: var(--blocky-primary-color);
 }
 
 .blocky-collaborative-cursor-rect {
@@ -152,8 +160,4 @@
   height: calc(100% - 6px);
   border-radius: 50%;
   background-color: rgb(239, 169, 41);
-}
-
-:root {
-  --color-neutral-muted: rgba(175, 184, 193, 0.2);
 }

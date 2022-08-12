@@ -1,5 +1,5 @@
 import { Component, createRef } from "preact";
-import { EditorController, type IPlugin } from "blocky-core";
+import { EditorController, darkTheme, type IPlugin } from "blocky-core";
 import {
   BlockyEditor,
   makePreactBanner,
@@ -83,7 +83,11 @@ function makeController(
   });
 }
 
-class App extends Component<unknown> {
+interface AppState {
+  darkMode: boolean;
+}
+
+class App extends Component<unknown, AppState> {
   private editorControllerLeft: EditorController;
   private editorControllerRight: EditorController;
   private containerRef = createRef<HTMLDivElement>();
@@ -140,6 +144,28 @@ class App extends Component<unknown> {
 
     // paste before the editor initialized
     this.editorControllerLeft.pasteHTMLAtCursor(ReadMeContent);
+
+    this.state = {
+      darkMode: false,
+    };
+  }
+
+  private handleDarkModeChanged = () => {
+    this.setState({
+      darkMode: !this.state.darkMode,
+    });
+  };
+
+  override componentDidUpdate(prevProps: unknown, prevState: AppState) {
+    if (!prevState.darkMode && this.state.darkMode) {
+      document.documentElement.setAttribute("data-theme", "dark");
+      this.editorControllerLeft.themeData = darkTheme;
+      this.editorControllerRight.themeData = darkTheme;
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+      this.editorControllerLeft.themeData = undefined;
+      this.editorControllerRight.themeData = undefined;
+    }
   }
 
   render() {
@@ -148,6 +174,18 @@ class App extends Component<unknown> {
         <div ref={this.containerRef} className="blocky-example-container">
           <div className="blocky-example-image">
             <img src={TianShuiWeiImage} />
+          </div>
+          <div class="theme-switch-wrapper">
+            <label class="theme-switch" for="checkbox">
+              <input
+                type="checkbox"
+                id="checkbox"
+                checked={this.state.darkMode}
+                onChange={this.handleDarkModeChanged}
+              />
+              <div class="slider round"></div>
+            </label>
+            <p>Enable Dark Mode</p>
           </div>
           <div className="blocky-example-badge-container">
             <a
