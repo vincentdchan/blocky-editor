@@ -1,6 +1,6 @@
 {
   "name": "blocky-preact",
-  "version": "2.4.0",
+  "version": "2.7.0",
   "description": "The Preact wrapper of the blocky editor.",
   "main": "dist/index.js",
   "scripts": {
@@ -25,8 +25,8 @@
   },
   "peerDependencies": {
     "blocky-common": "workspace:>=2.3.0",
-    "blocky-core": "workspace:>=2.4.0",
-    "blocky-data": "workspace:>=2.4.0",
+    "blocky-core": "workspace:>=2.7.0",
+    "blocky-data": "workspace:>=2.7.0",
     "preact": "*"
   },
   "dependencies": {
