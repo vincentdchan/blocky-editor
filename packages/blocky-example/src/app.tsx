@@ -6,7 +6,7 @@ import {
   makePreactToolbar,
   type BannerRenderProps,
 } from "blocky-preact";
-import makeBoldedTextPlugin from "blocky-core/dist/plugins/boldedTextPlugin";
+import makeStyledTextPlugin from "blocky-core/dist/plugins/styledTextPlugin";
 import makeCodeTextPlugin from "blocky-core/dist/plugins/codeTextPlugin";
 import makeBulletListPlugin from "blocky-core/dist/plugins/bulletListPlugin";
 import makeHeadingsPlugin from "blocky-core/dist/plugins/headingsPlugin";
@@ -16,13 +16,13 @@ import BannerMenu from "./bannerMenu";
 import ToolbarMenu from "./toolbarMenu";
 import TianShuiWeiImage from "./tianshuiwei.jpg";
 import { ReadMeContent } from "./readme";
-import "blocky-core/css/bolded-text-plugin.css";
+import "blocky-core/css/styled-text-plugin.css";
 import "blocky-core/css/blocky-core.css";
 import "./app.scss";
 
 function makeEditorPlugins(): IPlugin[] {
   return [
-    makeBoldedTextPlugin(),
+    makeStyledTextPlugin(),
     makeCodeTextPlugin(),
     makeBulletListPlugin(),
     makeHeadingsPlugin(),

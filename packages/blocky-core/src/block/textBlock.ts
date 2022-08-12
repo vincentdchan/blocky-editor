@@ -385,7 +385,9 @@ export class TextBlock extends Block {
         if (restAttr[key]) {
           const style = spanRegistry.styles.get(key);
           if (style) {
-            d.classList.add(style.className);
+            if (isString(style.className)) {
+              d.classList.add(style.className);
+            }
             style.onSpanCreated?.(d);
           }
         }

@@ -1,5 +1,6 @@
 import { Registry } from "./registry";
 import type { AttributesObject } from "blocky-data";
+import { isString } from "lodash-es";
 
 export type SpanRenderer = (
   element: HTMLSpanElement,
@@ -8,7 +9,7 @@ export type SpanRenderer = (
 
 export interface SpanStyle {
   name: string;
-  className: string;
+  className?: string;
   onSpanCreated?: (elem: HTMLElement) => void;
 }
 
@@ -20,6 +21,8 @@ export class SpanRegistry extends Registry<SpanStyle> {
   register(style: SpanStyle) {
     this.ensureUnsealed();
     this.styles.set(style.name, style);
-    this.classnames.set(style.className, style);
+    if (isString(style.className)) {
+      this.classnames.set(style.className, style);
+    }
   }
 }
