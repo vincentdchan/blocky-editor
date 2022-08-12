@@ -1,7 +1,7 @@
 
 .blocky-command-panel-container {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  background-color: var(--main-bg-color);
+  background-color: var(--bg-color);
   border-radius: 4px;
   box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.2);
   width: 200px;
@@ -13,12 +13,14 @@
 .blocky-command-value {
   border-radius: 4px;
   padding: 4px;
+  color: var(--primary-text-color);
 }
 
 .blocky-command-item {
   border-radius: 4px;
   padding: 4px;
   cursor: pointer;
+  color: var(--primary-text-color);
 
   &:hover {
     background-color: rgb(178, 178, 178);
