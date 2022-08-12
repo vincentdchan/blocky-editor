@@ -3,3 +3,5 @@
 tsconfig.json
 
 tsconfig.tsbuildinfo
+
+vite.config.ts
