@@ -25,6 +25,11 @@ import { EditorController } from "blocky-core";
 import { makePreactBanner, makePreactToolbar } from "blocky-preact";
 import BannerMenu from "./bannerMenu";
 import ToolbarMenu from "./toolbarMenu";
+import makeStyledTextPlugin from "blocky-core/dist/plugins/styledTextPlugin";
+import makeBulletListPlugin from "blocky-core/dist/plugins/bulletListPlugin";
+import makeHeadingsPlugin from "blocky-core/dist/plugins/headingsPlugin";
+import "blocky-core/css/styled-text-plugin.css";
+import "blocky-core/css/blocky-core.css";
 
 /**
  * The controller is used to control the editor.
