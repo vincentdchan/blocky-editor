@@ -507,7 +507,7 @@ export class Editor {
         );
       }
 
-      this.#showToolbarByCursorState(newCursorState, range);
+      this.#showToolbarByCursorState(newCursorState);
       return;
     }
 
@@ -539,7 +539,7 @@ export class Editor {
       );
     }
 
-    this.#showToolbarByCursorState(newCursorState, range);
+    this.#showToolbarByCursorState(newCursorState);
 
     if (this.#followerWidget) {
       this.#followerWidget.dispose();
@@ -547,7 +547,19 @@ export class Editor {
     }
   }
 
-  #showToolbarByCursorState(newCursorState: CursorState, range: Range) {
+  /**
+   * After the changeset is applied, the selection doesn't change immediately.
+   * It needs debounce to show.
+   */
+  #showToolbarByCursorState = debounce((newCursorState: CursorState) => {
+    const selection = window.getSelection();
+    if (!selection) {
+      return;
+    }
+    if (selection.rangeCount === 0) {
+      return;
+    }
+    const range = selection.getRangeAt(0);
     if (this.toolbarDelegate.enabled) {
       if (newCursorState.startId !== "Title" && this.#tryPlaceToolbar(range)) {
         this.toolbarDelegate.show();
@@ -555,7 +567,7 @@ export class Editor {
         this.toolbarDelegate.hide();
       }
     }
-  }
+  }, 100);
 
   #tryPlaceToolbar(range: Range): boolean {
     const { cursorState } = this.state;
@@ -564,11 +576,6 @@ export class Editor {
     }
 
     if (cursorState.isCollapsed) {
-      return false;
-    }
-
-    const { startId, endId } = cursorState;
-    if (startId !== endId) {
       return false;
     }
 
@@ -1424,7 +1431,9 @@ export class Editor {
     });
     widget.widgetMounted(this.controller);
 
-    this.#placeFollowWidgetUnderCursor(widget);
+    window.requestAnimationFrame(() => {
+      this.#placeFollowWidgetUnderCursor(widget);
+    });
   }
 
   #placeFollowWidgetUnderCursor(followWidget: FollowerWidget) {
@@ -1437,6 +1446,10 @@ export class Editor {
     }
     const range = selection.getRangeAt(0);
     const rects = range.getClientRects();
+    if (rects.length === 0) {
+      return;
+    }
+
     const last = rects.item(rects.length - 1)!;
     let x = last.x;
     let y = last.y;
@@ -1445,7 +1458,7 @@ export class Editor {
     x -= containerRect.x;
     y -= containerRect.y;
 
-    y += 20;
+    y += followWidget.yOffset;
 
     followWidget.x = x;
     followWidget.y = y;
