@@ -27,6 +27,13 @@ export class FollowerWidget extends ContainerWithCoord {
     this.container.contentEditable = "false";
     this.disposables.push(this.disposing);
   }
+  /**
+   * Can be override, specific the y offset
+   * from the cursor to the FollowerWidget
+   */
+  get yOffset(): number {
+    return 32;
+  }
   setEditingValue(value: string) {
     this.editingValue = value;
   }

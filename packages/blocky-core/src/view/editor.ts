@@ -1424,7 +1424,9 @@ export class Editor {
     });
     widget.widgetMounted(this.controller);
 
-    this.#placeFollowWidgetUnderCursor(widget);
+    window.requestAnimationFrame(() => {
+      this.#placeFollowWidgetUnderCursor(widget);
+    });
   }
 
   #placeFollowWidgetUnderCursor(followWidget: FollowerWidget) {
@@ -1437,6 +1439,10 @@ export class Editor {
     }
     const range = selection.getRangeAt(0);
     const rects = range.getClientRects();
+    if (rects.length === 0) {
+      return;
+    }
+
     const last = rects.item(rects.length - 1)!;
     let x = last.x;
     let y = last.y;
@@ -1445,7 +1451,7 @@ export class Editor {
     x -= containerRect.x;
     y -= containerRect.y;
 
-    y += 20;
+    y += followWidget.yOffset;
 
     followWidget.x = x;
     followWidget.y = y;
