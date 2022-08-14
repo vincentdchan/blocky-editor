@@ -51,7 +51,7 @@ I want the size of the editor to be as small as possible.
 </p>
 <p>
 And Preact is closer to the DOM.
-React has an abstract layer for event handling, which is complicated and useless for the editor.
+React has an abstract layer for event handling, which is complicated and unnecessary for the editor.
 </p>
 <p>
 Actually, you can wrap the editor in React/Vue/Angular.
