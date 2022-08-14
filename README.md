@@ -30,6 +30,7 @@ Blocky Editor is an editor which supports the concept of blocks. It can help you
 - [How to write a block](./docs/how-to-write-a-block.md)
 - [Data manipulation](./docs/data-manipulation.md)
 - [Follower widget](./docs/follower-widget.md)
+- [Contributing](./CONTRIBUTING.md)
 
 ## Compatibility
 
@@ -49,7 +50,7 @@ and gzipped. And Preact costs 4kb.
 I want the size of the editor to be as small as possible.
 
 And Preact is closer to the DOM.
-React has an abstract layer for event handling, which is complicated and useless for the editor.
+React has an abstract layer for event handling, which is complicated and unnecessary for the editor.
 
 Actually, you can wrap the editor in React/Vue/Angular.
 It's easy to do that.
