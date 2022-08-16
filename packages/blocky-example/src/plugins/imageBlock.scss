@@ -5,6 +5,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+
+
+  .image-resize-handle {
+    position: absolute;
+    height: 42px;
+    width: 8px;
+    border-radius: 4px;
+    box-shadow: 0 0 0 1pt rgb(52, 184, 220);
+
+    &.hover {
+      background-color: rgb(52, 184, 220);
+    }
+  }
 
   img {
     max-width: 100%;
@@ -18,4 +32,9 @@
   top: 0px;
   left: 0px;
   opacity: 0;
+}
+
+.image-center {
+  display: flex;
+  justify-content: center;
 }

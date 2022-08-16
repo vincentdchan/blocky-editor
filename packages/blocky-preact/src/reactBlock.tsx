@@ -6,6 +6,7 @@ import {
   type Block,
   ContentBlock,
   TryParsePastedDOMEvent,
+  BlockDidMountEvent,
 } from "blocky-core";
 import {
   render as reactRender,
@@ -16,6 +17,7 @@ import { unmountComponentAtNode } from "preact/compat";
 
 export interface ReactBlockOptions {
   name: string;
+  contentClassnames?: string[];
   component: (data: BlockElement) => ComponentChild;
   tryParsePastedDOM?(e: TryParsePastedDOMEvent): BlockElement | void;
 }
@@ -34,6 +36,16 @@ class ReactBlock extends ContentBlock {
 
   constructor(props: BlockElement, private options: ReactBlockOptions) {
     super(props);
+  }
+
+  override blockDidMount(e: BlockDidMountEvent): void {
+    super.blockDidMount(e);
+    const { contentClassnames } = this.options;
+    if (contentClassnames) {
+      for (const n of contentClassnames) {
+        this.contentContainer.classList.add(n);
+      }
+    }
   }
 
   override render() {

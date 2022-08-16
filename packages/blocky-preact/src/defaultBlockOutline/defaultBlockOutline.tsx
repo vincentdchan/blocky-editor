@@ -11,6 +11,9 @@ interface DefaultBlockOutlineInternalProps {
   editorController: EditorController;
   blockId: string;
   children?: any;
+  onMouseEnter?: (evt: JSX.TargetedMouseEvent<HTMLElement>) => void;
+  onMouseLeave?: (evt: JSX.TargetedMouseEvent<HTMLElement>) => void;
+  style?: JSX.CSSProperties;
 }
 
 interface InternalState {
@@ -91,24 +94,27 @@ class DefaultBlockOutlineInternal extends Component<
   };
 
   override render(
-    { children }: DefaultBlockOutlineInternalProps,
+    {
+      children,
+      onMouseEnter,
+      onMouseLeave,
+      style: inStyle,
+    }: DefaultBlockOutlineInternalProps,
     { showOutline, collaborativeOutlineColor }: InternalState
   ) {
-    let style: JSX.CSSProperties | undefined;
+    let style: JSX.CSSProperties | undefined = inStyle ?? {};
     if (showOutline) {
-      style = {
-        boxShadow: `0 0 0 1pt ${userFocusedColor}`,
-      };
+      style.boxShadow = `0 0 0 1pt ${userFocusedColor}`;
     } else if (typeof collaborativeOutlineColor === "string") {
-      style = {
-        boxShadow: `0 0 0 1pt ${collaborativeOutlineColor}`,
-      };
+      style.boxShadow = `0 0 0 1pt ${collaborativeOutlineColor}`;
     }
     return (
       <div
         className="blocky-default-block-outline"
         style={style}
         onClick={this.handleContainerClicked}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
       >
         {children}
       </div>
@@ -118,6 +124,9 @@ class DefaultBlockOutlineInternal extends Component<
 
 export interface DefaultBlockOutlineProps {
   children?: any;
+  onMouseEnter?: (evt: JSX.TargetedMouseEvent<HTMLElement>) => void;
+  onMouseLeave?: (evt: JSX.TargetedMouseEvent<HTMLElement>) => void;
+  style?: JSX.CSSProperties;
 }
 
 export function DefaultBlockOutline(props: DefaultBlockOutlineProps) {
