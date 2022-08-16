@@ -52,6 +52,25 @@ new Changeset(this.editor.state).removeChild(container, child).apply(); // remov
 When apply is called, the changeset will be applied to the editor.
 At the same time, the changeset will be logged and transmitted.
 
+- **updateAttributes(node, attributes):** Update the attributes of a `BlockyNode`.
+- **appendChild(node, child):** Append a node at the end
+  of another node.
+- **setCursorState(cursorState):** Set the cursor after
+  the changeset is applied.
+- **removeNode(node):** Remove a node from the parent.
+- **deleteChildrenAt(parent, index, count):** Delete
+  a sequences of children of a node.
+- **insertChildrenAfter(parent, children, after):** Insert a sequences of children after another node.
+- **insertChildrenAt(parent, index, children):** Insert
+  children at the position of a node.
+- **textEdit(node, propName, delta):** Apply the quill
+  delta to the BlockyNode. For a `Text` block, the `propName` is usually called `textContent`.
+- **push(operation):** Push an operation to the changeset.
+  Usually you don't need this method. Use
+  the methods above
+- **apply():** Apply this changeset to the `EditorState`.
+  The editor will render automatically after the changeset is applied.
+
 ### Serialization
 
 If you want to dump the document tree to JSON, you can use the utility in `serialize` namespace.
@@ -112,11 +131,11 @@ export class BlockyTextModel implements BlockyNode {
 }
 ```
 
-You can the the `compose` method to submit changeds. For example:
+You can the the `compose` method to submit changes. For example:
 
 ```typescript
-changeset.textEdit(() => new Delta().insert("Hello world")).apply();
-changeset.textEdit(() => new Delta().retain(4).delete(1)).apply(); // delete 1 char at the index 4
+changeset.textEdit(textNode, () => new Delta().insert("Hello world")).apply();
+changeset.textEdit(textNode, () => new Delta().retain(4).delete(1)).apply(); // delete 1 char at the index 4
 ```
 
 ## Collaborative editing

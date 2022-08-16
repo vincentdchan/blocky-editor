@@ -58,10 +58,15 @@ export class Changeset {
   beforeCursor: CursorState | null = null;
   afterCursor?: CursorState | null;
   forceUpdate = false;
+
   constructor(readonly state: ChangesetStateLogger) {
     this.version = state.appliedVersion + 1;
     this.beforeCursor = state.cursorState;
   }
+
+  /**
+   * Update the attributes of a `BlockyNode`.
+   */
   updateAttributes(
     node: BlockyElement,
     attributes: AttributesObject
@@ -80,10 +85,18 @@ export class Changeset {
     });
     return this;
   }
+
+  /**
+   * Set the cursor after the changeset is applied.
+   */
   setCursorState(cursorState: CursorState | null): Changeset {
     this.afterCursor = cursorState;
     return this;
   }
+
+  /**
+   * Append a node at the end of another node.
+   */
   appendChild(node: BlockyElement, child: BlockyNode): Changeset {
     const parentLoc = this.state.getLocationOfNode(node);
     const index = node.childrenLength;
@@ -94,6 +107,7 @@ export class Changeset {
     });
     return this;
   }
+
   removeChild(parent: BlockyElement, child: BlockyNode): Changeset {
     const parentLoc = this.state.getLocationOfNode(parent);
     const index = parent.indexOf(child);
@@ -104,9 +118,17 @@ export class Changeset {
     });
     return this;
   }
+
+  /**
+   * Remove a node from the parent.
+   */
   removeNode(node: BlockyNode): Changeset {
     return this.removeChild(node.parent!, node);
   }
+
+  /**
+   * Delete a sequences of children of a node.
+   */
   deleteChildrenAt(
     parent: BlockyElement,
     index: number,
@@ -136,6 +158,10 @@ export class Changeset {
     });
     return this;
   }
+
+  /**
+   * Insert a sequences of children after another node.
+   */
   insertChildrenAfter(
     parent: BlockyElement,
     children: BlockyNode[],
@@ -153,6 +179,10 @@ export class Changeset {
     });
     return this;
   }
+
+  /**
+   * Insert children at the position of a node.
+   */
   insertChildrenAt(
     parent: BlockyElement,
     index: number,
@@ -166,6 +196,11 @@ export class Changeset {
     });
     return this;
   }
+
+  /**
+   * Apply the quill delta to the BlockyNode.
+   * For a `Text` block, the `propName` is usually called `textContent`.
+   */
   textEdit(
     node: BlockElement,
     propName: string,
@@ -215,6 +250,7 @@ export class Changeset {
     });
     return this;
   }
+
   /**
    * This method will transform path.
    * If you don't want to transform path, call [pushWillMerge].
@@ -226,6 +262,7 @@ export class Changeset {
     }
     this.pushWillMerge(operation);
   }
+
   pushWillMerge(operation: Operation) {
     // TODO: test
     const len = this.operations.length;
@@ -239,6 +276,11 @@ export class Changeset {
     }
     this.operations.push(operation);
   }
+
+  /**
+   * Apply this changeset to the `EditorState`.
+   * The editor will render automatically after the changeset is applied.
+   */
   apply(options?: Partial<ChangesetApplyOptions>) {
     const finalizedChangeset = this.finalize(options);
     if (finalizedChangeset.operations.length === 0) {
@@ -246,6 +288,7 @@ export class Changeset {
     }
     this.state.apply(finalizedChangeset);
   }
+
   finalize(options?: Partial<ChangesetApplyOptions>): FinalizedChangeset {
     const result: FinalizedChangeset = {
       userId: this.state.userId,
@@ -262,6 +305,7 @@ export class Changeset {
     this.operations = [];
     return result;
   }
+
   /**
    * @param that Can be either a [Changeset] or a [FinalizedChangeset]
    */
@@ -283,6 +327,10 @@ export interface FinalizedChangeset {
   options: ChangesetApplyOptions;
 }
 
+/**
+ * A changeset interface used to transmit.
+ * Can be serialized as JSON.
+ */
 export interface ChangesetMessage {
   userId: string;
   version: number;
@@ -293,6 +341,9 @@ export interface ChangesetMessage {
   options: ChangesetApplyOptions;
 }
 
+/**
+ * Convert a {@link FinalizedChangeset} to {@link ChangesetMessage}.
+ */
 export function changesetToMessage(
   changeset: FinalizedChangeset
 ): ChangesetMessage {
@@ -302,6 +353,9 @@ export function changesetToMessage(
   };
 }
 
+/**
+ * Convert a {@link ChangesetMessage} to {@link FinalizedChangeset}.
+ */
 export function changesetFromMessage(
   msg: ChangesetMessage
 ): FinalizedChangeset {
