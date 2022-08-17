@@ -18,6 +18,7 @@ import {
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
+import { EmbedRegistry } from "@pkg/registry/embedRegistry";
 import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { type BannerFactory } from "@pkg/view/bannerDelegate";
 import { type ToolbarFactory } from "@pkg/view/toolbarDelegate";
@@ -44,6 +45,7 @@ export interface IEditorControllerOptions {
 
   spanRegistry?: SpanRegistry;
   blockRegistry?: BlockRegistry;
+  embedRegistry?: EmbedRegistry;
   state?: EditorState;
   idGenerator?: IdGenerator;
   bannerFactory?: BannerFactory;
@@ -93,6 +95,7 @@ export class EditorController {
   editor: Editor | undefined;
   readonly pluginRegistry: PluginRegistry;
   readonly spanRegistry: SpanRegistry;
+  readonly embedRegistry: EmbedRegistry;
   readonly blockRegistry: BlockRegistry;
   readonly idGenerator: IdGenerator;
   readonly state: EditorState;
@@ -109,6 +112,7 @@ export class EditorController {
     this.pluginRegistry =
       options?.pluginRegistry ?? new PluginRegistry(options?.plugins);
     this.spanRegistry = options?.spanRegistry ?? new SpanRegistry();
+    this.embedRegistry = options?.embedRegistry ?? new EmbedRegistry();
     this.blockRegistry = options?.blockRegistry ?? new BlockRegistry();
     this.idGenerator = options?.idGenerator ?? makeDefaultIdGenerator();
 
@@ -119,12 +123,9 @@ export class EditorController {
     });
 
     options?.plugins?.forEach((plugin) => {
-      plugin.blocks?.forEach((block) => {
-        this.blockRegistry.register(block);
-      });
-      plugin.spans?.forEach((span) => {
-        this.spanRegistry.register(span);
-      });
+      plugin.blocks?.forEach((block) => this.blockRegistry.register(block));
+      plugin.spans?.forEach((span) => this.spanRegistry.register(span));
+      plugin.embeds?.forEach((embed) => this.embedRegistry.register(embed));
     });
     this.blockRegistry.seal();
     this.spanRegistry.seal();

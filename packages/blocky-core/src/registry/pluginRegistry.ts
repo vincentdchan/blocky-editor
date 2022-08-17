@@ -2,6 +2,7 @@ import { isFunction } from "lodash-es";
 import type { IBlockDefinition } from "@pkg/block/basic";
 import type { Editor } from "@pkg/view/editor";
 import type { SpanStyle } from "./spanRegistry";
+import type { Embed } from "./embedRegistry";
 
 export type AfterFn = () => void;
 
@@ -21,6 +22,11 @@ export interface IPlugin {
    * The span registered by the plugin.
    */
   spans?: SpanStyle[];
+
+  /**
+   * The embed registered by the plugin.
+   */
+  embeds?: Embed[];
 
   /**
    * The block registered by the plugin.
