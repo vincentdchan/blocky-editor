@@ -7,6 +7,13 @@ export type SpanRenderer = (
   attribs: AttributesObject
 ) => void;
 
+/**
+ * Span is an element including editable text.
+ * It has it's own styles such as bold/italic/underline.
+ *
+ * The styles of the span can be mixed. A range of text
+ * can have multiple styles.
+ */
 export interface SpanStyle {
   name: string;
   className?: string;

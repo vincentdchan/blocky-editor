@@ -25,6 +25,7 @@ import { TextInputEvent, type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";
 import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { EditorController } from "..";
+import { type SpanStyle } from "@pkg/registry/spanRegistry";
 
 const TextContentClass = "blocky-block-text-content";
 
@@ -385,18 +386,21 @@ export class TextBlock extends Block {
         if (restAttr[key]) {
           const style = spanRegistry.styles.get(key);
           if (style) {
-            if (isString(style.className)) {
-              d.classList.add(style.className);
-            }
-            style.onSpanCreated?.(d);
+            this.#applyStyleOnSpan(d, style);
           }
         }
       }
 
       return d;
-    } else {
-      return document.createTextNode(op.insert! as string);
     }
+    return document.createTextNode(op.insert! as string);
+  }
+
+  #applyStyleOnSpan(element: HTMLElement, spanStyle: SpanStyle) {
+    if (isString(spanStyle.className)) {
+      element.classList.add(spanStyle.className);
+    }
+    spanStyle.onSpanCreated?.(element);
   }
 
   #createLeftPadContainer(): HTMLDivElement {
