@@ -21,7 +21,41 @@ import {
 } from "blocky-core";
 
 class MyBlock extends Block {
-  /** override the methods **/
+  /**
+   * Get the data of the block.
+   */
+  get elementData(): BlockyElement;
+
+  /** The methods to implement **/
+  /** render your dom when the block is mounted */
+  blockDidMount(e: BlockDidMountEvent): void;
+
+  /**
+   * Handle the block is focused.
+   *
+   * This hook will only be triggered when the focused id is
+   * equal to the block'id. The children is out of situation.
+   *
+   */
+  blockFocused?(e: BlockFocusedEvent): void;
+
+  /**
+   * Triggered when the block is blur.
+   */
+  blockBlur?(e: BlockBlurEvent): void;
+
+  /**
+   * Triggered when the renderer re-render the block.
+   */
+  render?(container: HTMLElement): void;
+
+  /**
+   * Clean something when the block is unmounted.
+   */
+  dispose() {
+    /** TODO: clean */
+    super.dispose();
+  }
 }
 
 export function makeMyBlock(): IBlockDefinition {
