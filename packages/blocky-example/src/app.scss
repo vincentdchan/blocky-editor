@@ -69,6 +69,8 @@ body {
 
 .blocky-example-editor-container {
   flex: 50%;
+  max-width: 50%;
+  overflow-x: scroll;
 }
 
 .blocky-example-user {
