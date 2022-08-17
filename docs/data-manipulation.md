@@ -1,6 +1,8 @@
 # Data manipulation
 
-## State
+## Background
+
+### State
 
 The state of the editor includes:
 
@@ -8,7 +10,15 @@ The state of the editor includes:
 - [The document tree.](#data-representation)
 - The blocks instances.
 
-### API
+### Controller
+
+The simple API to manipulate the data structure.
+
+### Changeset
+
+The low-level API to manipulate the data structure.
+
+## API
 
 The state instance can be accessed from the editor and the controller.
 
@@ -19,7 +29,7 @@ editor.state; // get access to the state.
 controller.state; // get state from the controller
 ```
 
-### Construct the state
+## Construct the state
 
 **Empty State:**
 
@@ -35,7 +45,24 @@ const controller = EditorController.emptyState();
 const controller = new EditorController();
 ```
 
-### Update the state
+## Update the state
+
+There are two ways to update the state.
+The `EditorController` provides the high-level API.
+The `Changeset` provides the low-level API.
+
+### Using the controller
+
+- **insertBlockAfterId(element, afterId, options):** Insert a block in a element after id.
+- **formatTextOnSelectedText(attributes):** Format the text in the selection.
+- **pasteHTMLAtCursor(htmlString):** Paste HTML string from the clipboard.
+- **deleteBlock(id):** Delete the block by id.
+- **setCursorState(cursorState):** Set the cursor state of the editor.
+- **getBlockElementAtCursor:** Return the element the cursor pointing at.
+- **insertFollowerWidget(widget):** Insert the widget following the cursor.
+  - **[Follower Widget](./follower-widget.md)**
+
+### Using the changeset
 
 The document tree is read-only. It should be regarded as immutable tree.
 
@@ -51,6 +78,8 @@ new Changeset(this.editor.state).removeChild(container, child).apply(); // remov
 
 When apply is called, the changeset will be applied to the editor.
 At the same time, the changeset will be logged and transmitted.
+
+The methods of `Changeset`:
 
 - **updateAttributes(node, attributes):** Update the attributes of a `BlockyNode`.
 - **appendChild(node, child):** Append a node at the end
@@ -71,7 +100,7 @@ At the same time, the changeset will be logged and transmitted.
 - **apply():** Apply this changeset to the `EditorState`.
   The editor will render automatically after the changeset is applied.
 
-### Serialization
+## Serialization
 
 If you want to dump the document tree to JSON, you can use the utility in `serialize` namespace.
 
@@ -140,9 +169,16 @@ changeset.textEdit(textNode, () => new Delta().retain(4).delete(1)).apply(); // 
 
 ## Collaborative editing
 
-The document tree of BlockyEditor supports collaborative editing naturally.
-What you need is to transfer the changeset betweens users.
-Changeset can be applied repeatedly. But they must be applied in order.
+Currently, the document tree of BlockyEditor supports collaborative editing using operation transforming(known as OT).
+
+What you need is to transfer the changeset between users.
+The changeset can be applied repeatedly.
+But they must be applied in order.
+
+To resolve conflicts, you need to transform the operations in the central server.
+The example server's code will be released later.
+
+You can also use a CRDT library such as YJS and bind the data model to it. I tried it. It works.
 
 Example:
 
