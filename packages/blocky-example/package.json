@@ -17,7 +17,8 @@
     "blocky-common": "workspace:*",
     "blocky-core": "workspace:*",
     "blocky-data": "workspace:*",
-    "blocky-preact": "workspace:*"
+    "blocky-preact": "workspace:*",
+    "quill-delta-es": "^5.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.18.2",
