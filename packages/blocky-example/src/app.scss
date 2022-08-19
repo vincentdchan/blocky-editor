@@ -16,21 +16,6 @@
   overflow-y: scroll;
 }
 
-@media only screen and (max-width: 600px) {
-  .blocky-example-app-window {
-    overflow: hidden;
-  }
-
-  .blocky-example-container {
-    width: 100%;
-    box-shadow: none;
-  }
-
-  .blocky-example-editor-container.right {
-    display: none;
-  }
-}
-
 body {
   margin: 0px;
   background-color: var(--bg-color);
@@ -149,4 +134,23 @@ input:checked + .slider:before {
 
 .slider.round:before {
   border-radius: 50%;
+}
+
+@media only screen and (max-width: 600px) {
+  .blocky-example-app-window {
+    overflow: hidden;
+  }
+
+  .blocky-example-container {
+    width: 100%;
+    box-shadow: none;
+  }
+
+  .blocky-example-editor-container.right {
+    display: none;
+  }
+
+  .blocky-example-editor-container {
+    max-width: 100%;
+  }
 }
