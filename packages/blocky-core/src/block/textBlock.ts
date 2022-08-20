@@ -210,17 +210,13 @@ export class TextBlock extends Block {
     element.appendChild(this.#bodyContainer);
   }
 
-  override blockFocused({
-    node: blockDom,
-    selection,
-    cursor,
-  }: BlockFocusedEvent): void {
+  override blockFocused({ selection, cursor }: BlockFocusedEvent): void {
     const contentContainer = this.findContentContainer();
 
     contentContainer.setAttribute("placeholder", "Empty content");
 
     const { offset } = cursor;
-    const pos = this.#findFocusPosition(blockDom, offset);
+    const pos = this.#findFocusPosition(offset);
     if (!pos) {
       const { firstChild } = contentContainer;
 
@@ -247,7 +243,7 @@ export class TextBlock extends Block {
       return;
     }
 
-    return this.#findFocusPosition(this.#container, offset);
+    return this.#findFocusPosition(offset);
   }
 
   override blockBlur(): void {
@@ -256,10 +252,7 @@ export class TextBlock extends Block {
     contentContainer.setAttribute("placeholder", zeroSpaceEmptyChar);
   }
 
-  #findFocusPosition(
-    blockDom: HTMLElement,
-    absoluteOffset: number
-  ): TextPosition | undefined {
+  #findFocusPosition(absoluteOffset: number): TextPosition | undefined {
     const contentContainer = this.findContentContainer();
     let ptr = contentContainer.firstChild;
 

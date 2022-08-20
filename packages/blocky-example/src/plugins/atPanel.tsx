@@ -2,7 +2,6 @@ import { PureComponent } from "preact/compat";
 import { Panel, SelectablePanel, PanelItem } from "@pkg/components/panel";
 import { type IPlugin, type EditorController, TextBlock } from "blocky-core";
 import { makePreactFollowerWidget } from "blocky-preact";
-import { Changeset } from "blocky-data";
 import Delta from "quill-delta-es";
 import "./atPanel.scss";
 
@@ -13,26 +12,15 @@ interface AtPanelProps {
 
 class AtPanel extends PureComponent<AtPanelProps> {
   #handleSelect = () => {
-    const { controller } = this.props;
-    const element = controller.getBlockElementAtCursor();
-    if (!element) {
-      return;
-    }
-    const offset = controller.state.cursorState?.startOffset;
-    if (typeof offset === "undefined") {
-      return;
-    }
-    new Changeset(controller.state)
-      .textEdit(element, "textContent", () =>
-        new Delta()
-          .retain(offset - 1)
-          .delete(1)
-          .insert({
-            type: "mention",
-            mention: "Vincent Chan",
-          })
-      )
-      .apply();
+    this.props.controller.applyDeltaAtCursor((index) =>
+      new Delta()
+        .retain(Math.max(index - 1, 0))
+        .delete(1)
+        .insert({
+          type: "mention",
+          mention: "Vincent Chan",
+        })
+    );
   };
   #handleClose = () => {
     this.props.closeWidget();
