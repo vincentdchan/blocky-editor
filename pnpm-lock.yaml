@@ -80,12 +80,15 @@ importers:
     specifiers:
       '@babel/core': ^7.18.2
       '@preact/preset-vite': ^2.2.0
+      '@types/marked': ^4.0.5
       '@types/node': ^17.0.41
       blocky-common: workspace:*
       blocky-core: workspace:*
       blocky-data: workspace:*
       blocky-preact: workspace:*
+      marked: ^4.0.18
       preact: ^10.7.3
+      preact-router: ^4.1.0
       quill-delta-es: ^5.0.2
       sass: ^1.52.3
       vite: ^2.9.12
@@ -94,10 +97,13 @@ importers:
       blocky-core: link:../blocky-core
       blocky-data: link:../blocky-data
       blocky-preact: link:../blocky-preact
+      marked: 4.0.18
+      preact-router: 4.1.0_preact@10.9.0
       quill-delta-es: 5.0.2
     devDependencies:
       '@babel/core': 7.18.6
       '@preact/preset-vite': 2.3.0_owyj5gncrwxzcpyzipbw3bejn4
+      '@types/marked': 4.0.5
       '@types/node': 17.0.45
       preact: 10.9.0
       sass: 1.53.0
@@ -551,6 +557,10 @@ packages:
 
   /@types/lodash/4.14.182:
     resolution: {integrity: sha512-/THyiqyQAP9AfARo4pF+aCGcyiQ94tX/Is2I7HofNRqoYLgN1PBoOWu2/zTA5zMxzP5EFutMtWtGAFRKUe961Q==}
+    dev: true
+
+  /@types/marked/4.0.5:
+    resolution: {integrity: sha512-jMN2moJ+lSf1VZXQo3VXeMCjoXuciVONig8+U0YNBop5aBvQw4qkolx1Nzn1i0T8L2l9IZ3jju6bS1pPwlaY1w==}
     dev: true
 
   /@types/node/17.0.45:
@@ -1802,6 +1812,12 @@ packages:
       yallist: 4.0.0
     dev: true
 
+  /marked/4.0.18:
+    resolution: {integrity: sha512-wbLDJ7Zh0sqA0Vdg6aqlbT+yPxqLblpAZh1mK2+AO2twQkPywvvqQNfEPVwSSRjZ7dZcdeVBIAgiO7MMp3Dszw==}
+    engines: {node: '>= 12'}
+    hasBin: true
+    dev: false
+
   /merge2/1.4.1:
     resolution: {integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==}
     engines: {node: '>= 8'}
@@ -1959,9 +1975,16 @@ packages:
       source-map-js: 1.0.2
     dev: true
 
+  /preact-router/4.1.0_preact@10.9.0:
+    resolution: {integrity: sha512-y1w2YvVpKAju9FMV+fAVR1NpH4MW5q07BZrziMZeg6F/rGJ9KvLUZtjOqsy2I8fDYiX36AM1AQTXIIK3jigBhA==}
+    peerDependencies:
+      preact: '>=10'
+    dependencies:
+      preact: 10.9.0
+    dev: false
+
   /preact/10.9.0:
     resolution: {integrity: sha512-jO6/OvCRL+OT8gst/+Q2ir7dMybZAX8ioP02Zmzh3BkQMHLyqZSujvxbUriXvHi8qmhcHKC2Gwbog6Kt+YTh+Q==}
-    dev: true
 
   /prelude-ls/1.1.2:
     resolution: {integrity: sha512-ESF23V4SKG6lVSGZgYNpbsiaAkdab6ZgOxe52p7+Kid3W3u3bxR4Vfd/o21dmN7jSt0IwgZ4v5MUd26FEtXE9w==}
