@@ -14,6 +14,7 @@ import {
   Changeset,
   blockyNodeFromJsonNode,
   CursorStateUpdateReason,
+  ChangesetApplyOptions,
 } from "blocky-data";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
@@ -171,6 +172,34 @@ export class EditorController {
     }
 
     editor.drawCollaborativeCursor(id, evt.state);
+  }
+
+  /**
+   * Apply the delta if the cursor is pointing at a
+   * TextBlock. This method will auto set the cursor for you.
+   */
+  applyDeltaAtCursor(
+    deltaGen: (offset: number) => Delta,
+    options?: Partial<ChangesetApplyOptions>
+  ) {
+    const element = this.getBlockElementAtCursor();
+    if (!element) {
+      return;
+    }
+    if (element.nodeName !== TextBlock.Name) {
+      return;
+    }
+    const offset = this.state.cursorState?.startOffset;
+    if (typeof offset === "undefined") {
+      return;
+    }
+    const delta = deltaGen(offset);
+    const appliedLen = delta.changeLength();
+
+    new Changeset(this.state)
+      .textEdit(element, "textContent", () => delta)
+      .setCursorState(CursorState.collapse(element.id, appliedLen))
+      .apply(options);
   }
 
   mount(editor: Editor) {
