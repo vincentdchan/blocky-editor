@@ -260,8 +260,13 @@ export class TextBlock extends Block {
       const contentLength = this.#contentLengthOfNode(ptr);
       if (absoluteOffset <= contentLength) {
         let node = ptr;
-        if (node instanceof HTMLSpanElement && node.firstChild) {
-          node = node.firstChild;
+        if (node instanceof HTMLSpanElement) {
+          if (node.contentEditable === "false") {
+            return undefined; // TODO: fix
+          }
+          if (node.firstChild) {
+            node = node.firstChild;
+          }
         }
         return { node, offset: absoluteOffset };
       } else {

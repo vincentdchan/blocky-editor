@@ -23,9 +23,6 @@ export const ReadMeContent = `
   <li>Preact: Wrap the editor in <a href="https://preactjs.com/">Preact</a>. Provide the UI facilities such as toolbar and banner.</li>
   <li>
     Example(this page): The example to demonstrate how to use the editor.
-    <ul>
-      <li>Gzipped size: ~46kb (one-time loading)</li>
-    </ul>
   </li>
 </ul>
 <h2>Resources</h2>
