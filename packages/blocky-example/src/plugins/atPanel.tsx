@@ -4,6 +4,7 @@ import { type IPlugin, type EditorController, TextBlock } from "blocky-core";
 import { makePreactFollowerWidget } from "blocky-preact";
 import { Changeset } from "blocky-data";
 import Delta from "quill-delta-es";
+import "./atPanel.scss";
 
 interface AtPanelProps {
   closeWidget: () => void;
@@ -23,10 +24,13 @@ class AtPanel extends PureComponent<AtPanelProps> {
     }
     new Changeset(controller.state)
       .textEdit(element, "textContent", () =>
-        new Delta().retain(offset).insert({
-          type: "mention",
-          mention: "Vincent Chan",
-        })
+        new Delta()
+          .retain(offset - 1)
+          .delete(1)
+          .insert({
+            type: "mention",
+            mention: "Vincent Chan",
+          })
       )
       .apply();
   };
@@ -56,6 +60,15 @@ class AtPanel extends PureComponent<AtPanelProps> {
 export function makeAtPanelPlugin(): IPlugin {
   return {
     name: "at-panel",
+    embeds: [
+      {
+        type: "mention",
+        onEmbedCreated(elem) {
+          elem.className = "blocky-mention";
+          elem.textContent = "@Vincent";
+        },
+      },
+    ],
     onInitialized(editor) {
       editor.keyDown.on((e: KeyboardEvent) => {
         if (e.key !== "@") {

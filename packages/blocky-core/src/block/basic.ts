@@ -214,7 +214,7 @@ export class Block implements IDisposable {
   }
 }
 
-const zeroWidthChar = "\u200b";
+export const zeroWidthChar = "\u200b";
 
 /**
  * Base class for the block with a content container
