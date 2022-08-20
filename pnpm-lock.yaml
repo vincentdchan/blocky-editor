@@ -86,6 +86,7 @@ importers:
       blocky-core: workspace:*
       blocky-data: workspace:*
       blocky-preact: workspace:*
+      highlight.js: ^11.6.0
       marked: ^4.0.18
       preact: ^10.7.3
       preact-router: ^4.1.0
@@ -97,6 +98,7 @@ importers:
       blocky-core: link:../blocky-core
       blocky-data: link:../blocky-data
       blocky-preact: link:../blocky-preact
+      highlight.js: 11.6.0
       marked: 4.0.18
       preact-router: 4.1.0_preact@10.9.0
       quill-delta-es: 5.0.2
@@ -1568,6 +1570,11 @@ packages:
     dependencies:
       function-bind: 1.1.1
     dev: true
+
+  /highlight.js/11.6.0:
+    resolution: {integrity: sha512-ig1eqDzJaB0pqEvlPVIpSSyMaO92bH1N2rJpLMN/nX396wTpDA4Eq0uK+7I/2XG17pFaaKE0kjV/XPeGt7Evjw==}
+    engines: {node: '>=12.0.0'}
+    dev: false
 
   /html-encoding-sniffer/3.0.0:
     resolution: {integrity: sha512-oWv4T4yJ52iKrufjnyZPkrN0CH3QnrUqdB6In1g5Fe1mia8GmF36gnfNySxoZtxD5+NmYw1EElVXiBk93UeskA==}
