@@ -166,11 +166,18 @@ export class TextBlock extends Block {
       if (ptr === focusedNode) {
         break;
       }
-      counter += ptr.textContent?.length ?? 0;
+      counter += this.#contentLengthOfNode(ptr);
       ptr = ptr.nextSibling;
     }
 
     return counter + offsetInNode;
+  }
+
+  #contentLengthOfNode(node: Node): number {
+    if (node instanceof HTMLSpanElement && node.contentEditable === "false") {
+      return 1;
+    }
+    return node.textContent?.length ?? 0;
   }
 
   protected findContentContainer(): HTMLElement {
@@ -213,7 +220,7 @@ export class TextBlock extends Block {
     contentContainer.setAttribute("placeholder", "Empty content");
 
     const { offset } = cursor;
-    const pos = this.findFocusPosition(blockDom, offset);
+    const pos = this.#findFocusPosition(blockDom, offset);
     if (!pos) {
       const { firstChild } = contentContainer;
 
@@ -240,7 +247,7 @@ export class TextBlock extends Block {
       return;
     }
 
-    return this.findFocusPosition(this.#container, offset);
+    return this.#findFocusPosition(this.#container, offset);
   }
 
   override blockBlur(): void {
@@ -249,7 +256,7 @@ export class TextBlock extends Block {
     contentContainer.setAttribute("placeholder", zeroSpaceEmptyChar);
   }
 
-  private findFocusPosition(
+  #findFocusPosition(
     blockDom: HTMLElement,
     absoluteOffset: number
   ): TextPosition | undefined {
@@ -257,7 +264,7 @@ export class TextBlock extends Block {
     let ptr = contentContainer.firstChild;
 
     while (ptr) {
-      const contentLength = ptr.textContent?.length ?? 0;
+      const contentLength = this.#contentLengthOfNode(ptr);
       if (absoluteOffset <= contentLength) {
         let node = ptr;
         if (node instanceof HTMLSpanElement && node.firstChild) {
@@ -274,9 +281,7 @@ export class TextBlock extends Block {
     return;
   }
 
-  private getAttributeObjectFromElement(
-    element: HTMLElement
-  ): AttributesObject {
+  #getAttributeObjectFromElement(element: HTMLElement): AttributesObject {
     const attributes: AttributesObject = {};
     const spanRegistry = this.editor.registry.span;
 
@@ -298,11 +303,20 @@ export class TextBlock extends Block {
   /**
    * Convert DOM to [[FormattedTextSlice]]
    */
-  private getFormattedTextSliceFromNode(newDelta: Delta, node: Node) {
+  #getFormattedTextSliceFromNode(newDelta: Delta, node: Node) {
     const content = node.textContent ?? "";
     if (node instanceof HTMLSpanElement) {
-      const attributes = this.getAttributeObjectFromElement(node);
-      newDelta.insert(content, attributes);
+      if (node.contentEditable === "false") {
+        const dataType = node.getAttribute("data-type");
+        if (dataType) {
+          newDelta.insert({
+            type: dataType,
+          });
+        }
+      } else {
+        const attributes = this.#getAttributeObjectFromElement(node);
+        newDelta.insert(content, attributes);
+      }
     } else {
       newDelta.insert(content);
     }
@@ -319,7 +333,7 @@ export class TextBlock extends Block {
 
     let ptr = contentContainer.firstChild;
     while (ptr) {
-      this.getFormattedTextSliceFromNode(newDelta, ptr);
+      this.#getFormattedTextSliceFromNode(newDelta, ptr);
       ptr = ptr.nextSibling;
     }
 
@@ -503,7 +517,7 @@ export class TextBlock extends Block {
     return this.#contentContainer;
   }
 
-  #isNodeMatch(op: Op, dom: Node): boolean {
+  #isSpanNodeMatch(op: Op, dom: Node): boolean {
     if (op.attributes) {
       if (isString(op.attributes.href)) {
         return (
@@ -553,33 +567,15 @@ export class TextBlock extends Block {
 
     for (let i = 0, len = textModel.delta.ops.length; i < len; i++) {
       const op = textModel.delta.ops[i];
-      if (!isString(op.insert)) {
-        continue;
-      }
-      if (!domPtr) {
-        domPtr = this.#createDomByOp(op, this.editor);
-        contentContainer.insertBefore(domPtr, prevDom?.nextSibling ?? null);
+      let next: Node | null = null;
+      if (isString(op.insert)) {
+        next = this.#renderTextSpanByOp(domPtr, prevDom, contentContainer, op);
       } else {
-        // is old
-        if (!this.#isNodeMatch(op, domPtr)) {
-          const oldDom = domPtr;
-          const newNode = this.#createDomByOp(op, this.editor);
-
-          prevDom = domPtr;
-          domPtr = domPtr.nextSibling;
-
-          contentContainer.replaceChild(newNode, oldDom);
-          continue;
-        } else {
-          clearNodeAttributes(domPtr);
-          if (domPtr.textContent !== op.insert) {
-            domPtr.textContent = op.insert;
-          }
-        }
+        next = this.#renderEmbedByOp(domPtr, prevDom, contentContainer, op);
       }
 
       prevDom = domPtr;
-      domPtr = domPtr.nextSibling;
+      domPtr = next;
     }
 
     // remove remaining text
@@ -589,6 +585,79 @@ export class TextBlock extends Block {
 
       domPtr = next;
     }
+  }
+
+  #renderEmbedByOp(
+    domPtr: Node | null,
+    prevDom: Node | null,
+    contentContainer: HTMLElement,
+    op: Op
+  ): Node | null {
+    if (!domPtr) {
+      domPtr = this.#createEmbedDomByOp(op, this.editor);
+      contentContainer.insertBefore(domPtr, prevDom?.nextSibling ?? null);
+    }
+    return domPtr.nextSibling ?? null;
+  }
+
+  #createEmbedDomByOp(op: Op, editor: Editor): Node {
+    const embedContainer = elem("span");
+    embedContainer.contentEditable = "false";
+    embedContainer.appendChild(this.#createNoWrapSpan());
+
+    const embed = elem("span");
+    embedContainer.appendChild(embed);
+
+    const record = op.insert as Record<string, unknown>;
+    const type = record.type as string;
+    const embedDef = editor.controller.embedRegistry.embeds.get(type);
+    if (!embedDef) {
+      embed.textContent = "Undefined";
+    } else {
+      embedDef.onEmbedCreated(embed);
+    }
+
+    embedContainer.setAttribute("data-type", type);
+    embedContainer.appendChild(this.#createNoWrapSpan());
+    return embedContainer;
+  }
+
+  #createNoWrapSpan(): HTMLSpanElement {
+    const result = elem("span");
+    result.style.whiteSpace = "nowrap";
+    return result;
+  }
+
+  // returns the next element
+  #renderTextSpanByOp(
+    domPtr: Node | null,
+    prevDom: Node | null,
+    contentContainer: HTMLElement,
+    op: Op
+  ): Node | null {
+    if (!domPtr) {
+      domPtr = this.#createDomByOp(op, this.editor);
+      contentContainer.insertBefore(domPtr, prevDom?.nextSibling ?? null);
+    } else {
+      // is old
+      if (!this.#isSpanNodeMatch(op, domPtr)) {
+        const oldDom = domPtr;
+        const newNode = this.#createDomByOp(op, this.editor);
+
+        prevDom = domPtr;
+        const next = domPtr.nextSibling;
+
+        contentContainer.replaceChild(newNode, oldDom);
+
+        return next;
+      } else {
+        clearNodeAttributes(domPtr);
+        if (domPtr.textContent !== op.insert) {
+          domPtr.textContent = op.insert as string;
+        }
+      }
+    }
+    return domPtr.nextSibling;
   }
 
   override onIndent(): void {
