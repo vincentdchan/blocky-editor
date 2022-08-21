@@ -11,6 +11,7 @@ hljs.registerLanguage("typescript", typescript);
 export interface MarkdownProps {
   markdown: string;
   baseUrl?: string;
+  className?: string;
 }
 
 marked.marked.setOptions({
@@ -36,8 +37,8 @@ class Markdown extends Component<MarkdownProps> {
       this.#ref.current!.innerHTML = htmlContent;
     }
   }
-  render() {
-    return <div ref={this.#ref}></div>;
+  render(props: MarkdownProps) {
+    return <div className={props.className} ref={this.#ref}></div>;
   }
 }
 
