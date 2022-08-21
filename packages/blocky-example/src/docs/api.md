@@ -4,9 +4,9 @@
 
 The state of the editor includes:
 
-- Cursor
-- [The document tree.](./get-started#data-representation)
-- The blocks instances.
+- The state of the cursor and selection
+- [The document tree](./get-started#data-representation)
+- The blocks instances
 
 ### Construct the state
 
@@ -18,7 +18,11 @@ To create a controller with empty state:
 const controller = EditorController.emptyState();
 ```
 
+By default, you don't need to create the `EditorState` yourself unless you want to use the state without the editor(Such as running on a server).
+
 **Default state:**
+
+The controller will create an `EditorState` for you.
 
 ```typescript
 const controller = new EditorController();

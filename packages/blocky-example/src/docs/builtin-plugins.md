@@ -6,6 +6,24 @@ Text block is built in. It's the most important block in the BlockyEditor. You d
 
 It handles the basic text rendering and editing stuff.
 
+Data definitions:
+
+```typescript
+interface TextBlockAttributes {
+  textType: TextType;
+  checked?: boolean /** used for checkbox */;
+}
+```
+
+Builtin types:
+
+- Checkbox
+- Bulleted
+- Normal
+- Heading1
+- Heading2
+- Heading3
+
 ## Styled text plugin
 
 Add styles of bold/italic/underline.
