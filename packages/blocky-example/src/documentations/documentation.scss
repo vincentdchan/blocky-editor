@@ -14,7 +14,7 @@
   .sidebar {
     flex-grow: 0;
     flex-shrink: 0;
-    width: 320px;
+    width: 280px;
     padding: 36px 48px;
     overflow-y: scroll;
 
@@ -42,10 +42,51 @@
   }
 
   .main-content {
-    padding: 36px 48px;
-    overflow-x: hidden;
-    overflow-y: scroll;
     flex-grow: 1;
     flex-shrink: 0;
+    position: relative;
+    overflow-y: scroll;
+
+    .md-content {
+      padding-top: 8px;;
+      padding-bottom: 128px;
+      overflow-x: hidden;
+      position: absolute;
+      width: 100%;
+      top: 0px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 920px;
+    }
+
+    h1 {
+      border-bottom-style: solid;
+      border-bottom-width: 2px;
+      border-bottom-color: #45D0D0;
+      padding-bottom: 8px;
+      padding-top: 8px;
+    }
+
+    h2 {
+      border-bottom-style: solid;
+      border-bottom-width: 1px;
+      border-bottom-color: #45D0D0;
+      padding-bottom: 8px;
+      padding-top: 8px;
+    }
+  }
+  @media only screen and (max-width: 920px) {
+    .sidebar {
+      display: none;
+    }
+    .md-content {
+      position: relative;
+      padding-left: 24px;
+      padding-right: 24px;
+      transform: none;
+      left: auto;
+      right: auto;
+      width: 100%;
+    }
   }
 }

@@ -1,35 +1,14 @@
-# Data manipulation
+# API
 
-## Background
-
-### State
+## EditorState
 
 The state of the editor includes:
 
 - Cursor
-- [The document tree.](#data-representation)
+- [The document tree.](./get-started#data-representation)
 - The blocks instances.
 
-### Controller
-
-The simple API to manipulate the data structure.
-
-### Changeset
-
-The low-level API to manipulate the data structure.
-
-## API
-
-The state instance can be accessed from the editor and the controller.
-
-For example:
-
-```typescript
-editor.state; // get access to the state.
-controller.state; // get state from the controller
-```
-
-## Construct the state
+### Construct the state
 
 **Empty State:**
 
@@ -45,13 +24,34 @@ const controller = EditorController.emptyState();
 const controller = new EditorController();
 ```
 
-## Update the state
+### Access the state
+
+The state instance can be accessed from the editor and the controller.
+
+For example:
+
+```typescript
+editor.state; // get access to the state.
+controller.state; // get state from the controller
+```
+
+### Update the state
 
 There are two ways to update the state.
 The `EditorController` provides the high-level API.
 The `Changeset` provides the low-level API.
 
-### Using the controller
+## Serialization
+
+If you want to dump the document tree to JSON, you can use the utility in `serialize` namespace.
+
+```typescript
+import { serialize } from "blocky-core";
+
+console.log(serialize.serializeState(editor.state));
+```
+
+## EditorController
 
 - **insertBlockAfterId(element, afterId, options):** Insert a block in a element after id.
 - **formatTextOnSelectedText(attributes):** Format the text in the selection.
@@ -60,9 +60,8 @@ The `Changeset` provides the low-level API.
 - **setCursorState(cursorState):** Set the cursor state of the editor.
 - **getBlockElementAtCursor:** Return the element the cursor pointing at.
 - **insertFollowerWidget(widget):** Insert the widget following the cursor.
-  - **[Follower Widget](./follower-widget.md)**
 
-### Using the changeset
+## Changeset
 
 The document tree is read-only. It should be regarded as immutable tree.
 
@@ -100,43 +99,13 @@ The methods of `Changeset`:
 - **apply():** Apply this changeset to the `EditorState`.
   The editor will render automatically after the changeset is applied.
 
-## Serialization
-
-If you want to dump the document tree to JSON, you can use the utility in `serialize` namespace.
-
-```typescript
-import { serialize } from "blocky-core";
-
-console.log(serialize.serializeState(editor.state));
-```
-
-## Data representation
-
-The data model in Blocky Editor is represented as an XML Document:
-
-Example:
-
-```xml
-<document>
-  <head>
-    <Title />
-  </head>
-  <body>
-    <Text />
-    <Text />
-      <Image src="" />
-    </Text>
-  </body>
-</document>
-```
-
-### BlockyNode
+## BlockyNode
 
 The tree of the document is assembled with `BlockyNode`.
 
 Every node has a nodeName corresponding to the nodeName in XML.
 
-### BlockyElement
+## BlockyElement
 
 `BlockyElement` is a kind of `BlockyNode`,
 which can store attributes:
@@ -150,7 +119,7 @@ class BlockyElement implements BlockyNode {
 }
 ```
 
-### BlockyTextModel
+## BlockyTextModel
 
 The text model of the blocky editor is implemented by [quill-delta](https://github.com/quilljs/delta).
 
@@ -167,46 +136,57 @@ changeset.textEdit(textNode, () => new Delta().insert("Hello world")).apply();
 changeset.textEdit(textNode, () => new Delta().retain(4).delete(1)).apply(); // delete 1 char at the index 4
 ```
 
-## Collaborative editing
+## Follower Widget
 
-Currently, the document tree of BlockyEditor supports collaborative editing using operation transforming(known as OT).
+A follower widget can follow the cursor when the user is typing. You can implement features such as a command panel or autocomplete through the follower widget.
 
-What you need is to transfer the changeset between users.
-The changeset can be applied repeatedly.
-But they must be applied in order.
+![](/follow-widget.gif)
 
-To resolve conflicts, you need to transform the operations in the central server.
-The example server's code will be released later.
+When the widget is inserted, it will follow the cursor automatically until the user changes the cursor manually. If you want to unmount the widget, call the `dispose()`.
 
-You can also use a CRDT library such as YJS and bind the data model to it. I tried it. It works.
+When the user begins to type, the content will be passed to the widget by the method `setEditingValue`. You can override this method to update your view.
 
-Example:
+As usual, there are two ways to implement a follower widget: using the raw API or using Preact.
+
+### VanillaJS
+
+Extend the class `FollowerWidget`.
 
 ```typescript
-this.editorControllerLeft.state.changesetApplied.on((changeset) => {
-  // simulate the net work
-  setTimeout(() => {
-    this.editorControllerRight.state.apply({
-      ...changeset,
-      afterCursor: undefined,
-      options: {
-        ...changeset.options,
-        updateView: true,
-      },
-    });
-  });
-});
+import { type EditorController, FollowerWidget } from "blocky-core";
 
-this.editorControllerRight.state.changesetApplied.on((changeset) => {
-  setTimeout(() => {
-    this.editorControllerLeft.state.apply({
-      ...changeset,
-      afterCursor: undefined,
-      options: {
-        ...changeset.options,
-        updateView: true,
-      },
-    });
-  });
-});
+export class MyFollowWidget extends FollowerWidget {
+  override setEditingValue(value: string) {
+    this.editingValue = value;
+    // implement here
+  }
+  override widgetMounted(controller: EditorController): void {
+    super.widgetMounted(controller);
+    // implement here
+  }
+  override dispose(): void {
+    // implement here
+    super.dispose();
+  }
+}
+
+editor.insertFollowerWidget(new MyFollowWidget());
+```
+
+### Preact
+
+Use the method `makePreactFollowerWidget`.
+
+```tsx
+import { makePreactFollowerWidget } from "blocky-preact";
+
+editor.insertFollowerWidget(
+  makePreactFollowerWidget(({ controller, editingValue, closeWidget }) => (
+    <CommandPanel
+      controller={controller}
+      editingValue={editingValue}
+      closeWidget={closeWidget}
+    />
+  ))
+);
 ```
