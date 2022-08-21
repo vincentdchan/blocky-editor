@@ -15,12 +15,20 @@
     flex-grow: 0;
     flex-shrink: 0;
     width: 280px;
-    padding: 36px 48px;
+    padding: 36px 0px 36px 120px;
     overflow-y: scroll;
 
     .logo {
       width: 220px;
-      margin-bottom: 28px;
+      margin-bottom: 18px;
+    }
+
+    .badge-container {
+      margin-bottom: 14px;
+
+      a {
+        margin-right: 8px;
+      }
     }
   }
   .sidebar-item {
@@ -57,6 +65,11 @@
       left: 50%;
       transform: translateX(-50%);
       max-width: 920px;
+    }
+
+    .md-container {
+      padding-left: 36px;
+      padding-right: 36px;
     }
 
     h1 {
