@@ -16,10 +16,20 @@ npm install blocky-preact
 
 ## Initialize the editor
 
+![](/init-progress.png)
+
+The `Editor` is data-driven.
+
+The `EditorState` includes all the states of the editor. The `Editor` will render depending on the `EditorState`.
+
+The controller is a bridge between the UI and the states. It also provides API for data manipulations.
+
 ### Create a controller
 
 A controller is used to initialize and control the editor.
-You can choose what plugins you want the editor to load.
+
+You can choose what plugins the editor should load.
+
 You can define how the editor render the toolbar.
 
 ```tsx
@@ -235,7 +245,7 @@ But they must be applied in order.
 To resolve conflicts, you need to transform the operations in the central server.
 The example server's code will be released later.
 
-You can also use a CRDT library such as YJS and bind the data model to it. I tried it. It works.
+You can also use a CRDT library such as YJS and bind the data model to it.
 
 Example:
 
