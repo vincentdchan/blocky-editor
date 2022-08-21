@@ -80,10 +80,11 @@ class Documentation extends Component<DocumentationProps, DocumentationState> {
     return (
       <div className="blocky-documentations">
         {this.renderSidebar()}
-        <Markdown
-          className="main-content"
-          markdown={this.props.content.content}
-        />
+        <div className="main-content">
+          <div className="md-content">
+            <Markdown markdown={this.props.content.content} />
+          </div>
+        </div>
       </div>
     );
   }

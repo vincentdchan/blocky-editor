@@ -1,6 +1,6 @@
 # Get started
 
-## Install the editor
+## Install
 
 Install the editor with your favorite package manger:
 
@@ -14,7 +14,9 @@ If you want to use the editor with Preact, install the `blocky-preact`:
 npm install blocky-preact
 ```
 
-## Create a controller
+## Initialize the editor
+
+### Create a controller
 
 A controller is used to initialize and control the editor.
 You can choose what plugins you want the editor to load.
@@ -62,8 +64,6 @@ function makeController(): EditorController {
 }
 ```
 
-## Initialize the editor
-
 ### Preact
 
 Pass the editor to the component.
@@ -95,6 +95,175 @@ const editor = Editor.fromController(container, controller);
 editor.render();
 ```
 
+## Data representation
+
+The data model in Blocky Editor is represented as an XML Document:
+
+Example:
+
+```xml
+<document>
+  <head>
+    <Title />
+  </head>
+  <body>
+    <Text />
+    <Text />
+      <Image src="" />
+    </Text>
+  </body>
+</document>
+```
+
+## Write a block
+
+You can use the plugin mechanism to extend the editor with
+your custom block.
+
+### VanillaJS
+
+To implement a block, you need to implement two interfaces.
+
+**Define the block**
+
+You should implement the interface `IBlockDefinition`.
+
+```typescript
+import {
+  type IBlockDefinition,
+  type EditorController,
+  type BlockData,
+  type BlockCreatedEvent,
+  Block,
+} from "blocky-core";
+
+class MyBlock extends Block {
+  /**
+   * Get the data of the block.
+   */
+  get elementData(): BlockyElement;
+
+  /** The methods to implement **/
+  /** render your dom when the block is mounted */
+  blockDidMount(e: BlockDidMountEvent): void;
+
+  /**
+   * Handle the block is focused.
+   *
+   * This hook will only be triggered when the focused id is
+   * equal to the block'id. The children is out of situation.
+   *
+   */
+  blockFocused?(e: BlockFocusedEvent): void;
+
+  /**
+   * Triggered when the block is blur.
+   */
+  blockBlur?(e: BlockBlurEvent): void;
+
+  /**
+   * Triggered when the renderer re-render the block.
+   */
+  render?(container: HTMLElement): void;
+
+  /**
+   * Clean something when the block is unmounted.
+   */
+  dispose() {
+    /** TODO: clean */
+    super.dispose();
+  }
+}
+
+export function makeMyBlock(): IBlockDefinition {
+  return {
+    name: "plugin-name",
+    editable: false,
+    onBlockCreated({ model }: BlockCreatedEvent): Block {
+      /** control how the block is created **/
+      return new MyBlock();
+    },
+  };
+}
+```
+
+### Write a block in Preact
+
+Implementing a block in Preact is more easier.
+
+```tsx
+import { type Editor, type IPlugin } from "blocky-core";
+import { makeReactBlock, DefaultBlockOutline } from "blocky-preact";
+
+export function makeMyBlockPlugin(): IPlugin {
+  return {
+    name: "plugin-name",
+    blocks: [
+      makeReactBlock({
+        name: "BlockName",
+        component: () => (
+          <DefaultBlockOutline>Write the block in Preact</DefaultBlockOutline>
+        ),
+      }),
+    ],
+  };
+}
+```
+
+### Add the plugin to the controller
+
+```tsx
+function makeController(): EditorController {
+  return new EditorController({
+    plugins: [
+      /** ... */
+      makeMyBlockPlugin(),
+    ],
+    /** ... */
+  });
+}
+```
+
 ## Collaborative editing
 
-[Collaborative editing](./data-manipulation.md#collaborative-editing).
+Currently, the document tree of BlockyEditor supports collaborative editing using operation transforming(known as OT).
+
+What you need is to transfer the changeset between users.
+The changeset can be applied repeatedly.
+But they must be applied in order.
+
+To resolve conflicts, you need to transform the operations in the central server.
+The example server's code will be released later.
+
+You can also use a CRDT library such as YJS and bind the data model to it. I tried it. It works.
+
+Example:
+
+```typescript
+this.editorControllerLeft.state.changesetApplied.on((changeset) => {
+  // simulate the net work
+  setTimeout(() => {
+    this.editorControllerRight.state.apply({
+      ...changeset,
+      afterCursor: undefined,
+      options: {
+        ...changeset.options,
+        updateView: true,
+      },
+    });
+  });
+});
+
+this.editorControllerRight.state.changesetApplied.on((changeset) => {
+  setTimeout(() => {
+    this.editorControllerLeft.state.apply({
+      ...changeset,
+      afterCursor: undefined,
+      options: {
+        ...changeset.options,
+        updateView: true,
+      },
+    });
+  });
+});
+```
