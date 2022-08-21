@@ -14,7 +14,7 @@ If you want to use the editor with Preact, install the `blocky-preact`:
 npm install blocky-preact
 ```
 
-## Create a controller:
+## Create a controller
 
 A controller is used to initialize and control the editor.
 You can choose what plugins you want the editor to load.
