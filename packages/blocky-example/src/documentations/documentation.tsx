@@ -49,6 +49,23 @@ class Documentation extends Component<DocumentationProps, DocumentationState> {
         <Link href="/">
           <img className="logo" src={LogoImg} />
         </Link>
+        <div className="badge-container">
+          <a
+            href="https://github.com/vincentdchan/blocky-editor"
+            target="_blank"
+          >
+            <img
+              alt="GitHub Repo stars"
+              src="https://img.shields.io/github/stars/vincentdchan/blocky-editor?style=social"
+            />
+          </a>
+          <a href="https://twitter.com/cdz_solo" target="_blank">
+            <img
+              alt="Twitter Follow"
+              src="https://img.shields.io/twitter/follow/cdz_solo?style=social"
+            ></img>
+          </a>
+        </div>
         {this.props.items.map((item) => (
           <div className="page-item">
             <Link href={item.href} className="sidebar-item">
@@ -82,7 +99,10 @@ class Documentation extends Component<DocumentationProps, DocumentationState> {
         {this.renderSidebar()}
         <div className="main-content">
           <div className="md-content">
-            <Markdown markdown={this.props.content.content} />
+            <Markdown
+              className="md-container"
+              markdown={this.props.content.content}
+            />
           </div>
         </div>
       </div>
