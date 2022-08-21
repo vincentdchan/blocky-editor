@@ -87,6 +87,11 @@
       padding-bottom: 8px;
       padding-top: 8px;
     }
+
+    pre {
+      width: 100%;
+      overflow-x: scroll;
+    }
   }
   @media only screen and (max-width: 920px) {
     .sidebar {

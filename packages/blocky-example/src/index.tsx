@@ -4,6 +4,7 @@ import App from "./app";
 import Documentation, { type DocItem, type Heading } from "./documentations";
 import GetStartedDoc from "./docs/get-started.md?raw";
 import ApiDoc from "./docs/api.md?raw";
+import FaqDoc from "./docs/faq.md?raw";
 
 const appId = "blocky-example-app";
 
@@ -19,7 +20,7 @@ function makeHeadingsByContent(href: string, content: string): Heading[] {
       const title = titleTest[1].trim();
       const suffix = title
         .split(" ")
-        .map((s) => s.toLowerCase())
+        .map((s) => s.toLowerCase().replaceAll(/\?/g, ""))
         .join("-");
       result.push({
         title,
@@ -51,6 +52,7 @@ function makeDocItem(href: string, content: string): DocItem {
 const docItems: DocItem[] = [
   makeDocItem("/doc/get-started", GetStartedDoc),
   makeDocItem("/doc/api", ApiDoc),
+  makeDocItem("/doc/faq", FaqDoc),
 ];
 
 interface RedirectProps {
@@ -76,6 +78,7 @@ render(
       content={docItems[0]}
     />
     <Documentation path="/doc/api" items={docItems} content={docItems[1]} />
+    <Documentation path="/doc/faq" items={docItems} content={docItems[2]} />
     <Redirect path="/doc" to="/doc/get-started" />
   </Router>,
   document.getElementById(appId)!

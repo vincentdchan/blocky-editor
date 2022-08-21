@@ -2,11 +2,22 @@ import ArchImageUrl from "./arch.png?url";
 
 export const ReadMeContent = `
 <p>Blocky Editor is an editor which supports the concept of blocks. It can help you to build an editor like Notion. It's tiny, fast and extensible. You can extend it with blocks.</p>
+<h2>Why?</h2>
+<p>
+  The main goal of this project is to provide an editor which is small and fast enough to be embedded in Notion-like apps.
+</p>
+<p>
+  It doesn't depend on any heavy editor framework, and it handles the complex text-editing details for you.
+</p>
+<p>
+  The developers only need to develop their blocks with their favourite UI frameworks.
+</p>
 <h2>Features</h2>
 <ul>
   <li>Extremely small.</li>
   <li>Extensible. Extend the editor with custom blocks and spans.</li>
   <li>Static typed.</li>
+  <li>Collaborative editing.</li>
 </ul>
 <h2>Packages</h2>
 <p>
@@ -37,20 +48,4 @@ export const ReadMeContent = `
   <li>Microsoft Edge</li>
   <li>Safari</li>
 </ul>
-<h2>FAQ</h2>
-<h3>Why does it use Preact instead of React?</h3>
-<p>
-Because it's small. React(used with ReactDOM) costs nearly 47kb after minified
-and gzipped. And Preact costs 4kb.
-I want the size of the editor to be as small as possible.
-</p>
-<p>
-And Preact is closer to the DOM.
-React has an abstract layer for event handling, which is complicated and unnecessary for the editor.
-</p>
-<p>
-Actually, you can wrap the editor in React/Vue/Angular.
-It's easy to do that.
-I don't have time to do that, and <a href="https://preactjs.com/">Preact</a> is good enough for me.
-</p>
 `;
