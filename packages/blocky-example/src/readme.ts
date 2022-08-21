@@ -27,10 +27,8 @@ export const ReadMeContent = `
 </ul>
 <h2>Resources</h2>
 <ul>
-  <li><a href="https://github.com/vincentdchan/blocky-editor/blob/master/docs/get-started.md">Get started</a></li>
-  <li><a href="https://github.com/vincentdchan/blocky-editor/blob/master/docs/how-to-write-a-block.md">How to write a block</a></li>
-  <li><a href="https://github.com/vincentdchan/blocky-editor/blob/master/docs/data-manipulation.md">Data manipulation</a></li>
-  <li><a href="https://github.com/vincentdchan/blocky-editor/blob/master/docs/follower-widget.md">Follower widget</a></li>
+  <li><a href="https://blocky-editor.dev/doc/get-started">Get started</a></li>
+  <li><a href="https://github.com/vincentdchan/blocky-editor/blob/master/CONTRIBUTING.md">CONTRIBUTING</a></li>
 </ul>
 <h2>Compatibility</h2>
 <p>Tested on</p>
