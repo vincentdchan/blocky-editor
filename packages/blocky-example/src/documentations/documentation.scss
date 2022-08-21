@@ -8,8 +8,13 @@
   .sidebar {
     flex-grow: 0;
     flex-shrink: 0;
-    width: 280px;
+    width: 320px;
     padding: 24px;
+
+    .logo {
+      width: 220px;
+      margin-bottom: 28px;
+    }
   }
   .sidebar-item {
     display: block;

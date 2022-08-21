@@ -1,6 +1,7 @@
 import { Component } from "preact";
 import Markdown from "@pkg/components/markdown";
 import { Link } from "preact-router/match";
+import LogoImg from "./logo.png";
 import "./documentation.scss";
 
 interface DocumentationState {
@@ -18,6 +19,7 @@ class Documentation extends Component<DocumentationProps, DocumentationState> {
   renderSidebar() {
     return (
       <div className="sidebar">
+        <img className="logo" src={LogoImg} />
         <Link href="/doc/get-started" className="sidebar-item">
           Get started
         </Link>
