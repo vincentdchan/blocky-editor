@@ -3,6 +3,7 @@
 Blocky Editor is an editor which supports the concept of blocks. It can help you to build an editor like Notion. It's tiny, fast and extensible. You can extend it with blocks.
 
 [Demo](https://blocky-editor.dev/)
+| [Documentations](https://blocky-editor.dev/doc/get-started)
 
 ## Features
 
@@ -25,10 +26,7 @@ Blocky Editor is an editor which supports the concept of blocks. It can help you
 
 ## Resources
 
-- [Get started](./docs/get-started.md)
-- [How to write a block](./docs/how-to-write-a-block.md)
-- [Data manipulation](./docs/data-manipulation.md)
-- [Follower widget](./docs/follower-widget.md)
+- [Get started](https://blocky-editor.dev/doc/get-started)
 - [Contributing](./CONTRIBUTING.md)
 
 ## Compatibility
