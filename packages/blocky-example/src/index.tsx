@@ -5,6 +5,7 @@ import Documentation, { type DocItem, type Heading } from "./documentations";
 import GetStartedDoc from "./docs/get-started.md?raw";
 import ApiDoc from "./docs/api.md?raw";
 import FaqDoc from "./docs/faq.md?raw";
+import BuiltinPluginsDoc from "./docs/builtin-plugins.md?raw";
 
 const appId = "blocky-example-app";
 
@@ -52,6 +53,7 @@ function makeDocItem(href: string, content: string): DocItem {
 const docItems: DocItem[] = [
   makeDocItem("/doc/get-started", GetStartedDoc),
   makeDocItem("/doc/api", ApiDoc),
+  makeDocItem("/doc/builtin-plugins", BuiltinPluginsDoc),
   makeDocItem("/doc/faq", FaqDoc),
 ];
 
@@ -78,7 +80,12 @@ render(
       content={docItems[0]}
     />
     <Documentation path="/doc/api" items={docItems} content={docItems[1]} />
-    <Documentation path="/doc/faq" items={docItems} content={docItems[2]} />
+    <Documentation
+      path="/doc/builtin-plugins"
+      items={docItems}
+      content={docItems[2]}
+    />
+    <Documentation path="/doc/faq" items={docItems} content={docItems[3]} />
     <Redirect path="/doc" to="/doc/get-started" />
   </Router>,
   document.getElementById(appId)!
