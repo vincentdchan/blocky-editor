@@ -4,34 +4,75 @@ import { Link } from "preact-router/match";
 import LogoImg from "./logo.png";
 import "./documentation.scss";
 
+export interface Heading {
+  title: string;
+  href: string;
+  id: string;
+}
+
+export interface DocItem {
+  href: string;
+  name: string;
+  content: string;
+  headings: Heading[];
+}
+
 interface DocumentationState {
   selectedContent: string;
 }
 
-interface DocumentationProps {
-  content: string;
+export interface DocumentationProps {
+  items: DocItem[];
+  content: DocItem;
 }
 
 class Documentation extends Component<DocumentationProps, DocumentationState> {
   constructor(props: DocumentationProps) {
     super(props);
   }
+  // override componentDidMount() {
+  //   setTimeout(() => {
+  //     const hash = window.location.hash;
+  //     if (hash.length < 1) {
+  //       return;
+  //     }
+  //     const element = document.querySelector(hash);
+  //     if (element) {
+  //       console.log(element);
+  //       element.scrollIntoView({ behavior: "smooth" });
+  //     }
+  //   }, 10);
+  // }
   renderSidebar() {
     return (
       <div className="sidebar">
-        <img className="logo" src={LogoImg} />
-        <Link href="/doc/get-started" className="sidebar-item">
-          Get started
+        <Link href="/">
+          <img className="logo" src={LogoImg} />
         </Link>
-        <Link href="/doc/data-manipulations" className="sidebar-item">
-          Data manipulations
-        </Link>
-        <Link href="/doc/how-to-write-a-block" className="sidebar-item">
-          How to write a block
-        </Link>
-        <Link href="/doc/follower-widget" className="sidebar-item">
-          Follower widget
-        </Link>
+        {this.props.items.map((item) => (
+          <div className="page-item">
+            <Link href={item.href} className="sidebar-item">
+              {item.name}
+            </Link>
+            <div className="headings">
+              {item.headings.map((h) => (
+                <Link
+                  onClick={() => {
+                    const elm = document.getElementById(h.id);
+                    if (!elm) {
+                      return;
+                    }
+                    elm.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  href={h.href}
+                  className="sidebar-item"
+                >
+                  {h.title}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
@@ -39,7 +80,10 @@ class Documentation extends Component<DocumentationProps, DocumentationState> {
     return (
       <div className="blocky-documentations">
         {this.renderSidebar()}
-        <Markdown markdown={this.props.content} />
+        <Markdown
+          className="main-content"
+          markdown={this.props.content.content}
+        />
       </div>
     );
   }
