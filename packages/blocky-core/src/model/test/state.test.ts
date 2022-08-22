@@ -6,9 +6,9 @@ import {
   BlockyDocument,
   BlockyTextModel,
   JSONNode,
+  Delta,
 } from "blocky-data";
 import { EditorState } from "../editorState";
-import Delta from "quill-delta-es";
 
 function makeDefaultUtils() {
   const blockRegistry = new BlockRegistry();

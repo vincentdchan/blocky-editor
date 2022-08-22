@@ -36,7 +36,6 @@ importers:
       is-hotkey: ^0.2.0
       jsdom: ^20.0.0
       lodash-es: ^4.17.21
-      quill-delta-es: ^5.0.2
       tsc-alias: ^1.6.9
       tslib: ^2.4.0
       typescript: ^4.7.3
@@ -47,7 +46,6 @@ importers:
       blocky-data: link:../blocky-data
       is-hotkey: 0.2.0
       lodash-es: 4.17.21
-      quill-delta-es: 5.0.2
     devDependencies:
       '@types/is-hotkey': 0.1.7
       '@types/lodash-es': 4.17.6
@@ -64,13 +62,13 @@ importers:
       '@types/lodash-es': ^4.17.6
       blocky-common: workspace:>=2.3.0
       lodash-es: ^4.17.21
-      quill-delta-es: ^5.0.2
+      quill-delta-es: 5.2.0
       vite: ^2.9.12
       vitest: ^0.14.2
     dependencies:
       blocky-common: link:../blocky-common
       lodash-es: 4.17.21
-      quill-delta-es: 5.0.2
+      quill-delta-es: 5.2.0
     devDependencies:
       '@types/lodash-es': 4.17.6
       vite: 2.9.14
@@ -90,7 +88,6 @@ importers:
       marked: ^4.0.18
       preact: ^10.7.3
       preact-router: ^4.1.0
-      quill-delta-es: ^5.0.2
       sass: ^1.52.3
       vite: ^2.9.12
     dependencies:
@@ -101,7 +98,6 @@ importers:
       highlight.js: 11.6.0
       marked: 4.0.18
       preact-router: 4.1.0_preact@10.9.0
-      quill-delta-es: 5.0.2
     devDependencies:
       '@babel/core': 7.18.6
       '@preact/preset-vite': 2.3.0_owyj5gncrwxzcpyzipbw3bejn4
@@ -2020,12 +2016,11 @@ packages:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
     dev: true
 
-  /quill-delta-es/5.0.2:
-    resolution: {integrity: sha512-oQFnjJvQ3HZ55DW56FaRtbfgWFREKEJIoVVmfcFWDsxWtKIF5kv+JLF4kupEKu3Kzxu9a/7XLqSCFVZRpLIvwQ==}
+  /quill-delta-es/5.2.0:
+    resolution: {integrity: sha512-qYxo6fCo+aBYRY0zkw1+5pj6x0I3N4Z/yb1QAp/6cpJVD+TBTCYrI2onFWIj23eRzN3JVJKHhakJKbGVY4/ASw==}
     engines: {node: '>= 12.0.0'}
     dependencies:
       fast-diff: 1.2.0
-      lodash-es: 4.17.21
     dev: false
 
   /readdirp/3.6.0:

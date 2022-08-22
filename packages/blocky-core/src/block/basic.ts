@@ -7,11 +7,11 @@ import {
   BlockyElement,
   CursorState,
   Changeset,
+  Delta,
 } from "blocky-data";
 import { type Editor } from "@pkg/view/editor";
 import { type EditorController } from "@pkg/view/controller";
 import { elem } from "blocky-common/es/dom";
-import Delta from "quill-delta-es";
 
 export interface BlockDidMountEvent {
   element: HTMLElement;

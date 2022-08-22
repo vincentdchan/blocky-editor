@@ -34,7 +34,6 @@
     "blocky-common": "workspace:>=2.3.0",
     "blocky-data": "workspace:2.8.0",
     "is-hotkey": "^0.2.0",
-    "lodash-es": "^4.17.21",
-    "quill-delta-es": "^5.0.2"
+    "lodash-es": "^4.17.21"
   }
 }

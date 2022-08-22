@@ -20,8 +20,7 @@
     "blocky-preact": "workspace:*",
     "highlight.js": "^11.6.0",
     "marked": "^4.0.18",
-    "preact-router": "^4.1.0",
-    "quill-delta-es": "^5.0.2"
+    "preact-router": "^4.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.2",

@@ -1,4 +1,3 @@
-import Delta from "quill-delta-es";
 import {
   type IBlockDefinition,
   type BlockCreatedEvent,
@@ -9,7 +8,7 @@ import {
   Block,
 } from "./basic";
 import { TextInputEvent } from "@pkg/view/editor";
-import { BlockyTextModel, BlockElement } from "blocky-data";
+import { BlockyTextModel, BlockElement, Delta } from "blocky-data";
 
 export class TitleBlock extends Block {
   static Name = "Title";

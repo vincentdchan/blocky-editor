@@ -2,7 +2,7 @@ import { PureComponent } from "preact/compat";
 import { Panel, SelectablePanel, PanelItem } from "@pkg/components/panel";
 import { type IPlugin, type EditorController, TextBlock } from "blocky-core";
 import { makePreactFollowerWidget } from "blocky-preact";
-import Delta from "quill-delta-es";
+import { Delta } from "blocky-data";
 import "./atPanel.scss";
 
 interface AtPanelProps {

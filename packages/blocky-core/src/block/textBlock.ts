@@ -1,5 +1,4 @@
 import { isString } from "lodash-es";
-import Delta, { Op } from "quill-delta-es";
 import { elem, removeNode, $on } from "blocky-common/es/dom";
 import {
   type IBlockDefinition,
@@ -20,6 +19,8 @@ import {
   BlockElement,
   Changeset,
   TextType,
+  Delta,
+  Op,
 } from "blocky-data";
 import { TextInputEvent, type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";

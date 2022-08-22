@@ -1,7 +1,6 @@
 import { isUpperCase } from "blocky-common/es/character";
 import { Slot } from "blocky-common/es/events";
 import { type Padding } from "blocky-common/es/dom";
-import Delta from "quill-delta-es";
 import { EditorState, NodeTraverser } from "@pkg/model";
 import {
   AttributesObject,
@@ -15,6 +14,7 @@ import {
   blockyNodeFromJsonNode,
   CursorStateUpdateReason,
   ChangesetApplyOptions,
+  Delta,
 } from "blocky-data";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";

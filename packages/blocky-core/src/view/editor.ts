@@ -9,7 +9,6 @@ import {
 } from "blocky-common/es/disposable";
 import { type Position } from "blocky-common/es/position";
 import { debounce, isFunction, isUndefined, isString } from "lodash-es";
-import Delta from "quill-delta-es";
 import { DocRenderer } from "@pkg/view/renderer";
 import { EditorState } from "@pkg/model";
 import {
@@ -25,6 +24,7 @@ import {
   FinalizedChangeset,
   CursorStateUpdateReason,
   TextType,
+  Delta,
 } from "blocky-data";
 import {
   IPlugin,
