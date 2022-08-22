@@ -1,7 +1,6 @@
 import { isWhiteSpace } from "blocky-common/es/text";
 import { type Editor, type IPlugin, TextBlock } from "@pkg/index";
-import { Changeset, TextType } from "blocky-data";
-import Delta from "quill-delta-es";
+import { Changeset, TextType, Delta } from "blocky-data";
 import { isNumber, isString } from "lodash-es";
 
 function makeHeadingsPlugin(): IPlugin {

@@ -1,6 +1,5 @@
 import { isObject } from "lodash-es";
-import Delta from "quill-delta-es";
-import { BlockElement, BlockyTextModel } from "blocky-data";
+import { BlockElement, BlockyTextModel, Delta } from "blocky-data";
 import { TextBlock } from "@pkg/block/textBlock";
 import type { IdGenerator } from "@pkg/helper/idHelper";
 

@@ -1,5 +1,4 @@
 import { isUndefined } from "lodash-es";
-import Delta from "quill-delta-es";
 import { removeNode } from "blocky-common/es/dom";
 import { Slot } from "blocky-common/es/events";
 import {
@@ -12,6 +11,7 @@ import {
   traverseNode,
   CursorState,
   State,
+  Delta,
 } from "blocky-data";
 import { Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
