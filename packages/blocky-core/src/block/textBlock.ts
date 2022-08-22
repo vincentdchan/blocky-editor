@@ -181,6 +181,17 @@ export class TextBlock extends Block {
     return node.textContent?.length ?? 0;
   }
 
+  #createContentContainer(): HTMLElement {
+    const e = elem("div", TextContentClass);
+    e.setAttribute("placeholder", zeroSpaceEmptyChar);
+    return e;
+  }
+
+  #createTextBodyContainer(): HTMLElement {
+    const e = elem("div", "blocky-text-body");
+    return e;
+  }
+
   protected findContentContainer(): HTMLElement {
     const e = this.#contentContainer;
     if (!e) {
@@ -189,23 +200,12 @@ export class TextBlock extends Block {
     return e;
   }
 
-  private createContentContainer(): HTMLElement {
-    const e = elem("div", TextContentClass);
-    e.setAttribute("placeholder", zeroSpaceEmptyChar);
-    return e;
-  }
-
-  private createTextBodyContainer(): HTMLElement {
-    const e = elem("div", "blocky-text-body");
-    return e;
-  }
-
   override blockDidMount({ element }: BlockDidMountEvent): void {
     element.classList.add("blocky-flex");
 
-    this.#bodyContainer = this.createTextBodyContainer();
+    this.#bodyContainer = this.#createTextBodyContainer();
 
-    this.#contentContainer = this.createContentContainer();
+    this.#contentContainer = this.#createContentContainer();
     this.#bodyContainer.append(this.#contentContainer);
 
     element.appendChild(this.#bodyContainer);
@@ -262,8 +262,13 @@ export class TextBlock extends Block {
       if (absoluteOffset <= contentLength) {
         let node = ptr;
         if (node instanceof HTMLSpanElement) {
+          // the cursor is in the embed, return the next
           if (node.contentEditable === "false") {
-            return undefined; // TODO: fix
+            const next = node.nextSibling;
+            if (!next) {
+              return undefined;
+            }
+            return { node: next, offset: 0 };
           }
           if (node.firstChild) {
             node = node.firstChild;
@@ -496,7 +501,7 @@ export class TextBlock extends Block {
     if (oldDataType !== textType) {
       this.#bodyContainer?.removeChild(this.#contentContainer!);
 
-      const newContainer = this.createContentContainer();
+      const newContainer = this.#createContentContainer();
       this.#bodyContainer?.insertBefore(newContainer, null);
       this.#contentContainer = newContainer;
 
@@ -571,6 +576,26 @@ export class TextBlock extends Block {
         next = this.#renderTextSpanByOp(domPtr, prevDom, contentContainer, op);
       } else {
         next = this.#renderEmbedByOp(domPtr, prevDom, contentContainer, op);
+        if (i === len - 1) {
+          // the last element of the delta is an embed, the next must be a '\n'
+          let appendEnding = false;
+          if (next === null) {
+            appendEnding = true;
+          }
+
+          if (next && next.textContent !== "\n") {
+            contentContainer.removeChild(next);
+          }
+
+          if (appendEnding) {
+            const ending = document.createTextNode("\n");
+            contentContainer.appendChild(ending);
+          }
+
+          prevDom = domPtr;
+          domPtr = null;
+          break;
+        }
       }
 
       prevDom = domPtr;
@@ -602,6 +627,11 @@ export class TextBlock extends Block {
   #createEmbedDomByOp(op: Op, editor: Editor): Node {
     const embedContainer = elem("span");
     embedContainer.contentEditable = "false";
+    $on(embedContainer, "click", (evt: MouseEvent) => {
+      evt.preventDefault();
+      // TODO: upload the event
+      // restore the selection
+    });
     embedContainer.appendChild(this.#createNoWrapSpan());
 
     const embed = elem("span");
@@ -702,7 +732,7 @@ export class TextBlock extends Block {
    * delete this node, append to the parent
    */
   override onDedent(): void {
-    const parentBlockElement = this.findParentBlockElement();
+    const parentBlockElement = this.#findParentBlockElement();
     if (!parentBlockElement) {
       return;
     }
@@ -735,7 +765,7 @@ export class TextBlock extends Block {
     change.apply();
   }
 
-  private findParentBlockElement(): BlockElement | undefined {
+  #findParentBlockElement(): BlockElement | undefined {
     let result = this.props.parent;
 
     while (result) {
