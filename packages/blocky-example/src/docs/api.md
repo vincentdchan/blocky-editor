@@ -136,6 +136,8 @@ export class BlockyTextModel implements BlockyNode {
 You can the the `compose` method to submit changes. For example:
 
 ```typescript
+import { Delta } from "blocky-data";
+
 changeset.textEdit(textNode, () => new Delta().insert("Hello world")).apply();
 changeset.textEdit(textNode, () => new Delta().retain(4).delete(1)).apply(); // delete 1 char at the index 4
 ```
