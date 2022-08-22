@@ -194,7 +194,7 @@ export class EditorController {
       return;
     }
     const delta = deltaGen(offset);
-    const appliedLen = delta.changeLength();
+    const appliedLen = delta.changeLength() + offset;
 
     new Changeset(this.state)
       .textEdit(element, "textContent", () => delta)
