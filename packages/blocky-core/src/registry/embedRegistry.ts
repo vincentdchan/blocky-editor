@@ -1,3 +1,4 @@
+import type { IDisposable } from "blocky-common/src/disposable";
 import { Registry } from "./registry";
 
 /**
@@ -6,8 +7,11 @@ import { Registry } from "./registry";
  */
 export interface Embed {
   type: string;
-  onEmbedCreated: (elem: HTMLElement) => void;
-  dispose?: () => void;
+  onEmbedCreated: (elem: HTMLElement) => IDisposable | void;
+}
+
+export interface EmbedNode extends IDisposable {
+  type: string;
 }
 
 export class EmbedRegistry extends Registry<Embed> {
