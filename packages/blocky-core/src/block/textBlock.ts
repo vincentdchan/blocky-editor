@@ -25,8 +25,10 @@ import {
 import { TextInputEvent, type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";
 import { HTMLConverter } from "@pkg/helper/htmlConverter";
-import { EditorController } from "..";
-import { type SpanStyle } from "@pkg/registry/spanRegistry";
+import { EditorController } from "@pkg/view/controller";
+import type { SpanStyle } from "@pkg/registry/spanRegistry";
+import type { EmbedNode } from "@pkg/registry/embedRegistry";
+import { IDisposable } from "blocky-common/src/disposable";
 
 const TextContentClass = "blocky-block-text-content";
 
@@ -617,11 +619,25 @@ export class TextBlock extends Block {
     contentContainer: HTMLElement,
     op: Op
   ): Node | null {
-    if (!domPtr) {
+    if (!domPtr || !this.#domMatchEmbedStruct(domPtr)) {
       domPtr = this.#createEmbedDomByOp(op, this.editor);
-      contentContainer.insertBefore(domPtr, prevDom?.nextSibling ?? null);
+      if (!prevDom) {
+        contentContainer.insertBefore(domPtr, contentContainer.firstChild);
+      } else {
+        contentContainer.insertBefore(domPtr, prevDom?.nextSibling ?? null);
+      }
     }
-    return domPtr.nextSibling ?? null;
+    return domPtr.nextSibling;
+  }
+
+  #domMatchEmbedStruct(domPtr: Node): boolean {
+    if (!(domPtr instanceof HTMLSpanElement)) {
+      return false;
+    }
+    if (domPtr.contentEditable !== "false") {
+      return false;
+    }
+    return true;
   }
 
   #createEmbedDomByOp(op: Op, editor: Editor): Node {
@@ -640,14 +656,23 @@ export class TextBlock extends Block {
     const record = op.insert as Record<string, unknown>;
     const type = record.type as string;
     const embedDef = editor.controller.embedRegistry.embeds.get(type);
+    let disposable: IDisposable | undefined | void;
     if (!embedDef) {
       embed.textContent = "Undefined";
     } else {
-      embedDef.onEmbedCreated(embed);
+      disposable = embedDef.onEmbedCreated(embed);
     }
 
     embedContainer.setAttribute("data-type", type);
     embedContainer.appendChild(this.#createNoWrapSpan());
+
+    const embedNode: EmbedNode = {
+      type,
+      dispose() {
+        disposable?.dispose();
+      },
+    };
+    embedContainer._mgNode = embedNode;
     return embedContainer;
   }
 
