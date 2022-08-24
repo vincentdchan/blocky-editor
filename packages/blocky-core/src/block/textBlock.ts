@@ -1,4 +1,4 @@
-import { isString } from "lodash-es";
+import { isObject, isString } from "lodash-es";
 import { elem, removeNode, $on } from "blocky-common/es/dom";
 import {
   type IBlockDefinition,
@@ -115,6 +115,7 @@ export class TextBlock extends Block {
   #bodyContainer: HTMLElement | null = null;
   #contentContainer: HTMLElement | null = null;
   #leftPadRenderer: LeftPadRenderer | null = null;
+  #embeds: Set<EmbedNode> = new Set();
 
   constructor(props: BlockElement) {
     super(props);
@@ -619,7 +620,7 @@ export class TextBlock extends Block {
     contentContainer: HTMLElement,
     op: Op
   ): Node | null {
-    if (!domPtr || !this.#domMatchEmbedStruct(domPtr)) {
+    if (!domPtr || !this.#domMatchEmbedStruct(op, domPtr)) {
       domPtr = this.#createEmbedDomByOp(op, this.editor);
       if (!prevDom) {
         contentContainer.insertBefore(domPtr, contentContainer.firstChild);
@@ -630,14 +631,18 @@ export class TextBlock extends Block {
     return domPtr.nextSibling;
   }
 
-  #domMatchEmbedStruct(domPtr: Node): boolean {
+  #domMatchEmbedStruct(op: Op, domPtr: Node): boolean {
     if (!(domPtr instanceof HTMLSpanElement)) {
       return false;
     }
     if (domPtr.contentEditable !== "false") {
       return false;
     }
-    return true;
+    if (!isObject(op.insert) || !isString(op.insert.type)) {
+      return false;
+    }
+    const dataType = domPtr.getAttribute("data-type");
+    return op.insert.type === dataType;
   }
 
   #createEmbedDomByOp(op: Op, editor: Editor): Node {
@@ -655,6 +660,11 @@ export class TextBlock extends Block {
 
     const record = op.insert as Record<string, unknown>;
     const type = record.type as string;
+
+    if (isString(type)) {
+      embedContainer.setAttribute("data-type", type);
+    }
+
     const embedDef = editor.controller.embedRegistry.embeds.get(type);
     let disposable: IDisposable | undefined | void;
     if (!embedDef) {
@@ -672,6 +682,7 @@ export class TextBlock extends Block {
         disposable?.dispose();
       },
     };
+    this.#embeds.add(embedNode);
     embedContainer._mgNode = embedNode;
     return embedContainer;
   }
@@ -800,6 +811,14 @@ export class TextBlock extends Block {
 
       result = result.parent;
     }
+  }
+
+  override dispose(): void {
+    for (const embed of this.#embeds) {
+      embed.dispose();
+    }
+    this.#embeds.clear();
+    super.dispose();
   }
 }
 
