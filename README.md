@@ -28,7 +28,7 @@ The developers only need to develop their blocks with their favourite UI framewo
 - Data(![npm](https://img.shields.io/npm/v/blocky-data)): The data structure of the editor. Can be used without browser environment.
 - Core(![npm](https://img.shields.io/npm/v/blocky-core)): The core of the editor. Written in vanilla JS. It can be used standalone without any
   UI frameworks.
-  - Gzipped size: ~32kb
+  - Gzipped size: ~28kb
 - Preact(![npm](https://img.shields.io/npm/v/blocky-preact)): Wrap the editor in [Preact](https://preactjs.com/). Provide the UI facilities such as
   toolbar and banner.
 - [Example](https://blocky-editor.dev/): The example to demonstrate how to use the editor.
