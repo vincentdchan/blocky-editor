@@ -2,6 +2,7 @@
 
 - Export `Delta` from `blocky-data`
 - Export `Embed` plugins
+- Shrink the size to 28kb(minified + gzipped)
 - Fix some issues
 
 ## 2.8.0
