@@ -7,7 +7,7 @@ import { Registry } from "./registry";
  */
 export interface Embed {
   type: string;
-  onEmbedCreated: (elem: HTMLElement) => IDisposable | void;
+  onEmbedCreated: (elem: HTMLElement, embed: any) => IDisposable | void;
 }
 
 export interface EmbedNode extends IDisposable {
