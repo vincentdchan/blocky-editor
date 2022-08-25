@@ -32,6 +32,8 @@ import { type FollowerWidget } from "./followerWidget";
 import type { ThemeData } from "@pkg/model/theme";
 import { isUndefined } from "lodash-es";
 
+const defaultEmptyContent = "Empty content";
+
 export interface IEditorControllerOptions {
   title?: string;
   pluginRegistry?: PluginRegistry;
@@ -64,6 +66,8 @@ export interface IEditorControllerOptions {
    * When the user types, the element will scroll.
    */
   scrollContainer?: HTMLElement | (() => HTMLElement);
+
+  emptyPlaceholder?: string;
 }
 
 export interface IInsertOptions {
@@ -102,6 +106,7 @@ export class EditorController {
   readonly state: EditorState;
   readonly cursorChanged: Slot<CursorChangedEvent> = new Slot();
   readonly beforeApplyCursorChanged: Slot<CursorChangedEvent> = new Slot();
+  readonly emptyPlaceholder: string;
 
   /**
    * A class to control the behavior in the editor
@@ -116,6 +121,7 @@ export class EditorController {
     this.embedRegistry = options?.embedRegistry ?? new EmbedRegistry();
     this.blockRegistry = options?.blockRegistry ?? new BlockRegistry();
     this.idGenerator = options?.idGenerator ?? makeDefaultIdGenerator();
+    this.emptyPlaceholder = options?.emptyPlaceholder ?? defaultEmptyContent;
 
     this.#htmlConverter = new HTMLConverter({
       idGenerator: this.idGenerator,

@@ -217,7 +217,8 @@ export class TextBlock extends Block {
   override blockFocused({ selection, cursor }: BlockFocusedEvent): void {
     const contentContainer = this.findContentContainer();
 
-    contentContainer.setAttribute("placeholder", "Empty content");
+    const emptyPlaceholder = this.editor.controller.emptyPlaceholder;
+    contentContainer.setAttribute("placeholder", emptyPlaceholder);
 
     const { offset } = cursor;
     const pos = this.#findFocusPosition(offset);
@@ -346,12 +347,21 @@ export class TextBlock extends Block {
 
     const beforeDelta = this.textModel.delta;
 
-    const diff = beforeDelta.diff(newDelta, offset);
-    changeset.textEdit(this.props, "textContent", () => diff);
+    try {
+      const diff = beforeDelta.diff(newDelta, offset);
+      changeset.textEdit(this.props, "textContent", () => diff);
 
-    this.editor.addStagedInput(
-      new TextInputEvent(beforeDelta, diff, blockElement)
-    );
+      this.editor.addStagedInput(
+        new TextInputEvent(beforeDelta, diff, blockElement)
+      );
+    } catch (err) {
+      console.error(
+        `[Blocky] diff error ${err}, before:`,
+        beforeDelta,
+        " new: ",
+        newDelta
+      );
+    }
   }
 
   get textModel(): BlockyTextModel {
@@ -582,7 +592,7 @@ export class TextBlock extends Block {
           contentContainer,
           op
         );
-      } else {
+      } else if (isObject(op.insert)) {
         thisNode = this.#renderEmbedByOp(domPtr, prevDom, contentContainer, op);
         if (i === len - 1) {
           // the last element of the delta is an embed, the next must be a '\n'
@@ -608,7 +618,7 @@ export class TextBlock extends Block {
       }
 
       prevDom = thisNode;
-      domPtr = thisNode!.nextSibling;
+      domPtr = thisNode?.nextSibling ?? null;
     }
 
     // remove remaining text
@@ -723,7 +733,7 @@ export class TextBlock extends Block {
       },
     };
     this.#embeds.add(embedNode);
-    embedContainer._mgNode = embedNode;
+    embedContainer._mgEmbed = embedNode;
     return embedContainer;
   }
 

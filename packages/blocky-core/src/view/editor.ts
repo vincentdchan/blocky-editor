@@ -682,14 +682,52 @@ export class Editor {
 
     const change = new Changeset(this.state);
     this.#checkMarkedDom(change, domNode, currentOffset);
-    change.apply({
+    const finalizedChangeset = change.apply({
+      // But there is an special case:
+      // When the line became empty, we need to clear the empty <br/> created
+      // by the browser.
       updateView: false,
     });
+    if (finalizedChangeset) {
+      this.#rerenderEmptyLines(finalizedChangeset);
+    }
     // this is essential because the cursor will change
     // after the user typing.
     this.#handleSelectionChanged(CursorStateUpdateReason.contentChanged);
     this.#debouncedSealUndo();
   };
+
+  /**
+   *
+   * Theoretically, we don't need to re-render after the user typed.
+   * But there is an special case:
+   * When the line became empty, we need to clear the empty <br/> created
+   * by the browser.
+   *
+   * So the editor call the `render` method.
+   *
+   */
+  #rerenderEmptyLines(changeset: FinalizedChangeset) {
+    for (const op of changeset.operations) {
+      if (op.op === "text-edit") {
+        const blockElement = this.state.getBlockElementById(op.id);
+        if (!blockElement) {
+          // has been deleted?
+          continue;
+        }
+        if (blockElement.nodeName === TextBlock.Name) {
+          const textModel = blockElement.getTextModel("textContent")!;
+          if (textModel.length === 0) {
+            const block = this.state.blocks.get(op.id);
+            const dom = this.state.domMap.get(op.id);
+            if (block && dom) {
+              block.render?.(dom as HTMLElement);
+            }
+          }
+        }
+      }
+    }
+  }
 
   placeBannerAt(blockContainer: HTMLElement, node: BlockElement) {
     const block = this.state.blocks.get(node.id);
@@ -1141,16 +1179,26 @@ export class Editor {
   }
 
   handleCursorStateChanged = (evt: CursorStateUpdateEvent) => {
-    if (
-      evt.reason === CursorStateUpdateReason.contentChanged ||
-      evt.reason === CursorStateUpdateReason.uiEvent
-    ) {
+    const sel = window.getSelection();
+    if (!sel) {
       return;
     }
 
     const newState = evt.state;
-    const sel = window.getSelection();
-    if (!sel) {
+
+    if (
+      evt.reason === CursorStateUpdateReason.contentChanged ||
+      evt.reason === CursorStateUpdateReason.uiEvent
+    ) {
+      // Although the selection is submitted by UIEvents,
+      // we don't need to fetch the selection from the browser.
+      // we still need to reset the focused state.
+      if (newState?.isCollapsed && newState.id !== evt.prevState?.id) {
+        const targetNode = this.state.domMap.get(newState.id)!;
+        if (targetNode instanceof HTMLDivElement) {
+          this.#focusBlock(sel, targetNode, newState);
+        }
+      }
       return;
     }
 

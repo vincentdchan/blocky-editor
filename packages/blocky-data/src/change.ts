@@ -281,12 +281,13 @@ export class Changeset {
    * Apply this changeset to the `EditorState`.
    * The editor will render automatically after the changeset is applied.
    */
-  apply(options?: Partial<ChangesetApplyOptions>) {
+  apply(options?: Partial<ChangesetApplyOptions>): FinalizedChangeset | void {
     const finalizedChangeset = this.finalize(options);
     if (finalizedChangeset.operations.length === 0) {
       return;
     }
     this.state.apply(finalizedChangeset);
+    return finalizedChangeset;
   }
 
   finalize(options?: Partial<ChangesetApplyOptions>): FinalizedChangeset {
