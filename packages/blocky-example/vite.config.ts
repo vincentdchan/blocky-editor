@@ -15,7 +15,11 @@ export default defineConfig(() => {
     // base: env.command === 'build'
     //   ? `https://assets-cdn.xindiancad.com/${getVersionQuery()}/`
     //   : '',
-    plugins: [preact()],
+    plugins: [
+      preact({
+        exclude: [/blocky-core/, /node_modules/],
+      }),
+    ],
     resolve: {
       alias: {
         "@pkg": resolveByProjectRootDir("src"),

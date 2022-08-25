@@ -574,14 +574,20 @@ export class TextBlock extends Block {
 
     for (let i = 0, len = textModel.delta.ops.length; i < len; i++) {
       const op = textModel.delta.ops[i];
-      let next: Node | null = null;
+      let thisNode: Node | null = null;
       if (isString(op.insert)) {
-        next = this.#renderTextSpanByOp(domPtr, prevDom, contentContainer, op);
+        thisNode = this.#renderTextSpanByOp(
+          domPtr,
+          prevDom,
+          contentContainer,
+          op
+        );
       } else {
-        next = this.#renderEmbedByOp(domPtr, prevDom, contentContainer, op);
+        thisNode = this.#renderEmbedByOp(domPtr, prevDom, contentContainer, op);
         if (i === len - 1) {
           // the last element of the delta is an embed, the next must be a '\n'
           let appendEnding = false;
+          const next = thisNode?.nextSibling;
           if (next === null) {
             appendEnding = true;
           }
@@ -595,14 +601,14 @@ export class TextBlock extends Block {
             contentContainer.appendChild(ending);
           }
 
-          prevDom = domPtr;
+          prevDom = thisNode;
           domPtr = null;
           break;
         }
       }
 
-      prevDom = domPtr;
-      domPtr = next;
+      prevDom = thisNode;
+      domPtr = thisNode!.nextSibling;
     }
 
     // remove remaining text
@@ -612,6 +618,40 @@ export class TextBlock extends Block {
 
       domPtr = next;
     }
+  }
+
+  // return this element
+  #renderTextSpanByOp(
+    domPtr: Node | null,
+    prevDom: Node | null,
+    contentContainer: HTMLElement,
+    op: Op
+  ): Node | null {
+    if (!domPtr) {
+      domPtr = this.#createDomByOp(op, this.editor);
+      if (!prevDom) {
+        contentContainer.insertBefore(domPtr, contentContainer.firstChild);
+      } else {
+        contentContainer.insertBefore(domPtr, prevDom?.nextSibling ?? null);
+      }
+    } else {
+      // is old
+      if (!this.#isSpanNodeMatch(op, domPtr)) {
+        const oldDom = domPtr;
+        const newNode = this.#createDomByOp(op, this.editor);
+
+        prevDom = domPtr;
+        contentContainer.replaceChild(newNode, oldDom);
+
+        domPtr = newNode;
+      } else {
+        clearNodeAttributes(domPtr);
+        if (domPtr.textContent !== op.insert) {
+          domPtr.textContent = op.insert as string;
+        }
+      }
+    }
+    return domPtr;
   }
 
   #renderEmbedByOp(
@@ -628,7 +668,7 @@ export class TextBlock extends Block {
         contentContainer.insertBefore(domPtr, prevDom?.nextSibling ?? null);
       }
     }
-    return domPtr.nextSibling;
+    return domPtr;
   }
 
   #domMatchEmbedStruct(op: Op, domPtr: Node): boolean {
@@ -670,7 +710,7 @@ export class TextBlock extends Block {
     if (!embedDef) {
       embed.textContent = "Undefined";
     } else {
-      disposable = embedDef.onEmbedCreated(embed);
+      disposable = embedDef.onEmbedCreated(embed, record);
     }
 
     embedContainer.setAttribute("data-type", type);
@@ -691,38 +731,6 @@ export class TextBlock extends Block {
     const result = elem("span");
     result.style.whiteSpace = "nowrap";
     return result;
-  }
-
-  // returns the next element
-  #renderTextSpanByOp(
-    domPtr: Node | null,
-    prevDom: Node | null,
-    contentContainer: HTMLElement,
-    op: Op
-  ): Node | null {
-    if (!domPtr) {
-      domPtr = this.#createDomByOp(op, this.editor);
-      contentContainer.insertBefore(domPtr, prevDom?.nextSibling ?? null);
-    } else {
-      // is old
-      if (!this.#isSpanNodeMatch(op, domPtr)) {
-        const oldDom = domPtr;
-        const newNode = this.#createDomByOp(op, this.editor);
-
-        prevDom = domPtr;
-        const next = domPtr.nextSibling;
-
-        contentContainer.replaceChild(newNode, oldDom);
-
-        return next;
-      } else {
-        clearNodeAttributes(domPtr);
-        if (domPtr.textContent !== op.insert) {
-          domPtr.textContent = op.insert as string;
-        }
-      }
-    }
-    return domPtr.nextSibling;
   }
 
   override onIndent(): void {
