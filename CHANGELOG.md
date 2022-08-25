@@ -1,3 +1,8 @@
+## 2.9.1
+
+- Fix issue of empty placeholder
+- Introduce API `emptyPlaceholder` to the controller's options
+
 ## 2.9.0
 
 - Export `Delta` from `blocky-data`
