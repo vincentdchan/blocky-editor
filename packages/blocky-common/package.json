@@ -4,13 +4,16 @@
   "description": "The common utilities for the blocky editor.",
   "module": "./es",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "vitest",
+    "test:prod": "vitest --run"
   },
   "homepage": "https://github.com/vincentdchan/blocky-editor",
   "keywords": [],
   "author": "Vincent Chan <okcdz@diverse.space>",
   "license": "MIT",
   "devDependencies": {
-    "typescript": "^4.7.3"
+    "typescript": "^4.7.3",
+    "vitest": "^0.14.2"
   }
 }

@@ -23,8 +23,10 @@ importers:
   packages/blocky-common:
     specifiers:
       typescript: ^4.7.3
+      vitest: ^0.14.2
     devDependencies:
       typescript: 4.7.3
+      vitest: 0.14.2
 
   packages/blocky-core:
     specifiers:
