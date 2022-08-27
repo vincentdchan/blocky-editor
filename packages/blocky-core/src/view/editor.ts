@@ -97,6 +97,7 @@ export class TextInputEvent {
     readonly applyDelta: Delta,
     readonly blockElement: BlockElement
   ) {}
+
   get beforeString(): string {
     if (isUndefined(this.#beforeString)) {
       this.#beforeString = this.beforeDelta.reduce((prev, item) => {

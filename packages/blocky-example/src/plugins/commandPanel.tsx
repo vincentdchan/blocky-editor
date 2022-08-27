@@ -26,17 +26,21 @@ class CommandPanel extends PureComponent<CommandPanelProps> {
   constructor(props: CommandPanelProps) {
     super(props);
   }
+
   #handleSelect = (selectedIndex: number) => {
     if (selectedIndex === 0) {
       alert("Command");
     }
   };
+
   #handleClose = () => {
     this.props.closeWidget();
   };
+
   override componentWillUnmount() {
     flattenDisposable(this.disposables).dispose();
   }
+
   render(props: CommandPanelProps): ComponentChild {
     const { editingValue } = props;
     const commandContent = editingValue.slice(1);

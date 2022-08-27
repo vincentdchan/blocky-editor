@@ -225,6 +225,7 @@ export class Changeset {
     });
     return this;
   }
+
   textConcat(
     node: BlockElement,
     propName: string,

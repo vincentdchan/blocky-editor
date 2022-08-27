@@ -80,6 +80,7 @@ class CheckboxRenderer extends LeftPadRenderer {
 
     $on(this.#checkboxContainer, "click", this.#handleClick);
   }
+
   #handleClick = () => {
     const checked = !!this.blockElement.getAttribute("checked");
     new Changeset(this.state)
@@ -88,6 +89,7 @@ class CheckboxRenderer extends LeftPadRenderer {
         refreshCursor: true,
       });
   };
+
   override render(): void {
     const checked = !!this.blockElement.getAttribute("checked");
     if (checked == this.#checked) {

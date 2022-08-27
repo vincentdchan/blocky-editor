@@ -204,6 +204,7 @@ export class State implements ChangesetStateLogger {
       parent.__insertChildAt(index++, blockyNodeFromJsonNode(child));
     }
   }
+
   #applyUpdateOperation(updateOperation: UpdateNodeOperation) {
     const { location, attributes } = updateOperation;
     const node = this.findNodeByLocation(location) as BlockyElement;
@@ -212,6 +213,7 @@ export class State implements ChangesetStateLogger {
       node.__setAttribute(key, value);
     }
   }
+
   #applyRemoveOperation(removeOperation: RemoveNodeOperation) {
     const { location, children } = removeOperation;
     const parentLoc = location.slice(0, location.length - 1);
@@ -219,6 +221,7 @@ export class State implements ChangesetStateLogger {
     const parent = this.findNodeByLocation(parentLoc) as BlockyElement;
     parent.__deleteChildrenAt(index, children.length);
   }
+
   #applyTextEditOperation(textEditOperation: TextEditOperation) {
     const { location, delta } = textEditOperation;
     const node = this.findNodeByLocation(location) as BlockyElement;

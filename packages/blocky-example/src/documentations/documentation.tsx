@@ -30,6 +30,7 @@ class Documentation extends Component<DocumentationProps, DocumentationState> {
   constructor(props: DocumentationProps) {
     super(props);
   }
+
   // override componentDidMount() {
   //   setTimeout(() => {
   //     const hash = window.location.hash;
@@ -93,6 +94,7 @@ class Documentation extends Component<DocumentationProps, DocumentationState> {
       </div>
     );
   }
+
   render() {
     return (
       <div className="blocky-documentations">

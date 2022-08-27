@@ -22,9 +22,11 @@ class AtPanel extends PureComponent<AtPanelProps> {
         })
     );
   };
+
   #handleClose = () => {
     this.props.closeWidget();
   };
+
   render(props: AtPanelProps) {
     return (
       <SelectablePanel
