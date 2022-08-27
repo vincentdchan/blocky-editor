@@ -6,6 +6,7 @@ import {
 import { Slot } from "blocky-common/es/events";
 import type { EditorController } from "./controller";
 import {
+  BlockElement,
   CursorState,
   CursorStateUpdateReason,
   type CursorStateUpdateEvent,
@@ -18,6 +19,7 @@ import {
  */
 export class FollowerWidget extends ContainerWithCoord {
   protected editingValue = "";
+  protected focusedNode: BlockElement | undefined;
   protected disposables: IDisposable[] = [];
   startCursorState: CursorState | undefined;
   readonly disposing: Slot = new Slot();
@@ -42,6 +44,10 @@ export class FollowerWidget extends ContainerWithCoord {
     this.disposables.push(
       controller.state.cursorStateChanged.on(this.#cursorUpdateHandler)
     );
+    const cursor = this.#controller!.state.cursorState;
+    if (cursor) {
+      this.focusedNode = this.#controller!.state.getBlockElementById(cursor.id);
+    }
   }
   #cursorUpdateHandler = (evt: CursorStateUpdateEvent) => {
     if (evt.reason !== CursorStateUpdateReason.contentChanged) {
