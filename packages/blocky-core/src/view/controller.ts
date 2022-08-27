@@ -140,14 +140,14 @@ export class EditorController {
     if (options?.state) {
       this.state = options.state;
     } else {
-      this.state = new EditorState(
+      this.state = new EditorState({
         userId,
-        new BlockyDocument({
+        document: new BlockyDocument({
           title: options?.title,
         }),
-        this.blockRegistry,
-        this.idGenerator
-      );
+        blockRegistry: this.blockRegistry,
+        idGenerator: this.idGenerator,
+      });
     }
   }
 
