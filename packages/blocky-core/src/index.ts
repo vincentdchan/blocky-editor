@@ -10,7 +10,14 @@ export {
   type CollaborativeCursorFactory,
   type CollaborativeCursorClient,
 } from "./view/collaborativeCursors";
-export { type IPlugin } from "./registry/pluginRegistry";
+export { type IPlugin, PluginRegistry } from "./registry/pluginRegistry";
+export { BlockRegistry } from "./registry/blockRegistry";
+export { type SpanStyle, SpanRegistry } from "./registry/spanRegistry";
+export {
+  type Embed,
+  type EmbedNode,
+  EmbedRegistry,
+} from "./registry/embedRegistry";
 export { getTextTypeForTextBlock } from "./block/textBlock";
 export {
   EditorState,

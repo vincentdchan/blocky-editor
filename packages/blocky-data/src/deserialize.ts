@@ -24,7 +24,7 @@ export function blockyNodeFromJsonNode(jsonNode: JSONNode): BlockyNode {
   return blockyElementFromJsonNode(jsonNode);
 }
 
-export function documentFromJsonNode(jsonNode: JSONNode): BlockyElement {
+export function documentFromJsonNode(jsonNode: JSONNode): BlockyDocument {
   const headNode = jsonNode.children![0];
   const bodyNode = jsonNode.children![1];
   if (headNode.nodeName !== "head") {

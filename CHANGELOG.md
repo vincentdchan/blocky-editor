@@ -2,6 +2,7 @@
 
 - Fix issue of empty placeholder
 - Introduce API `emptyPlaceholder` to the controller's options
+- Export `BlockRegistry`, `EmbedRegistry` and `SpanRegistry`
 
 ## 2.9.0
 
