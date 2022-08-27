@@ -1,3 +1,7 @@
+## 2.10.0
+
+- Use `IEditorStateInitOptions` to initialize `EditorState`
+
 ## 2.9.1
 
 - Fix issue of empty placeholder

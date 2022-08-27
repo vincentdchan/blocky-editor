@@ -1,4 +1,3 @@
-import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { expect, test } from "vitest";
 import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import {
@@ -9,12 +8,6 @@ import {
   Delta,
 } from "blocky-data";
 import { EditorState } from "../editorState";
-
-function makeDefaultUtils() {
-  const blockRegistry = new BlockRegistry();
-  const idGenerator = makeDefaultIdGenerator();
-  return { blockRegistry, idGenerator };
-}
 
 function removeId(node: JSONNode) {
   if (node.id) {
@@ -27,7 +20,7 @@ function removeId(node: JSONNode) {
 }
 
 test("serialize", () => {
-  const { blockRegistry, idGenerator } = makeDefaultUtils();
+  const idGenerator = makeDefaultIdGenerator();
   const doc = new BlockyDocument({
     bodyChildren: [
       new BlockElement("Text", idGenerator.mkBlockId(), {
@@ -37,7 +30,11 @@ test("serialize", () => {
       }),
     ],
   });
-  const state = new EditorState("User-1", doc, blockRegistry, idGenerator);
+  const state = new EditorState({
+    userId: "User-1",
+    document: doc,
+    idGenerator,
+  });
   const json = state.toJSON();
   removeId(json);
   expect(json).toEqual({

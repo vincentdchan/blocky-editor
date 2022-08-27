@@ -17,7 +17,15 @@ import { Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { TextBlock } from "@pkg/block/textBlock";
 import { TitleBlock } from "@pkg/block/titleBlock";
-import type { IdGenerator } from "@pkg/helper/idHelper";
+import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
+
+export interface IEditorStateInitOptions {
+  userId: string;
+  document: BlockyDocument;
+  initVersion?: number;
+  blockRegistry?: BlockRegistry;
+  idGenerator?: IdGenerator;
+}
 
 /**
  * This class is used to store all the states
@@ -34,15 +42,16 @@ export class EditorState extends State {
   readonly blocks: Map<string, Block> = new Map();
   readonly newBlockCreated: Slot<Block> = new Slot();
   readonly blockDeleted: Slot<BlockElement> = new Slot();
+  readonly blockRegistry: BlockRegistry;
+  readonly idGenerator: IdGenerator;
   silent = false;
 
-  constructor(
-    userId: string,
-    document: BlockyDocument,
-    readonly blockRegistry: BlockRegistry,
-    readonly idHelper: IdGenerator
-  ) {
-    super(userId, document);
+  constructor(options: IEditorStateInitOptions) {
+    super(options.userId, options.document, options.initVersion);
+    this.blockRegistry = options.blockRegistry ?? new BlockRegistry();
+    this.idGenerator = options.idGenerator ?? makeDefaultIdGenerator();
+    const { document } = options;
+
     traverseNode(document, (node: BlockyNode) => {
       if (node instanceof BlockElement) {
         this.#handleNewBlockMounted(node);
@@ -84,7 +93,7 @@ export class EditorState extends State {
     }
     return new BlockElement(
       TextBlock.Name,
-      this.idHelper.mkBlockId(),
+      this.idGenerator.mkBlockId(),
       attributes,
       children
     );

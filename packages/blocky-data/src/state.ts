@@ -51,10 +51,16 @@ export class State implements ChangesetStateLogger {
   readonly changesetApplied: Slot<FinalizedChangeset> = new Slot();
   readonly versionHistory = new VersionHistory();
   readonly cursorStateChanged: Slot<CursorStateUpdateEvent> = new Slot();
-  #appliedVersion = 0;
+  #appliedVersion: number;
   #cursorState: CursorState | null = null;
 
-  constructor(readonly userId: string, readonly document: BlockyDocument) {}
+  constructor(
+    readonly userId: string,
+    readonly document: BlockyDocument,
+    initVersion = 0
+  ) {
+    this.#appliedVersion = initVersion;
+  }
 
   get cursorState(): CursorState | null {
     return this.#cursorState;

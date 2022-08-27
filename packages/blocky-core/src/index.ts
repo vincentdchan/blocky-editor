@@ -22,6 +22,7 @@ export { getTextTypeForTextBlock } from "./block/textBlock";
 export {
   EditorState,
   NodeTraverser,
+  type IEditorStateInitOptions,
   type ThemeData,
   type ParagraphStyle,
   darkTheme,
