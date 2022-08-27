@@ -29,6 +29,7 @@ export class FollowerWidget extends ContainerWithCoord {
     this.container.contentEditable = "false";
     this.disposables.push(this.disposing);
   }
+
   /**
    * Can be override, specific the y offset
    * from the cursor to the FollowerWidget
@@ -36,9 +37,11 @@ export class FollowerWidget extends ContainerWithCoord {
   get yOffset(): number {
     return 32;
   }
+
   setEditingValue(value: string) {
     this.editingValue = value;
   }
+
   widgetMounted(controller: EditorController): void {
     this.#controller = controller;
     this.disposables.push(
@@ -49,6 +52,7 @@ export class FollowerWidget extends ContainerWithCoord {
       this.focusedNode = this.#controller!.state.getBlockElementById(cursor.id);
     }
   }
+
   #cursorUpdateHandler = (evt: CursorStateUpdateEvent) => {
     if (evt.reason !== CursorStateUpdateReason.contentChanged) {
       this.dispose();
@@ -73,6 +77,7 @@ export class FollowerWidget extends ContainerWithCoord {
     );
     this.setEditingValue(editingValue);
   };
+
   dispose() {
     this.disposing.emit();
     flattenDisposable(this.disposables).dispose();

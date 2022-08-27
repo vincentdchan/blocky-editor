@@ -29,6 +29,7 @@ class Markdown extends Component<MarkdownProps> {
     });
     this.#ref.current!.innerHTML = htmlContent;
   }
+
   override componentWillReceiveProps(nextProps: MarkdownProps) {
     if (this.props.markdown !== nextProps.markdown) {
       const htmlContent = marked.marked(nextProps.markdown, {
@@ -37,6 +38,7 @@ class Markdown extends Component<MarkdownProps> {
       this.#ref.current!.innerHTML = htmlContent;
     }
   }
+
   render(props: MarkdownProps) {
     return <div className={props.className} ref={this.#ref}></div>;
   }

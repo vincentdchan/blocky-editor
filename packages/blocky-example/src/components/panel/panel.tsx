@@ -63,15 +63,18 @@ export class SelectablePanel extends Component<
       selectedIndex: -1,
     };
   }
+
   override componentDidMount() {
     const { editor } = this.props.controller;
     if (editor) {
       this.disposables.push(editor.keyDown.on(this.#handleEditorKeydown));
     }
   }
+
   override componentWillUnmount() {
     flattenDisposable(this.disposables).dispose();
   }
+
   #handleEditorKeydown = (e: KeyboardEvent) => {
     const commandsLength = this.props.length;
     let currentIndex = this.state.selectedIndex;
@@ -105,6 +108,7 @@ export class SelectablePanel extends Component<
       return;
     }
   };
+
   render(props: SelectablePanelProps) {
     return props.children?.(this.state.selectedIndex);
   }

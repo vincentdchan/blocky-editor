@@ -35,12 +35,15 @@ class CollaborativeCursorRect extends ContainerWithCoord {
     this.mouseEnter = Slot.fromEvent(this.container, "mouseenter");
     this.mouseLeave = Slot.fromEvent(this.container, "mouseleave");
   }
+
   setColor(color: string) {
     this.container.style.backgroundColor = color;
   }
+
   setHeight(v: number) {
     this.container.style.height = v + "px";
   }
+
   setWidth(v: number) {
     this.container.style.width = v + "px";
   }

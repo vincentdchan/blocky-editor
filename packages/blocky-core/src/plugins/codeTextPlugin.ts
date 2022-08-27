@@ -14,6 +14,7 @@ class CodeTextDetector {
   ) {
     this.#cursor = startCursorState;
   }
+
   emit(cursorState: CursorState | null): boolean {
     if (cursorState === null) {
       return false;
@@ -25,6 +26,7 @@ class CodeTextDetector {
     this.startCursorState = cursorState;
     return true;
   }
+
   emitNonDot(cursorState: CursorState | null): boolean {
     if (cursorState === null) {
       return false;

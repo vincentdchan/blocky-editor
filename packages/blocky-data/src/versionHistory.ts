@@ -7,10 +7,12 @@ export class VersionHistory {
   constructor(baseVersion = 0) {
     this.#baseVersion = baseVersion;
   }
+
   get(index: number): FinalizedChangeset | undefined {
     index -= this.#baseVersion;
     return this.#data[index];
   }
+
   insert(changeset: FinalizedChangeset) {
     const index = changeset.version;
     if (index < this.#baseVersion) {

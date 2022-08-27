@@ -4,7 +4,8 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   ignorePatterns: [
     "packages/blocky-common/src/hash.ts",
-    "*.js"
+    "*.js",
+    "*.d.ts"
   ],
   plugins: [
     '@typescript-eslint',
@@ -23,6 +24,11 @@ module.exports = {
     "@typescript-eslint/explicit-member-accessibility": [2, {
       accessibility: "no-public"
     }],
+    'lines-between-class-members': [
+      'error',
+      'always',
+      { 'exceptAfterSingleLine': true },
+    ],
     "no-empty": 1
   },
 };

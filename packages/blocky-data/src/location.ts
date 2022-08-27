@@ -19,6 +19,7 @@ export class NodeLocation {
 
     return true;
   }
+
   static transform(
     base: NodeLocation,
     location: NodeLocation,
@@ -47,26 +48,32 @@ export class NodeLocation {
     prefix.push(...suffix);
     return new NodeLocation(prefix);
   }
+
   #hashCode: number | undefined;
   readonly path: readonly number[];
   constructor(path: number[]) {
     this.path = Object.freeze(path);
   }
+
   slice(start: number, end?: number): NodeLocation {
     return new NodeLocation(this.path.slice(start, end));
   }
+
   get last(): number {
     if (this.path.length === 0) {
       throw new Error("Location is empty");
     }
     return this.path[this.path.length - 1];
   }
+
   get length() {
     return this.path.length;
   }
+
   toString() {
     return "[" + this.path.join(", ") + "]";
   }
+
   get hashCode() {
     if (isUndefined(this.#hashCode)) {
       this.#hashCode = hashIntArrays(this.path);
