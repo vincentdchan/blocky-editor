@@ -178,10 +178,13 @@ export class CollaborativeCursor {
       this.#rects.push(cursorRect);
     }
 
+    const firstRect = rects[0];
+    this.#x = firstRect.x;
+    this.#y = firstRect.y;
+
     if (this.#label) {
-      const firstRect = rects[0];
-      this.#label.x = firstRect.x;
-      this.#label.y = firstRect.y - CursorLabel.Height * 1.5;
+      this.#label.x = this.#x;
+      this.#label.y = this.#y - CursorLabel.Height * 1.5;
     }
 
     this.#debouncedShowLabel();

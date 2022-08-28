@@ -40,7 +40,6 @@ class ToolbarMenu extends Component<ToolbarMenuProps, ToolbarMenuState> {
   }
 
   private handleBold = () => {
-    console.log("bold");
     const { editorController } = this.props;
     editorController.formatTextOnSelectedText({
       bold: true,
