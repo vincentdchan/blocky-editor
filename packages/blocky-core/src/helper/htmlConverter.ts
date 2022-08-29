@@ -1,10 +1,13 @@
 import { isObject } from "lodash-es";
 import { BlockElement, BlockyTextModel, Delta } from "blocky-data";
 import { TextBlock } from "@pkg/block/textBlock";
+import { removeLineBreaks } from "blocky-common/es/text";
 import type { IdGenerator } from "@pkg/helper/idHelper";
 
 function createTextElement(id: string, content: string): BlockElement {
-  const textModel = new BlockyTextModel(new Delta().insert(content));
+  const textModel = new BlockyTextModel(
+    new Delta().insert(removeLineBreaks(content))
+  );
   return new BlockElement(TextBlock.Name, id, {
     textContent: textModel,
   });

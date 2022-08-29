@@ -1,5 +1,6 @@
 import { isObject, isString } from "lodash-es";
 import { elem, removeNode, $on } from "blocky-common/es/dom";
+import { removeLineBreaks } from "blocky-common/es/text";
 import {
   type IBlockDefinition,
   type BlockCreatedEvent,
@@ -896,21 +897,21 @@ class TextBlockDefinition implements IBlockDefinition {
 
       while (childPtr) {
         if (childPtr instanceof Text) {
-          delta.insert(normalizeString(childPtr.textContent));
+          delta.insert(removeLineBreaks(childPtr.textContent));
         } else if (childPtr instanceof HTMLElement) {
           if (converter.isContainerElement(childPtr)) {
             const childElements = converter.parseContainerElement(childPtr);
             childrenContainer.push(...childElements);
           } else {
             const attributes = editorController.getAttributesBySpan(childPtr);
-            delta.insert(normalizeString(childPtr.textContent), attributes);
+            delta.insert(removeLineBreaks(childPtr.textContent), attributes);
           }
         }
 
         childPtr = childPtr.nextSibling;
       }
     } else {
-      delta.insert(normalizeString(node.textContent));
+      delta.insert(removeLineBreaks(node.textContent));
     }
     const textModel = new BlockyTextModel(delta);
 
@@ -985,12 +986,4 @@ export function makeTextBlockDefinition(): IBlockDefinition {
 
 export function getTextTypeForTextBlock(blockElement: BlockElement): TextType {
   return parseInt(blockElement.getAttribute("textType") || "0", 10);
-}
-
-// TODO: optimize
-function normalizeString(content: string | null): string {
-  if (content === null) {
-    return "";
-  }
-  return content.replaceAll(/(\\r\\n|\t)/g, "");
 }
