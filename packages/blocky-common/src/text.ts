@@ -1,4 +1,3 @@
-
 export function isWhiteSpace(text: string): boolean {
   if (text === " ") {
     return true;
@@ -9,4 +8,12 @@ export function isWhiteSpace(text: string): boolean {
   }
 
   return false;
+}
+
+// TODO: optimize
+export function removeLineBreaks(content: string | null): string {
+  if (content === null) {
+    return "";
+  }
+  return content.replaceAll(/(\r|\n|\t)/g, "");
 }
