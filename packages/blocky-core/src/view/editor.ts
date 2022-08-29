@@ -12,7 +12,6 @@ import { debounce, isFunction, isUndefined, isString } from "lodash-es";
 import { DocRenderer } from "@pkg/view/renderer";
 import { EditorState } from "@pkg/model";
 import {
-  type AttributesObject,
   type CursorStateUpdateEvent,
   BlockyTextModel,
   BlockyElement,
@@ -34,6 +33,7 @@ import {
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
+import { textToDeltaWithURL } from "@pkg/helper/urlHelper";
 import { BannerDelegate, type BannerFactory } from "./bannerDelegate";
 import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlock } from "@pkg/block/textBlock";
@@ -1380,7 +1380,7 @@ export class Editor {
     }
   };
 
-  #insertTextAtCursor(text: string, attributes?: AttributesObject) {
+  #insertTextAtCursor(text: string) {
     let { cursorState } = this.state;
 
     if (cursorState?.isOpen) {
@@ -1392,7 +1392,10 @@ export class Editor {
       return null;
     }
 
-    const lines = text.split("\n").map((t) => t.replaceAll(/\\r/g, ""));
+    const lines = text
+      .split("\n")
+      .map((t) => t.replaceAll(/\t|\r/g, ""))
+      .map(textToDeltaWithURL);
 
     if (lines.length === 0) {
       return;
@@ -1405,7 +1408,7 @@ export class Editor {
       const afterOffset = cursorState.offset + text.length;
       new Changeset(this.state)
         .textEdit(textElement, "textContent", () =>
-          new Delta().retain(cursorState!.offset).insert(firstLine, attributes)
+          new Delta().retain(cursorState!.offset).concat(firstLine)
         )
         .setCursorState(CursorState.collapse(cursorState.id, afterOffset))
         .apply();
@@ -1414,7 +1417,7 @@ export class Editor {
     }
   }
 
-  #insertMultipleLinesAt(cursorState: CursorState, lines: string[]) {
+  #insertMultipleLinesAt(cursorState: CursorState, lines: Delta[]) {
     if (lines.length <= 1) {
       return;
     }
@@ -1430,12 +1433,11 @@ export class Editor {
       new Delta()
         .retain(cursorState.offset)
         .delete(remainLength)
-        .insert(lines[0])
+        .concat(lines[0])
     );
     const appendElements: BlockElement[] = [];
     for (let i = 1; i < lines.length; i++) {
-      const lineContent = lines[i];
-      let delta: Delta = new Delta().insert(lineContent);
+      let delta = lines[i];
       if (i === lines.length - 1) {
         const lineOriginalLen = delta.length();
         delta = delta.concat(firstLineRemains);

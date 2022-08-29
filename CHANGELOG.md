@@ -1,6 +1,8 @@
 ## 2.10.0
 
 - Use `IEditorStateInitOptions` to initialize `EditorState`
+- Recognize hyperlinks from pasted text
+- Fix some issues
 
 ## 2.9.1
 
