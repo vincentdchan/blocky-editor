@@ -35,8 +35,26 @@ import { isUndefined } from "lodash-es";
 const defaultEmptyContent = "Empty content";
 
 export interface IEditorControllerOptions {
+  /**
+   * The title is used to create the document
+   *
+   * If document is passed, this field is ignored.
+   */
   title?: string;
+
   pluginRegistry?: PluginRegistry;
+
+  /**
+   * The document to create the state
+   *
+   * If this is empty, the controller will create a new one.
+   */
+  document?: BlockyDocument;
+
+  /**
+   * The initial version of the state
+   */
+  initVersion?: number;
 
   /**
    *
@@ -49,7 +67,6 @@ export interface IEditorControllerOptions {
   spanRegistry?: SpanRegistry;
   blockRegistry?: BlockRegistry;
   embedRegistry?: EmbedRegistry;
-  state?: EditorState;
   idGenerator?: IdGenerator;
   bannerFactory?: BannerFactory;
   toolbarFactory?: ToolbarFactory;
@@ -137,18 +154,17 @@ export class EditorController {
     this.blockRegistry.seal();
     this.spanRegistry.seal();
 
-    if (options?.state) {
-      this.state = options.state;
-    } else {
-      this.state = new EditorState({
-        userId,
-        document: new BlockyDocument({
+    this.state = new EditorState({
+      userId,
+      document:
+        options?.document ??
+        new BlockyDocument({
           title: options?.title,
         }),
-        blockRegistry: this.blockRegistry,
-        idGenerator: this.idGenerator,
-      });
-    }
+      initVersion: options?.initVersion,
+      blockRegistry: this.blockRegistry,
+      idGenerator: this.idGenerator,
+    });
   }
 
   get themeData(): ThemeData | undefined {
