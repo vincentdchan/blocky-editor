@@ -22,6 +22,7 @@
     "baseUrl": "src",
     "rootDir": "src",
     "inlineSourceMap": true,
+    "inlineSources": true,
     "composite": true
   },
   // "include": [
