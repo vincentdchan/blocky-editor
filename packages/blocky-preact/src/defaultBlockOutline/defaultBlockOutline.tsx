@@ -6,10 +6,13 @@ import {
 } from "blocky-common/es/disposable";
 import { CursorState, type CursorStateUpdateEvent } from "blocky-data";
 import type { EditorController, CursorChangedEvent } from "blocky-core";
+import { isString } from "lodash-es";
 
 interface DefaultBlockOutlineInternalProps {
   editorController: EditorController;
   blockId: string;
+  outlineColor?: string;
+  focusOutlineColor?: string;
   children?: any;
 }
 
@@ -91,17 +94,25 @@ class DefaultBlockOutlineInternal extends Component<
   };
 
   override render(
-    { children }: DefaultBlockOutlineInternalProps,
+    {
+      children,
+      outlineColor,
+      focusOutlineColor,
+    }: DefaultBlockOutlineInternalProps,
     { showOutline, collaborativeOutlineColor }: InternalState
   ) {
     let style: JSX.CSSProperties | undefined;
     if (showOutline) {
       style = {
-        boxShadow: `0 0 0 1pt ${userFocusedColor}`,
+        boxShadow: `0 0 0 1pt ${focusOutlineColor ?? userFocusedColor}`,
       };
     } else if (typeof collaborativeOutlineColor === "string") {
       style = {
         boxShadow: `0 0 0 1pt ${collaborativeOutlineColor}`,
+      };
+    } else if (isString(outlineColor)) {
+      style = {
+        boxShadow: `0 0 0 1pt ${outlineColor}`,
       };
     }
     return (
@@ -117,6 +128,8 @@ class DefaultBlockOutlineInternal extends Component<
 }
 
 export interface DefaultBlockOutlineProps {
+  outlineColor?: string;
+  focusOutlineColor?: string;
   children?: any;
 }
 
