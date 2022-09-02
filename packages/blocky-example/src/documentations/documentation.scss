@@ -37,7 +37,7 @@
     font-size: 14px;
     padding-top: 4px;
     padding-bottom: 4px;
-    color: black;
+    color: var(--primary-text-color);
     text-decoration: none;
   }
 
@@ -47,6 +47,7 @@
 
   .page-item {
     padding-bottom: 14px;
+    color: var(--primary-text-color);
   }
 
   .main-content {
@@ -54,6 +55,7 @@
     flex-shrink: 0;
     position: relative;
     overflow-y: scroll;
+    color: var(--primary-text-color);
 
     .md-content {
       padding-top: 8px;;

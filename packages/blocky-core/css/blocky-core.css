@@ -3,6 +3,10 @@
     Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 }
 
+.blocky-documents {
+  max-width: 580px;
+}
+
 .blocky-documents:focus {
   outline: none;
 }
@@ -11,6 +15,8 @@
   position: relative;
   --color-neutral-muted: rgba(175, 184, 193, 0.2);
   --blocky-primary-color: black;
+  display: flex;
+  justify-content: center;
 }
 
 .blocky-editor-banner-delegate {

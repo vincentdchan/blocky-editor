@@ -1,6 +1,10 @@
 import { BlockElement } from "blocky-data";
 import { type TryParsePastedDOMEvent, type IPlugin } from "blocky-core";
-import { makeReactBlock, DefaultBlockOutline } from "blocky-preact";
+import {
+  makeReactBlock,
+  DefaultBlockOutline,
+  type ReactBlockRenderProps,
+} from "blocky-preact";
 import { type RefObject, createRef } from "preact";
 import { PureComponent } from "preact/compat";
 import Button from "@pkg/components/button";
@@ -80,7 +84,9 @@ export function makeImageBlockPlugin(): IPlugin {
     blocks: [
       makeReactBlock({
         name: ImageBlockName,
-        component: (data: BlockElement) => <ImageBlock blockElement={data} />,
+        component: (props: ReactBlockRenderProps) => (
+          <ImageBlock blockElement={props.blockElement} />
+        ),
         tryParsePastedDOM(e: TryParsePastedDOMEvent) {
           const { node, editorController } = e;
           const img = node.querySelector("img");

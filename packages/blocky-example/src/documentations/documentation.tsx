@@ -1,7 +1,8 @@
 import { Component } from "preact";
 import Markdown from "@pkg/components/markdown";
+import { ThemeSwitch } from "@pkg/themeSwitch";
 import { Link } from "preact-router/match";
-import LogoImg from "./logo.png";
+import AppLogo from "@pkg/components/appLogo";
 import "./documentation.scss";
 
 export interface Heading {
@@ -48,7 +49,7 @@ class Documentation extends Component<DocumentationProps, DocumentationState> {
     return (
       <div className="sidebar">
         <Link href="/">
-          <img className="logo" src={LogoImg} />
+          <AppLogo />
         </Link>
         <div className="badge-container">
           <a
@@ -67,6 +68,7 @@ class Documentation extends Component<DocumentationProps, DocumentationState> {
             ></img>
           </a>
         </div>
+        <ThemeSwitch />
         {this.props.items.map((item) => (
           <div className="page-item">
             <Link href={item.href} className="sidebar-item">
