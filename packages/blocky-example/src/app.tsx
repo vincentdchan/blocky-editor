@@ -10,6 +10,7 @@ import makeStyledTextPlugin from "blocky-core/dist/plugins/styledTextPlugin";
 import makeCodeTextPlugin from "blocky-core/dist/plugins/codeTextPlugin";
 import makeBulletListPlugin from "blocky-core/dist/plugins/bulletListPlugin";
 import makeHeadingsPlugin from "blocky-core/dist/plugins/headingsPlugin";
+import AppLogo from "@pkg/components/appLogo";
 import { makeImageBlockPlugin } from "./plugins/imageBlock";
 import { makeCommandPanelPlugin } from "./plugins/commandPanel";
 import { makeAtPanelPlugin } from "./plugins/atPanel";
@@ -17,6 +18,8 @@ import BannerMenu from "./bannerMenu";
 import ToolbarMenu from "./toolbarMenu";
 import TianShuiWeiImage from "./tianshuiwei.jpg";
 import { ReadMeContent } from "./readme";
+import { Link } from "preact-router/match";
+import { ThemeSwitch, Theme } from "./themeSwitch";
 import "blocky-core/css/styled-text-plugin.css";
 import "blocky-core/css/blocky-core.css";
 import "./app.scss";
@@ -85,11 +88,7 @@ function makeController(
   });
 }
 
-interface AppState {
-  darkMode: boolean;
-}
-
-class App extends Component<unknown, AppState> {
+class App extends Component<unknown> {
   private editorControllerLeft: EditorController;
   private editorControllerRight: EditorController;
   private containerRef = createRef<HTMLDivElement>();
@@ -146,85 +145,115 @@ class App extends Component<unknown, AppState> {
 
     // paste before the editor initialized
     this.editorControllerLeft.pasteHTMLAtCursor(ReadMeContent);
-
-    this.state = {
-      darkMode: false,
-    };
-  }
-
-  private handleDarkModeChanged = () => {
-    this.setState({
-      darkMode: !this.state.darkMode,
-    });
-  };
-
-  override componentDidUpdate(prevProps: unknown, prevState: AppState) {
-    if (!prevState.darkMode && this.state.darkMode) {
-      document.documentElement.setAttribute("data-theme", "dark");
-      this.editorControllerLeft.themeData = darkTheme;
-      this.editorControllerRight.themeData = darkTheme;
-    } else {
-      document.documentElement.setAttribute("data-theme", "light");
-      this.editorControllerLeft.themeData = undefined;
-      this.editorControllerRight.themeData = undefined;
-    }
   }
 
   render() {
     return (
       <div className="blocky-example-app-window">
-        <div ref={this.containerRef} className="blocky-example-container">
-          <div className="blocky-example-image">
-            <img src={TianShuiWeiImage} />
-          </div>
-          <div class="theme-switch-wrapper">
-            <label class="theme-switch" for="checkbox">
-              <input
-                type="checkbox"
-                id="checkbox"
-                checked={this.state.darkMode}
-                onChange={this.handleDarkModeChanged}
-              />
-              <div class="slider round"></div>
-            </label>
-            <p>Enable Dark Mode</p>
-          </div>
-          <div className="blocky-example-badge-container">
-            <a
-              href="https://github.com/vincentdchan/blocky-editor"
-              target="_blank"
+        <div className="blocky-example-sidebar-container">
+          <header>
+            <Link href="/">
+              <AppLogo />
+            </Link>
+            <div className="blocky-example-badge-container">
+              <a
+                href="https://github.com/vincentdchan/blocky-editor"
+                target="_blank"
+              >
+                <img
+                  alt="GitHub Repo stars"
+                  src="https://img.shields.io/github/stars/vincentdchan/blocky-editor?style=social"
+                />
+              </a>
+            </div>
+            <div
+              className="blocky-example-badge-container"
+              style={{ marginTop: 8 }}
             >
-              <img
-                alt="GitHub Repo stars"
-                src="https://img.shields.io/github/stars/vincentdchan/blocky-editor?style=social"
-              />
-            </a>
-            <a href="https://twitter.com/cdz_solo" target="_blank">
-              <img
-                alt="Twitter Follow"
-                src="https://img.shields.io/twitter/follow/cdz_solo?style=social"
-              ></img>
-            </a>
+              <a href="https://twitter.com/cdz_solo" target="_blank">
+                <img
+                  alt="Twitter Follow"
+                  src="https://img.shields.io/twitter/follow/cdz_solo?style=social"
+                ></img>
+              </a>
+            </div>
+            <ThemeSwitch />
+          </header>
+          <div>
+            <Link className="blocky-example-link" href="/doc/get-started">
+              Get started
+            </Link>
+            <Link className="blocky-example-link" href="/doc/api">
+              Api
+            </Link>
           </div>
-          <div className="blocky-example-editors">
-            <div className="blocky-example-editor-container left">
-              <div className="blocky-example-user">
-                <span style={{ backgroundColor: User1Color }}>User 1</span>
-              </div>
-              <BlockyEditor controller={this.editorControllerLeft} autoFocus />
+        </div>
+        <div ref={this.containerRef} className="blocky-example-container">
+          <div className="blocky-example-editor-container left">
+            <div className="blocky-example-image">
+              <img src={TianShuiWeiImage} />
             </div>
-            <div className="blocky-example-editor-container right">
-              <div className="blocky-example-user">
-                <span style={{ backgroundColor: User2Color }}>User 2</span>
-              </div>
-              <BlockyEditor
-                controller={this.editorControllerRight}
-                ignoreInitEmpty
-              />
+            <Theme.Consumer>
+              {(options) => (
+                <BlockyEditorWithTheme
+                  controller={this.editorControllerLeft}
+                  darkMode={options.darkMode}
+                  autoFocus
+                />
+              )}
+            </Theme.Consumer>
+          </div>
+          <div className="blocky-example-editor-container right">
+            <div className="blocky-example-image">
+              <img src={TianShuiWeiImage} />
             </div>
+            <Theme.Consumer>
+              {(options) => (
+                <BlockyEditorWithTheme
+                  controller={this.editorControllerRight}
+                  darkMode={options.darkMode}
+                  ignoreInitEmpty
+                />
+              )}
+            </Theme.Consumer>
           </div>
         </div>
       </div>
+    );
+  }
+}
+
+interface BlockyEditorWithThemeProps {
+  controller: EditorController;
+  ignoreInitEmpty?: boolean;
+  autoFocus?: boolean;
+  darkMode?: boolean;
+}
+
+class BlockyEditorWithTheme extends Component<BlockyEditorWithThemeProps> {
+  componentDidMount() {
+    if (this.props.darkMode) {
+      this.props.controller.themeData = darkTheme;
+    }
+  }
+
+  componentWillReceiveProps(nextProps: BlockyEditorWithThemeProps) {
+    if (this.props.darkMode !== nextProps.darkMode) {
+      if (nextProps.darkMode) {
+        nextProps.controller.themeData = darkTheme;
+      } else {
+        nextProps.controller.themeData = undefined;
+      }
+    }
+  }
+
+  render(props: BlockyEditorWithThemeProps) {
+    return (
+      <BlockyEditor
+        controller={props.controller}
+        autoFocus={props.autoFocus}
+        ignoreInitEmpty={props.ignoreInitEmpty}
+      />
     );
   }
 }

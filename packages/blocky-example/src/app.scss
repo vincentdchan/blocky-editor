@@ -8,12 +8,43 @@
   justify-content: center;
 }
 
+.blocky-example-sidebar-container {
+  min-width: 260px;
+  border-right-style: solid;
+  border-right-width: 1px;
+  border-right-color: grey;
+
+  header {
+    padding: 0px 28px;
+  }
+
+  .logo {
+    width: 200px;
+    margin-bottom: 18px;
+    margin-top: 28px;
+  }
+}
+
+.blocky-example-link {
+  display: block;
+  height: 28px;
+  line-height: 28px;
+  padding: 0px 28px;
+  color: var(--primary-text-color);
+  text-decoration: none;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 14px;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+}
+
 .blocky-example-container {
-  width: 1280px;
   height: 100%;
-  box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.2);
   overflow-x: hidden;
-  overflow-y: scroll;
+  position: relative;
+  display: flex;
 }
 
 body {
@@ -22,7 +53,6 @@ body {
 }
 
 .blocky-example-badge-container {
-  padding: 0px 56px;
 
   a {
     margin-right: 8px;
@@ -48,14 +78,17 @@ body {
   --primary-text-color: #c3c3bf;
 }
 
-.blocky-example-editors {
-  display: flex;
-}
-
 .blocky-example-editor-container {
   flex: 50%;
   max-width: 50%;
   overflow-x: scroll;
+  overflow-y: scroll;
+
+  &.left {
+    border-right-style: solid;
+    border-right-width: 1px;
+    border-right-color: grey;
+  }
 }
 
 .blocky-example-user {
@@ -74,14 +107,14 @@ body {
 
 /*Simple css to style it like a toggle switch*/
 .theme-switch-wrapper {
-  padding: 0px 56px;
+  margin-top: 14px;
   margin-bottom: 16px;
   display: flex;
   align-items: center;
 
   p {
     margin-left: 10px;
-    font-size: 16px;
+    font-size: 13px;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     color: var(--primary-text-color);
   }
@@ -152,5 +185,9 @@ input:checked + .slider:before {
 
   .blocky-example-editor-container {
     max-width: 100%;
+  }
+
+  .blocky-example-sidebar-container {
+    display: none;
   }
 }

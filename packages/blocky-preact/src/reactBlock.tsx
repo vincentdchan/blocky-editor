@@ -14,9 +14,14 @@ import {
 } from "preact";
 import { unmountComponentAtNode } from "preact/compat";
 
+export interface ReactBlockRenderProps {
+  controller: EditorController;
+  blockElement: BlockElement;
+}
+
 export interface ReactBlockOptions {
   name: string;
-  component: (data: BlockElement) => ComponentChild;
+  component: (props: ReactBlockRenderProps) => ComponentChild;
   tryParsePastedDOM?(e: TryParsePastedDOMEvent): BlockElement | void;
 }
 
@@ -44,7 +49,10 @@ class ReactBlock extends ContentBlock {
       <ReactBlockContext.Provider
         value={{ editorController, blockId: this.props.id }}
       >
-        {component(this.props)}
+        {component({
+          controller: this.editor.controller,
+          blockElement: this.props,
+        })}
       </ReactBlockContext.Provider>,
       this.contentContainer
     );
