@@ -1,3 +1,8 @@
+## 2.11.0
+
+- Add `EditorController` to the props of the renderer in `blocky-preact`
+- Add `max-width` to the content of the body
+
 ## 2.10.0
 
 - Use `IEditorStateInitOptions` to initialize `EditorState`
