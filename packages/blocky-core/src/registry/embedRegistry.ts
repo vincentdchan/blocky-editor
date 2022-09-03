@@ -1,23 +1,27 @@
-import type { IDisposable } from "blocky-common/src/disposable";
 import { Registry } from "./registry";
+
+export interface Embed {
+  dispose?(): void;
+}
+
+export interface EmbedInitOptions {
+  element: HTMLElement;
+  record: any;
+}
 
 /**
  * Embed is an element which is not editable.
  * Such as an calendar reference.
  */
-export interface Embed {
+export interface EmbedDefinition {
   type: string;
-  onEmbedCreated: (elem: HTMLElement, embed: any) => IDisposable | void;
+  new (options: EmbedInitOptions): Embed | void;
 }
 
-export interface EmbedNode extends IDisposable {
-  type: string;
-}
+export class EmbedRegistry extends Registry<EmbedDefinition> {
+  readonly embeds: Map<string, EmbedDefinition> = new Map();
 
-export class EmbedRegistry extends Registry<Embed> {
-  readonly embeds: Map<string, Embed> = new Map();
-
-  register(embed: Embed) {
+  register(embed: EmbedDefinition) {
     this.ensureUnsealed();
     this.embeds.set(embed.type, embed);
   }

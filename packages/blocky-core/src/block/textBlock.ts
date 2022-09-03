@@ -28,8 +28,7 @@ import { type Position } from "blocky-common/es/position";
 import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { EditorController } from "@pkg/view/controller";
 import type { SpanStyle } from "@pkg/registry/spanRegistry";
-import type { EmbedNode } from "@pkg/registry/embedRegistry";
-import { IDisposable } from "blocky-common/src/disposable";
+import type { Embed } from "@pkg/registry/embedRegistry";
 
 const TextContentClass = "blocky-block-text-content";
 
@@ -118,7 +117,7 @@ export class TextBlock extends Block {
   #bodyContainer: HTMLElement | null = null;
   #contentContainer: HTMLElement | null = null;
   #leftPadRenderer: LeftPadRenderer | null = null;
-  #embeds: Set<EmbedNode> = new Set();
+  #embeds: Set<Embed> = new Set();
 
   constructor(props: BlockElement) {
     super(props);
@@ -719,23 +718,21 @@ export class TextBlock extends Block {
     }
 
     const embedDef = editor.controller.embedRegistry.embeds.get(type);
-    let disposable: IDisposable | undefined | void;
+    let embedNode: Embed | undefined | void;
     if (!embedDef) {
+      console.error("Can not find embed type ", type);
       embed.textContent = "Undefined";
     } else {
-      disposable = embedDef.onEmbedCreated(embed, record);
+      embedNode = new embedDef({
+        element: embed,
+        record,
+      });
     }
 
     embedContainer.setAttribute("data-type", type);
     embedContainer.appendChild(this.#createNoWrapSpan());
 
-    const embedNode: EmbedNode = {
-      type,
-      dispose() {
-        disposable?.dispose();
-      },
-    };
-    this.#embeds.add(embedNode);
+    this.#embeds.add(embedNode!);
     embedContainer._mgEmbed = embedNode;
     return embedContainer;
   }
@@ -836,7 +833,7 @@ export class TextBlock extends Block {
 
   override dispose(): void {
     for (const embed of this.#embeds) {
-      embed.dispose();
+      embed.dispose?.();
     }
     this.#embeds.clear();
     super.dispose();
