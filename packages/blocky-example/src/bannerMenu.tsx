@@ -49,7 +49,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
     const { state } = editorController;
     this.disposables.push(
       state.newBlockCreated.on(this.handleBlocksChanged),
-      state.blockDeleted.on(this.handleBlocksChanged)
+      state.blockWillDelete.on(this.handleBlocksChanged)
     );
 
     this.handleBlocksChanged();
