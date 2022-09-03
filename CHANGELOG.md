@@ -1,3 +1,7 @@
+## 2.11.1
+
+- Use hook style for `DefaultBlockOutline`
+
 ## 2.11.0
 
 - Add `EditorController` to the props of the renderer in `blocky-preact`
