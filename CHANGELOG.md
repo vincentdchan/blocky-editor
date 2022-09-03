@@ -1,6 +1,7 @@
 ## 2.11.1
 
 - Use hook style for `DefaultBlockOutline`
+- Fix #61: dispose() wasn't call when the block is deleted directly
 
 ## 2.11.0
 

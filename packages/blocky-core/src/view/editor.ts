@@ -228,6 +228,12 @@ export class Editor {
 
     this.state.beforeChangesetApply.on(this.#handleBeforeChangesetApply);
     this.state.changesetApplied.on(this.#handleChangesetApplied);
+    this.state.blockWillDelete.on((blockElement: BlockElement) => {
+      const dom = this.state.domMap.get(blockElement.id);
+      if (dom) {
+        this.destructBlockNode(dom);
+      }
+    });
 
     this.undoManager = new UndoManager(state);
   }

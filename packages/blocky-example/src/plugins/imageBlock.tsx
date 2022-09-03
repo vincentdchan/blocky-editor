@@ -49,6 +49,10 @@ class ImageBlock extends PureComponent<ImageBlockProps, ImageBlockState> {
     fr.readAsDataURL(files[0]);
   };
 
+  override componentWillUnmount() {
+    console.log("image unmounted");
+  }
+
   renderBlockContent() {
     const { data } = this.state;
     if (typeof data === "undefined") {

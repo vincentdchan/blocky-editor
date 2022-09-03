@@ -1,5 +1,4 @@
 import { isUndefined } from "lodash-es";
-import { removeNode } from "blocky-common/es/dom";
 import { Slot } from "blocky-common/es/events";
 import {
   type AttributesObject,
@@ -41,7 +40,7 @@ export class EditorState extends State {
   readonly domMap: Map<string, Node> = new Map();
   readonly blocks: Map<string, Block> = new Map();
   readonly newBlockCreated: Slot<Block> = new Slot();
-  readonly blockDeleted: Slot<BlockElement> = new Slot();
+  readonly blockWillDelete: Slot<BlockElement> = new Slot();
   readonly blockRegistry: BlockRegistry;
   readonly idGenerator: IdGenerator;
   silent = false;
@@ -123,16 +122,11 @@ export class EditorState extends State {
 
   #unmountBlock(blockElement: BlockElement): boolean {
     const blockId = blockElement.id;
-
-    const dom = this.domMap.get(blockId);
-    if (dom) {
-      removeNode(dom);
-    }
+    this.blockWillDelete.emit(blockElement);
 
     this.#idMap.delete(blockId);
     this.domMap.delete(blockId);
 
-    this.blockDeleted.emit(blockElement);
     return true;
   }
 
