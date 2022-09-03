@@ -14,8 +14,9 @@ export { type IPlugin, PluginRegistry } from "./registry/pluginRegistry";
 export { BlockRegistry } from "./registry/blockRegistry";
 export { type SpanStyle, SpanRegistry } from "./registry/spanRegistry";
 export {
+  type EmbedDefinition,
   type Embed,
-  type EmbedNode,
+  type EmbedInitOptions,
   EmbedRegistry,
 } from "./registry/embedRegistry";
 export { getTextTypeForTextBlock } from "./block/textBlock";

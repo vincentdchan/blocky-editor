@@ -1,6 +1,12 @@
 import { PureComponent } from "preact/compat";
 import { Panel, SelectablePanel, PanelItem } from "@pkg/components/panel";
-import { type IPlugin, type EditorController, TextBlock } from "blocky-core";
+import {
+  type IPlugin,
+  type EditorController,
+  TextBlock,
+  Embed,
+  type EmbedInitOptions,
+} from "blocky-core";
 import { makePreactFollowerWidget } from "blocky-preact";
 import { Delta } from "blocky-data";
 import "./atPanel.scss";
@@ -47,18 +53,18 @@ class AtPanel extends PureComponent<AtPanelProps> {
   }
 }
 
+class MyEmbed implements Embed {
+  static type = "mention";
+  constructor(props: EmbedInitOptions) {
+    props.element.className = "blocky-mention";
+    props.element.textContent = "@Vincent";
+  }
+}
+
 export function makeAtPanelPlugin(): IPlugin {
   return {
     name: "at-panel",
-    embeds: [
-      {
-        type: "mention",
-        onEmbedCreated(elem) {
-          elem.className = "blocky-mention";
-          elem.textContent = "@Vincent";
-        },
-      },
-    ],
+    embeds: [MyEmbed],
     onInitialized(editor) {
       editor.keyDown.on((e: KeyboardEvent) => {
         if (e.key !== "@") {
