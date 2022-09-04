@@ -471,7 +471,6 @@ export class TextBlock extends Block {
     contentContainer: HTMLElement,
     textType: TextType
   ) {
-    console.log("set text type", textType);
     contentContainer.setAttribute("data-type", textType);
     switch (textType) {
       case TextType.Checkbox: {
@@ -495,7 +494,7 @@ export class TextBlock extends Block {
       case TextType.Heading1:
       case TextType.Heading2:
       case TextType.Heading3: {
-        contentContainer.classList.add(`blocky-heading${textType}`);
+        contentContainer.classList.add(`blocky-${textType}`);
         break;
       }
     }
