@@ -1,3 +1,7 @@
+## 2.12.1
+
+- Fix issus of embed data
+
 ## 2.12.0
 
 - New embed API

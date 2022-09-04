@@ -317,11 +317,9 @@ export class TextBlock extends Block {
     const content = node.textContent ?? "";
     if (node instanceof HTMLSpanElement) {
       if (node.contentEditable === "false") {
-        const dataType = node.getAttribute("data-type");
-        if (dataType) {
-          newDelta.insert({
-            type: dataType,
-          });
+        const embedNode: Embed = node._mgNode;
+        if (embedNode) {
+          newDelta.insert(embedNode.record);
         }
       } else {
         const attributes = this.#getAttributeObjectFromElement(node);
@@ -737,6 +735,7 @@ export class TextBlock extends Block {
     } else {
       embedNode = new embedDef({
         element: embed,
+        container: embedContainer,
         record,
       });
       if (embedNode) {
