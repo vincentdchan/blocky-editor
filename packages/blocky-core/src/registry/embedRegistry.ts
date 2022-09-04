@@ -1,6 +1,7 @@
 import { Registry } from "./registry";
 
 export interface Embed {
+  container?: Element;
   dispose?(): void;
 }
 

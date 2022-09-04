@@ -2,7 +2,7 @@
 
 - New embed API
 - Use hook style for `DefaultBlockOutline`
-- Fix #61: dispose() wasn't call when the block is deleted directly
+- Fix some issues
 
 ## 2.11.0
 
