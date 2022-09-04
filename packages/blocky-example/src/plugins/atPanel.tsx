@@ -53,12 +53,13 @@ class AtPanel extends PureComponent<AtPanelProps> {
   }
 }
 
-class MyEmbed implements Embed {
+class MyEmbed extends Embed {
   static type = "mention";
 
   constructor(props: EmbedInitOptions) {
-    props.element.className = "blocky-mention";
-    props.element.textContent = "@Vincent";
+    super(props);
+    this.container.className = "blocky-mention";
+    this.container.textContent = "@Vincent";
   }
 
   dispose() {

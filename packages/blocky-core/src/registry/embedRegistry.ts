@@ -1,11 +1,21 @@
 import { Registry } from "./registry";
 
-export interface Embed {
-  container?: Element;
+export class Embed {
+  container: Element;
+  element: Element;
+  record: Record<string, any>;
+
+  constructor(options: EmbedInitOptions) {
+    this.container = options.container;
+    this.element = options.element;
+    this.record = options.record;
+  }
+
   dispose?(): void;
 }
 
 export interface EmbedInitOptions {
+  container: HTMLElement;
   element: HTMLElement;
   record: any;
 }
