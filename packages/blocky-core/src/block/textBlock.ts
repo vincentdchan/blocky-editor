@@ -317,7 +317,7 @@ export class TextBlock extends Block {
     const content = node.textContent ?? "";
     if (node instanceof HTMLSpanElement) {
       if (node.contentEditable === "false") {
-        const embedNode: Embed = node._mgNode;
+        const embedNode: Embed = node._mgEmbed;
         if (embedNode) {
           newDelta.insert(embedNode.record);
         }
