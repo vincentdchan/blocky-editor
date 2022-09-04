@@ -1,3 +1,7 @@
+## 2.13.0
+
+- Turn `textType` into string
+
 ## 2.12.1
 
 - Fix issus of embed data
