@@ -1,6 +1,6 @@
 import { type CursorStateUpdateEvent } from "blocky-data";
 import { type EditorController, type CursorChangedEvent } from "blocky-core";
-import { useCallback, useEffect, useState } from "preact/hooks";
+import { useEffect, useState, useRef } from "preact/hooks";
 
 export interface BlockActiveDetectorProps {
   controller: EditorController;
@@ -9,23 +9,31 @@ export interface BlockActiveDetectorProps {
 
 export function useBlockActive(props: BlockActiveDetectorProps): boolean {
   const [active, setActive] = useState<boolean>(false);
+  const cursorUpdateHandler = useRef<
+    ((e: CursorStateUpdateEvent) => void) | undefined
+  >(undefined);
 
   const { controller, blockId } = props;
 
-  const handleNewCursorState = useCallback(
-    (evt: CursorStateUpdateEvent) => {
+  useEffect(() => {
+    cursorUpdateHandler.current = (evt: CursorStateUpdateEvent) => {
       const { state } = evt;
       const nextActive =
         state !== null && state.isCollapsed && state.id === blockId;
 
+      if (nextActive === active) {
+        return;
+      }
       setActive(nextActive);
-    },
-    [blockId, active]
-  );
+    };
+  }, [blockId, active]);
 
   useEffect(() => {
-    const disposable =
-      controller.state.cursorStateChanged.on(handleNewCursorState);
+    const disposable = controller.state.cursorStateChanged.on(
+      (e: CursorStateUpdateEvent) => {
+        cursorUpdateHandler.current!(e);
+      }
+    );
     return () => disposable.dispose();
   }, [controller]);
 
@@ -39,8 +47,12 @@ export function useCollaborativeOutlineColor(
     string | undefined
   >(undefined);
   const { controller, blockId } = props;
-  const handleApplyCursorChangedEvent = useCallback(
-    (evt: CursorChangedEvent) => {
+  const applyCursorChangedEventHandler = useRef<
+    ((e: CursorChangedEvent) => void) | undefined
+  >(undefined);
+
+  useEffect(() => {
+    applyCursorChangedEventHandler.current = (evt: CursorChangedEvent) => {
       const { state } = evt;
       const shouldShowOutline =
         state !== null && state.isCollapsed && state.id === props.blockId;
@@ -56,13 +68,14 @@ export function useCollaborativeOutlineColor(
       } else {
         setCollaborativeOutlineColor(undefined);
       }
-    },
-    [controller, blockId]
-  );
+    };
+  }, [controller, blockId]);
 
   useEffect(() => {
     const disposable = controller.beforeApplyCursorChanged.on(
-      handleApplyCursorChangedEvent
+      (evt: CursorChangedEvent) => {
+        applyCursorChangedEventHandler.current!(evt);
+      }
     );
     return () => disposable.dispose();
   }, [controller]);
