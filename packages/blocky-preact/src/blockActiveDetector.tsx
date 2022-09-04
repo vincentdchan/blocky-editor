@@ -1,28 +1,14 @@
 import { type CursorStateUpdateEvent } from "blocky-data";
 import { type EditorController, type CursorChangedEvent } from "blocky-core";
-import {
-  type IDisposable,
-  flattenDisposable,
-} from "blocky-common/es/disposable";
 import { useCallback, useEffect, useState } from "preact/hooks";
-
-export interface BlockActiveResult {
-  active: boolean;
-  collaborativeOutlineColor?: string;
-}
 
 export interface BlockActiveDetectorProps {
   controller: EditorController;
   blockId: string;
 }
 
-export function useBlockActive(
-  props: BlockActiveDetectorProps
-): BlockActiveResult {
+export function useBlockActive(props: BlockActiveDetectorProps): boolean {
   const [active, setActive] = useState<boolean>(false);
-  const [collaborativeOutlineColor, setCollaborativeOutlineColor] = useState<
-    string | undefined
-  >(undefined);
 
   const { controller, blockId } = props;
 
@@ -37,6 +23,22 @@ export function useBlockActive(
     [blockId, active]
   );
 
+  useEffect(() => {
+    const disposable =
+      controller.state.cursorStateChanged.on(handleNewCursorState);
+    return () => disposable.dispose();
+  }, [controller]);
+
+  return active;
+}
+
+export function useCollaborativeOutlineColor(
+  props: BlockActiveDetectorProps
+): string | undefined {
+  const [collaborativeOutlineColor, setCollaborativeOutlineColor] = useState<
+    string | undefined
+  >(undefined);
+  const { controller, blockId } = props;
   const handleApplyCursorChangedEvent = useCallback(
     (evt: CursorChangedEvent) => {
       const { state } = evt;
@@ -59,12 +61,11 @@ export function useBlockActive(
   );
 
   useEffect(() => {
-    const disposables: IDisposable[] = [
-      controller.state.cursorStateChanged.on(handleNewCursorState),
-      controller.beforeApplyCursorChanged.on(handleApplyCursorChangedEvent),
-    ];
-    return () => flattenDisposable(disposables).dispose();
+    const disposable = controller.beforeApplyCursorChanged.on(
+      handleApplyCursorChangedEvent
+    );
+    return () => disposable.dispose();
   }, [controller]);
 
-  return { active, collaborativeOutlineColor };
+  return collaborativeOutlineColor;
 }
