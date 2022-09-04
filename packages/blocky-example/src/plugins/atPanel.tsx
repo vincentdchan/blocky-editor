@@ -55,9 +55,14 @@ class AtPanel extends PureComponent<AtPanelProps> {
 
 class MyEmbed implements Embed {
   static type = "mention";
+
   constructor(props: EmbedInitOptions) {
     props.element.className = "blocky-mention";
     props.element.textContent = "@Vincent";
+  }
+
+  dispose() {
+    console.log("delete mention");
   }
 }
 

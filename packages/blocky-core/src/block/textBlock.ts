@@ -380,10 +380,22 @@ export class TextBlock extends Block {
     }
 
     this.#renderBlockTextContent(container, textModel);
+    this.#checkEmbed();
   }
 
   override renderChildren(): BlockyNode | void | null {
     return this.props.firstChild;
+  }
+
+  #checkEmbed() {
+    const embeds = [...this.#embeds];
+    for (const embed of embeds) {
+      const { container } = embed;
+      if (container && container.parentNode === null) {
+        this.#embeds.delete(embed);
+        embed.dispose?.();
+      }
+    }
   }
 
   #createAnchorNode(href: string): HTMLSpanElement {
@@ -727,6 +739,9 @@ export class TextBlock extends Block {
         element: embed,
         record,
       });
+      if (embedNode) {
+        embedNode.container = embedContainer;
+      }
     }
 
     embedContainer.setAttribute("data-type", type);
