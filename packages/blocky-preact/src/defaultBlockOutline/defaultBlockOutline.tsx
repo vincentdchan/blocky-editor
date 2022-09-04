@@ -3,7 +3,11 @@ import { useCallback } from "preact/hooks";
 import { ReactBlockContext } from "../reactBlock";
 import { CursorState } from "blocky-data";
 import type { EditorController } from "blocky-core";
-import { useBlockActive } from "../blockActiveDetector";
+import {
+  useBlockActive,
+  useCollaborativeOutlineColor,
+  type BlockActiveDetectorProps,
+} from "../blockActiveDetector";
 import { isString } from "lodash-es";
 
 interface DefaultBlockOutlineInternalProps {
@@ -19,10 +23,12 @@ const userFocusedColor = `rgb(52, 184, 220)`;
 
 function DefaultBlockOutlineInternal(props: DefaultBlockOutlineInternalProps) {
   const { focusOutlineColor, outlineColor, editorController, blockId } = props;
-  const { active, collaborativeOutlineColor } = useBlockActive({
+  const detectProps: BlockActiveDetectorProps = {
     controller: editorController,
     blockId: blockId,
-  });
+  };
+  const active = useBlockActive(detectProps);
+  const collaborativeOutlineColor = useCollaborativeOutlineColor(detectProps);
 
   const handleContainerClicked = useCallback(() => {
     editorController.setCursorState(CursorState.collapse(blockId, 0));
