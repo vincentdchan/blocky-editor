@@ -62,21 +62,21 @@
   color: rgb(52, 184, 220);
 }
 
-.blocky-heading1 {
+.blocky-h1 {
   padding-top: 8px;
   padding-bottom: 4px;
   font-size: 32px;
   font-weight: 600;
 }
 
-.blocky-heading2 {
+.blocky-h2 {
   padding-top: 8px;
   padding-bottom: 4px;
   font-size: 28px;
   font-weight: 600;
 }
 
-.blocky-heading3 {
+.blocky-h3 {
   padding-top: 8px;
   padding-bottom: 4px;
   font-size: 24px;

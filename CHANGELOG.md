@@ -1,3 +1,7 @@
+## 2.13.1
+
+- Fix issue of headings
+
 ## 2.13.0
 
 - Turn `textType` into string
