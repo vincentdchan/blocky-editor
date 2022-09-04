@@ -22,6 +22,7 @@ import {
   TextType,
   Delta,
   Op,
+  textTypePrecedence,
 } from "blocky-data";
 import { TextInputEvent, type Editor } from "@pkg/view/editor";
 import { type Position } from "blocky-common/es/position";
@@ -39,10 +40,6 @@ const zeroSpaceEmptyChar = String.fromCharCode(160);
 interface TextPosition {
   node: Node;
   offset: number;
-}
-
-function getTextTypeFromElement(element: BlockyElement): TextType {
-  return parseInt(element.getAttribute("textType") ?? "0", 10);
 }
 
 function textTypeCanIndent(textType: TextType): boolean {
@@ -124,7 +121,7 @@ export class TextBlock extends Block {
   }
 
   private getTextType(): TextType {
-    return getTextTypeFromElement(this.elementData);
+    return getTextTypeForTextBlock(this.elementData as BlockElement);
   }
 
   override getCursorHeight(): number {
@@ -143,8 +140,9 @@ export class TextBlock extends Block {
 
   override getBannerOffset(): Position {
     const textType = this.getTextType();
+    const precedence = textTypePrecedence(textType);
 
-    if (textType > 0) {
+    if (precedence > 0) {
       return { x: 0, y: 12 };
     }
 
@@ -473,7 +471,8 @@ export class TextBlock extends Block {
     contentContainer: HTMLElement,
     textType: TextType
   ) {
-    contentContainer.setAttribute("data-type", textType.toString());
+    console.log("set text type", textType);
+    contentContainer.setAttribute("data-type", textType);
     switch (textType) {
       case TextType.Checkbox: {
         this.#leftPadRenderer = this.#createCheckboxRenderer();
@@ -522,8 +521,7 @@ export class TextBlock extends Block {
       return contentContainer;
     }
 
-    const oldDataType = parseInt(renderedType, 10);
-    if (oldDataType !== textType) {
+    if (renderedType !== textType) {
       this.#bodyContainer?.removeChild(this.#contentContainer!);
 
       const newContainer = this.#createContentContainer();
@@ -758,19 +756,19 @@ export class TextBlock extends Block {
   }
 
   override onIndent(): void {
-    const prevElement = this.props.prevSibling as BlockyElement | undefined;
+    const prevElement = this.props.prevSibling as BlockElement | undefined;
     if (!prevElement) {
       return;
     }
     this.#makeThisTextBlockIndent(prevElement);
   }
 
-  #makeThisTextBlockIndent(prevElement: BlockyElement) {
+  #makeThisTextBlockIndent(prevElement: BlockElement) {
     if (prevElement.nodeName !== TextBlock.Name) {
       return;
     }
 
-    const textType = getTextTypeFromElement(prevElement);
+    const textType = getTextTypeForTextBlock(prevElement);
     if (!textTypeCanIndent(textType)) {
       return;
     }
@@ -902,9 +900,9 @@ class TextBlockDefinition implements IBlockDefinition {
     if (textContentContainer) {
       let childPtr = textContentContainer.firstChild;
 
-      const dataType = textContentContainer.getAttribute("data-type") || "0";
-      const dataTypeInt = parseInt(dataType, 10);
-      attributes.textType = dataTypeInt;
+      const dataType =
+        textContentContainer.getAttribute("data-type") || TextType.Normal;
+      attributes.textType = dataType;
 
       while (childPtr) {
         if (childPtr instanceof Text) {
@@ -996,5 +994,5 @@ export function makeTextBlockDefinition(): IBlockDefinition {
 }
 
 export function getTextTypeForTextBlock(blockElement: BlockElement): TextType {
-  return parseInt(blockElement.getAttribute("textType") || "0", 10);
+  return blockElement.getAttribute("textType") ?? TextType.Normal;
 }
