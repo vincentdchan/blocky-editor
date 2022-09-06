@@ -49,6 +49,8 @@
 }
 
 .blocky-editor-title-container {
+  font-size: 32px;
+  font-weight: 700;
   color: var(--blocky-primary-color);
 }
 
@@ -65,21 +67,21 @@
 .blocky-h1 {
   padding-top: 8px;
   padding-bottom: 4px;
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 600;
 }
 
 .blocky-h2 {
   padding-top: 8px;
   padding-bottom: 4px;
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 600;
 }
 
 .blocky-h3 {
   padding-top: 8px;
   padding-bottom: 4px;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
 }
 
