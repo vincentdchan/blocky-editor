@@ -1,6 +1,8 @@
 ## 2.14.0
 
-- Add `spellcheck` option for `EditorController`
+- Add new options for `EditorController`
+  - `spellcheck`
+  - `titleEditable`
 
 ## 2.13.1
 
