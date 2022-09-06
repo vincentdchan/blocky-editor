@@ -1,12 +1,16 @@
-import { type IDisposable } from "blocky-common/es/disposable";
 import { isUndefined } from "lodash-es";
 import type { EditorController } from "@pkg/view/controller";
 import { UIDelegate } from "./uiDelegate";
 
+export interface Toolbar {
+  yOffset?: number;
+  dispose?(): void;
+}
+
 export type ToolbarFactory = (
   dom: HTMLDivElement,
   controller: EditorController
-) => IDisposable | undefined;
+) => Toolbar | undefined;
 
 const DebounceDelay = 250;
 
@@ -22,6 +26,7 @@ export class ToolbarDelegate extends UIDelegate {
   #y = 0;
   #controller: EditorController;
   #factory?: ToolbarFactory;
+  #toolbar: Toolbar | undefined;
 
   constructor(options: ToolbarDelegateInitOptions) {
     super("blocky-editor-toolbar-delegate blocky-cm-noselect");
@@ -30,17 +35,14 @@ export class ToolbarDelegate extends UIDelegate {
   }
 
   get offsetY(): number {
-    return -16;
+    return this.#toolbar?.yOffset ?? -16;
   }
 
   override mount(parent: HTMLElement): void {
     super.mount(parent);
 
     if (this.#factory) {
-      const disposable = this.#factory(this.container, this.#controller);
-      if (disposable) {
-        this.disposables.push(disposable);
-      }
+      this.#toolbar = this.#factory(this.container, this.#controller);
       this.#enabled = true;
     }
   }
@@ -84,5 +86,11 @@ export class ToolbarDelegate extends UIDelegate {
   setPosition(x: number, y: number) {
     this.#x = x;
     this.#y = y;
+  }
+
+  override dispose(): void {
+    this.#toolbar?.dispose?.();
+    this.#toolbar = undefined;
+    super.dispose();
   }
 }
