@@ -76,18 +76,20 @@ export function makeAtPanelPlugin(): IPlugin {
         if (e.key !== "@") {
           return;
         }
-        const blockElement = editor.controller.getBlockElementAtCursor();
-        if (!blockElement) {
-          return;
-        }
-        if (blockElement.nodeName !== TextBlock.Name) {
-          return;
-        }
-        editor.insertFollowerWidget(
-          makePreactFollowerWidget(({ controller, closeWidget }) => (
-            <AtPanel controller={controller} closeWidget={closeWidget} />
-          ))
-        );
+        editor.controller.enqueueNextTick(() => {
+          const blockElement = editor.controller.getBlockElementAtCursor();
+          if (!blockElement) {
+            return;
+          }
+          if (blockElement.nodeName !== TextBlock.Name) {
+            return;
+          }
+          editor.insertFollowerWidget(
+            makePreactFollowerWidget(({ controller, closeWidget }) => (
+              <AtPanel controller={controller} closeWidget={closeWidget} />
+            ))
+          );
+        });
       });
     },
   };

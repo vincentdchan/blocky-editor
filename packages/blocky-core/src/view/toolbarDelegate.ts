@@ -5,29 +5,39 @@ import { UIDelegate } from "./uiDelegate";
 
 export type ToolbarFactory = (
   dom: HTMLDivElement,
-  editorController: EditorController
+  controller: EditorController
 ) => IDisposable | undefined;
 
 const DebounceDelay = 250;
+
+export interface ToolbarDelegateInitOptions {
+  controller: EditorController;
+  factory?: ToolbarFactory;
+}
 
 export class ToolbarDelegate extends UIDelegate {
   #enabled = false;
   #debounced: any;
   #x = 0;
   #y = 0;
+  #controller: EditorController;
+  #factory?: ToolbarFactory;
 
-  constructor(
-    private editorController: EditorController,
-    private factory?: ToolbarFactory
-  ) {
+  constructor(options: ToolbarDelegateInitOptions) {
     super("blocky-editor-toolbar-delegate blocky-cm-noselect");
+    this.#controller = options.controller;
+    this.#factory = options.factory;
+  }
+
+  get offsetY(): number {
+    return -16;
   }
 
   override mount(parent: HTMLElement): void {
     super.mount(parent);
 
-    if (this.factory) {
-      const disposable = this.factory(this.container, this.editorController);
+    if (this.#factory) {
+      const disposable = this.#factory(this.container, this.#controller);
       if (disposable) {
         this.disposables.push(disposable);
       }

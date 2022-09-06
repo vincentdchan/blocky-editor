@@ -1,4 +1,5 @@
 import { type EditorController, FollowerWidget } from "blocky-core";
+import { isNumber } from "lodash-es";
 import { type ComponentChild, render } from "preact";
 import { unmountComponentAtNode } from "preact/compat";
 
@@ -12,13 +13,29 @@ export type FollowerWidgetRenderer = (
   props: FollowerWidgetProps
 ) => ComponentChild;
 
+export interface PreactFollowWidgetOptions {
+  yOffset?: number;
+}
+
 export class PreactFollowWidget extends FollowerWidget {
   #renderer: FollowerWidgetRenderer;
   #controller: EditorController | undefined;
+  #yOffset: number | undefined;
 
-  constructor(renderer: FollowerWidgetRenderer) {
+  constructor(
+    renderer: FollowerWidgetRenderer,
+    options?: PreactFollowWidgetOptions
+  ) {
     super();
     this.#renderer = renderer;
+    this.#yOffset = options?.yOffset;
+  }
+
+  override get yOffset(): number {
+    if (isNumber(this.#yOffset)) {
+      return this.#yOffset;
+    }
+    return super.yOffset;
   }
 
   override setEditingValue(value: string) {
@@ -50,7 +67,8 @@ export class PreactFollowWidget extends FollowerWidget {
 }
 
 export function makePreactFollowerWidget(
-  renderer: FollowerWidgetRenderer
+  renderer: FollowerWidgetRenderer,
+  options?: PreactFollowWidgetOptions
 ): FollowerWidget {
-  return new PreactFollowWidget(renderer);
+  return new PreactFollowWidget(renderer, options);
 }

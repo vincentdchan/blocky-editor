@@ -286,10 +286,10 @@ export class EditorController {
     return element.id;
   }
 
-  emitNextTicks() {
+  __emitNextTicks() {
     const fns = this.#nextTick;
     if (fns.length > 0) {
-      setTimeout(() => {
+      window.requestAnimationFrame(() => {
         for (const fn of fns) {
           try {
             fn();
@@ -297,7 +297,7 @@ export class EditorController {
             console.error(err);
           }
         }
-      }, 0);
+      });
     }
     this.#nextTick = [];
   }

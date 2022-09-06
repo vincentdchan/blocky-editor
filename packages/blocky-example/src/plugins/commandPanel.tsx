@@ -43,7 +43,7 @@ class CommandPanel extends PureComponent<CommandPanelProps> {
 
   render(props: CommandPanelProps): ComponentChild {
     const { editingValue } = props;
-    const commandContent = editingValue.slice(1);
+    const commandContent = editingValue;
     return (
       <SelectablePanel
         onSelect={this.#handleSelect}
@@ -74,24 +74,27 @@ export function makeCommandPanelPlugin(): IPlugin {
         if (e.key !== "/") {
           return;
         }
-        const blockElement = editor.controller.getBlockElementAtCursor();
-        if (!blockElement) {
-          return;
-        }
-        if (blockElement.nodeName !== TextBlock.Name) {
-          return;
-        }
-        editor.insertFollowerWidget(
-          makePreactFollowerWidget(
-            ({ controller, editingValue, closeWidget }) => (
-              <CommandPanel
-                controller={controller}
-                editingValue={editingValue}
-                closeWidget={closeWidget}
-              />
+
+        editor.controller.enqueueNextTick(() => {
+          const blockElement = editor.controller.getBlockElementAtCursor();
+          if (!blockElement) {
+            return;
+          }
+          if (blockElement.nodeName !== TextBlock.Name) {
+            return;
+          }
+          editor.insertFollowerWidget(
+            makePreactFollowerWidget(
+              ({ controller, editingValue, closeWidget }) => (
+                <CommandPanel
+                  controller={controller}
+                  editingValue={editingValue}
+                  closeWidget={closeWidget}
+                />
+              )
             )
-          )
-        );
+          );
+        });
       });
     },
   };
