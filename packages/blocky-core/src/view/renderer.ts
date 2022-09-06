@@ -86,6 +86,10 @@ export class DocRenderer {
         const { right, left } = padding;
         elem.style.paddingLeft = `${left}px`;
         elem.style.paddingRight = `${right}px`;
+
+        if (this.editor.controller?.options?.titleEditable === false) {
+          elem.contentEditable = "false";
+        }
       }
     );
     this.renderTitle(titleContainer, document.title);

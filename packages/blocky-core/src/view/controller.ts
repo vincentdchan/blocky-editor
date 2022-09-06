@@ -53,6 +53,8 @@ export interface IEditorControllerOptions {
 
   /**
    * The initial version of the state
+   *
+   * Default: 0
    */
   initVersion?: number;
 
@@ -93,6 +95,13 @@ export interface IEditorControllerOptions {
    * Default: true
    */
   spellcheck?: boolean;
+
+  /**
+   * Define whether the title is editable
+   *
+   * Default: true
+   */
+  titleEditable?: boolean;
 }
 
 export interface IInsertOptions {
