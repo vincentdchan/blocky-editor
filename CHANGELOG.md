@@ -3,7 +3,7 @@
 - Add new options for `EditorController`
   - `spellcheck`
   - `titleEditable`
-- Customize the height of the follower widget
+- Customize the height of the follower widget/toolbar
 - Fix issue of the follower widget
 
 ## 2.13.1
