@@ -371,6 +371,9 @@ export class Editor {
     if (!this.#renderedDom) {
       this.#container.appendChild(newDom);
       newDom.contentEditable = "true";
+      if (this.controller.options?.spellcheck === false) {
+        newDom.spellcheck = false;
+      }
 
       $on(newDom, "input", () => {
         if (this.composing) {

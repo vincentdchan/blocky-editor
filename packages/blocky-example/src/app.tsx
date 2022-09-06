@@ -85,6 +85,8 @@ function makeController(
     }),
 
     scrollContainer,
+
+    spellcheck: false,
   });
 }
 
