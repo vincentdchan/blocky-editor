@@ -90,7 +90,6 @@ function makeCodeTextPlugin(): IPlugin {
                       )
                       .apply();
                   });
-                  editor.controller.emitNextTicks();
                 }
               );
             }

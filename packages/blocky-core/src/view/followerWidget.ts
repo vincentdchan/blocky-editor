@@ -28,6 +28,8 @@ export class FollowerWidget extends ContainerWithCoord {
     super("blocky-follow-widget");
     this.container.contentEditable = "false";
     this.disposables.push(this.disposing);
+    this.x = -1000;
+    this.y = -1000;
   }
 
   /**

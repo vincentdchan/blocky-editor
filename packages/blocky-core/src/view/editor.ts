@@ -207,7 +207,10 @@ export class Editor {
     this.bannerDelegate.mount(this.#container);
     this.disposables.push(this.bannerDelegate);
 
-    this.toolbarDelegate = new ToolbarDelegate(controller, toolbarFactory);
+    this.toolbarDelegate = new ToolbarDelegate({
+      controller,
+      factory: toolbarFactory,
+    });
     this.toolbarDelegate.mount(this.#container);
     this.disposables.push(this.toolbarDelegate);
 
@@ -397,7 +400,7 @@ export class Editor {
       this.#handleSelectionChanged(CursorStateUpdateReason.contentChanged);
     }
 
-    this.controller.emitNextTicks();
+    this.controller.__emitNextTicks();
   }
 
   #handleEditorBlur = () => {
@@ -598,7 +601,8 @@ export class Editor {
     }
 
     const x = rect.x - containerRect.x;
-    const y = rect.y - containerRect.y - rect.height - 12;
+    const y =
+      rect.y - containerRect.y - rect.height + this.toolbarDelegate.offsetY;
 
     this.toolbarDelegate.setPosition(x, y);
 
@@ -990,7 +994,8 @@ export class Editor {
   #handleChangesetApplied = (changeset: FinalizedChangeset) => {
     const { options } = changeset;
     const isThisUser = changeset.userId === this.controller.userId;
-    if (options.updateView || changeset.forceUpdate) {
+    const needsRender = options.updateView || changeset.forceUpdate;
+    if (needsRender) {
       this.render(() => {
         if (!isThisUser) {
           return;
@@ -1027,6 +1032,10 @@ export class Editor {
     }
 
     this.#emitStagedInput();
+
+    if (!needsRender) {
+      this.controller.__emitNextTicks();
+    }
   };
 
   openExternalLink(link: string) {
