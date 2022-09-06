@@ -1,3 +1,7 @@
+## 2.14.0
+
+- Add `spellcheck` option for `EditorController`
+
 ## 2.13.1
 
 - Fix issue of headings

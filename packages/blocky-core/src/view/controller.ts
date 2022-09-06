@@ -85,6 +85,14 @@ export interface IEditorControllerOptions {
   scrollContainer?: HTMLElement | (() => HTMLElement);
 
   emptyPlaceholder?: string;
+
+  /**
+   * If this is set to false, the spellcheck of the browser
+   * will be disabled.
+   *
+   * Default: true
+   */
+  spellcheck?: boolean;
 }
 
 export interface IInsertOptions {
