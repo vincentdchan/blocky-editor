@@ -323,12 +323,28 @@ export class EditorController {
 
     const changeset = new Changeset(this.state);
     const states = this.state.splitCursorStateByBlocks(cursorState);
+    const attribKeys = attribs ? Object.keys(attribs) : [];
 
     for (const state of states) {
       const blockElement = this.state.getBlockElementById(state.endId)!;
       if (blockElement.nodeName !== TextBlock.Name) {
         continue;
       }
+
+      const currentText = blockElement.getTextModel("textContent")!;
+      const prevDelta = currentText.delta.slice(
+        state.startOffset,
+        state.endOffset
+      );
+      if (prevDelta.ops.length === 1 && attribs) {
+        const op = prevDelta.ops[0];
+        for (const key of attribKeys) {
+          if (op.attributes && op.attributes[key]) {
+            attribs[key] = null;
+          }
+        }
+      }
+
       changeset.textEdit(blockElement, "textContent", () =>
         new Delta()
           .retain(state.startOffset)
