@@ -1039,6 +1039,15 @@ export class Editor {
   };
 
   openExternalLink(link: string) {
+    const launcher = this.controller.options?.urlLauncher;
+    if (launcher) {
+      try {
+        launcher(link);
+      } catch (err) {
+        console.error(err);
+      }
+      return;
+    }
     // TODO: handle this in plugin
     window.open(link, "_blank")?.focus();
   }

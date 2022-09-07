@@ -102,6 +102,11 @@ export interface IEditorControllerOptions {
    * Default: true
    */
   titleEditable?: boolean;
+
+  /**
+   * The method used to open external links
+   */
+  urlLauncher?: (url: string) => void;
 }
 
 export interface IInsertOptions {
