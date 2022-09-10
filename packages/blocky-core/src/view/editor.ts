@@ -865,6 +865,16 @@ export class Editor {
     }
   }
 
+  #insertEmptyTextBeforeBlock(element: BlockElement) {
+    const newTextElement = this.state.createTextElement();
+    const parent = element.parent!;
+
+    new Changeset(this.state)
+      .insertChildrenAfter(parent, [newTextElement], element.prevSibling)
+      .setCursorState(CursorState.collapse(element.id, 0))
+      .apply();
+  }
+
   #insertEmptyTextAfterBlock(parent: BlockyElement, afterId: string) {
     const newTextElement = this.state.createTextElement();
     const currentBlock = this.state.getBlockElementById(afterId);
@@ -903,6 +913,14 @@ export class Editor {
     const textModel = blockElement.getTextModel("textContent")!;
 
     const cursorOffset = cursorState.offset;
+
+    // If the currentOffset are 0, we don't want to split
+    // the text into two lines.
+    // Insert an empty line before this line will be better.
+    if (cursorOffset === 0) {
+      this.#insertEmptyTextBeforeBlock(blockElement);
+      return;
+    }
 
     const slices = textModel.delta.slice(cursorOffset);
 
