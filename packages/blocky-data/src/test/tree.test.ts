@@ -1,5 +1,6 @@
 import { test, expect, describe } from "vitest";
-import { BlockyElement } from "..";
+import { BlockyElement, BlockyTextModel } from "..";
+import Delta from "quill-delta-es";
 
 test("tree append", () => {
   const parent = new BlockyElement("block");
@@ -131,5 +132,35 @@ describe("toJSON()", () => {
     expect(() => {
       element.__setAttribute("nodeName", "123");
     }).toThrow("'nodeName' is preserved");
+  });
+});
+
+describe("describe", () => {
+  test("length cache", () => {
+    const model = new BlockyTextModel(new Delta().insert("aaa"));
+    expect(model.length).toBe(3);
+    model.__applyDelta(new Delta().insert("a"));
+    expect(model.length).toBe(4);
+  });
+  test("length embed", () => {
+    const model = new BlockyTextModel(new Delta().insert("a"));
+    expect(model.length).toBe(1);
+    model.__applyDelta(new Delta().insert({ bold: true }));
+    expect(model.length).toBe(2);
+  });
+  test("charAt", () => {
+    const model = new BlockyTextModel(new Delta().insert("abc"));
+    expect(model.charAt(0)).toBe("a");
+    expect(model.charAt(1)).toBe("b");
+    expect(model.charAt(2)).toBe("c");
+  });
+  test("charAt embed", () => {
+    const model = new BlockyTextModel(
+      new Delta().insert("abc").insert({ bold: true }).insert("efg")
+    );
+    expect(model.charAt(3)).toEqual({ bold: true });
+    expect(model.charAt(4)).toEqual("e");
+    expect(model.charAt(5)).toEqual("f");
+    expect(model.charAt(6)).toEqual("g");
   });
 });

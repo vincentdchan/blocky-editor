@@ -3,7 +3,7 @@
  * Do NOT split them into several files.
  * It will cause strange compilation errors by Vite.
  */
-import { isUndefined } from "lodash-es";
+import { isUndefined, isString, isObject } from "lodash-es";
 import { Slot } from "blocky-common/es/events";
 import Delta from "quill-delta-es";
 import type { ElementChangedEvent } from "./events";
@@ -47,6 +47,7 @@ export interface BlockyNode {
 export class BlockyTextModel {
   #delta = new Delta();
   #cachedString: string | undefined;
+  #cachedLength: number | undefined;
 
   constructor(delta?: Delta) {
     this.#delta = delta ?? new Delta();
@@ -54,6 +55,34 @@ export class BlockyTextModel {
 
   get delta(): Delta {
     return this.#delta;
+  }
+
+  /**
+   * Return the char at the index of the delta.
+   * If the position is not a char(an embed), return null
+   */
+  charAt(index: number): string | Record<string, unknown> | undefined {
+    if (index < 0 || index > this.length) {
+      return undefined;
+    }
+
+    for (const op of this.#delta.ops) {
+      if (isString(op.insert)) {
+        if (index < op.insert.length) {
+          return op.insert[index];
+        }
+
+        index -= op.insert.length;
+      } else if (isObject(op.insert)) {
+        if (index === 0) {
+          return op.insert;
+        }
+
+        index--;
+      }
+    }
+
+    return undefined;
   }
 
   /**
@@ -66,7 +95,7 @@ export class BlockyTextModel {
     const newDelta = oldDelta.compose(v);
     this.#delta = newDelta;
     this.#cachedString = undefined;
-    // this.changed.emit({ oldDelta, newDelta });
+    this.#cachedLength = undefined;
   }
 
   toString(): string {
@@ -86,7 +115,17 @@ export class BlockyTextModel {
   }
 
   get length() {
-    return this.#delta.length();
+    if (isUndefined(this.#cachedLength)) {
+      this.#cachedLength = this.#delta.reduce((acc, op) => {
+        if (isString(op.insert)) {
+          return acc + op.insert.length;
+        } else if (isObject(op.insert)) {
+          return acc + 1;
+        }
+        return acc;
+      }, 0);
+    }
+    return this.#cachedLength;
   }
 
   clone(): BlockyTextModel {
