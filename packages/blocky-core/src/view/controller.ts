@@ -36,6 +36,11 @@ const defaultEmptyContent = "Empty content";
 
 export interface IEditorControllerOptions {
   /**
+   * Define if title block should be used.
+   */
+  hasTitle: boolean;
+
+  /**
    * The title is used to create the document
    *
    * If document is passed, this field is ignored.
@@ -97,7 +102,8 @@ export interface IEditorControllerOptions {
   spellcheck?: boolean;
 
   /**
-   * Define whether the title is editable
+   * Define whether the title is editable.
+   * If `hasTitle` is set to false, this field is ignored.
    *
    * Default: true
    */

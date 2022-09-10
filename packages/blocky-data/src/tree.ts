@@ -560,13 +560,15 @@ export class BlockElement extends BlockyElement {
 }
 
 export interface DocumentInitProps {
-  title?: string;
-  head?: BlockyElement;
-  body?: BlockyElement;
+  hasTitle: boolean;
+  title: string;
+  head: BlockyElement;
+  body: BlockyElement;
   bodyChildren: BlockyNode[];
 }
 
 export class BlockyDocument extends BlockyElement {
+  readonly hasTitle: boolean;
   readonly title: BlockElement;
   readonly head: BlockyElement;
   readonly body: BlockyElement;
@@ -574,9 +576,12 @@ export class BlockyDocument extends BlockyElement {
   readonly blockElementAdded = new Slot<BlockElement>();
   readonly blockElementRemoved = new Slot<BlockElement>();
 
-  constructor(props?: Partial<DocumentInitProps>) {
+  constructor(props: Partial<DocumentInitProps> = {}) {
+    // document has title unless explictly set to false
+    const hasTitle = props?.hasTitle === false ? false : true;
     let title: BlockElement;
     let head: BlockyElement | undefined = props?.head;
+
     if (isUndefined(head)) {
       title = new BlockElement("Title", "title", {
         textContent: props?.title
@@ -594,13 +599,16 @@ export class BlockyDocument extends BlockyElement {
     const body =
       props?.body ??
       new BlockyElement("body", undefined, props?.bodyChildren ?? []);
-    super("document", undefined, [head, body]);
+    super("document", undefined, head ? [head, body] : [body]);
 
+    this.hasTitle = hasTitle;
     this.title = title;
     this.head = head;
     this.body = body;
 
-    this.reportBlockyNodeInserted(this.head);
+    if (this.hasTitle && this.head) {
+      this.reportBlockyNodeInserted(this.head);
+    }
     this.reportBlockyNodeInserted(this.body);
   }
 

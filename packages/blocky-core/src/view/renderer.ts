@@ -76,26 +76,30 @@ export class DocRenderer {
     dom._mgNode = document;
 
     const { clsPrefix } = this;
-    const titleContainer = ensureChild(
-      dom,
-      0,
-      "div",
-      `${clsPrefix}-editor-title-container ${this.blockClassName}`,
-      (elem: HTMLElement) => {
-        const { padding } = this.editor;
-        const { right, left } = padding;
-        elem.style.paddingLeft = `${left}px`;
-        elem.style.paddingRight = `${right}px`;
 
-        if (this.editor.controller?.options?.titleEditable === false) {
-          elem.contentEditable = "false";
+    if (document.hasTitle) {
+      const titleContainer = ensureChild(
+        dom,
+        0,
+        "div",
+        `${clsPrefix}-editor-title-container ${this.blockClassName}`,
+        (elem: HTMLElement) => {
+          const { padding } = this.editor;
+          const { right, left } = padding;
+          elem.style.paddingLeft = `${left}px`;
+          elem.style.paddingRight = `${right}px`;
+
+          if (this.editor.controller?.options?.titleEditable === false) {
+            elem.contentEditable = "false";
+          }
         }
-      }
-    );
-    this.renderTitle(titleContainer, document.title);
+      );
+      this.renderTitle(titleContainer, document.title);
+    }
+
     const blocksContainer = ensureChild(
       dom,
-      1,
+      document.hasTitle ? 1 : 0,
       "div",
       `${clsPrefix}-editor-blocks-container`,
       (elem: HTMLElement) => {
