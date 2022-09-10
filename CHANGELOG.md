@@ -2,6 +2,7 @@
 
 - Provide `charAt` for BlockyTextModel #64
 - Fix #63: press enter at the beginning of the headings
+- Fix: Scroll into view after pasted text
 
 ## 2.14.0
 
