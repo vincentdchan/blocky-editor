@@ -593,6 +593,8 @@ export class EditorController {
     }
     changeset.insertChildrenAfter(parent, insertChildren, prev);
     changeset.apply();
+
+    this.editor?.scrollInViewIfNeed();
   }
 
   #leafHandler = (node: Node): BlockElement | void => {

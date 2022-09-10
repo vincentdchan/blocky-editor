@@ -93,7 +93,8 @@ function makeController(
 class App extends Component<unknown> {
   private editorControllerLeft: EditorController;
   private editorControllerRight: EditorController;
-  private containerRef = createRef<HTMLDivElement>();
+  private containerLeftRef = createRef<HTMLDivElement>();
+  private containerRightRef = createRef<HTMLDivElement>();
 
   constructor(props: unknown) {
     super(props);
@@ -101,13 +102,13 @@ class App extends Component<unknown> {
     this.editorControllerLeft = makeController(
       "User-1",
       "Blocky Editor",
-      () => this.containerRef.current!
+      () => this.containerLeftRef.current!
     );
 
     this.editorControllerRight = makeController(
       "User-2",
       "Blocky Editor",
-      () => this.containerRef.current!
+      () => this.containerRightRef.current!
     );
 
     this.editorControllerLeft.state.changesetApplied.on((changeset) => {
@@ -190,8 +191,11 @@ class App extends Component<unknown> {
             </Link>
           </div>
         </div>
-        <div ref={this.containerRef} className="blocky-example-container">
-          <div className="blocky-example-editor-container left">
+        <div className="blocky-example-container">
+          <div
+            ref={this.containerLeftRef}
+            className="blocky-example-editor-container left"
+          >
             <div className="blocky-example-image">
               <img src={TianShuiWeiImage} />
             </div>
@@ -205,7 +209,10 @@ class App extends Component<unknown> {
               )}
             </Theme.Consumer>
           </div>
-          <div className="blocky-example-editor-container right">
+          <div
+            ref={this.containerRightRef}
+            className="blocky-example-editor-container right"
+          >
             <div className="blocky-example-image">
               <img src={TianShuiWeiImage} />
             </div>
