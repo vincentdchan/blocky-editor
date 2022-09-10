@@ -1,3 +1,7 @@
+## 2.15.0
+
+- Provide `charAt` for BlockyTextModel #64
+
 ## 2.14.0
 
 - Add new options for `EditorController`
