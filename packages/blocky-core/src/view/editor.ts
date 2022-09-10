@@ -875,12 +875,12 @@ export class Editor {
       .apply();
   }
 
-  #insertEmptyTextAfterBlock(parent: BlockyElement, afterId: string) {
+  #insertEmptyTextAfterBlock(element: BlockElement) {
     const newTextElement = this.state.createTextElement();
-    const currentBlock = this.state.getBlockElementById(afterId);
+    const parent = element.parent!;
 
     new Changeset(this.state)
-      .insertChildrenAfter(parent, [newTextElement], currentBlock)
+      .insertChildrenAfter(parent, [newTextElement], element)
       .setCursorState(CursorState.collapse(newTextElement.id, 0))
       .apply();
   }
@@ -904,10 +904,7 @@ export class Editor {
 
     if (!this.state.isTextLike(blockElement)) {
       // default behavior
-      this.#insertEmptyTextAfterBlock(
-        blockElement.parent! as BlockyElement,
-        cursorState.id
-      );
+      this.#insertEmptyTextAfterBlock(blockElement);
       return;
     }
     const textModel = blockElement.getTextModel("textContent")!;
