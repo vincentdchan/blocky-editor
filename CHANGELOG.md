@@ -1,6 +1,7 @@
 ## 2.15.0
 
 - Provide `charAt` for BlockyTextModel #64
+- Fix #63: press enter at the beginning of the headings
 
 ## 2.14.0
 
