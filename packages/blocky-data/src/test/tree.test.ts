@@ -1,108 +1,121 @@
 import { test, expect, describe } from "vitest";
-import { BlockyElement, BlockyTextModel } from "..";
+import { BlockyElement, BlockyTextModel, BlockyDocument } from "..";
 import Delta from "quill-delta-es";
 
-test("tree append", () => {
-  const parent = new BlockyElement("block");
-  const firstChild = new BlockyElement("first-child");
-  const secondChild = new BlockyElement("second-child");
+describe("BlockyDocument", () => {
+  test("init with title", () => {
+    const document = new BlockyDocument({
+      title: "My Title",
+    });
 
-  parent.__insertChildAt(parent.childrenLength, firstChild);
+    const textModel = document.title.getTextModel("textContent")!;
+    expect(textModel.toString()).toEqual("My Title");
+  });
+});
 
-  let callbackIsCalled = false;
-  parent.changed.on((e) => {
-    if (e.type === "element-insert-child") {
-      callbackIsCalled = true;
-      expect(e.index).toEqual(1);
-    }
+describe("tree operation", () => {
+  test("tree append", () => {
+    const parent = new BlockyElement("block");
+    const firstChild = new BlockyElement("first-child");
+    const secondChild = new BlockyElement("second-child");
+
+    parent.__insertChildAt(parent.childrenLength, firstChild);
+
+    let callbackIsCalled = false;
+    parent.changed.on((e) => {
+      if (e.type === "element-insert-child") {
+        callbackIsCalled = true;
+        expect(e.index).toEqual(1);
+      }
+    });
+
+    parent.__insertChildAt(parent.childrenLength, secondChild);
+
+    expect(callbackIsCalled).toBeTruthy();
   });
 
-  parent.__insertChildAt(parent.childrenLength, secondChild);
+  test("tree insert at first", () => {
+    const parent = new BlockyElement("block");
+    const firstChild = new BlockyElement("first-child");
+    const secondChild = new BlockyElement("second-child");
 
-  expect(callbackIsCalled).toBeTruthy();
-});
+    parent.__insertChildAt(parent.childrenLength, firstChild);
 
-test("tree insert at first", () => {
-  const parent = new BlockyElement("block");
-  const firstChild = new BlockyElement("first-child");
-  const secondChild = new BlockyElement("second-child");
+    let callbackIsCalled = false;
+    parent.changed.on((e) => {
+      if (e.type === "element-insert-child") {
+        callbackIsCalled = true;
+        expect(e.index).toEqual(0);
+      }
+    });
 
-  parent.__insertChildAt(parent.childrenLength, firstChild);
+    parent.__insertChildAt(3, secondChild);
 
-  let callbackIsCalled = false;
-  parent.changed.on((e) => {
-    if (e.type === "element-insert-child") {
-      callbackIsCalled = true;
-      expect(e.index).toEqual(0);
-    }
+    expect(callbackIsCalled).toBeTruthy();
   });
 
-  parent.__insertChildAt(3, secondChild);
+  test("tree set attribute", () => {
+    const node = new BlockyElement("block");
 
-  expect(callbackIsCalled).toBeTruthy();
-});
+    let callbackIsCalled = false;
+    node.changed.on((e) => {
+      if (e.type === "element-set-attrib") {
+        callbackIsCalled = true;
+        expect(e.key).toEqual("key");
+        expect(e.value).toEqual("value");
+      }
+    });
 
-test("tree set attribute", () => {
-  const node = new BlockyElement("block");
+    node.__setAttribute("key", "value");
 
-  let callbackIsCalled = false;
-  node.changed.on((e) => {
-    if (e.type === "element-set-attrib") {
-      callbackIsCalled = true;
-      expect(e.key).toEqual("key");
-      expect(e.value).toEqual("value");
-    }
+    expect(callbackIsCalled).toBeTruthy();
   });
 
-  node.__setAttribute("key", "value");
+  test("tree insert at index", () => {
+    const parent = new BlockyElement("block");
+    const firstChild = new BlockyElement("first-child");
+    const secondChild = new BlockyElement("second-child");
+    const thirdChild = new BlockyElement("third-child");
 
-  expect(callbackIsCalled).toBeTruthy();
-});
+    parent.__insertChildAt(parent.childrenLength, firstChild);
+    parent.__insertChildAt(parent.childrenLength, thirdChild);
 
-test("tree insert at index", () => {
-  const parent = new BlockyElement("block");
-  const firstChild = new BlockyElement("first-child");
-  const secondChild = new BlockyElement("second-child");
-  const thirdChild = new BlockyElement("third-child");
+    parent.__insertChildAt(1, secondChild);
 
-  parent.__insertChildAt(parent.childrenLength, firstChild);
-  parent.__insertChildAt(parent.childrenLength, thirdChild);
+    expect(secondChild.prevSibling).toBe(firstChild);
+    expect(secondChild.nextSibling).toBe(thirdChild);
+  });
 
-  parent.__insertChildAt(1, secondChild);
+  test("tree delete children at index", () => {
+    const parent = new BlockyElement("block");
+    const firstChild = new BlockyElement("first-child");
+    const secondChild = new BlockyElement("second-child");
+    const thirdChild = new BlockyElement("third-child");
 
-  expect(secondChild.prevSibling).toBe(firstChild);
-  expect(secondChild.nextSibling).toBe(thirdChild);
-});
+    parent.__insertChildAt(parent.childrenLength, firstChild);
+    parent.__insertChildAt(parent.childrenLength, secondChild);
+    parent.__insertChildAt(parent.childrenLength, thirdChild);
 
-test("tree delete children at index", () => {
-  const parent = new BlockyElement("block");
-  const firstChild = new BlockyElement("first-child");
-  const secondChild = new BlockyElement("second-child");
-  const thirdChild = new BlockyElement("third-child");
+    parent.__deleteChildrenAt(1, 1);
+    expect(parent.childrenLength).toBe(2);
+    expect(firstChild.nextSibling).toBe(thirdChild);
+    expect(thirdChild.prevSibling).toBe(firstChild);
 
-  parent.__insertChildAt(parent.childrenLength, firstChild);
-  parent.__insertChildAt(parent.childrenLength, secondChild);
-  parent.__insertChildAt(parent.childrenLength, thirdChild);
+    expect(secondChild.prevSibling).toBeNull();
+    expect(secondChild.nextSibling).toBeNull();
+  });
 
-  parent.__deleteChildrenAt(1, 1);
-  expect(parent.childrenLength).toBe(2);
-  expect(firstChild.nextSibling).toBe(thirdChild);
-  expect(thirdChild.prevSibling).toBe(firstChild);
-
-  expect(secondChild.prevSibling).toBeNull();
-  expect(secondChild.nextSibling).toBeNull();
-});
-
-test("child validation", () => {
-  const element = new BlockyElement("name");
-  expect(() => {
-    element.__insertChildAt(element.childrenLength, element);
-  }).toThrowError("Can not add ancestors of a node as child");
-  const firstChild = new BlockyElement("child");
-  element.__insertChildAt(element.childrenLength, firstChild);
-  expect(() => {
-    element.__insertChildAt(1, element);
-  }).toThrowError("Can not add ancestors of a node as child");
+  test("child validation", () => {
+    const element = new BlockyElement("name");
+    expect(() => {
+      element.__insertChildAt(element.childrenLength, element);
+    }).toThrowError("Can not add ancestors of a node as child");
+    const firstChild = new BlockyElement("child");
+    element.__insertChildAt(element.childrenLength, firstChild);
+    expect(() => {
+      element.__insertChildAt(1, element);
+    }).toThrowError("Can not add ancestors of a node as child");
+  });
 });
 
 describe("toJSON()", () => {
@@ -135,7 +148,7 @@ describe("toJSON()", () => {
   });
 });
 
-describe("describe", () => {
+describe("BlockyTextModel", () => {
   test("length cache", () => {
     const model = new BlockyTextModel(new Delta().insert("aaa"));
     expect(model.length).toBe(3);
