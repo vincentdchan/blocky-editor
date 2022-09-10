@@ -905,6 +905,7 @@ export class Editor {
     if (!this.state.isTextLike(blockElement)) {
       // default behavior
       this.#insertEmptyTextAfterBlock(blockElement);
+      this.scrollInViewIfNeed();
       return;
     }
     const textModel = blockElement.getTextModel("textContent")!;
@@ -916,51 +917,56 @@ export class Editor {
     // Insert an empty line before this line will be better.
     if (cursorOffset === 0) {
       this.#insertEmptyTextBeforeBlock(blockElement);
-      return;
-    }
-
-    const slices = textModel.delta.slice(cursorOffset);
-
-    const textType = getTextTypeForTextBlock(blockElement);
-    const attributes = Object.create(null);
-    if (this.preservedTextType.has(textType)) {
-      // preserved data type
-      attributes.textType = textType;
-    }
-
-    const children: BlockyNode[] = [];
-    let ptr = blockElement.firstChild;
-    while (ptr) {
-      children.push(ptr.clone());
-      ptr = ptr.nextSibling;
-    }
-    const newTextElement = this.state.createTextElement(
-      slices,
-      attributes,
-      children
-    );
-    const changeset = new Changeset(this.state);
-    changeset.textEdit(blockElement, "textContent", () =>
-      new Delta().retain(cursorOffset).delete(textModel.length - cursorOffset)
-    );
-
-    if (blockElement.nodeName === TitleBlock.Name) {
-      changeset.insertChildrenAfter(this.state.document.body, [newTextElement]);
     } else {
-      const parentElement = blockElement.parent! as BlockyElement;
+      const slices = textModel.delta.slice(cursorOffset);
+
+      const textType = getTextTypeForTextBlock(blockElement);
+      const attributes = Object.create(null);
+      if (this.preservedTextType.has(textType)) {
+        // preserved data type
+        attributes.textType = textType;
+      }
+
+      const children: BlockyNode[] = [];
+      let ptr = blockElement.firstChild;
+      while (ptr) {
+        children.push(ptr.clone());
+        ptr = ptr.nextSibling;
+      }
+      const newTextElement = this.state.createTextElement(
+        slices,
+        attributes,
+        children
+      );
+      const changeset = new Changeset(this.state);
+      changeset.textEdit(blockElement, "textContent", () =>
+        new Delta().retain(cursorOffset).delete(textModel.length - cursorOffset)
+      );
+
+      if (blockElement.nodeName === TitleBlock.Name) {
+        changeset.insertChildrenAfter(this.state.document.body, [
+          newTextElement,
+        ]);
+      } else {
+        const parentElement = blockElement.parent! as BlockyElement;
+        changeset
+          .deleteChildrenAt(blockElement, 0, children.length)
+          .insertChildrenAfter(parentElement, [newTextElement], blockElement);
+      }
+
       changeset
-        .deleteChildrenAt(blockElement, 0, children.length)
-        .insertChildrenAfter(parentElement, [newTextElement], blockElement);
+        .setCursorState(CursorState.collapse(newTextElement.id, 0))
+        .apply();
     }
 
-    changeset
-      .setCursorState(CursorState.collapse(newTextElement.id, 0))
-      .apply();
-
-    window.requestAnimationFrame(() => this.#scrollInViewIfNeed());
+    this.scrollInViewIfNeed();
   }
 
-  #scrollInViewIfNeed() {
+  scrollInViewIfNeed() {
+    window.requestAnimationFrame(() => this.#indeedScrollInView());
+  }
+
+  #indeedScrollInView() {
     const scrollContainerGetter = this.controller.options?.scrollContainer;
     if (isUndefined(scrollContainerGetter)) {
       return;
