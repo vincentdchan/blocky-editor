@@ -1596,7 +1596,6 @@ export class Editor {
       return;
     }
     const scrollContainerHeight = scrollContainer.clientHeight;
-    console.log({ scrollContainerHeight });
     if (isNumber(maxHeight)) {
       if (y + maxHeight > scrollContainerHeight) {
         return maxHeight;
