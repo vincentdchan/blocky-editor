@@ -1,5 +1,9 @@
 ## 2.15.1
 
+- Add `onError` to options
+
+## 2.15.1
+
 - Place follower widget at top if overflow
 
 ## 2.15.0

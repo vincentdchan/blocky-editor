@@ -352,13 +352,14 @@ export class TextBlock extends Block {
       this.editor.addStagedInput(
         new TextInputEvent(beforeDelta, diff, blockElement)
       );
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(
         `[Blocky] diff error ${err}, before:`,
         beforeDelta,
         " new: ",
         newDelta
       );
+      this.editor.controller.options?.onError?.(err);
     }
   }
 
