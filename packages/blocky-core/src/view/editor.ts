@@ -8,7 +8,13 @@ import {
   flattenDisposable,
 } from "blocky-common/es/disposable";
 import { type Position } from "blocky-common/es/position";
-import { debounce, isFunction, isUndefined, isString } from "lodash-es";
+import {
+  debounce,
+  isFunction,
+  isUndefined,
+  isString,
+  isNumber,
+} from "lodash-es";
 import { DocRenderer } from "@pkg/view/renderer";
 import { EditorState } from "@pkg/model";
 import {
@@ -1553,14 +1559,50 @@ export class Editor {
     let x = last.x;
     let y = last.y;
 
+    const atTopMaxHeight = this.#shouldPlaceAtTheTopOfCursor(
+      last.y,
+      followWidget
+    );
+
     const containerRect = this.#container.getBoundingClientRect();
     x -= containerRect.x;
     y -= containerRect.y;
 
-    y += followWidget.yOffset;
+    if (isNumber(atTopMaxHeight)) {
+      y -= atTopMaxHeight;
+      followWidget.atTop = true;
+    } else {
+      y += followWidget.yOffset;
+      followWidget.atTop = false;
+    }
 
     followWidget.x = x;
     followWidget.y = y;
+
+    followWidget.widgetAfterReposition?.();
+  }
+
+  // return height
+  #shouldPlaceAtTheTopOfCursor(
+    y: number,
+    followerWidget: FollowerWidget
+  ): number | undefined {
+    const { maxHeight } = followerWidget;
+    let scrollContainer = this.controller.options?.scrollContainer;
+    if (isFunction(scrollContainer)) {
+      scrollContainer = scrollContainer();
+    }
+    if (!scrollContainer) {
+      return;
+    }
+    const scrollContainerHeight = scrollContainer.clientHeight;
+    console.log({ scrollContainerHeight });
+    if (isNumber(maxHeight)) {
+      if (y + maxHeight > scrollContainerHeight) {
+        return maxHeight;
+      }
+    }
+    return;
   }
 
   dispose() {
