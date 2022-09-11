@@ -376,34 +376,40 @@ export class Editor {
   }
 
   render(done?: AfterFn) {
-    const newDom = this.#renderer.render(this.#renderedDom);
-    if (!this.#renderedDom) {
-      this.#container.appendChild(newDom);
-      newDom.contentEditable = "true";
-      if (this.controller.options?.spellcheck === false) {
-        newDom.spellcheck = false;
+    try {
+      const newDom = this.#renderer.render(this.#renderedDom);
+      if (!this.#renderedDom) {
+        this.#container.appendChild(newDom);
+        newDom.contentEditable = "true";
+        if (this.controller.options?.spellcheck === false) {
+          newDom.spellcheck = false;
+        }
+
+        $on(newDom, "input", () => {
+          if (this.composing) {
+            return;
+          }
+          this.#handleContentChanged();
+        });
+        $on(newDom, "compositionstart", this.#handleCompositionStart);
+        $on(newDom, "compositionend", this.#handleCompositionEnd);
+        $on(newDom, "keydown", this.#handleKeyDown);
+        $on(newDom, "copy", this.#handleCopy);
+        $on(newDom, "paste", this.#handlePaste);
+        $on(newDom, "blur", this.#handleEditorBlur);
+
+        this.#renderedDom = newDom;
       }
 
-      $on(newDom, "input", () => {
-        if (this.composing) {
-          return;
-        }
-        this.#handleContentChanged();
-      });
-      $on(newDom, "compositionstart", this.#handleCompositionStart);
-      $on(newDom, "compositionend", this.#handleCompositionEnd);
-      $on(newDom, "keydown", this.#handleKeyDown);
-      $on(newDom, "copy", this.#handleCopy);
-      $on(newDom, "paste", this.#handlePaste);
-      $on(newDom, "blur", this.#handleEditorBlur);
-
-      this.#renderedDom = newDom;
-    }
-
-    if (done) {
-      done();
-    } else {
-      this.#handleSelectionChanged(CursorStateUpdateReason.contentChanged);
+      if (done) {
+        done();
+      } else {
+        this.#handleSelectionChanged(CursorStateUpdateReason.contentChanged);
+      }
+    } catch (err) {
+      console.error(err);
+      this.controller.options?.onError?.(err);
+      return;
     }
 
     this.controller.__emitNextTicks();
@@ -843,12 +849,30 @@ export class Editor {
       this.#handleDelete(e);
     } else if (isHotkey("mod+z", e)) {
       e.preventDefault();
-      this.undoManager.undo();
+      this.#undo();
     } else if (isHotkey("mod+shift+z", e)) {
       e.preventDefault();
-      this.undoManager.redo();
+      this.#redo();
     }
   };
+
+  #undo() {
+    try {
+      this.undoManager.undo();
+    } catch (err) {
+      console.error("[Blocky]undo error", err);
+      this.controller.options?.onError?.(err);
+    }
+  }
+
+  #redo() {
+    try {
+      this.undoManager.redo();
+    } catch (err) {
+      console.error("[Blocky]redo error", err);
+      this.controller.options?.onError?.(err);
+    }
+  }
 
   #handleKeyTab(e: KeyboardEvent) {
     e.preventDefault();

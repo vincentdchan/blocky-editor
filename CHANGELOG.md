@@ -1,4 +1,4 @@
-## 2.15.1
+## 2.15.3
 
 - Add `onError` to options
 
