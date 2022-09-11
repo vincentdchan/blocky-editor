@@ -107,6 +107,13 @@ export interface IEditorControllerOptions {
    * The method used to open external links
    */
   urlLauncher?: (url: string) => void;
+
+  /**
+   * The internal error.
+   * Some data went wrong when this method is called.
+   * The editor should refresh itself.
+   */
+  onError?: (err: unknown) => void;
 }
 
 export interface IInsertOptions {
