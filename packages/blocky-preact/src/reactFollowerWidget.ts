@@ -6,6 +6,7 @@ import { unmountComponentAtNode } from "preact/compat";
 export interface FollowerWidgetProps {
   controller: EditorController;
   editingValue: string;
+  atTop: boolean;
   closeWidget: () => void;
 }
 
@@ -15,12 +16,14 @@ export type FollowerWidgetRenderer = (
 
 export interface PreactFollowWidgetOptions {
   yOffset?: number;
+  maxHeight?: number;
 }
 
 export class PreactFollowWidget extends FollowerWidget {
   #renderer: FollowerWidgetRenderer;
   #controller: EditorController | undefined;
   #yOffset: number | undefined;
+  #maxHeight: number | undefined;
 
   constructor(
     renderer: FollowerWidgetRenderer,
@@ -29,6 +32,7 @@ export class PreactFollowWidget extends FollowerWidget {
     super();
     this.#renderer = renderer;
     this.#yOffset = options?.yOffset;
+    this.#maxHeight = options?.maxHeight;
   }
 
   override get yOffset(): number {
@@ -36,6 +40,13 @@ export class PreactFollowWidget extends FollowerWidget {
       return this.#yOffset;
     }
     return super.yOffset;
+  }
+
+  override get maxHeight(): number | undefined {
+    if (isNumber(this.#maxHeight)) {
+      return this.#maxHeight;
+    }
+    return super.maxHeight;
   }
 
   override setEditingValue(value: string) {
@@ -49,11 +60,16 @@ export class PreactFollowWidget extends FollowerWidget {
     this.#render();
   }
 
+  override widgetAfterReposition() {
+    this.#render();
+  }
+
   #render() {
     render(
       this.#renderer({
         controller: this.#controller!,
         editingValue: this.editingValue,
+        atTop: this.atTop,
         closeWidget: () => this.dispose(),
       }),
       this.container

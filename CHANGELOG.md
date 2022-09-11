@@ -1,3 +1,7 @@
+## 2.15.1
+
+- Place follower widget at top if overflow
+
 ## 2.15.0
 
 - Provide `charAt` for BlockyTextModel #64

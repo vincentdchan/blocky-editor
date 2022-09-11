@@ -91,7 +91,8 @@ export function makeCommandPanelPlugin(): IPlugin {
                   editingValue={editingValue}
                   closeWidget={closeWidget}
                 />
-              )
+              ),
+              { maxHeight: 80 }
             )
           );
         });

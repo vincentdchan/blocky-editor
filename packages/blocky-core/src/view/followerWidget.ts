@@ -24,6 +24,7 @@ export class FollowerWidget extends ContainerWithCoord {
   startCursorState: CursorState | undefined;
   readonly disposing: Slot = new Slot();
   #controller: EditorController | undefined;
+  #atTop = false;
   constructor() {
     super("blocky-follow-widget");
     this.container.contentEditable = "false";
@@ -40,6 +41,18 @@ export class FollowerWidget extends ContainerWithCoord {
     return 32;
   }
 
+  get maxHeight(): number | undefined {
+    return undefined;
+  }
+
+  get atTop() {
+    return this.#atTop;
+  }
+
+  set atTop(v: boolean) {
+    this.#atTop = v;
+  }
+
   setEditingValue(value: string) {
     this.editingValue = value;
   }
@@ -54,6 +67,8 @@ export class FollowerWidget extends ContainerWithCoord {
       this.focusedNode = this.#controller!.state.getBlockElementById(cursor.id);
     }
   }
+
+  widgetAfterReposition?(): void;
 
   #cursorUpdateHandler = (evt: CursorStateUpdateEvent) => {
     if (evt.reason !== CursorStateUpdateReason.contentChanged) {
