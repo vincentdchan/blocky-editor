@@ -76,8 +76,9 @@ export class DocRenderer {
     dom._mgNode = document;
 
     const { clsPrefix } = this;
+    const hasTitle = !!this.editor.controller.options?.hasTitle;
 
-    if (document.hasTitle) {
+    if (hasTitle) {
       const titleContainer = ensureChild(
         dom,
         0,
@@ -99,7 +100,7 @@ export class DocRenderer {
 
     const blocksContainer = ensureChild(
       dom,
-      document.hasTitle ? 1 : 0,
+      hasTitle ? 1 : 0,
       "div",
       `${clsPrefix}-editor-blocks-container`,
       (elem: HTMLElement) => {

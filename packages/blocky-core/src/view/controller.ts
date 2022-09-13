@@ -158,7 +158,7 @@ export class EditorController {
    */
   constructor(
     readonly userId: string,
-    public options?: IEditorControllerOptions
+    public options?: Partial<IEditorControllerOptions>
   ) {
     this.pluginRegistry =
       options?.pluginRegistry ?? new PluginRegistry(options?.plugins);

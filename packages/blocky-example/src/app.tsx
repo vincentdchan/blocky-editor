@@ -87,6 +87,7 @@ function makeController(
     scrollContainer,
 
     spellcheck: false,
+    hasTitle: false,
   });
 }
 
