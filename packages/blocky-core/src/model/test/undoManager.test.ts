@@ -1,6 +1,18 @@
-import { test, expect, describe } from "vitest";
+import { test, expect, describe, vi } from "vitest";
+import { FixedSizeStack, HistoryItem, UndoManager } from "../undoManager";
+import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
+import { EditorState } from "../editorState";
+import {
+  BlockElement,
+  BlockyDocument,
+  BlockyTextModel,
+  Changeset,
+  ChangesetRecordOption,
+  Delta,
+  FinalizedChangeset,
+  InsertNodeOperation,
+} from "blocky-data";
 import "@pkg/index";
-import { FixedSizeStack, HistoryItem } from "../undoManager";
 
 describe("FixedSizeStack", () => {
   test("push() + pop()", () => {
@@ -37,5 +49,75 @@ describe("FixedSizeStack", () => {
     expect(fixedSizeStack.length).toBe(2);
     fixedSizeStack.clear();
     expect(fixedSizeStack.length).toBe(0);
+  });
+});
+
+describe("UndoManager", () => {
+  const userId = "User-1";
+
+  test("delete", () => {
+    const idGenerator = makeDefaultIdGenerator();
+    const e1 = new BlockElement("Text", idGenerator.mkBlockId(), {
+      textContent: new BlockyTextModel(new Delta().insert("0")),
+    });
+    const e2 = new BlockElement("Text", idGenerator.mkBlockId(), {
+      textContent: new BlockyTextModel(new Delta().insert("1")),
+    });
+    const e3 = new BlockElement("Text", idGenerator.mkBlockId(), {
+      textContent: new BlockyTextModel(new Delta().insert("2")),
+    });
+    const doc = new BlockyDocument({
+      bodyChildren: [e1, e2, e3],
+    });
+    const state = new EditorState({
+      userId,
+      document: doc,
+      idGenerator,
+    });
+
+    new Changeset(state).removeNode(e1).removeNode(e2).removeNode(e3).apply({
+      record: ChangesetRecordOption.Undo,
+    });
+
+    const undoManager = new UndoManager(state);
+    const undoItem = undoManager.getAUndoItem();
+    undoItem.startVersion = 1;
+    undoItem.length = 1;
+    undoItem.seal();
+
+    const spy = vi.spyOn(state, "apply");
+
+    spy.mockImplementationOnce((changeset: FinalizedChangeset) => {
+      expect(changeset.operations.length).toBe(3);
+      expect(changeset.operations[0].location.path).toEqual([1, 0]);
+      expect(changeset.operations[0].op).toBe("insert-nodes");
+      const insert1 = (changeset.operations[0] as InsertNodeOperation)
+        .children[0];
+      expect(insert1.attributes).toEqual({
+        textContent: [{ insert: "2" }],
+      });
+
+      expect(changeset.operations[1].location.path).toEqual([1, 0]);
+      expect(changeset.operations[1].op).toBe("insert-nodes");
+      const insert2 = (changeset.operations[1] as InsertNodeOperation)
+        .children[0];
+      expect(insert2.attributes).toEqual({
+        textContent: [{ insert: "1" }],
+      });
+
+      expect(changeset.operations[2].location.path).toEqual([1, 0]);
+      expect(changeset.operations[2].op).toBe("insert-nodes");
+      const insert3 = (changeset.operations[2] as InsertNodeOperation)
+        .children[0];
+      expect(insert3.attributes).toEqual({
+        textContent: [{ insert: "0" }],
+      });
+
+      return true;
+    });
+
+    undoManager.undo();
+
+    expect(spy).toHaveBeenCalledOnce();
   });
 });

@@ -1,7 +1,5 @@
-
 export * from "./cancellable";
 export * from "./cell";
-export * from "./channels";
 export * from "./disposable";
 export * from "./events";
 export * from "./lazy";
