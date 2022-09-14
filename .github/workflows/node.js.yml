@@ -29,4 +29,5 @@ jobs:
       - run: pnpm run build
       - run: pnpm run lint
       - run: pnpm -r --if-present run test:prod
+      - run: pnpm -r --if-present run check
       - run: chmod +x ./bundle_size.sh && ./bundle_size.sh

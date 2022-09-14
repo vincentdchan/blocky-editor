@@ -38,6 +38,10 @@ The developers only need to develop their blocks with their favourite UI framewo
 - [Get started](https://blocky-editor.dev/doc/get-started)
 - [Contributing](./CONTRIBUTING.md)
 
+## Products
+
+- [CubyText](https://github.com/vincentdchan/CubyText)
+
 ## Compatibility
 
 Tested on
