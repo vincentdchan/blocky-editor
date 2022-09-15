@@ -16,7 +16,7 @@ import {
   isNumber,
 } from "lodash-es";
 import { DocRenderer } from "@pkg/view/renderer";
-import { EditorState } from "@pkg/model";
+import { EditorState, SearchContext } from "@pkg/model";
 import {
   type CursorStateUpdateEvent,
   BlockyTextModel,
@@ -753,6 +753,10 @@ export class Editor {
         }
       }
     }
+  }
+
+  createSearchContext(content: string): SearchContext {
+    return new SearchContext(this.state.document, content);
   }
 
   placeBannerAt(blockContainer: HTMLElement, node: BlockElement) {
