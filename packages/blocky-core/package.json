@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
     "test": "vitest",
-    "test:prod": "vitest --run"
+    "test:unit": "vitest --run"
   },
   "homepage": "https://github.com/vincentdchan/blocky-editor",
   "keywords": [

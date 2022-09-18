@@ -17,8 +17,14 @@ pnpm run dev
 ## Run tests
 
 ```sh
-pnpm -r --if-present run test:prod
+# unit test
+pnpm test:unit
+
+# e2e test
+pnpm test:e2e
 ```
+
+Note that to run E2E tests locally, please make sure browser binaries are already installed via `npx playwright install` and local dev environment is started with `pnpm dev`.
 
 ## Print the bundle size
 

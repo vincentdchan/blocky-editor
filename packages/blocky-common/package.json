@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest",
-    "test:prod": "vitest --run"
+    "test:unit": "vitest --run"
   },
   "homepage": "https://github.com/vincentdchan/blocky-editor",
   "keywords": [],

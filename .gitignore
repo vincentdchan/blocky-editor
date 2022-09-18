@@ -5,3 +5,8 @@ dist
 *.tsbuildinfo
 
 .DS_Store
+
+# playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/

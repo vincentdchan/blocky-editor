@@ -9,7 +9,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest",
-    "test:prod": "vitest --run"
+    "test:unit": "vitest --run"
   },
   "devDependencies": {
     "@types/lodash-es": "^4.17.6",
