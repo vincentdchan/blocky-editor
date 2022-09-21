@@ -4,6 +4,7 @@ importers:
 
   .:
     specifiers:
+      '@playwright/test': ^1.25.2
       '@typescript-eslint/eslint-plugin': ^5.30.4
       '@typescript-eslint/parser': ^5.30.4
       esbuild: ^0.14.49
@@ -12,6 +13,7 @@ importers:
       typescript: ^4.7.3
       typescript-transform-paths: ^3.3.1
     devDependencies:
+      '@playwright/test': 1.25.2
       '@typescript-eslint/eslint-plugin': 5.30.6_ca2dkzy3u2ze64lng5f53xzl5u
       '@typescript-eslint/parser': 5.30.6_zi6vhgfvjwwpz4aow2huzz5d74
       esbuild: 0.14.49
@@ -473,6 +475,15 @@ packages:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.13.0
+    dev: true
+
+  /@playwright/test/1.25.2:
+    resolution: {integrity: sha512-6qPznIR4Fw02OMbqXUPMG6bFFg1hDVNEdihKy0t9K0dmRbus1DyP5Q5XFQhGwEHQkLG5hrSfBuu9CW/foqhQHQ==}
+    engines: {node: '>=14'}
+    hasBin: true
+    dependencies:
+      '@types/node': 17.0.45
+      playwright-core: 1.25.2
     dev: true
 
   /@preact/preset-vite/2.3.0_5rdr2dfwms3wfk7mzdaubsploq:
@@ -2189,6 +2200,12 @@ packages:
   /picomatch/2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
+    dev: true
+
+  /playwright-core/1.25.2:
+    resolution: {integrity: sha512-0yTbUE9lIddkEpLHL3u8PoCL+pWiZtj5A/j3U7YoNjcmKKDGBnCrgHJMzwd2J5vy6l28q4ki3JIuz7McLHhl1A==}
+    engines: {node: '>=14'}
+    hasBin: true
     dev: true
 
   /plimit-lit/1.2.7:

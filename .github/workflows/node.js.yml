@@ -25,9 +25,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm install -g pnpm
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
+      - run: npx playwright install chromium
       - run: pnpm run build
       - run: pnpm run lint
-      - run: pnpm -r --if-present run test:prod
+      - run: pnpm run test:unit
+      - run: pnpm run test:e2e
       - run: pnpm -r --if-present run check
       - run: chmod +x ./bundle_size.sh && ./bundle_size.sh
