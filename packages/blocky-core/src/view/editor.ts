@@ -762,10 +762,7 @@ export class Editor {
 
   createSearchContext(content: string): SearchContext {
     if (!this.#searchContext) {
-      this.#searchContext = new SearchContext(
-        this.#container,
-        this.state.document
-      );
+      this.#searchContext = new SearchContext(this.#container, this);
       this.#searchContext.disposing.on(() => {
         this.#searchContext = undefined;
       });
@@ -1102,11 +1099,22 @@ export class Editor {
     }
 
     this.#emitStagedInput();
+    this.#refreshSearch();
 
     if (!needsRender) {
       this.controller.__emitNextTicks();
     }
   };
+
+  #refreshSearch() {
+    if (!this.#searchContext) {
+      return;
+    }
+    this.#searchContext.hide();
+    this.#debouncedRefreshSearch();
+  }
+
+  #debouncedRefreshSearch = debounce(() => this.#searchContext?.refresh(), 300);
 
   openExternalLink(link: string) {
     const launcher = this.controller.options?.urlLauncher;

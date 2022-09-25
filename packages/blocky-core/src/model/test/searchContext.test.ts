@@ -4,13 +4,16 @@ import {
   BlockyTextModel,
   Delta,
 } from "blocky-data";
+import { Editor } from "../../view/editor";
+import { EditorController } from "../..//view/controller";
 import { expect, test } from "vitest";
 import { SearchContext } from "../searchContext";
 
 test("search empty", () => {
-  const doc = new BlockyDocument();
   const dummyEditorContainer = document.createElement("div");
-  const searchContent = new SearchContext(dummyEditorContainer, doc);
+  const controller = new EditorController("dummyId");
+  const editor = Editor.fromController(dummyEditorContainer, controller);
+  const searchContent = new SearchContext(dummyEditorContainer, editor);
   searchContent.search("Hello");
   expect(searchContent.contexts.length).toBe(0);
 });
@@ -32,7 +35,11 @@ test("search text", () => {
     ],
   });
   const dummyEditorContainer = document.createElement("div");
-  const searchContent = new SearchContext(dummyEditorContainer, doc);
+  const controller = new EditorController("dummyId", {
+    document: doc,
+  });
+  const editor = Editor.fromController(dummyEditorContainer, controller);
+  const searchContent = new SearchContext(dummyEditorContainer, editor);
   searchContent.search("Hello");
   expect(searchContent.contexts.length).toBe(3);
   expect(searchContent.contexts[0]).toEqual({
