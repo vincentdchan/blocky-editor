@@ -1,4 +1,5 @@
-import { Component, createRef } from "preact";
+import { Component, createRef, RefObject } from "preact";
+import { useEffect, useState } from "preact/compat";
 import { EditorController, darkTheme, type IPlugin } from "blocky-core";
 import {
   BlockyEditor,
@@ -11,6 +12,7 @@ import makeCodeTextPlugin from "blocky-core/dist/plugins/codeTextPlugin";
 import makeBulletListPlugin from "blocky-core/dist/plugins/bulletListPlugin";
 import makeHeadingsPlugin from "blocky-core/dist/plugins/headingsPlugin";
 import AppLogo from "@pkg/components/appLogo";
+import SearchBox from "@pkg/components/searchBox";
 import { makeImageBlockPlugin } from "./plugins/imageBlock";
 import { makeCommandPanelPlugin } from "./plugins/commandPanel";
 import { makeAtPanelPlugin } from "./plugins/atPanel";
@@ -20,6 +22,7 @@ import TianShuiWeiImage from "./tianshuiwei.jpg";
 import { ReadMeContent } from "./readme";
 import { Link } from "preact-router/match";
 import { ThemeSwitch, Theme } from "./themeSwitch";
+import { isHotkey } from "is-hotkey";
 import "blocky-core/css/styled-text-plugin.css";
 import "blocky-core/css/blocky-core.css";
 import "./app.scss";
@@ -192,40 +195,16 @@ class App extends Component<unknown> {
           </div>
         </div>
         <div className="blocky-example-container">
-          <div
-            ref={this.containerLeftRef}
+          <BlockyEditorWithSearchBoxAndTitle
+            containerRef={this.containerLeftRef}
             className="blocky-example-editor-container left"
-          >
-            <div className="blocky-example-image">
-              <img src={TianShuiWeiImage} />
-            </div>
-            <Theme.Consumer>
-              {(options) => (
-                <BlockyEditorWithTheme
-                  controller={this.editorControllerLeft}
-                  darkMode={options.darkMode}
-                  autoFocus
-                />
-              )}
-            </Theme.Consumer>
-          </div>
-          <div
-            ref={this.containerRightRef}
+            controller={this.editorControllerLeft}
+          />
+          <BlockyEditorWithSearchBoxAndTitle
+            containerRef={this.containerRightRef}
             className="blocky-example-editor-container right"
-          >
-            <div className="blocky-example-image">
-              <img src={TianShuiWeiImage} />
-            </div>
-            <Theme.Consumer>
-              {(options) => (
-                <BlockyEditorWithTheme
-                  controller={this.editorControllerRight}
-                  darkMode={options.darkMode}
-                  ignoreInitEmpty
-                />
-              )}
-            </Theme.Consumer>
-          </div>
+            controller={this.editorControllerRight}
+          />
         </div>
       </div>
     );
@@ -239,32 +218,68 @@ interface BlockyEditorWithThemeProps {
   darkMode?: boolean;
 }
 
-class BlockyEditorWithTheme extends Component<BlockyEditorWithThemeProps> {
-  componentDidMount() {
-    if (this.props.darkMode) {
-      this.props.controller.themeData = darkTheme;
+function BlockyEditorWithTheme(props: BlockyEditorWithThemeProps) {
+  const { darkMode, controller } = props;
+  useEffect(() => {
+    if (darkMode) {
+      controller.themeData = darkTheme;
+    } else {
+      controller.themeData = undefined;
     }
-  }
+  }, [darkMode]);
+  return (
+    <BlockyEditor
+      controller={props.controller}
+      autoFocus={props.autoFocus}
+      ignoreInitEmpty={props.ignoreInitEmpty}
+    />
+  );
+}
 
-  componentWillReceiveProps(nextProps: BlockyEditorWithThemeProps) {
-    if (this.props.darkMode !== nextProps.darkMode) {
-      if (nextProps.darkMode) {
-        nextProps.controller.themeData = darkTheme;
-      } else {
-        nextProps.controller.themeData = undefined;
+interface BlockyEditorWithSearchBoxAndTitleProps {
+  containerRef: RefObject<HTMLDivElement>;
+  className: string;
+  controller: EditorController;
+}
+
+function BlockyEditorWithSearchBoxAndTitle(
+  props: BlockyEditorWithSearchBoxAndTitleProps
+) {
+  const { controller } = props;
+  const [showSearchBox, setShowSearchBox] = useState(false);
+  useEffect(() => {
+    const disposable = controller.editor?.keyDown.on((e: KeyboardEvent) => {
+      if (isHotkey("mod+f", e)) {
+        e.preventDefault();
+        setShowSearchBox(true);
       }
-    }
-  }
-
-  render(props: BlockyEditorWithThemeProps) {
-    return (
-      <BlockyEditor
-        controller={props.controller}
-        autoFocus={props.autoFocus}
-        ignoreInitEmpty={props.ignoreInitEmpty}
-      />
-    );
-  }
+    });
+    return () => disposable?.dispose();
+  }, [controller]);
+  return (
+    <div ref={props.containerRef} className={props.className}>
+      {showSearchBox && (
+        <SearchBox
+          controller={controller}
+          onClose={() => setShowSearchBox(false)}
+        />
+      )}
+      <div className="blocky-example-content-container">
+        <div className="blocky-example-image">
+          <img src={TianShuiWeiImage} />
+        </div>
+        <Theme.Consumer>
+          {(options) => (
+            <BlockyEditorWithTheme
+              controller={controller}
+              darkMode={options.darkMode}
+              ignoreInitEmpty
+            />
+          )}
+        </Theme.Consumer>
+      </div>
+    </div>
+  );
 }
 
 export default App;

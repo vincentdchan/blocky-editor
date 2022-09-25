@@ -1,5 +1,5 @@
 import { ContainerWithCoord, DivContainer } from "blocky-common/es/dom";
-import { Slot } from "blocky-common/es/events";
+import { Slot } from "blocky-common/es";
 
 class CursorLabel extends ContainerWithCoord {
   static Height = 12;

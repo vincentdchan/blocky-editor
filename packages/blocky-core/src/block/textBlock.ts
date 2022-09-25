@@ -1,6 +1,6 @@
 import { isObject, isString } from "lodash-es";
 import { elem, removeNode, $on } from "blocky-common/es/dom";
-import { removeLineBreaks } from "blocky-common/es/text";
+import { removeLineBreaks, type Position } from "blocky-common/es";
 import {
   type IBlockDefinition,
   type BlockCreatedEvent,
@@ -25,7 +25,6 @@ import {
   textTypePrecedence,
 } from "blocky-data";
 import { TextInputEvent, type Editor } from "@pkg/view/editor";
-import { type Position } from "blocky-common/es/position";
 import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { EditorController } from "@pkg/view/controller";
 import type { SpanStyle } from "@pkg/registry/spanRegistry";

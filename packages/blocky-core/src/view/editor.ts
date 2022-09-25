@@ -1,13 +1,17 @@
-import { $on, isContainNode, removeNode } from "blocky-common/es/dom";
-import { isUpperCase } from "blocky-common/es/character";
-import { Slot } from "blocky-common/es/events";
-import { type Padding } from "blocky-common/es/dom";
-import { areEqualShallow } from "blocky-common/es/object";
 import {
-  type IDisposable,
+  $on,
+  isContainNode,
+  removeNode,
+  type Padding,
+} from "blocky-common/es/dom";
+import {
+  isUpperCase,
+  Slot,
+  areEqualShallow,
   flattenDisposable,
-} from "blocky-common/es/disposable";
-import { type Position } from "blocky-common/es/position";
+  type IDisposable,
+  type Position,
+} from "blocky-common/es";
 import {
   debounce,
   isFunction,
@@ -137,6 +141,7 @@ export class Editor {
    */
   #stagedInput: TextInputEvent[] = [];
   #themeData?: ThemeData;
+  #searchContext: SearchContext | undefined;
 
   readonly onEveryBlock: Slot<Block> = new Slot();
 
@@ -756,7 +761,14 @@ export class Editor {
   }
 
   createSearchContext(content: string): SearchContext {
-    return new SearchContext(this.state.document, content);
+    if (!this.#searchContext) {
+      this.#searchContext = new SearchContext(this.#container, this);
+      this.#searchContext.disposing.on(() => {
+        this.#searchContext = undefined;
+      });
+    }
+    this.#searchContext.search(content);
+    return this.#searchContext;
   }
 
   placeBannerAt(blockContainer: HTMLElement, node: BlockElement) {
@@ -1087,11 +1099,22 @@ export class Editor {
     }
 
     this.#emitStagedInput();
+    this.#refreshSearch();
 
     if (!needsRender) {
       this.controller.__emitNextTicks();
     }
   };
+
+  #refreshSearch() {
+    if (!this.#searchContext) {
+      return;
+    }
+    this.#searchContext.hide();
+    this.#debouncedRefreshSearch();
+  }
+
+  #debouncedRefreshSearch = debounce(() => this.#searchContext?.refresh(), 300);
 
   openExternalLink(link: string) {
     const launcher = this.controller.options?.urlLauncher;

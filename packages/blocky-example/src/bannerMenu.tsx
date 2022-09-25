@@ -1,10 +1,7 @@
 import { Component, type RefObject, createRef } from "preact";
 import { type EditorController } from "blocky-core";
 import { BlockElement, TextType } from "blocky-data";
-import {
-  type IDisposable,
-  flattenDisposable,
-} from "blocky-common/es/disposable";
+import { type IDisposable, flattenDisposable } from "blocky-common/es";
 import Dropdown from "@pkg/components/dropdown";
 import { Menu, MenuItem, Divider } from "@pkg/components/menu";
 import { ImageBlockName } from "@pkg/plugins/imageBlock";

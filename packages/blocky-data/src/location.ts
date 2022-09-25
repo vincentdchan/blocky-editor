@@ -1,5 +1,5 @@
 import { isUndefined } from "lodash-es";
-import { hashIntArrays } from "blocky-common/es/hash";
+import { hashIntArrays } from "blocky-common/es";
 
 export class NodeLocation {
   static equals(a: NodeLocation, b: NodeLocation): boolean {

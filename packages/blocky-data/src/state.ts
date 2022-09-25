@@ -4,7 +4,7 @@ import {
   type BlockyTextModel,
   BlockyElement,
 } from "./tree";
-import { Slot } from "blocky-common/es/events";
+import { Slot } from "blocky-common/es";
 import { isUndefined } from "lodash-es";
 import {
   type FinalizedChangeset,

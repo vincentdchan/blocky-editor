@@ -1,4 +1,4 @@
-import { type IDisposable, flattenDisposable } from "blocky-common/es/disposable";
+import { type IDisposable, flattenDisposable } from "blocky-common/es";
 import { DivContainer } from "blocky-common/es/dom";
 
 export class UIDelegate extends DivContainer {
@@ -30,5 +30,4 @@ export class UIDelegate extends DivContainer {
     this.container.style.display = "";
     this.shown = true;
   }
-
 }

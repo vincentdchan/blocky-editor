@@ -1,5 +1,4 @@
-import { isUpperCase } from "blocky-common/es/character";
-import { Slot } from "blocky-common/es/events";
+import { isUpperCase, Slot } from "blocky-common/es";
 import { type Padding } from "blocky-common/es/dom";
 import { EditorState, NodeTraverser } from "@pkg/model";
 import {

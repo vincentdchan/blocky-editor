@@ -1,7 +1,7 @@
 import { isObject } from "lodash-es";
 import { BlockElement, BlockyTextModel } from "blocky-data";
 import { TextBlock } from "@pkg/block/textBlock";
-import { removeLineBreaks } from "blocky-common/es/text";
+import { removeLineBreaks } from "blocky-common/es";
 import { textToDeltaWithURL } from "@pkg/helper/urlHelper";
 import type { IdGenerator } from "@pkg/helper/idHelper";
 

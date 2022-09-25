@@ -1,5 +1,5 @@
 import { isUndefined } from "lodash-es";
-import { isUpperCase } from "blocky-common/es/character";
+import { isUpperCase } from "blocky-common/es";
 import {
   type BlockyNode,
   type JSONNode,
