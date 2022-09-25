@@ -2,7 +2,7 @@ import { IDisposable, Slot } from "blocky-common/es";
 import { elem, removeNode, ContainerWithCoord } from "blocky-common/es/dom";
 import { BlockElement, BlockyNode } from "blocky-data";
 import { isString, isObject } from "lodash-es";
-import { Editor } from "..";
+import { Editor } from "@pkg/view/editor";
 
 export interface SearchResult {
   blockId: string;
@@ -10,15 +10,41 @@ export interface SearchResult {
 }
 
 class SearchRangeRect extends ContainerWithCoord {
+  #x = 0;
+  #y = 0;
+  #width = 0;
+  #height = 0;
+
   constructor() {
     super("blocky-search-range");
   }
 
   setPositionByRect(containerRect: DOMRect, rect: DOMRect) {
-    this.container.style.left = rect.x - containerRect.x + "px";
-    this.container.style.top = rect.y - containerRect.y + "px";
-    this.container.style.width = rect.width + "px";
-    this.container.style.height = rect.height + "px";
+    this.#setPosition(
+      rect.x - containerRect.x,
+      rect.y - containerRect.y,
+      rect.width,
+      rect.height
+    );
+  }
+
+  #setPosition(x: number, y: number, width: number, height: number) {
+    if (x !== this.#x) {
+      this.container.style.left = x + "px";
+      this.#x = x;
+    }
+    if (y !== this.#y) {
+      this.container.style.top = y + "px";
+      this.#y = y;
+    }
+    if (width !== this.#width) {
+      this.container.style.width = width + "px";
+      this.#width = width;
+    }
+    if (height !== this.#height) {
+      this.container.style.height = height + "px";
+      this.#height = height;
+    }
   }
 }
 
@@ -28,6 +54,7 @@ export class SearchContext implements IDisposable {
   content: string | undefined;
   readonly searchRangesContainer: HTMLDivElement;
 
+  #startIndexes: number[] = [];
   #rangeRects: SearchRangeRect[] = [];
 
   constructor(
@@ -54,6 +81,7 @@ export class SearchContext implements IDisposable {
     this.contexts.length = 0;
     this.content = content;
     this.#iterateNode(this.editor.state.document); // search in each nodes
+    this.#startIndexes.length = this.contexts.length;
     this.#drawRects();
   }
 
@@ -67,7 +95,9 @@ export class SearchContext implements IDisposable {
     const containerRect = this.editorContainer.getBoundingClientRect();
 
     let index = 0;
-    for (const searchResult of this.contexts) {
+    for (let i = 0, len = this.contexts.length; i < len; i++) {
+      this.#startIndexes[i] = index;
+      const searchResult = this.contexts[i];
       index += this.#drawRectBySearchResult(containerRect, searchResult, index);
     }
 
