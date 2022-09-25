@@ -13,6 +13,7 @@
   border-right-style: solid;
   border-right-width: 1px;
   border-right-color: grey;
+  flex-shrink: 0;
 
   header {
     padding: 0px 28px;
@@ -45,6 +46,7 @@
   overflow-x: hidden;
   position: relative;
   display: flex;
+  flex: 1;
 }
 
 body {
@@ -81,14 +83,23 @@ body {
 .blocky-example-editor-container {
   flex: 50%;
   max-width: 50%;
-  overflow-x: scroll;
-  overflow-y: scroll;
+  position: relative;
 
   &.left {
     border-right-style: solid;
     border-right-width: 1px;
     border-right-color: grey;
   }
+}
+
+.blocky-example-content-container {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 100%;
+  height: 100%;
+  overflow-x: scroll;
+  overflow-y: scroll;
 }
 
 .blocky-example-user {
