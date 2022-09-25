@@ -1,4 +1,4 @@
-import { type IDisposable } from "blocky-common/es/disposable";
+import { type IDisposable } from "blocky-common/es";
 import type { EditorController } from "@pkg/view/controller";
 import type { BlockElement } from "blocky-data";
 import { UIDelegate } from "./uiDelegate";

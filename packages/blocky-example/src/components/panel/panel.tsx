@@ -1,10 +1,7 @@
 import { Component, ComponentChildren } from "preact";
 import { PureComponent } from "preact/compat";
 import { type EditorController } from "blocky-core";
-import {
-  type IDisposable,
-  flattenDisposable,
-} from "blocky-common/es/disposable";
+import { type IDisposable, flattenDisposable } from "blocky-common/es";
 import "./panel.scss";
 
 export interface PanelProps {

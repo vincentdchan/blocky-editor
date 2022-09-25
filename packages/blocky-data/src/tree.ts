@@ -4,7 +4,7 @@
  * It will cause strange compilation errors by Vite.
  */
 import { isUndefined, isString, isObject } from "lodash-es";
-import { Slot } from "blocky-common/es/events";
+import { Slot } from "blocky-common/es";
 import Delta from "quill-delta-es";
 import type { ElementChangedEvent } from "./events";
 

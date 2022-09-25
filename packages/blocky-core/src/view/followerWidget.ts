@@ -1,9 +1,5 @@
 import { ContainerWithCoord } from "blocky-common/es/dom";
-import {
-  type IDisposable,
-  flattenDisposable,
-} from "blocky-common/es/disposable";
-import { Slot } from "blocky-common/es/events";
+import { type IDisposable, flattenDisposable, Slot } from "blocky-common/es";
 import type { EditorController } from "./controller";
 import {
   BlockElement,

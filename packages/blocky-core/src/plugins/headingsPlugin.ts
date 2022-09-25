@@ -1,4 +1,4 @@
-import { isWhiteSpace } from "blocky-common/es/text";
+import { isWhiteSpace } from "blocky-common/es";
 import { type Editor, type IPlugin, TextBlock } from "@pkg/index";
 import { Changeset, TextType, Delta } from "blocky-data";
 import { isNumber, isString } from "lodash-es";

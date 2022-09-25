@@ -1,4 +1,4 @@
-import { isWhiteSpace } from "blocky-common/es/text";
+import { isWhiteSpace } from "blocky-common/es";
 import { isNumber, isString } from "lodash-es";
 import {
   BlockElement,

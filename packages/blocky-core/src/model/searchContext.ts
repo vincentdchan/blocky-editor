@@ -1,6 +1,5 @@
-import { IDisposable } from "blocky-common/es/disposable";
-import { elem, removeNode } from "blocky-common/src/dom";
-import { Slot } from "blocky-common/src/slot";
+import { IDisposable, Slot } from "blocky-common/es";
+import { elem, removeNode } from "blocky-common/es/dom";
 import { BlockElement, BlockyDocument, BlockyNode } from "blocky-data";
 import { isString, isObject } from "lodash-es";
 

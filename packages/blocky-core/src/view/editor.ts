@@ -1,13 +1,17 @@
-import { $on, isContainNode, removeNode } from "blocky-common/es/dom";
-import { isUpperCase } from "blocky-common/es/character";
-import { Slot } from "blocky-common/es/events";
-import { type Padding } from "blocky-common/es/dom";
-import { areEqualShallow } from "blocky-common/es/object";
 import {
-  type IDisposable,
+  $on,
+  isContainNode,
+  removeNode,
+  type Padding,
+} from "blocky-common/es/dom";
+import {
+  isUpperCase,
+  Slot,
+  areEqualShallow,
   flattenDisposable,
-} from "blocky-common/es/disposable";
-import { type Position } from "blocky-common/es/position";
+  type IDisposable,
+  type Position,
+} from "blocky-common/es";
 import {
   debounce,
   isFunction,
