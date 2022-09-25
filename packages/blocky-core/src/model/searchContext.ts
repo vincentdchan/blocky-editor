@@ -1,3 +1,5 @@
+import { IDisposable } from "blocky-common/es/disposable";
+import { Slot } from "blocky-common/src/slot";
 import { BlockElement, BlockyDocument, BlockyNode } from "blocky-data";
 import { isString, isObject } from "lodash-es";
 
@@ -6,11 +8,17 @@ export interface SearchResult {
   startIndex: number;
 }
 
-export class SearchContext {
+export class SearchContext implements IDisposable {
   readonly contexts: SearchResult[] = [];
+  readonly disposing = new Slot();
+  content: string | undefined;
 
-  constructor(readonly document: BlockyDocument, readonly content: string) {
-    this.#iterateNode(document);
+  constructor(readonly document: BlockyDocument) {}
+
+  search(content: string) {
+    this.contexts.length = 0;
+    this.content = content;
+    this.#iterateNode(this.document);
   }
 
   #iterateNode(node: BlockyNode) {
@@ -33,9 +41,13 @@ export class SearchContext {
 
     let acc = 0;
     let accStr = "";
+    const { content } = this;
+    if (!content) {
+      return;
+    }
 
     const searchContent = () => {
-      const index = accStr.indexOf(this.content);
+      const index = accStr.indexOf(content);
       if (index >= 0) {
         this.contexts.push({
           blockId: blockElement.id,
@@ -56,5 +68,9 @@ export class SearchContext {
     }
 
     searchContent();
+  }
+
+  dispose(): void {
+    this.disposing.emit();
   }
 }

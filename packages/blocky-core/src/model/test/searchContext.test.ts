@@ -9,7 +9,8 @@ import { SearchContext } from "../searchContext";
 
 test("search empty", () => {
   const doc = new BlockyDocument();
-  const searchContent = new SearchContext(doc, "Hello");
+  const searchContent = new SearchContext(doc);
+  searchContent.search("Hello");
   expect(searchContent.contexts.length).toBe(0);
 });
 
@@ -29,7 +30,8 @@ test("search text", () => {
       }),
     ],
   });
-  const searchContent = new SearchContext(doc, "Hello");
+  const searchContent = new SearchContext(doc);
+  searchContent.search("Hello");
   expect(searchContent.contexts.length).toBe(3);
   expect(searchContent.contexts[0]).toEqual({
     blockId: "id-1",

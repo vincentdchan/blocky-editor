@@ -26,6 +26,7 @@ export {
   type IEditorStateInitOptions,
   type ThemeData,
   type ParagraphStyle,
+  SearchContext,
   darkTheme,
 } from "./model";
 export { TextBlock } from "./block/textBlock";

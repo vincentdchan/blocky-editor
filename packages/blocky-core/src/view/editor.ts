@@ -137,6 +137,7 @@ export class Editor {
    */
   #stagedInput: TextInputEvent[] = [];
   #themeData?: ThemeData;
+  #searchContext: SearchContext | undefined;
 
   readonly onEveryBlock: Slot<Block> = new Slot();
 
@@ -756,7 +757,14 @@ export class Editor {
   }
 
   createSearchContext(content: string): SearchContext {
-    return new SearchContext(this.state.document, content);
+    if (!this.#searchContext) {
+      this.#searchContext = new SearchContext(this.state.document);
+      this.#searchContext.disposing.on(() => {
+        this.#searchContext = undefined;
+      });
+    }
+    this.#searchContext.search(content);
+    return this.#searchContext;
   }
 
   placeBannerAt(blockContainer: HTMLElement, node: BlockElement) {
