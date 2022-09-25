@@ -758,7 +758,10 @@ export class Editor {
 
   createSearchContext(content: string): SearchContext {
     if (!this.#searchContext) {
-      this.#searchContext = new SearchContext(this.state.document);
+      this.#searchContext = new SearchContext(
+        this.#container,
+        this.state.document
+      );
       this.#searchContext.disposing.on(() => {
         this.#searchContext = undefined;
       });

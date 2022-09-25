@@ -9,7 +9,8 @@ import { SearchContext } from "../searchContext";
 
 test("search empty", () => {
   const doc = new BlockyDocument();
-  const searchContent = new SearchContext(doc);
+  const dummyEditorContainer = document.createElement("div");
+  const searchContent = new SearchContext(dummyEditorContainer, doc);
   searchContent.search("Hello");
   expect(searchContent.contexts.length).toBe(0);
 });
@@ -30,7 +31,8 @@ test("search text", () => {
       }),
     ],
   });
-  const searchContent = new SearchContext(doc);
+  const dummyEditorContainer = document.createElement("div");
+  const searchContent = new SearchContext(dummyEditorContainer, doc);
   searchContent.search("Hello");
   expect(searchContent.contexts.length).toBe(3);
   expect(searchContent.contexts[0]).toEqual({

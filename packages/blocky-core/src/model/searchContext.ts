@@ -1,4 +1,5 @@
 import { IDisposable } from "blocky-common/es/disposable";
+import { elem, removeNode } from "blocky-common/src/dom";
 import { Slot } from "blocky-common/src/slot";
 import { BlockElement, BlockyDocument, BlockyNode } from "blocky-data";
 import { isString, isObject } from "lodash-es";
@@ -12,8 +13,18 @@ export class SearchContext implements IDisposable {
   readonly contexts: SearchResult[] = [];
   readonly disposing = new Slot();
   content: string | undefined;
+  readonly searchRangesContainer: HTMLDivElement;
 
-  constructor(readonly document: BlockyDocument) {}
+  constructor(
+    readonly editorContainer: HTMLDivElement,
+    readonly document: BlockyDocument
+  ) {
+    this.searchRangesContainer = elem("div", "blocky-search-ranges");
+    editorContainer.insertBefore(
+      this.searchRangesContainer,
+      editorContainer.firstChild
+    );
+  }
 
   search(content: string) {
     this.contexts.length = 0;
@@ -72,5 +83,6 @@ export class SearchContext implements IDisposable {
 
   dispose(): void {
     this.disposing.emit();
+    removeNode(this.searchRangesContainer);
   }
 }
