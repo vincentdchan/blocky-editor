@@ -14,9 +14,24 @@ class SearchRangeRect extends ContainerWithCoord {
   #y = 0;
   #width = 0;
   #height = 0;
+  #active = false;
 
   constructor() {
     super("blocky-search-range");
+  }
+
+  setIsActive(active: boolean) {
+    if (active === this.#active) {
+      return;
+    }
+
+    if (active) {
+      this.container.classList.add("active");
+    } else {
+      this.container.classList.remove("active");
+    }
+
+    this.#active = active;
   }
 
   setPositionByRect(containerRect: DOMRect, rect: DOMRect) {
@@ -56,6 +71,8 @@ export class SearchContext implements IDisposable {
 
   #startIndexes: number[] = [];
   #rangeRects: SearchRangeRect[] = [];
+  #activeIndex = 0;
+  #clearActiveDisposables: IDisposable[] = [];
 
   constructor(
     readonly editorContainer: HTMLDivElement,
@@ -83,6 +100,39 @@ export class SearchContext implements IDisposable {
     this.#iterateNode(this.editor.state.document); // search in each nodes
     this.#startIndexes.length = this.contexts.length;
     this.#drawRects();
+    this.#indeedSetActiveIndex(this.#activeIndex);
+  }
+
+  #clearPrevRects() {
+    this.#clearActiveDisposables.forEach((d) => d.dispose());
+    this.#clearActiveDisposables.length = 0;
+  }
+
+  setActiveIndex(index: number) {
+    if (index === this.#activeIndex) {
+      return;
+    }
+    this.#indeedSetActiveIndex(index);
+    this.#activeIndex = index;
+  }
+
+  #indeedSetActiveIndex(index: number) {
+    this.#clearPrevRects();
+    const startIndex = this.#startIndexes[index];
+    let endIndex: number;
+    if (index >= this.#startIndexes.length - 1) {
+      endIndex = this.#startIndexes.length;
+    } else {
+      endIndex = this.#startIndexes[index + 1];
+    }
+
+    for (let i = startIndex; i < endIndex; i++) {
+      const rangeRect = this.#rangeRects[i];
+      rangeRect.setIsActive(true);
+      this.#clearActiveDisposables.push({
+        dispose: () => rangeRect.setIsActive(false),
+      });
+    }
   }
 
   refresh() {

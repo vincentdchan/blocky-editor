@@ -43,6 +43,15 @@ class SearchBox extends Component<SearchBoxProps, SearchBoxState> {
     });
   }
 
+  override componentDidUpdate(
+    previousProps: Readonly<SearchBoxProps>,
+    previousState: Readonly<SearchBoxState>
+  ): void {
+    if (previousState.currentIndex !== this.state.currentIndex) {
+      this.#searchContext?.setActiveIndex(this.state.currentIndex);
+    }
+  }
+
   /**
    * Restore the cursor state
    */

@@ -172,6 +172,10 @@
 
 .blocky-search-range {
   position: absolute;
-  background-color: rgb(239, 169, 41);
+  background-color: rgb(240, 198, 119);
   z-index: -1;
+}
+
+.blocky-search-range.active {
+  background-color: rgb(235, 154, 4);
 }
