@@ -2,7 +2,6 @@ import { isObject, isString } from "lodash-es";
 import { elem, removeNode, $on } from "blocky-common/es/dom";
 import { removeLineBreaks, type Position } from "blocky-common/es";
 import {
-  type BlockCreatedEvent,
   type BlockDidMountEvent,
   type BlockFocusedEvent,
   type BlockContentChangedEvent,
@@ -203,10 +202,6 @@ export class TextBlock extends Block {
   #contentContainer: HTMLElement | null = null;
   #leftPadRenderer: LeftPadRenderer | null = null;
   #embeds: Set<Embed> = new Set();
-
-  constructor(props: BlockCreatedEvent) {
-    super(props.blockElement);
-  }
 
   private getTextType(): TextType {
     return getTextTypeForTextBlock(this.elementData as BlockElement);

@@ -2,7 +2,6 @@ import type { BlockElement } from "blocky-data";
 import {
   type IBlockDefinition,
   type EditorController,
-  type BlockCreatedEvent,
   ContentBlock,
   TryParsePastedDOMEvent,
 } from "blocky-core";
@@ -46,10 +45,6 @@ export function makeReactBlock(options: ReactBlockOptions): IBlockDefinition {
       tryParsePastedDOM && tryParsePastedDOM.bind(options);
 
     #rendered: HTMLElement | undefined;
-
-    constructor({ blockElement }: BlockCreatedEvent) {
-      super(blockElement);
-    }
 
     override render() {
       const { component } = options;

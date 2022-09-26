@@ -1,5 +1,4 @@
 import {
-  type BlockCreatedEvent,
   type BlockFocusedEvent,
   type BlockContentChangedEvent,
   type BlockDidMountEvent,
@@ -14,10 +13,6 @@ export class TitleBlock extends Block {
   static Editable = true;
 
   #container: HTMLElement | undefined;
-
-  constructor(props: BlockCreatedEvent) {
-    super(props.blockElement);
-  }
 
   override blockContentChanged({
     changeset,

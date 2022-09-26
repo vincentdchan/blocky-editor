@@ -151,7 +151,11 @@ export class Block implements IDisposable {
     return null;
   }
 
-  constructor(public props: BlockElement) {}
+  props: BlockElement;
+
+  constructor(evt: BlockCreatedEvent) {
+    this.props = evt.blockElement;
+  }
 
   get elementData(): BlockyElement {
     return this.props;
