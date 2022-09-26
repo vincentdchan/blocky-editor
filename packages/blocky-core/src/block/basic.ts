@@ -100,9 +100,9 @@ export interface BlockContentChangedEvent {
  * Handle the paste event.
  */
 export interface IBlockDefinition {
-  name: string;
+  Name: string;
 
-  editable?: boolean;
+  Editable?: boolean;
 
   /**
    * This method is used to handle pasting specific
@@ -111,7 +111,7 @@ export interface IBlockDefinition {
    * If you want to handle the HTML pasted from another
    * source, please implement [[tryParsePastedDOM]].
    */
-  onPaste?(e: BlockPasteEvent): BlockElement | undefined;
+  OnPaste?(e: BlockPasteEvent): BlockElement | undefined;
 
   /**
    *
@@ -129,9 +129,9 @@ export interface IBlockDefinition {
    * or handle it with default handler if no plugins handles.
    *
    */
-  tryParsePastedDOM?(e: TryParsePastedDOMEvent): BlockElement | void;
+  TryParsePastedDOM?(e: TryParsePastedDOMEvent): BlockElement | void;
 
-  onBlockCreated(e: BlockCreatedEvent): Block;
+  new (e: BlockCreatedEvent): Block;
 }
 
 /**
@@ -237,7 +237,7 @@ export class ContentBlock extends Block {
     const contentContainer = elem("div", "blocky-content");
     this.#contentContainer = contentContainer;
 
-    if (!blockDef.editable) {
+    if (!blockDef.Editable) {
       contentContainer.contentEditable = "false";
     }
 

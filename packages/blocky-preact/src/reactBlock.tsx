@@ -3,7 +3,6 @@ import {
   type IBlockDefinition,
   type EditorController,
   type BlockCreatedEvent,
-  type Block,
   ContentBlock,
   TryParsePastedDOMEvent,
 } from "blocky-core";
@@ -34,51 +33,47 @@ export const ReactBlockContext = createContext<IReactBlockContext | undefined>(
   undefined
 );
 
-class ReactBlock extends ContentBlock {
-  #rendered: HTMLElement | undefined;
-
-  constructor(props: BlockElement, private options: ReactBlockOptions) {
-    super(props);
-  }
-
-  override render() {
-    const { component } = this.options;
-    this.#rendered = this.contentContainer;
-    const editorController = this.editor.controller;
-    reactRender(
-      <ReactBlockContext.Provider
-        value={{ editorController, blockId: this.props.id }}
-      >
-        {component({
-          controller: this.editor.controller,
-          blockElement: this.props,
-        })}
-      </ReactBlockContext.Provider>,
-      this.contentContainer
-    );
-  }
-
-  dispose() {
-    if (this.#rendered) {
-      unmountComponentAtNode(this.#rendered);
-      this.#rendered = undefined;
-    }
-    super.dispose();
-  }
-}
-
 /**
  * This method is used connect between blocky-core and preact.
  * Help to write a block in React's style.
  */
 export function makeReactBlock(options: ReactBlockOptions): IBlockDefinition {
   const { name, tryParsePastedDOM } = options;
-  return {
-    name,
-    editable: false,
-    onBlockCreated({ blockElement }: BlockCreatedEvent): Block {
-      return new ReactBlock(blockElement, options);
-    },
-    tryParsePastedDOM: tryParsePastedDOM && tryParsePastedDOM.bind(options),
+  return class ReactBlock extends ContentBlock {
+    static Name = name;
+    static Editable = false;
+    static TryParsePastedDOM =
+      tryParsePastedDOM && tryParsePastedDOM.bind(options);
+
+    #rendered: HTMLElement | undefined;
+
+    constructor({ blockElement }: BlockCreatedEvent) {
+      super(blockElement);
+    }
+
+    override render() {
+      const { component } = options;
+      this.#rendered = this.contentContainer;
+      const editorController = this.editor.controller;
+      reactRender(
+        <ReactBlockContext.Provider
+          value={{ editorController, blockId: this.props.id }}
+        >
+          {component({
+            controller: this.editor.controller,
+            blockElement: this.props,
+          })}
+        </ReactBlockContext.Provider>,
+        this.contentContainer
+      );
+    }
+
+    dispose() {
+      if (this.#rendered) {
+        unmountComponentAtNode(this.#rendered);
+        this.#rendered = undefined;
+      }
+      super.dispose();
+    }
   };
 }

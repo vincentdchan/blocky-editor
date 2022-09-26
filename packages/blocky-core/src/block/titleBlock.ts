@@ -1,5 +1,4 @@
 import {
-  type IBlockDefinition,
   type BlockCreatedEvent,
   type BlockFocusedEvent,
   type BlockContentChangedEvent,
@@ -8,14 +7,16 @@ import {
   Block,
 } from "./basic";
 import { TextInputEvent } from "@pkg/view/editor";
-import { BlockyTextModel, BlockElement, Delta } from "blocky-data";
+import { BlockyTextModel, Delta } from "blocky-data";
 
 export class TitleBlock extends Block {
   static Name = "Title";
+  static Editable = true;
+
   #container: HTMLElement | undefined;
 
-  constructor(props: BlockElement) {
-    super(props);
+  constructor(props: BlockCreatedEvent) {
+    super(props.blockElement);
   }
 
   override blockContentChanged({
@@ -81,14 +82,5 @@ export class TitleBlock extends Block {
 
   get textModel(): BlockyTextModel {
     return this.props.getAttribute<BlockyTextModel>("textContent")!;
-  }
-}
-
-export class TitleBlockDefinition implements IBlockDefinition {
-  name: string = TitleBlock.Name;
-  editable = true;
-
-  onBlockCreated({ blockElement: data }: BlockCreatedEvent): Block {
-    return new TitleBlock(data);
   }
 }

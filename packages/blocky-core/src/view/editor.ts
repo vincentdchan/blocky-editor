@@ -1255,7 +1255,7 @@ export class Editor {
       throw new Error(`definition not found for ${node.nodeName}`);
     }
 
-    if (blockDef.editable !== false) {
+    if (blockDef.Editable !== false) {
       return false;
     }
 

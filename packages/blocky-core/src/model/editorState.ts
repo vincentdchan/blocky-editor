@@ -102,7 +102,7 @@ export class EditorState extends State {
     this.#insertElement(blockElement);
 
     if (blockElement.nodeName === "Title") {
-      const titleBlock = new TitleBlock(blockElement);
+      const titleBlock = new TitleBlock({ blockElement });
       this.blocks.set(blockElement.id, titleBlock);
       return;
     }
@@ -113,7 +113,7 @@ export class EditorState extends State {
       throw new Error("invalid block name: " + blockElement.nodeName);
     }
 
-    const block = blockDef.onBlockCreated({ blockElement });
+    const block = new blockDef({ blockElement });
 
     this.blocks.set(blockElement.id, block);
 

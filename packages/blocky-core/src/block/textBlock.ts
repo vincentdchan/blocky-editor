@@ -2,7 +2,6 @@ import { isObject, isString } from "lodash-es";
 import { elem, removeNode, $on } from "blocky-common/es/dom";
 import { removeLineBreaks, type Position } from "blocky-common/es";
 import {
-  type IBlockDefinition,
   type BlockCreatedEvent,
   type BlockDidMountEvent,
   type BlockFocusedEvent,
@@ -108,6 +107,96 @@ class CheckboxRenderer extends LeftPadRenderer {
  */
 export class TextBlock extends Block {
   static Name = "Text";
+  static Editable = true;
+
+  static OnPaste({
+    editorController,
+    node: container,
+    converter,
+  }: BlockPasteEvent): BlockElement | undefined {
+    return TextBlock.#getTextElementFromDOM(
+      editorController,
+      container,
+      converter
+    );
+  }
+
+  /**
+   * Rebuild the data structure from the pasted html.
+   */
+  static #getTextElementFromDOM(
+    editorController: EditorController,
+    node: HTMLElement,
+    converter: HTMLConverter
+  ): BlockElement {
+    const newId = editorController.idGenerator.mkBlockId();
+
+    const attributes = Object.create(null);
+    const childrenContainer: BlockyNode[] = [];
+
+    // TODO: Maybe using querySelector is slow.
+    // Should make a benchmark here
+    let textContentContainer = node.querySelector(".blocky-block-text-content");
+
+    // if content container if not found, using the node directly
+    if (!textContentContainer) {
+      textContentContainer = node;
+    }
+
+    const delta = new Delta();
+    if (textContentContainer) {
+      let childPtr = textContentContainer.firstChild;
+
+      const dataType =
+        textContentContainer.getAttribute("data-type") || TextType.Normal;
+      attributes.textType = dataType;
+
+      while (childPtr) {
+        if (childPtr instanceof Text) {
+          delta.insert(removeLineBreaks(childPtr.textContent));
+        } else if (childPtr instanceof HTMLElement) {
+          if (converter.isContainerElement(childPtr)) {
+            const childElements = converter.parseContainerElement(childPtr);
+            childrenContainer.push(...childElements);
+          } else {
+            const attributes = editorController.getAttributesBySpan(childPtr);
+            delta.insert(removeLineBreaks(childPtr.textContent), attributes);
+          }
+        }
+
+        childPtr = childPtr.nextSibling;
+      }
+    } else {
+      delta.insert(removeLineBreaks(node.textContent));
+    }
+    const textModel = new BlockyTextModel(delta);
+
+    const { tagName } = node;
+    if (tagName === "H1") {
+      attributes.textType = TextType.Heading1;
+    } else if (tagName === "H2") {
+      attributes.textType = TextType.Heading2;
+    } else if (tagName === "H3") {
+      attributes.textType = TextType.Heading3;
+    } else if (tagName === "LI") {
+      attributes.textType = TextType.Bulleted;
+    }
+
+    const childrenNode: BlockyNode[] = [];
+    if (childrenContainer.length > 0) {
+      childrenNode.push(...childrenContainer);
+    }
+
+    return new BlockElement(
+      TextBlock.Name,
+      newId,
+      {
+        ...attributes,
+        textContent: textModel,
+      },
+      childrenNode
+    );
+  }
 
   #container: HTMLElement | undefined;
   #bodyContainer: HTMLElement | null = null;
@@ -115,8 +204,8 @@ export class TextBlock extends Block {
   #leftPadRenderer: LeftPadRenderer | null = null;
   #embeds: Set<Embed> = new Set();
 
-  constructor(props: BlockElement) {
-    super(props);
+  constructor(props: BlockCreatedEvent) {
+    super(props.blockElement);
   }
 
   private getTextType(): TextType {
@@ -857,100 +946,6 @@ function clearNodeAttributes(node: Node) {
   }
 }
 
-class TextBlockDefinition implements IBlockDefinition {
-  name: string = TextBlock.Name;
-  editable = true;
-
-  onBlockCreated({ blockElement: data }: BlockCreatedEvent): Block {
-    return new TextBlock(data);
-  }
-
-  onPaste({
-    editorController,
-    node: container,
-    converter,
-  }: BlockPasteEvent): BlockElement | undefined {
-    return this.#getTextElementFromDOM(editorController, container, converter);
-  }
-
-  /**
-   * Rebuild the data structure from the pasted html.
-   */
-  #getTextElementFromDOM(
-    editorController: EditorController,
-    node: HTMLElement,
-    converter: HTMLConverter
-  ): BlockElement {
-    const newId = editorController.idGenerator.mkBlockId();
-
-    const attributes = Object.create(null);
-    const childrenContainer: BlockyNode[] = [];
-
-    // TODO: Maybe using querySelector is slow.
-    // Should make a benchmark here
-    let textContentContainer = node.querySelector(".blocky-block-text-content");
-
-    // if content container if not found, using the node directly
-    if (!textContentContainer) {
-      textContentContainer = node;
-    }
-
-    const delta = new Delta();
-    if (textContentContainer) {
-      let childPtr = textContentContainer.firstChild;
-
-      const dataType =
-        textContentContainer.getAttribute("data-type") || TextType.Normal;
-      attributes.textType = dataType;
-
-      while (childPtr) {
-        if (childPtr instanceof Text) {
-          delta.insert(removeLineBreaks(childPtr.textContent));
-        } else if (childPtr instanceof HTMLElement) {
-          if (converter.isContainerElement(childPtr)) {
-            const childElements = converter.parseContainerElement(childPtr);
-            childrenContainer.push(...childElements);
-          } else {
-            const attributes = editorController.getAttributesBySpan(childPtr);
-            delta.insert(removeLineBreaks(childPtr.textContent), attributes);
-          }
-        }
-
-        childPtr = childPtr.nextSibling;
-      }
-    } else {
-      delta.insert(removeLineBreaks(node.textContent));
-    }
-    const textModel = new BlockyTextModel(delta);
-
-    const { tagName } = node;
-    if (tagName === "H1") {
-      attributes.textType = TextType.Heading1;
-    } else if (tagName === "H2") {
-      attributes.textType = TextType.Heading2;
-    } else if (tagName === "H3") {
-      attributes.textType = TextType.Heading3;
-    } else if (tagName === "LI") {
-      attributes.textType = TextType.Bulleted;
-    }
-
-    const childrenNode: BlockyNode[] = [];
-    if (childrenContainer.length > 0) {
-      childrenNode.push(...childrenContainer);
-    }
-
-    return new BlockElement(
-      TextBlock.Name,
-      newId,
-      {
-        ...attributes,
-        textContent: textModel,
-      },
-      childrenNode
-    );
-  }
-}
-
 function setRangeIfDifferent(
   sel: Selection,
   startContainer: Node,
@@ -986,10 +981,6 @@ function isRangeEqual(
     range.endContainer === endContainer &&
     range.endOffset === endOffset
   );
-}
-
-export function makeTextBlockDefinition(): IBlockDefinition {
-  return new TextBlockDefinition();
 }
 
 export function getTextTypeForTextBlock(blockElement: BlockElement): TextType {

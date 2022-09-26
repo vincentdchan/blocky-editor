@@ -6,8 +6,8 @@ import type {
 } from "@pkg/block/basic";
 import type { BlockElement } from "blocky-data";
 import { Registry } from "./registry";
-import { makeTextBlockDefinition, TextBlock } from "@pkg/block/textBlock";
-import { TitleBlockDefinition, TitleBlock } from "@pkg/block/titleBlock";
+import { TextBlock } from "@pkg/block/textBlock";
+import { TitleBlock } from "@pkg/block/titleBlock";
 
 export class BlockRegistry extends Registry<IBlockDefinition> {
   #types: IBlockDefinition[];
@@ -15,14 +15,14 @@ export class BlockRegistry extends Registry<IBlockDefinition> {
 
   constructor() {
     super();
-    this.#types = [makeTextBlockDefinition(), new TitleBlockDefinition()];
+    this.#types = [TextBlock, TitleBlock];
     this.#nameMap.set(TextBlock.Name, 0);
     this.#nameMap.set(TitleBlock.Name, 1);
   }
 
   register(blockType: IBlockDefinition): number {
     this.ensureUnsealed();
-    const { name } = blockType;
+    const { Name: name } = blockType;
     if (this.#nameMap.has(name)) {
       throw new Error(`SpanType '${name}' exists`);
     }
@@ -55,7 +55,7 @@ export class BlockRegistry extends Registry<IBlockDefinition> {
 
   handlePasteElement(e: TryParsePastedDOMEvent): BlockElement | void {
     for (const def of this.#types) {
-      const test = def.tryParsePastedDOM?.(e);
+      const test = def.TryParsePastedDOM?.(e);
       if (test) {
         return test;
       }

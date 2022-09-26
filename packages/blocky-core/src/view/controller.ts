@@ -614,7 +614,7 @@ export class EditorController {
     }
 
     const blockDef = this.blockRegistry.getBlockDefByName(TextBlock.Name);
-    const pasteHandler = blockDef?.onPaste;
+    const pasteHandler = blockDef?.OnPaste;
     const evt = new BlockPasteEvent({
       node: node as HTMLElement,
       editorController: this,
@@ -645,7 +645,7 @@ export class EditorController {
       }
     }
 
-    const pasteHandler = blockDef?.onPaste;
+    const pasteHandler = blockDef?.OnPaste;
     if (pasteHandler) {
       const evt = new BlockPasteEvent({
         editorController: this,
