@@ -148,6 +148,9 @@ import {
 } from "blocky-core";
 
 class MyBlock extends Block {
+  static Name = "MyBlock";
+  static Editable = false;
+
   /**
    * Get the data of the block.
    */
@@ -185,14 +188,10 @@ class MyBlock extends Block {
   }
 }
 
-export function makeMyBlock(): IBlockDefinition {
+export function makeMyBlockPlugin(): IPlugin {
   return {
     name: "plugin-name",
-    editable: false,
-    onBlockCreated({ model }: BlockCreatedEvent): Block {
-      /** control how the block is created **/
-      return new MyBlock();
-    },
+    blocks: [MyBlock],
   };
 }
 ```
