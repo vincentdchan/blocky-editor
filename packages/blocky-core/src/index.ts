@@ -2,6 +2,7 @@ export * from "./view/editor";
 export * from "./view/controller";
 export * from "./block/basic";
 export { makeDefaultIdGenerator, type IdGenerator } from "./helper/idHelper";
+export { CopyContentBuilder, html } from "./helper/copyContentBuilder";
 export { type BannerFactory, type BannerInstance } from "./view/bannerDelegate";
 export { type ToolbarFactory, type Toolbar } from "./view/toolbarDelegate";
 export { FollowerWidget } from "./view/followerWidget";

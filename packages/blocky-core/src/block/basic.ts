@@ -1,5 +1,6 @@
 import { type IDisposable, type Position } from "blocky-common/es";
 import { elem } from "blocky-common/es/dom";
+import { CopyContentBuilder } from "@pkg/helper/copyContentBuilder";
 import { type HTMLConverter } from "@pkg/helper/htmlConverter";
 import {
   type BlockyNode,
@@ -94,6 +95,11 @@ export interface BlockContentChangedEvent {
   offset?: number;
 }
 
+export interface BlockCopyEvent {
+  builder: CopyContentBuilder;
+  range: "all" | [number, number];
+}
+
 /**
  * This class is used to define a block.
  * Tell the editor the name of the block.
@@ -182,6 +188,8 @@ export class Block implements IDisposable {
   onDedent?(e: KeyboardEvent): void;
 
   onIndent?(e: KeyboardEvent): void;
+
+  onCopy?(e: BlockCopyEvent): void;
 
   /**
    * Handle the block is focused.

@@ -17,6 +17,7 @@ import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { TextBlock } from "@pkg/block/textBlock";
 import { TitleBlock } from "@pkg/block/titleBlock";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
+import { NodeTraverser } from "./traverser";
 
 export interface IEditorStateInitOptions {
   userId: string;
@@ -223,51 +224,5 @@ export class EditorState extends State {
 
     result.children = children;
     return result;
-  }
-}
-
-export class NodeTraverser {
-  #node: BlockyNode | null;
-  constructor(readonly state: EditorState, beginNode: BlockyNode) {
-    this.#node = beginNode;
-  }
-
-  peek(): BlockyNode | null {
-    return this.#node;
-  }
-
-  next() {
-    const current = this.#node;
-    if (current === null) {
-      return current;
-    }
-
-    if (current.nodeName === TitleBlock.Name) {
-      this.#node = this.state.document.body.firstChild;
-      return current;
-    }
-
-    if (current.firstChild) {
-      this.#node = this.#findLeadingChildOfNode(current);
-    } else if (current.nextSibling) {
-      this.#node = current.nextSibling;
-    } else {
-      const parent = current.parent!;
-      const nextOfParent = parent.nextSibling;
-      if (nextOfParent === null) {
-        this.#node = null;
-      } else {
-        this.#node = this.#findLeadingChildOfNode(nextOfParent);
-      }
-    }
-
-    return current;
-  }
-
-  #findLeadingChildOfNode(node: BlockyNode): BlockyNode {
-    while (node.firstChild !== null) {
-      node = node.firstChild;
-    }
-    return node;
   }
 }

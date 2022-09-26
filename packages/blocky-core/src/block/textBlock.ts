@@ -8,6 +8,7 @@ import {
   type BlockPasteEvent,
   type CursorDomResult,
   Block,
+  BlockCopyEvent,
 } from "./basic";
 import { EditorState } from "@pkg/model";
 import {
@@ -25,6 +26,7 @@ import {
 import { TextInputEvent, type Editor } from "@pkg/view/editor";
 import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { EditorController } from "@pkg/view/controller";
+import { html } from "@pkg/helper/copyContentBuilder";
 import type { SpanStyle } from "@pkg/registry/spanRegistry";
 import type { Embed } from "@pkg/registry/embedRegistry";
 
@@ -844,6 +846,21 @@ export class TextBlock extends Block {
       return;
     }
     this.#makeThisTextBlockIndent(prevElement);
+  }
+
+  override onCopy(e: BlockCopyEvent): void {
+    console.log("copy", e);
+    const textModel = this.textModel;
+    let textContent: string;
+    if (e.range === "all") {
+      textContent = textModel.toString();
+    } else {
+      const [start, end] = e.range;
+      textContent = textModel.delta.toString().slice(start, end);
+    }
+
+    const data = html`<p>${textContent}</p>`;
+    e.builder.add(data);
   }
 
   #makeThisTextBlockIndent(prevElement: BlockElement) {

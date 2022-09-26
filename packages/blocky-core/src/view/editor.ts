@@ -59,6 +59,7 @@ import {
 import { isHotkey } from "is-hotkey";
 import { TitleBlock } from "@pkg/block/titleBlock";
 import type { ThemeData } from "@pkg/model/theme";
+import { CopyContentBuilder } from "@pkg/helper/copyContentBuilder";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
@@ -1425,37 +1426,60 @@ export class Editor {
     this.#lastFocusedId = undefined;
   }
 
+  /**
+   * Handle the copy event for the editor.
+   *
+   * 1. If the user implements `onCopy`.
+   *    Invoke this method to get the HTML.
+   *    This is the recommended way because the block can
+   *    determine what to be copied.
+   * 2. Otherwise, create a dummy `<div>` element to store the data.
+   */
   #handleCopy = (e: ClipboardEvent) => {
-    const { cursorState } = this.state;
-    if (!cursorState) {
-      return;
-    }
-
-    const blockElement = this.state.getBlockElementById(cursorState.id);
-    if (!blockElement) {
-      return;
-    }
-
-    if (
-      blockElement.nodeName === TextBlock.Name ||
-      blockElement.nodeName === "Title"
-    ) {
-      return;
-    }
-
-    const blockData = blockElement.toJSON();
-    console.log(JSON.stringify(blockData).replace(/"/g, '\\"'));
-    e.clipboardData?.clearData();
-    e.clipboardData?.setData(
-      "text/html",
-      `<div data-id="${blockElement.id}" data-type="${
-        blockElement.nodeName
-      }" data-content="${JSON.stringify(blockData).replace(
-        /"/g,
-        "&quot;"
-      )}"></div>`
-    );
     e.preventDefault();
+    const { cursorState } = this.state;
+    if (!cursorState || cursorState.isCollapsed) {
+      return;
+    }
+
+    const block = this.state.blocks.get(cursorState.id);
+    if (!block) {
+      return;
+    }
+
+    const copyContentBuilder = new CopyContentBuilder();
+
+    const startOffset = cursorState.startOffset;
+    const endOffset = cursorState.endOffset;
+    block.onCopy?.({
+      range: [startOffset, endOffset],
+      builder: copyContentBuilder,
+    });
+
+    const copyData = copyContentBuilder.toString();
+    console.log("copyData:", copyData);
+    e.clipboardData?.clearData();
+    e.clipboardData?.setData("text/html", copyData);
+
+    // if (
+    //   blockElement.nodeName === TextBlock.Name ||
+    //   blockElement.nodeName === "Title"
+    // ) {
+    //   return;
+    // }
+
+    // const blockData = blockElement.toJSON();
+    // console.log(JSON.stringify(blockData).replace(/"/g, '\\"'));
+    // e.clipboardData?.clearData();
+    // e.clipboardData?.setData(
+    //   "text/html",
+    //   `<div data-id="${blockElement.id}" data-type="${
+    //     blockElement.nodeName
+    //   }" data-content="${JSON.stringify(blockData).replace(
+    //     /"/g,
+    //     "&quot;"
+    //   )}"></div>`
+    // );
   };
 
   #handlePaste = (e: ClipboardEvent) => {
