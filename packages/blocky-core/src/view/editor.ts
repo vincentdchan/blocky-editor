@@ -20,7 +20,7 @@ import {
   isNumber,
 } from "lodash-es";
 import { DocRenderer } from "@pkg/view/renderer";
-import { EditorState, SearchContext } from "@pkg/model";
+import { EditorState, NodeTraverser, SearchContext } from "@pkg/model";
 import {
   type CursorStateUpdateEvent,
   BlockyTextModel,
@@ -1442,19 +1442,33 @@ export class Editor {
       return;
     }
 
-    const block = this.state.blocks.get(cursorState.id);
-    if (!block) {
+    const startBlock = this.state.blocks.get(cursorState.startId);
+    const endBlock = this.state.blocks.get(cursorState.endId);
+    if (!startBlock || !endBlock) {
       return;
     }
 
     const copyContentBuilder = new CopyContentBuilder();
+    const traverser = new NodeTraverser(
+      this.state,
+      startBlock.props,
+      endBlock.props
+    );
 
     const startOffset = cursorState.startOffset;
     const endOffset = cursorState.endOffset;
-    block.onCopy?.({
-      range: [startOffset, endOffset],
-      builder: copyContentBuilder,
-    });
+
+    while (traverser.peek()) {
+      const currentNode = traverser.next()!;
+      this.#invokeCopyOnElement(
+        currentNode as BlockElement,
+        copyContentBuilder,
+        currentNode === startBlock.props,
+        currentNode === endBlock.props,
+        startOffset,
+        endOffset
+      );
+    }
 
     const copyData = copyContentBuilder.toString();
     console.log("copyData:", copyData);
@@ -1481,6 +1495,35 @@ export class Editor {
     //   )}"></div>`
     // );
   };
+
+  #invokeCopyOnElement(
+    blockElement: BlockElement,
+    copyContentBuilder: CopyContentBuilder,
+    isStart: boolean,
+    isEnd: boolean,
+    startOffset: number,
+    endOffset: number
+  ) {
+    const block = this.state.blocks.get(blockElement.id)!;
+    const isText = blockElement.nodeName === TextBlock.Name;
+    if (isStart && isText) {
+      const len = blockElement.getTextModel("textContent")?.length ?? 0;
+      block.onCopy?.({
+        range: [startOffset, len],
+        builder: copyContentBuilder,
+      });
+    } else if (isEnd && isText) {
+      block.onCopy?.({
+        range: [0, endOffset],
+        builder: copyContentBuilder,
+      });
+    } else {
+      block.onCopy?.({
+        range: "all",
+        builder: copyContentBuilder,
+      });
+    }
+  }
 
   #handlePaste = (e: ClipboardEvent) => {
     e.preventDefault(); // take over the paste event

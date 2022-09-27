@@ -26,7 +26,6 @@ import {
 import { TextInputEvent, type Editor } from "@pkg/view/editor";
 import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { EditorController } from "@pkg/view/controller";
-import { html } from "@pkg/helper/copyContentBuilder";
 import type { SpanStyle } from "@pkg/registry/spanRegistry";
 import type { Embed } from "@pkg/registry/embedRegistry";
 
@@ -849,17 +848,34 @@ export class TextBlock extends Block {
   }
 
   override onCopy(e: BlockCopyEvent): void {
-    console.log("copy", e);
     const textModel = this.textModel;
-    let textContent: string;
-    if (e.range === "all") {
-      textContent = textModel.toString();
-    } else {
-      const [start, end] = e.range;
-      textContent = textModel.delta.toString().slice(start, end);
+    let start = 0;
+    let end = textModel.length;
+
+    const pContainer = document.createElement("p");
+
+    if (e.range !== "all") {
+      start = e.range[0];
+      end = e.range[1];
     }
 
-    const data = html`<p>${textContent}</p>`;
+    // let index = 0;
+    for (const op of textModel.delta.ops) {
+      if (isString(op.insert)) {
+        if (start >= op.insert.length) {
+          start -= op.insert.length;
+          end -= op.insert.length;
+        } else {
+          pContainer.appendChild(document.createTextNode(op.insert));
+        }
+      } else if (isObject(op.insert)) {
+        // TODO
+        pContainer.appendChild(document.createTextNode("@"));
+      }
+    }
+
+    const data = pContainer.outerHTML;
+    console.log("add", data);
     e.builder.add(data);
   }
 

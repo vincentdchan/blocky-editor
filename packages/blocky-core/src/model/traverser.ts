@@ -25,7 +25,8 @@ export class NodeTraverser {
     }
 
     if (current === this.#endNode) {
-      return null;
+      this.#node = null;
+      return current;
     }
 
     if (current.nodeName === TitleBlock.Name) {
