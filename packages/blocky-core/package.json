@@ -1,6 +1,6 @@
 {
   "name": "blocky-core",
-  "version": "2.15.3",
+  "version": "2.16.0",
   "description": "The core of the blocky editor",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -32,11 +32,11 @@
     "vitest": "^0.14.2"
   },
   "dependencies": {
-    "blocky-common": "workspace:2.15.0",
+    "blocky-common": "workspace:2.16.0",
     "is-hotkey": "^0.2.0",
     "lodash-es": "^4.17.21"
   },
   "peerDependencies": {
-    "blocky-data": "workspace:^2.15.0"
+    "blocky-data": "workspace:^2.16.0"
   }
 }

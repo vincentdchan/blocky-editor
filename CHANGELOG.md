@@ -1,3 +1,8 @@
+## 2.16.0
+
+- New block init API
+- Support searching text
+
 ## 2.15.3
 
 - Add `onError` to options
