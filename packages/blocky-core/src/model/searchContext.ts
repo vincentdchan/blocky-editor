@@ -234,12 +234,17 @@ export class SearchContext implements IDisposable {
     }
 
     const searchContent = () => {
-      const index = accStr.indexOf(content);
-      if (index >= 0) {
+      let position = 0;
+      for (;;) {
+        const index = accStr.indexOf(content, position);
+        if (index < 0) {
+          break;
+        }
         this.contexts.push({
           blockId: blockElement.id,
           startIndex: index + acc,
         });
+        position = index + content.length;
       }
     };
 
