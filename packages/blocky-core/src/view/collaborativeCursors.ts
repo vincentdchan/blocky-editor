@@ -1,5 +1,5 @@
 import { ContainerWithCoord, DivContainer } from "blocky-common/es/dom";
-import { Slot } from "blocky-common/es";
+import { Observable, fromEvent } from "rxjs";
 
 class CursorLabel extends ContainerWithCoord {
   static Height = 12;
@@ -28,12 +28,12 @@ class CursorLabel extends ContainerWithCoord {
 const minWidthOfCursor = 2;
 
 class CollaborativeCursorRect extends ContainerWithCoord {
-  readonly mouseEnter: Slot<MouseEvent>;
-  readonly mouseLeave: Slot<MouseEvent>;
+  readonly mouseEnter: Observable<MouseEvent>;
+  readonly mouseLeave: Observable<MouseEvent>;
   constructor() {
     super("blocky-collaborative-cursor-rect");
-    this.mouseEnter = Slot.fromEvent(this.container, "mouseenter");
-    this.mouseLeave = Slot.fromEvent(this.container, "mouseleave");
+    this.mouseEnter = fromEvent<MouseEvent>(this.container, "mouseenter");
+    this.mouseLeave = fromEvent<MouseEvent>(this.container, "mouseleave");
   }
 
   setColor(color: string) {
@@ -192,8 +192,8 @@ export class CollaborativeCursor {
 
   #createCursorRectWithCoord(): CollaborativeCursorRect {
     const cursorRect = new CollaborativeCursorRect();
-    cursorRect.mouseEnter.on(this.#handleMouseEnter);
-    cursorRect.mouseLeave.on(this.#handleMouseLeave);
+    cursorRect.mouseEnter.subscribe(this.#handleMouseEnter);
+    cursorRect.mouseLeave.subscribe(this.#handleMouseLeave);
     cursorRect.setColor(this.#color);
     cursorRect.setHeight(this.#height);
     cursorRect.mount(this.parent);

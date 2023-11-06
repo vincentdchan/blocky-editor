@@ -19,6 +19,7 @@
   "dependencies": {
     "blocky-common": "workspace:2.16.0",
     "lodash-es": "^4.17.21",
-    "quill-delta-es": "5.2.0"
+    "quill-delta-es": "5.2.0",
+    "rxjs": "^7.8.1"
   }
 }

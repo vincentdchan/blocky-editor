@@ -30,7 +30,7 @@ function makeStyledTextPlugin(): IPlugin {
       },
     ],
     onInitialized(editor: Editor) {
-      editor.keyDown.on((e: KeyboardEvent) => {
+      editor.keyDown.subscribe((e: KeyboardEvent) => {
         if (isHotkey("mod+b", e)) {
           e.preventDefault();
           editor.controller.formatTextOnSelectedText({

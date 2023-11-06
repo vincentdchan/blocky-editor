@@ -1,4 +1,5 @@
-import { IDisposable, Slot } from "blocky-common/es";
+import { IDisposable } from "blocky-common/es";
+import { Subject } from "rxjs";
 import { elem, removeNode, ContainerWithCoord } from "blocky-common/es/dom";
 import { BlockElement, BlockyNode } from "blocky-data";
 import { isString, isObject } from "lodash-es";
@@ -65,7 +66,7 @@ class SearchRangeRect extends ContainerWithCoord {
 
 export class SearchContext implements IDisposable {
   readonly contexts: SearchResult[] = [];
-  readonly disposing = new Slot();
+  readonly dispose$ = new Subject<void>();
   content: string | undefined;
   readonly searchRangesContainer: HTMLDivElement;
 
@@ -263,7 +264,7 @@ export class SearchContext implements IDisposable {
   }
 
   dispose(): void {
-    this.disposing.emit();
+    this.dispose$.next();
     removeNode(this.searchRangesContainer);
   }
 }

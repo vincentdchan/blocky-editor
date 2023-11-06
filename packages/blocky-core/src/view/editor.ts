@@ -6,12 +6,12 @@ import {
 } from "blocky-common/es/dom";
 import {
   isUpperCase,
-  Slot,
   areEqualShallow,
   flattenDisposable,
   type IDisposable,
   type Position,
 } from "blocky-common/es";
+import { Subject, takeUntil, take } from "rxjs";
 import {
   debounce,
   isFunction,
@@ -143,7 +143,9 @@ export class Editor {
   #themeData?: ThemeData;
   #searchContext: SearchContext | undefined;
 
-  readonly onEveryBlock: Slot<Block> = new Slot();
+  readonly dispose$ = new Subject<void>();
+
+  readonly onEveryBlock: Subject<Block> = new Subject();
 
   readonly bannerDelegate: BannerDelegate;
   readonly toolbarDelegate: ToolbarDelegate;
@@ -154,8 +156,8 @@ export class Editor {
 
   readonly state: EditorState;
   readonly registry: EditorRegistry;
-  readonly keyDown = new Slot<KeyboardEvent>();
-  readonly textInput = new Slot<TextInputEvent>();
+  readonly keyDown = new Subject<KeyboardEvent>();
+  readonly textInput = new Subject<TextInputEvent>();
 
   readonly preservedTextType: Set<TextType> = new Set([TextType.Bulleted]);
 
@@ -227,7 +229,7 @@ export class Editor {
 
     document.addEventListener("selectionchange", this.#selectionChangedHandler);
 
-    state.cursorStateChanged.on(this.handleCursorStateChanged);
+    state.cursorStateChanged.subscribe(this.handleCursorStateChanged);
 
     this.disposables.push($on(container, "mouseleave", this.#hideBanner));
 
@@ -240,9 +242,9 @@ export class Editor {
 
     this.#initBlockCreated();
 
-    this.state.beforeChangesetApply.on(this.#handleBeforeChangesetApply);
-    this.state.changesetApplied.on(this.#handleChangesetApplied);
-    this.state.blockWillDelete.on((blockElement: BlockElement) => {
+    this.state.beforeChangesetApply.subscribe(this.#handleBeforeChangesetApply);
+    this.state.changesetApplied.subscribe(this.#handleChangesetApplied);
+    this.state.blockWillDelete.subscribe((blockElement: BlockElement) => {
       const dom = this.state.domMap.get(blockElement.id);
       if (dom) {
         this.destructBlockNode(dom);
@@ -285,22 +287,22 @@ export class Editor {
     const oldInput = this.#stagedInput;
     this.#stagedInput = newInput;
     for (let i = 0; i < oldInput.length; i++) {
-      this.textInput.emit(oldInput[i]);
+      this.textInput.next(oldInput[i]);
     }
   }
 
   #initBlockCreated() {
-    this.disposables.push(
-      this.onEveryBlock.on((block: Block) => {
+    this.onEveryBlock
+      .pipe(takeUntil(this.dispose$))
+      .subscribe((block: Block) => {
         block.setEditor(this);
-      })
-    );
+      });
 
     for (const block of this.state.blocks.values()) {
-      this.onEveryBlock.emit(block);
+      this.onEveryBlock.next(block);
     }
 
-    this.state.newBlockCreated.pipe(this.onEveryBlock);
+    this.state.newBlockCreated.subscribe(this.onEveryBlock);
   }
 
   drawCollaborativeCursor(id: string, state: CursorState | null) {
@@ -763,9 +765,11 @@ export class Editor {
   createSearchContext(content: string): SearchContext {
     if (!this.#searchContext) {
       this.#searchContext = new SearchContext(this.#container, this);
-      this.#searchContext.disposing.on(() => {
-        this.#searchContext = undefined;
-      });
+      this.#searchContext.dispose$
+        .pipe(take(1))
+        .subscribe(() => {
+          this.#searchContext = undefined;
+        });
     }
     this.#searchContext.search(content);
     return this.#searchContext;
@@ -836,7 +840,7 @@ export class Editor {
   };
 
   #handleKeyDown = (e: KeyboardEvent) => {
-    this.keyDown.emit(e);
+    this.keyDown.next(e);
     if (e.defaultPrevented) {
       return;
     }
@@ -1582,7 +1586,9 @@ export class Editor {
     this.#followerWidget = widget;
     this.#container.insertBefore(widget.container, this.#container.firstChild);
     widget.startCursorState = this.state.cursorState!;
-    widget.disposing.on(() => {
+    widget.dispose$
+    .pipe(take(1))
+    .subscribe(() => {
       this.#followerWidget = undefined;
     });
     widget.widgetMounted(this.controller);
@@ -1656,6 +1662,7 @@ export class Editor {
   }
 
   dispose() {
+    this.dispose$.next();
     this.#followerWidget?.dispose();
     this.#followerWidget = undefined;
     document.removeEventListener(

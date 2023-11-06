@@ -46,7 +46,7 @@ function makeCodeTextPlugin(): IPlugin {
       },
     ],
     onInitialized(editor: Editor) {
-      editor.keyDown.on((e: KeyboardEvent) => {
+      editor.keyDown.subscribe((e: KeyboardEvent) => {
         if (isHotkey("mod+m", e)) {
           e.preventDefault();
           editor.controller.formatTextOnSelectedText({

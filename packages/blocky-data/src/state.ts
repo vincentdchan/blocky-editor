@@ -4,7 +4,7 @@ import {
   type BlockyTextModel,
   BlockyElement,
 } from "./tree";
-import { Slot } from "blocky-common/es";
+import { Subject } from "rxjs";
 import { isUndefined } from "lodash-es";
 import {
   type FinalizedChangeset,
@@ -47,10 +47,10 @@ export interface CursorStateUpdateEvent {
 }
 
 export class State implements ChangesetStateLogger {
-  readonly beforeChangesetApply: Slot<FinalizedChangeset> = new Slot();
-  readonly changesetApplied: Slot<FinalizedChangeset> = new Slot();
+  readonly beforeChangesetApply: Subject<FinalizedChangeset> = new Subject();
+  readonly changesetApplied: Subject<FinalizedChangeset> = new Subject();
   readonly versionHistory = new VersionHistory();
-  readonly cursorStateChanged: Slot<CursorStateUpdateEvent> = new Slot();
+  readonly cursorStateChanged: Subject<CursorStateUpdateEvent> = new Subject();
   #appliedVersion: number;
   #cursorState: CursorState | null = null;
 
@@ -86,7 +86,7 @@ export class State implements ChangesetStateLogger {
     }
     const prevState = this.#cursorState;
     this.#cursorState = cursorState;
-    this.cursorStateChanged.emit({
+    this.cursorStateChanged.next({
       prevState,
       state: cursorState,
       reason,
@@ -117,7 +117,7 @@ export class State implements ChangesetStateLogger {
     if (this.#appliedVersion >= changeset.version) {
       return false;
     }
-    this.beforeChangesetApply.emit(changeset);
+    this.beforeChangesetApply.next(changeset);
 
     for (const operation of changeset.operations) {
       switch (operation.op) {
@@ -141,7 +141,7 @@ export class State implements ChangesetStateLogger {
     }
 
     this.#appliedVersion = changeset.version;
-    this.changesetApplied.emit(changeset);
+    this.changesetApplied.next(changeset);
     this.versionHistory.insert(changeset);
     return true;
   }

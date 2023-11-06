@@ -4,7 +4,7 @@
  * It will cause strange compilation errors by Vite.
  */
 import { isUndefined, isString, isObject } from "lodash-es";
-import { Slot } from "blocky-common/es";
+import { Subject } from "rxjs";
 import Delta from "quill-delta-es";
 import type { ElementChangedEvent } from "./events";
 
@@ -155,7 +155,7 @@ export class BlockyElement implements BlockyNode {
   #lastChild: BlockyNode | null = null;
   #attributes: InternAttributes = {};
 
-  changed: Slot<ElementChangedEvent> = new Slot();
+  changed: Subject<ElementChangedEvent> = new Subject();
 
   constructor(
     public nodeName: string,
@@ -250,7 +250,7 @@ export class BlockyElement implements BlockyNode {
 
     this.doc?.reportBlockyNodeInserted(node);
 
-    this.changed.emit({
+    this.changed.next({
       type: "element-insert-child",
       parent: this,
       child: node,
@@ -301,7 +301,7 @@ export class BlockyElement implements BlockyNode {
 
     this.doc?.reportBlockyNodeInserted(node);
 
-    this.changed.emit({
+    this.changed.next({
       type: "element-insert-child",
       parent: this,
       child: node,
@@ -358,7 +358,7 @@ export class BlockyElement implements BlockyNode {
     const oldValue = this.#attributes[name];
     this.#attributes[name] = value;
 
-    this.changed.emit({
+    this.changed.next({
       type: "element-set-attrib",
       key: name,
       value,
@@ -435,7 +435,7 @@ export class BlockyElement implements BlockyNode {
 
     this.doc?.reportBlockyNodeRemoved(node);
 
-    this.changed.emit({
+    this.changed.next({
       type: "element-remove-child",
       parent: this,
       child: node,
@@ -610,8 +610,8 @@ export class BlockyDocument extends BlockyElement {
   readonly head: BlockyElement;
   readonly body: BlockyElement;
 
-  readonly blockElementAdded = new Slot<BlockElement>();
-  readonly blockElementRemoved = new Slot<BlockElement>();
+  readonly blockElementAdded = new Subject<BlockElement>();
+  readonly blockElementRemoved = new Subject<BlockElement>();
 
   constructor(props?: Partial<DocumentInitProps>) {
     let title: BlockElement;
@@ -647,7 +647,7 @@ export class BlockyDocument extends BlockyElement {
     traverseNode(blockyNode, (item: BlockyNode) => {
       item.doc = this;
       if (item instanceof BlockElement) {
-        this.blockElementAdded.emit(item);
+        this.blockElementAdded.next(item);
       }
     });
   }
@@ -656,7 +656,7 @@ export class BlockyDocument extends BlockyElement {
     traverseNode(blockyNode, (item: BlockyNode) => {
       item.doc = undefined;
       if (item instanceof BlockElement) {
-        this.blockElementRemoved.emit(item);
+        this.blockElementRemoved.next(item);
       }
     });
   }

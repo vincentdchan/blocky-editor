@@ -7,6 +7,7 @@ import {
   TextType,
   Delta,
 } from "blocky-data";
+import { filter } from "rxjs";
 import {
   getTextTypeForTextBlock,
   TextBlock,
@@ -129,9 +130,9 @@ function makeBulletListPlugin(): IPlugin {
     name: "bullet-list",
     onInitialized(editor: Editor) {
       editor.textInput
-        .filter((evt) => evt.blockElement.nodeName === TextBlock.Name) // don't apply on Title block
-        .on(handleTextInputEvent(editor));
-      editor.keyDown.on(handleKeydown(editor));
+        .pipe(filter((evt) => evt.blockElement.nodeName === TextBlock.Name))
+        .subscribe(handleTextInputEvent(editor));
+      editor.keyDown.subscribe(handleKeydown(editor));
     },
   };
 }

@@ -1,4 +1,5 @@
-import { isUpperCase, Slot } from "blocky-common/es";
+import { isUpperCase } from "blocky-common/es";
+import { Subject } from "rxjs";
 import { type Padding } from "blocky-common/es/dom";
 import { EditorState, NodeTraverser } from "@pkg/model";
 import {
@@ -149,8 +150,8 @@ export class EditorController {
   readonly blockRegistry: BlockRegistry;
   readonly idGenerator: IdGenerator;
   readonly state: EditorState;
-  readonly cursorChanged: Slot<CursorChangedEvent> = new Slot();
-  readonly beforeApplyCursorChanged: Slot<CursorChangedEvent> = new Slot();
+  readonly cursorChanged: Subject<CursorChangedEvent> = new Subject();
+  readonly beforeApplyCursorChanged: Subject<CursorChangedEvent> = new Subject();
   readonly emptyPlaceholder: string;
 
   /**
@@ -211,7 +212,7 @@ export class EditorController {
    * from another user.
    */
   applyCursorChangedEvent(evt: CursorChangedEvent) {
-    this.beforeApplyCursorChanged.emit(evt);
+    this.beforeApplyCursorChanged.next(evt);
     const { editor } = this;
     if (!editor) {
       return;
@@ -255,10 +256,10 @@ export class EditorController {
   mount(editor: Editor) {
     this.editor = editor;
 
-    this.state.cursorStateChanged.on((e) => {
+    this.state.cursorStateChanged.subscribe((e) => {
       const id = this.userId;
       const evt = new CursorChangedEvent(id, e.state);
-      this.cursorChanged.emit(evt);
+      this.cursorChanged.next(evt);
     });
   }
 

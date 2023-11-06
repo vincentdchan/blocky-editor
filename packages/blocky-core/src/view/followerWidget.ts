@@ -1,5 +1,6 @@
 import { ContainerWithCoord } from "blocky-common/es/dom";
-import { type IDisposable, flattenDisposable, Slot } from "blocky-common/es";
+import { type IDisposable, flattenDisposable } from "blocky-common/es";
+import { Subject, takeUntil } from "rxjs";
 import type { EditorController } from "./controller";
 import {
   BlockElement,
@@ -18,13 +19,12 @@ export class FollowerWidget extends ContainerWithCoord {
   protected focusedNode: BlockElement | undefined;
   protected disposables: IDisposable[] = [];
   startCursorState: CursorState | undefined;
-  readonly disposing: Slot = new Slot();
+  readonly dispose$ = new Subject<void>();
   #controller: EditorController | undefined;
   #atTop = false;
   constructor() {
     super("blocky-follow-widget");
     this.container.contentEditable = "false";
-    this.disposables.push(this.disposing);
     this.x = -1000;
     this.y = -1000;
   }
@@ -55,9 +55,9 @@ export class FollowerWidget extends ContainerWithCoord {
 
   widgetMounted(controller: EditorController): void {
     this.#controller = controller;
-    this.disposables.push(
-      controller.state.cursorStateChanged.on(this.#cursorUpdateHandler)
-    );
+    controller.state.cursorStateChanged
+      .pipe(takeUntil(this.dispose$))
+      .subscribe(this.#cursorUpdateHandler);
     const cursor = this.#controller!.state.cursorState;
     if (cursor) {
       this.focusedNode = this.#controller!.state.getBlockElementById(cursor.id);
@@ -92,7 +92,7 @@ export class FollowerWidget extends ContainerWithCoord {
   };
 
   dispose() {
-    this.disposing.emit();
+    this.dispose$.next();
     flattenDisposable(this.disposables).dispose();
     super.dispose();
   }

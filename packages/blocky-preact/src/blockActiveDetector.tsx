@@ -29,12 +29,12 @@ export function useBlockActive(props: BlockActiveDetectorProps): boolean {
   }, [blockId, active]);
 
   useEffect(() => {
-    const disposable = controller.state.cursorStateChanged.on(
+    const s = controller.state.cursorStateChanged.subscribe(
       (e: CursorStateUpdateEvent) => {
         cursorUpdateHandler.current!(e);
       }
     );
-    return () => disposable.dispose();
+    return () => s.unsubscribe();
   }, [controller]);
 
   return active;
@@ -72,12 +72,12 @@ export function useCollaborativeOutlineColor(
   }, [controller, blockId]);
 
   useEffect(() => {
-    const disposable = controller.beforeApplyCursorChanged.on(
+    const s = controller.beforeApplyCursorChanged.subscribe(
       (evt: CursorChangedEvent) => {
         applyCursorChangedEventHandler.current!(evt);
       }
     );
-    return () => disposable.dispose();
+    return () => s.unsubscribe();
   }, [controller]);
 
   return collaborativeOutlineColor;

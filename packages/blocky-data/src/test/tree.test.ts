@@ -22,7 +22,7 @@ describe("tree operation", () => {
     parent.__insertChildAt(parent.childrenLength, firstChild);
 
     let callbackIsCalled = false;
-    parent.changed.on((e) => {
+    parent.changed.subscribe((e) => {
       if (e.type === "element-insert-child") {
         callbackIsCalled = true;
         expect(e.index).toEqual(1);
@@ -42,7 +42,7 @@ describe("tree operation", () => {
     parent.__insertChildAt(parent.childrenLength, firstChild);
 
     let callbackIsCalled = false;
-    parent.changed.on((e) => {
+    parent.changed.subscribe((e) => {
       if (e.type === "element-insert-child") {
         callbackIsCalled = true;
         expect(e.index).toEqual(0);
@@ -58,7 +58,7 @@ describe("tree operation", () => {
     const node = new BlockyElement("block");
 
     let callbackIsCalled = false;
-    node.changed.on((e) => {
+    node.changed.subscribe((e) => {
       if (e.type === "element-set-attrib") {
         callbackIsCalled = true;
         expect(e.key).toEqual("key");

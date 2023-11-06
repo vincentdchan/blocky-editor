@@ -1,5 +1,5 @@
 import { isUndefined } from "lodash-es";
-import { Slot } from "blocky-common/es/events";
+import { Subject } from "rxjs";
 import {
   type AttributesObject,
   type BlockyNode,
@@ -39,8 +39,8 @@ export class EditorState extends State {
   #idMap: Map<string, BlockElement> = new Map();
   readonly domMap: Map<string, Node> = new Map();
   readonly blocks: Map<string, Block> = new Map();
-  readonly newBlockCreated: Slot<Block> = new Slot();
-  readonly blockWillDelete: Slot<BlockElement> = new Slot();
+  readonly newBlockCreated: Subject<Block> = new Subject();
+  readonly blockWillDelete: Subject<BlockElement> = new Subject();
   readonly blockRegistry: BlockRegistry;
   readonly idGenerator: IdGenerator;
   silent = false;
@@ -57,10 +57,10 @@ export class EditorState extends State {
       }
     });
 
-    document.blockElementAdded.on((blockElement: BlockElement) =>
+    document.blockElementAdded.subscribe((blockElement: BlockElement) =>
       this.#handleNewBlockMounted(blockElement)
     );
-    document.blockElementRemoved.on((blockElement: BlockElement) =>
+    document.blockElementRemoved.subscribe((blockElement: BlockElement) =>
       this.#unmountBlock(blockElement)
     );
   }
@@ -117,12 +117,12 @@ export class EditorState extends State {
 
     this.blocks.set(blockElement.id, block);
 
-    this.newBlockCreated.emit(block);
+    this.newBlockCreated.next(block);
   }
 
   #unmountBlock(blockElement: BlockElement): boolean {
     const blockId = blockElement.id;
-    this.blockWillDelete.emit(blockElement);
+    this.blockWillDelete.next(blockElement);
 
     this.#idMap.delete(blockId);
     this.domMap.delete(blockId);
