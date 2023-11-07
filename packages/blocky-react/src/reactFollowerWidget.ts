@@ -1,7 +1,7 @@
 import { type EditorController, FollowerWidget } from "blocky-core";
 import { isNumber } from "lodash-es";
-import { type ComponentChild, render } from "preact";
-import { unmountComponentAtNode } from "preact/compat";
+import React from "react";
+import { createRoot, Root } from "react-dom/client";
 
 export interface FollowerWidgetProps {
   controller: EditorController;
@@ -12,7 +12,7 @@ export interface FollowerWidgetProps {
 
 export type FollowerWidgetRenderer = (
   props: FollowerWidgetProps
-) => ComponentChild;
+) => React.ReactNode;
 
 export interface PreactFollowWidgetOptions {
   yOffset?: number;
@@ -24,6 +24,7 @@ export class PreactFollowWidget extends FollowerWidget {
   #controller: EditorController | undefined;
   #yOffset: number | undefined;
   #maxHeight: number | undefined;
+  #root: Root | undefined;
 
   constructor(
     renderer: FollowerWidgetRenderer,
@@ -65,19 +66,20 @@ export class PreactFollowWidget extends FollowerWidget {
   }
 
   #render() {
-    render(
+    this.#root?.unmount();
+    this.#root = createRoot(this.container);
+    this.#root.render(
       this.#renderer({
         controller: this.#controller!,
         editingValue: this.editingValue,
         atTop: this.atTop,
         closeWidget: () => this.dispose(),
       }),
-      this.container
     );
   }
 
   override dispose(): void {
-    unmountComponentAtNode(this.container);
+    this.#root?.unmount();
     super.dispose();
   }
 }

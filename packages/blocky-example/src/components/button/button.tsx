@@ -1,8 +1,7 @@
-import { JSX } from "preact";
-import { memo } from "preact/compat";
+import React, { memo } from "react";
 import "./button.scss";
 
-const Button = memo((props: JSX.HTMLAttributes<HTMLButtonElement>) => {
+const Button = memo((props: React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => {
   return <button className="blocky-example-button" {...props} />;
 });
 

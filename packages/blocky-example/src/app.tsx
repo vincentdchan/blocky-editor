@@ -1,9 +1,8 @@
-import { Component, createRef, RefObject } from "preact";
-import { useEffect, useState } from "preact/compat";
+import { Component, createRef, RefObject, useEffect, useState } from "react";
 import { EditorController, darkTheme, type IPlugin } from "blocky-core";
 import {
   BlockyEditor,
-  makePreactBanner,
+  makeReactBanner,
   makePreactToolbar,
   type BannerRenderProps,
 } from "blocky-react";
@@ -20,7 +19,7 @@ import BannerMenu from "./bannerMenu";
 import ToolbarMenu from "./toolbarMenu";
 import TianShuiWeiImage from "./tianshuiwei.jpg";
 import { ReadMeContent } from "./readme";
-import { Link } from "preact-router/match";
+import { Link } from "react-router-dom";
 import { ThemeSwitch, Theme } from "./themeSwitch";
 import { isHotkey } from "is-hotkey";
 import { Subject, takeUntil } from "rxjs";
@@ -72,7 +71,7 @@ function makeController(
      * Tell the editor how to render the banner.
      * We use a banner written in Preact here.
      */
-    bannerFactory: makePreactBanner(
+    bannerFactory: makeReactBanner(
       ({ editorController, focusedNode }: BannerRenderProps) => (
         <BannerMenu
           editorController={editorController}
@@ -172,7 +171,7 @@ class App extends Component<unknown> {
       <div className="blocky-example-app-window">
         <div className="blocky-example-sidebar-container">
           <header>
-            <Link href="/">
+            <Link to="/">
               <AppLogo />
             </Link>
             <div className="blocky-example-badge-container">
@@ -200,10 +199,10 @@ class App extends Component<unknown> {
             <ThemeSwitch />
           </header>
           <div>
-            <Link className="blocky-example-link" href="/doc/get-started">
+            <Link className="blocky-example-link" to="/doc/get-started">
               Get started
             </Link>
-            <Link className="blocky-example-link" href="/doc/api">
+            <Link className="blocky-example-link" to="/doc/api">
               Api
             </Link>
           </div>
@@ -268,7 +267,7 @@ function BlockyEditorWithSearchBoxAndTitle(
         setShowSearchBox(true);
       }
     });
-    return () => s?.unsubscribe;
+    return () => s?.unsubscribe();
   }, [controller]);
   return (
     <div ref={props.containerRef} className={props.className}>

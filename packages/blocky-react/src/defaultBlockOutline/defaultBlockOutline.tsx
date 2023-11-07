@@ -1,5 +1,4 @@
-import { JSX } from "preact";
-import { useCallback } from "preact/hooks";
+import React, { useCallback } from "react";
 import { ReactBlockContext } from "../reactBlock";
 import { CursorState } from "blocky-data";
 import type { EditorController } from "blocky-core";
@@ -34,7 +33,7 @@ function DefaultBlockOutlineInternal(props: DefaultBlockOutlineInternalProps) {
     editorController.setCursorState(CursorState.collapse(blockId, 0));
   }, [blockId]);
 
-  let style: JSX.CSSProperties | undefined;
+  let style: React.CSSProperties | undefined;
   if (active) {
     style = {
       boxShadow: `0 0 0 1pt ${focusOutlineColor ?? userFocusedColor}`,

@@ -1,4 +1,4 @@
-import { Component, ComponentChildren, createContext } from "preact";
+import React, { Component, createContext } from "react";
 
 export interface ThemeContext {
   darkMode: boolean;
@@ -11,7 +11,7 @@ export const Theme = createContext<ThemeContext>({
 });
 
 export interface ThemeProviderProps {
-  children?: ComponentChildren;
+  children?: React.ReactNode;
 }
 
 interface ThemeProviderState {
@@ -46,12 +46,12 @@ export class ThemeProvider extends Component<
     });
   };
 
-  render(props: ThemeProviderProps) {
+  render() {
     return (
       <Theme.Provider
         value={{ darkMode: this.state.darkMode, toggle: this.#toggle }}
       >
-        {props.children}
+        {this.props.children}
       </Theme.Provider>
     );
   }
@@ -62,15 +62,15 @@ export class ThemeSwitch extends Component {
     return (
       <Theme.Consumer>
         {(theme) => (
-          <div class="theme-switch-wrapper">
-            <label class="theme-switch" for="checkbox">
+          <div className="theme-switch-wrapper">
+            <label className="theme-switch">
               <input
                 type="checkbox"
                 id="checkbox"
                 checked={theme.darkMode}
                 onChange={() => theme.toggle()}
               />
-              <div class="slider round"></div>
+              <div className="slider round"></div>
             </label>
             <p>Enable Dark Mode</p>
           </div>

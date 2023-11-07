@@ -5,12 +5,8 @@ import {
   ContentBlock,
   TryParsePastedDOMEvent,
 } from "blocky-core";
-import {
-  render as reactRender,
-  type ComponentChild,
-  createContext,
-} from "preact";
-import { unmountComponentAtNode } from "preact/compat";
+import React, { createContext } from "react";
+import { createRoot, type Root } from "react-dom/client"
 
 export interface ReactBlockRenderProps {
   controller: EditorController;
@@ -19,7 +15,7 @@ export interface ReactBlockRenderProps {
 
 export interface ReactBlockOptions {
   name: string;
-  component: (props: ReactBlockRenderProps) => ComponentChild;
+  component: (props: ReactBlockRenderProps) => React.ReactNode;
   tryParsePastedDOM?(e: TryParsePastedDOMEvent): BlockElement | void;
 }
 
@@ -44,13 +40,13 @@ export function makeReactBlock(options: ReactBlockOptions): IBlockDefinition {
     static TryParsePastedDOM =
       tryParsePastedDOM && tryParsePastedDOM.bind(options);
 
-    #rendered: HTMLElement | undefined;
+    #rendered: Root | undefined;
 
     override render() {
       const { component } = options;
-      this.#rendered = this.contentContainer;
+      this.#rendered = createRoot(this.contentContainer);
       const editorController = this.editor.controller;
-      reactRender(
+      this.#rendered.render(
         <ReactBlockContext.Provider
           value={{ editorController, blockId: this.props.id }}
         >
@@ -59,13 +55,12 @@ export function makeReactBlock(options: ReactBlockOptions): IBlockDefinition {
             blockElement: this.props,
           })}
         </ReactBlockContext.Provider>,
-        this.contentContainer
       );
     }
 
     dispose() {
       if (this.#rendered) {
-        unmountComponentAtNode(this.#rendered);
+        this.#rendered.unmount();
         this.#rendered = undefined;
       }
       super.dispose();

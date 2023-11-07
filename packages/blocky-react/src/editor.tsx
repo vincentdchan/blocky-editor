@@ -1,4 +1,4 @@
-import { Component, createRef, type RefObject } from "preact";
+import { Component, createRef, type RefObject } from "react";
 import { CursorState } from "blocky-data";
 import { Editor, type EditorController } from "blocky-core";
 

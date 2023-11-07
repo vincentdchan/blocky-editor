@@ -1,6 +1,6 @@
-import { render, Component } from "preact";
-import { Suspense, lazy } from "preact/compat";
-import Router, { route } from "preact-router";
+import { Suspense, lazy, useEffect } from "react";
+import { createRoot } from "react-dom/client";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import App from "./app";
 import type { DocItem, Heading } from "./documentations";
 import GetStartedDoc from "./docs/get-started.md?raw";
@@ -65,36 +65,63 @@ interface RedirectProps {
   to: string;
 }
 
-class Redirect extends Component<RedirectProps> {
-  componentWillMount() {
-    route(this.props.to, true);
-  }
-
-  render() {
-    return null;
-  }
+function Redirect(props: RedirectProps) {
+  const navigate = useNavigate();
+  useEffect(() => {
+    navigate(props.to)
+  }, [props.to, navigate]);
+  return null;
 }
 
-render(
+const root = createRoot(document.getElementById(appId)!);
+
+root.render(
   <ThemeProvider>
     <Suspense fallback={null}>
-      <Router>
-        <App path="/" />
-        <Documentation
+      <Routes>
+        <Route
+        path="/"
+        element={<App />}
+        />
+        <Route
           path="/doc/get-started"
-          items={docItems}
-          content={docItems[0]}
+          element={
+            <Documentation items={docItems}
+              content={docItems[0]}
+            />
+          }
         />
-        <Documentation path="/doc/api" items={docItems} content={docItems[1]} />
-        <Documentation
+        <Route
+          path="/doc/api" 
+          element={
+            <Documentation items={docItems} content={docItems[1]} />
+          }
+        />
+        <Route
           path="/doc/builtin-plugins"
-          items={docItems}
-          content={docItems[2]}
+          element={
+            <Documentation
+              items={docItems}
+              content={docItems[2]}
+            />
+          }
         />
-        <Documentation path="/doc/faq" items={docItems} content={docItems[3]} />
-        <Redirect path="/doc" to="/doc/get-started" />
-      </Router>
+        <Route
+          path="/doc/faq"
+          element={
+            <Documentation
+              items={docItems}
+              content={docItems[3]}
+            />
+          }
+        />
+        <Route
+          path="/doc"
+          element={
+            <Redirect to="/doc/get-started" />
+          }
+        />
+      </Routes>
     </Suspense>
   </ThemeProvider>,
-  document.getElementById(appId)!
 );

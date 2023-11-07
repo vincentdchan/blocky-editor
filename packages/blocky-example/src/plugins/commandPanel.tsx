@@ -1,5 +1,4 @@
-import type { ComponentChild } from "preact";
-import { PureComponent } from "preact/compat";
+import { PureComponent } from "react";
 import { makePreactFollowerWidget } from "blocky-react";
 import { type IDisposable, flattenDisposable } from "blocky-common/es";
 import {
@@ -38,14 +37,14 @@ class CommandPanel extends PureComponent<CommandPanelProps> {
     flattenDisposable(this.disposables).dispose();
   }
 
-  render(props: CommandPanelProps): ComponentChild {
-    const { editingValue } = props;
+  render() {
+    const { editingValue } = this.props;
     const commandContent = editingValue;
     return (
       <SelectablePanel
         onSelect={this.#handleSelect}
         onClose={this.#handleClose}
-        controller={props.controller}
+        controller={this.props.controller}
         length={commandsLength}
       >
         {(index: number) => (

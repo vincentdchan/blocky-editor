@@ -19,7 +19,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "preact",
     "declaration": true,
     "declarationDir": "./dist",
     "sourceMap": true,
