@@ -67,7 +67,7 @@ export function makeCommandPanelPlugin(): IPlugin {
   return {
     name: "command-panel",
     onInitialized(editor) {
-      editor.keyDown.on((e: KeyboardEvent) => {
+      editor.keyDown.subscribe((e: KeyboardEvent) => {
         if (e.key !== "/") {
           return;
         }

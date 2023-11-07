@@ -72,7 +72,7 @@ export function makeAtPanelPlugin(): IPlugin {
     name: "at-panel",
     embeds: [MyEmbed],
     onInitialized(editor) {
-      editor.keyDown.on((e: KeyboardEvent) => {
+      editor.keyDown.subscribe((e: KeyboardEvent) => {
         if (e.key !== "@") {
           return;
         }

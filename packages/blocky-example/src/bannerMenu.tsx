@@ -1,10 +1,10 @@
 import { Component, type RefObject, createRef } from "preact";
 import { type EditorController } from "blocky-core";
 import { BlockElement, TextType } from "blocky-data";
-import { type IDisposable, flattenDisposable } from "blocky-common/es";
 import Dropdown from "@pkg/components/dropdown";
 import { Menu, MenuItem, Divider } from "@pkg/components/menu";
 import { ImageBlockName } from "@pkg/plugins/imageBlock";
+import { Subject, takeUntil } from "rxjs";
 import "./bannerMenu.scss";
 
 export interface BannerProps {
@@ -29,7 +29,7 @@ const BannerIcon = `
 
 class BannerMenu extends Component<BannerProps, BannerState> {
   private bannerRef: RefObject<HTMLDivElement> = createRef();
-  private disposables: IDisposable[] = [];
+  private dispose$ = new Subject<void>();
 
   constructor(props: BannerProps) {
     super(props);
@@ -44,10 +44,12 @@ class BannerMenu extends Component<BannerProps, BannerState> {
   override componentDidMount() {
     const { editorController } = this.props;
     const { state } = editorController;
-    this.disposables.push(
-      state.newBlockCreated.on(this.handleBlocksChanged),
-      state.blockWillDelete.on(this.handleBlocksChanged)
-    );
+    state.newBlockCreated
+      .pipe(takeUntil(this.dispose$))
+      .subscribe(this.handleBlocksChanged);
+    state.blockWillDelete
+      .pipe(takeUntil(this.dispose$))
+      .subscribe(this.handleBlocksChanged);
 
     this.handleBlocksChanged();
 
@@ -55,7 +57,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
   }
 
   override componentWillUnmount() {
-    flattenDisposable(this.disposables).dispose();
+    this.dispose$.next();
   }
 
   private handleBlocksChanged = () => {

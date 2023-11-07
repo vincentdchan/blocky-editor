@@ -1,7 +1,7 @@
 import { Component, ComponentChildren } from "preact";
 import { PureComponent } from "preact/compat";
 import { type EditorController } from "blocky-core";
-import { type IDisposable, flattenDisposable } from "blocky-common/es";
+import { Subject, takeUntil } from "rxjs";
 import "./panel.scss";
 
 export interface PanelProps {
@@ -53,7 +53,7 @@ export class SelectablePanel extends Component<
   SelectablePanelProps,
   SelectablePanelState
 > {
-  private disposables: IDisposable[] = [];
+  private dispose$ = new Subject<void>();
   constructor(props: SelectablePanelProps) {
     super(props);
     this.state = {
@@ -64,12 +64,14 @@ export class SelectablePanel extends Component<
   override componentDidMount() {
     const { editor } = this.props.controller;
     if (editor) {
-      this.disposables.push(editor.keyDown.on(this.#handleEditorKeydown));
+      editor.keyDown
+        .pipe(takeUntil(this.dispose$))
+        .subscribe(this.#handleEditorKeydown);
     }
   }
 
   override componentWillUnmount() {
-    flattenDisposable(this.disposables).dispose();
+    this.dispose$.next();
   }
 
   #handleEditorKeydown = (e: KeyboardEvent) => {

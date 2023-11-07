@@ -23,6 +23,7 @@ import { ReadMeContent } from "./readme";
 import { Link } from "preact-router/match";
 import { ThemeSwitch, Theme } from "./themeSwitch";
 import { isHotkey } from "is-hotkey";
+import { Subject, takeUntil } from "rxjs";
 import "blocky-core/css/styled-text-plugin.css";
 import "blocky-core/css/blocky-core.css";
 import "./app.scss";
@@ -98,6 +99,7 @@ class App extends Component<unknown> {
   private editorControllerRight: EditorController;
   private containerLeftRef = createRef<HTMLDivElement>();
   private containerRightRef = createRef<HTMLDivElement>();
+  private dispose$ = new Subject<void>();
 
   constructor(props: unknown) {
     super(props);
@@ -114,7 +116,9 @@ class App extends Component<unknown> {
       () => this.containerRightRef.current!
     );
 
-    this.editorControllerLeft.state.changesetApplied.on((changeset) => {
+    this.editorControllerLeft.state.changesetApplied
+    .pipe(takeUntil(this.dispose$))
+    .subscribe((changeset) => {
       // simulate the net work
       setTimeout(() => {
         this.editorControllerRight.state.apply({
@@ -128,7 +132,9 @@ class App extends Component<unknown> {
       });
     });
 
-    this.editorControllerRight.state.changesetApplied.on((changeset) => {
+    this.editorControllerRight.state.changesetApplied
+    .pipe(takeUntil(this.dispose$))
+    .subscribe((changeset) => {
       setTimeout(() => {
         this.editorControllerLeft.state.apply({
           ...changeset,
@@ -141,16 +147,24 @@ class App extends Component<unknown> {
       });
     });
 
-    this.editorControllerLeft.cursorChanged.on((evt) => {
+    this.editorControllerLeft.cursorChanged
+    .pipe(takeUntil(this.dispose$))
+    .subscribe((evt) => {
       this.editorControllerRight.applyCursorChangedEvent(evt);
     });
 
-    this.editorControllerRight.cursorChanged.on((evt) => {
+    this.editorControllerRight.cursorChanged
+    .pipe(takeUntil(this.dispose$))
+    .subscribe((evt) => {
       this.editorControllerLeft.applyCursorChangedEvent(evt);
     });
 
     // paste before the editor initialized
     this.editorControllerLeft.pasteHTMLAtCursor(ReadMeContent);
+  }
+
+  componentWillUnmount(): void {
+    this.dispose$.next();
   }
 
   render() {
@@ -248,13 +262,13 @@ function BlockyEditorWithSearchBoxAndTitle(
   const { controller } = props;
   const [showSearchBox, setShowSearchBox] = useState(false);
   useEffect(() => {
-    const disposable = controller.editor?.keyDown.on((e: KeyboardEvent) => {
+    const s = controller.editor?.keyDown.subscribe((e: KeyboardEvent) => {
       if (isHotkey("mod+f", e)) {
         e.preventDefault();
         setShowSearchBox(true);
       }
     });
-    return () => disposable?.dispose();
+    return () => s?.unsubscribe;
   }, [controller]);
   return (
     <div ref={props.containerRef} className={props.className}>
