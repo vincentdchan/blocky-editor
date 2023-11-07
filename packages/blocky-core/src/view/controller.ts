@@ -703,4 +703,8 @@ export class EditorController {
     }
     return this.state.getBlockElementById(this.state.cursorState.id)!;
   }
+
+  dispose() {
+    this.state.dispose();
+  }
 }

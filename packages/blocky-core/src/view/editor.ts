@@ -229,7 +229,9 @@ export class Editor {
 
     document.addEventListener("selectionchange", this.#selectionChangedHandler);
 
-    state.cursorStateChanged.subscribe(this.handleCursorStateChanged);
+    state.cursorStateChanged
+      .pipe(takeUntil(this.dispose$))
+      .subscribe(this.handleCursorStateChanged);
 
     this.disposables.push($on(container, "mouseleave", this.#hideBanner));
 
@@ -242,14 +244,20 @@ export class Editor {
 
     this.#initBlockCreated();
 
-    this.state.beforeChangesetApply.subscribe(this.#handleBeforeChangesetApply);
-    this.state.changesetApplied.subscribe(this.#handleChangesetApplied);
-    this.state.blockWillDelete.subscribe((blockElement: BlockElement) => {
-      const dom = this.state.domMap.get(blockElement.id);
-      if (dom) {
-        this.destructBlockNode(dom);
-      }
-    });
+    this.state.beforeChangesetApply
+      .pipe(takeUntil(this.dispose$))
+      .subscribe(this.#handleBeforeChangesetApply);
+    this.state.changesetApplied
+      .pipe(takeUntil(this.dispose$))
+      .subscribe(this.#handleChangesetApplied);
+    this.state.blockWillDelete
+      .pipe(takeUntil(this.dispose$))
+      .subscribe((blockElement: BlockElement) => {
+        const dom = this.state.domMap.get(blockElement.id);
+        if (dom) {
+          this.destructBlockNode(dom);
+        }
+      });
 
     this.undoManager = new UndoManager(state);
   }
@@ -302,7 +310,9 @@ export class Editor {
       this.onEveryBlock.next(block);
     }
 
-    this.state.newBlockCreated.subscribe(this.onEveryBlock);
+    this.state.newBlockCreated
+      .pipe(takeUntil(this.dispose$))
+      .subscribe(this.onEveryBlock);
   }
 
   drawCollaborativeCursor(id: string, state: CursorState | null) {
@@ -1587,10 +1597,10 @@ export class Editor {
     this.#container.insertBefore(widget.container, this.#container.firstChild);
     widget.startCursorState = this.state.cursorState!;
     widget.dispose$
-    .pipe(take(1))
-    .subscribe(() => {
-      this.#followerWidget = undefined;
-    });
+      .pipe(take(1))
+      .subscribe(() => {
+        this.#followerWidget = undefined;
+      });
     widget.widgetMounted(this.controller);
 
     window.requestAnimationFrame(() => {

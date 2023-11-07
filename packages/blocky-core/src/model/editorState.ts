@@ -1,5 +1,5 @@
 import { isUndefined } from "lodash-es";
-import { Subject } from "rxjs";
+import { Subject, takeUntil } from "rxjs";
 import {
   type AttributesObject,
   type BlockyNode,
@@ -43,6 +43,7 @@ export class EditorState extends State {
   readonly blockWillDelete: Subject<BlockElement> = new Subject();
   readonly blockRegistry: BlockRegistry;
   readonly idGenerator: IdGenerator;
+  readonly dispose$ = new Subject<void>();
   silent = false;
 
   constructor(options: IEditorStateInitOptions) {
@@ -57,12 +58,16 @@ export class EditorState extends State {
       }
     });
 
-    document.blockElementAdded.subscribe((blockElement: BlockElement) =>
-      this.#handleNewBlockMounted(blockElement)
-    );
-    document.blockElementRemoved.subscribe((blockElement: BlockElement) =>
-      this.#unmountBlock(blockElement)
-    );
+    document.blockElementAdded
+      .pipe(takeUntil(this.dispose$))
+      .subscribe((blockElement: BlockElement) =>
+        this.#handleNewBlockMounted(blockElement)
+      );
+    document.blockElementRemoved
+      .pipe(takeUntil(this.dispose$))
+      .subscribe((blockElement: BlockElement) =>
+        this.#unmountBlock(blockElement)
+      );
   }
 
   getBlockElementById(id: string): BlockElement | undefined {
@@ -223,6 +228,10 @@ export class EditorState extends State {
 
     result.children = children;
     return result;
+  }
+
+  dispose() {
+    this.dispose$.next();
   }
 }
 

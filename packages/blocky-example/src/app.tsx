@@ -164,6 +164,9 @@ class App extends Component<unknown> {
 
   componentWillUnmount(): void {
     this.dispose$.next();
+
+    this.editorControllerLeft.dispose();
+    this.editorControllerRight.dispose();
   }
 
   render() {
