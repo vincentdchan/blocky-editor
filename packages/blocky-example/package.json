@@ -29,7 +29,6 @@
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.18.2",
     "@types/is-hotkey": "^0.1.7",
     "@types/lodash-es": "^4.17.6",
     "@types/marked": "^4.0.5",
