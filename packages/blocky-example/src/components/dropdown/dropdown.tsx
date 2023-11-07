@@ -1,5 +1,5 @@
-import { Component } from "preact";
-import { createPortal } from "preact/compat";
+import { Component } from "react";
+import { createPortal } from "react-dom";
 import Mask from "@pkg/components/mask";
 
 export interface DropdownProps {
@@ -11,8 +11,8 @@ export interface DropdownProps {
 
 class Dropdown extends Component<DropdownProps> {
 
-  override render(props: DropdownProps) {
-    const { children, show, onMaskClicked, overlay } = props;
+  override render() {
+    const { children, show, onMaskClicked, overlay } = this.props;
     return (
       <>
         {children}

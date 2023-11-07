@@ -1,4 +1,4 @@
-import { PureComponent } from "preact/compat";
+import { PureComponent } from "react";
 import { Panel, SelectablePanel, PanelItem } from "@pkg/components/panel";
 import {
   type IPlugin,
@@ -7,7 +7,7 @@ import {
   Embed,
   type EmbedInitOptions,
 } from "blocky-core";
-import { makePreactFollowerWidget } from "blocky-preact";
+import { makePreactFollowerWidget } from "blocky-react";
 import { Delta } from "blocky-data";
 import "./atPanel.scss";
 
@@ -33,12 +33,12 @@ class AtPanel extends PureComponent<AtPanelProps> {
     this.props.closeWidget();
   };
 
-  render(props: AtPanelProps) {
+  override render() {
     return (
       <SelectablePanel
         onSelect={this.#handleSelect}
         onClose={this.#handleClose}
-        controller={props.controller}
+        controller={this.props.controller}
         length={1}
       >
         {(index: number) => (

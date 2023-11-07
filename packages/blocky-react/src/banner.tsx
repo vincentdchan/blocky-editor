@@ -1,5 +1,5 @@
-import { render, type ComponentChild } from "preact";
-import { unmountComponentAtNode } from "preact/compat";
+import React from "react";
+import { createRoot } from "react-dom/client";
 import type { BlockElement } from "blocky-data";
 import type {
   BannerFactory,
@@ -12,16 +12,17 @@ export interface RenderProps {
   focusedNode?: BlockElement;
 }
 
-export type Renderer = (props: RenderProps) => ComponentChild;
+export type Renderer = (props: RenderProps) => React.ReactNode;
 
-export function makePreactBanner(renderer: Renderer): BannerFactory {
+export function makeReactBanner(renderer: Renderer): BannerFactory {
   return (
     container: HTMLDivElement,
     editorController: EditorController
   ): BannerInstance => {
     let focusedNode: BlockElement | undefined;
+    const root = createRoot(container);
     const renderFn = () => {
-      render(renderer({ editorController, focusedNode }), container);
+      root.render(renderer({ editorController, focusedNode }));
     };
     renderFn();
     return {
@@ -30,7 +31,7 @@ export function makePreactBanner(renderer: Renderer): BannerFactory {
         renderFn();
       },
       dispose() {
-        unmountComponentAtNode(container);
+        root.unmount();
       },
     };
   };

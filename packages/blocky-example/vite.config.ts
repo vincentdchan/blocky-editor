@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 import * as path from "path";
-import preact from "@preact/preset-vite";
+import react from "@vitejs/plugin-react";
 
 export const projectRootDir = process.cwd();
 
@@ -16,7 +16,7 @@ export default defineConfig(() => {
     //   ? `https://assets-cdn.xindiancad.com/${getVersionQuery()}/`
     //   : '',
     plugins: [
-      preact({
+      react({
         exclude: [/blocky-core/, /node_modules/],
       }),
     ],

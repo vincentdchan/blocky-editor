@@ -5,7 +5,7 @@ import { Theme } from "@pkg/themeSwitch";
 function AppLogo() {
   return (
     <Theme.Consumer>
-      {(options) => (
+      {(options: any) => (
         <img className="logo" src={options.darkMode ? DarkLogoImg : LogoImg} />
       )}
     </Theme.Consumer>

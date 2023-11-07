@@ -8,7 +8,7 @@ export * from "./reactBlock";
 export * from "./reactFollowerWidget";
 export * from "./blockActiveDetector";
 export {
-  makePreactBanner,
+  makeReactBanner,
   type RenderProps as BannerRenderProps,
 } from "./banner";
 export { makePreactToolbar } from "./toolbar";

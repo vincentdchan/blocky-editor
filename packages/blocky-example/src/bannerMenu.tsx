@@ -1,4 +1,4 @@
-import { Component, type RefObject, createRef } from "preact";
+import { Component, type RefObject, createRef } from "react";
 import { type EditorController } from "blocky-core";
 import { BlockElement, TextType } from "blocky-data";
 import Dropdown from "@pkg/components/dropdown";

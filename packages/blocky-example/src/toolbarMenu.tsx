@@ -1,12 +1,11 @@
 import type { EditorController } from "blocky-core";
 import { CursorState } from "blocky-data";
-import { Component, JSX, createRef, RefObject } from "preact";
-import { memo } from "preact/compat";
+import React, { Component, createRef, RefObject, memo } from "react";
 import Mask from "@pkg/components/mask";
 import Button from "./components/button";
 import "./toolbarMenu.scss";
 
-const ToolbarMenuItem = memo((props: JSX.HTMLAttributes<HTMLButtonElement>) => {
+const ToolbarMenuItem = memo((props: React.HTMLAttributes<HTMLButtonElement>) => {
   const { className = "", ...restProps } = props;
   return (
     <button
@@ -138,7 +137,7 @@ class ToolbarMenu extends Component<ToolbarMenuProps, ToolbarMenuState> {
 }
 
 interface AnchorToolbarProps {
-  style?: JSX.CSSProperties;
+  style?: React.CSSProperties;
   onSubmitLink?: (link: string) => void;
 }
 
@@ -168,7 +167,7 @@ class AnchorToolbar extends Component<AnchorToolbarProps, AnchorToolbarState> {
     };
   }
 
-  private handleClicked = (e: JSX.TargetedMouseEvent<HTMLDivElement>) => {
+  private handleClicked = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
   };
 
@@ -176,7 +175,7 @@ class AnchorToolbar extends Component<AnchorToolbarProps, AnchorToolbarState> {
     this.props.onSubmitLink?.(this.state.content);
   };
 
-  private handleContentChanged = (e: JSX.TargetedEvent<HTMLInputElement>) => {
+  private handleContentChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
     const content = (e.target! as any).value as string;
     const valid = isUrl(content);
     this.setState({
@@ -185,7 +184,7 @@ class AnchorToolbar extends Component<AnchorToolbarProps, AnchorToolbarState> {
     });
   };
 
-  private handleKeydown = (e: JSX.TargetedKeyboardEvent<HTMLInputElement>) => {
+  private handleKeydown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
       if (!this.state.valid) {
@@ -199,8 +198,8 @@ class AnchorToolbar extends Component<AnchorToolbarProps, AnchorToolbarState> {
     this.inputRef.current?.focus();
   }
 
-  override render(props: AnchorToolbarProps, state: AnchorToolbarState) {
-    const { style } = props;
+  override render() {
+    const { style } = this.props;
     return (
       <div
         onClick={this.handleClicked}
@@ -210,11 +209,11 @@ class AnchorToolbar extends Component<AnchorToolbarProps, AnchorToolbarState> {
         <input
           ref={this.inputRef}
           placeholder="Link"
-          value={state.content}
+          value={this.state.content}
           onChange={this.handleContentChanged}
           onKeyDown={this.handleKeydown}
         />
-        <Button disabled={!state.valid} onClick={this.handleConfirmed}>
+        <Button disabled={!this.state.valid} onClick={this.handleConfirmed}>
           Confirm
         </Button>
       </div>

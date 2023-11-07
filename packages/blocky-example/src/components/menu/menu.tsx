@@ -1,13 +1,14 @@
-import { Component, type JSX } from "preact";
+import React, { Component } from "react";
 import "./menu.scss";
 
 export interface MenuProps {
-  style?: JSX.CSSProperties;
+  style?: React.CSSProperties;
   children?: any;
 }
 
 export class Menu extends Component<MenuProps> {
-  override render({ children, style }: MenuProps) {
+  override render() {
+    const { children, style } = this.props;
     return (
       <div className="blocky-menu blocky-default-fonts" style={style}>
         {children}
@@ -17,13 +18,14 @@ export class Menu extends Component<MenuProps> {
 }
 
 export interface MenuItemProps {
-  style?: JSX.CSSProperties;
+  style?: React.CSSProperties;
   onClick?: () => void;
   children?: any;
 }
 
 export class MenuItem extends Component<MenuItemProps> {
-  override render({ style, onClick, children }: MenuItemProps) {
+  override render() {
+    const { style, onClick, children } = this.props;
     return (
       <div className="blocky-menu-item blocky-cm-noselect" onClick={onClick} style={style}>
         {children}

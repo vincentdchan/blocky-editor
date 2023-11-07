@@ -1,7 +1,7 @@
-import { Component } from "preact";
+import { Component } from "react";
 import Markdown from "@pkg/components/markdown";
 import { ThemeSwitch } from "@pkg/themeSwitch";
-import { Link } from "preact-router/match";
+import { Link } from "react-router-dom";
 import AppLogo from "@pkg/components/appLogo";
 import "./documentation.scss";
 
@@ -48,7 +48,7 @@ class Documentation extends Component<DocumentationProps, DocumentationState> {
   renderSidebar() {
     return (
       <div className="sidebar">
-        <Link href="/">
+        <Link to="/">
           <AppLogo />
         </Link>
         <div className="badge-container">
@@ -71,7 +71,7 @@ class Documentation extends Component<DocumentationProps, DocumentationState> {
         <ThemeSwitch />
         {this.props.items.map((item) => (
           <div className="page-item">
-            <Link href={item.href} className="sidebar-item">
+            <Link to={item.href} className="sidebar-item">
               {item.name}
             </Link>
             <div className="headings">
@@ -84,7 +84,7 @@ class Documentation extends Component<DocumentationProps, DocumentationState> {
                     }
                     elm.scrollIntoView({ behavior: "smooth" });
                   }}
-                  href={h.href}
+                  to={h.href}
                   className="sidebar-item"
                 >
                   {h.title}

@@ -1,4 +1,4 @@
-import { Component, createRef, JSX } from "preact";
+import React, { Component, createRef } from "react";
 import Button from "@pkg/components/button";
 import { type EditorController, type SearchContext } from "blocky-core";
 import { type CursorState, CursorStateUpdateReason } from "blocky-data";
@@ -71,7 +71,7 @@ class SearchBox extends Component<SearchBoxProps, SearchBoxState> {
       this.props.controller.editor?.state.cursorState ?? null;
   };
 
-  #handleInputKeyDown = (e: JSX.TargetedKeyboardEvent<HTMLInputElement>) => {
+  #handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Escape") {
       this.props.onClose?.();
     } else if (e.key === "Enter") {
@@ -85,7 +85,7 @@ class SearchBox extends Component<SearchBoxProps, SearchBoxState> {
     }
   };
 
-  #handleInputChanged = (e: JSX.TargetedEvent<HTMLInputElement>) => {
+  #handleInputChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
     this.setState(
       {
         searchContent: (e.target as HTMLInputElement).value,
@@ -140,7 +140,7 @@ class SearchBox extends Component<SearchBoxProps, SearchBoxState> {
     this.setState({ currentIndex });
   };
 
-  override render(props: SearchBoxProps, state: SearchBoxState) {
+  override render() {
     return (
       <div className="blocky-example-search-box">
         <input
@@ -148,7 +148,7 @@ class SearchBox extends Component<SearchBoxProps, SearchBoxState> {
           onKeyDown={this.#handleInputKeyDown}
           onFocus={this.#handleInputFocus}
           onChange={this.#handleInputChanged}
-          value={state.searchContent}
+          value={this.state.searchContent}
           ref={this.#inputRef}
         />
         <div className="result-display">{this.#resultMessage()}</div>
@@ -158,7 +158,7 @@ class SearchBox extends Component<SearchBoxProps, SearchBoxState> {
         <Button onClick={this.#emitNext} disabled={this.#nextDisabled()}>
           {">"}
         </Button>
-        <Button onClick={props.onClose}>{"X"}</Button>
+        <Button onClick={this.props.onClose}>{"X"}</Button>
       </div>
     );
   }

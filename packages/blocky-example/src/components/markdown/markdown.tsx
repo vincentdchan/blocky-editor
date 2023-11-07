@@ -1,4 +1,4 @@
-import { Component, createRef } from "preact";
+import { Component, createRef } from "react";
 import * as marked from "marked";
 import hljs from "highlight.js";
 import javascript from "highlight.js/lib/languages/javascript";
@@ -39,8 +39,8 @@ class Markdown extends Component<MarkdownProps> {
     }
   }
 
-  render(props: MarkdownProps) {
-    return <div className={props.className} ref={this.#ref}></div>;
+  render() {
+    return <div className={this.props.className} ref={this.#ref}></div>;
   }
 }
 

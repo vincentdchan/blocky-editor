@@ -1,4 +1,4 @@
-import { Component } from "preact";
+import { Component } from "react";
 import "./mask.scss";
 
 export interface MaskProps {
@@ -8,7 +8,8 @@ export interface MaskProps {
 
 class Mask extends Component<MaskProps> {
 
-  override render({ children, onClick }: MaskProps) {
+  override render() {
+    const { children, onClick } = this.props;
     return (
       <div className="blocky-example-mask" onClick={onClick}>
         {children}

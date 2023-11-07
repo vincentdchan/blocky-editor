@@ -1,5 +1,4 @@
-import { Component, ComponentChildren } from "preact";
-import { PureComponent } from "preact/compat";
+import React, { Component, PureComponent } from "react";
 import { type EditorController } from "blocky-core";
 import { Subject, takeUntil } from "rxjs";
 import "./panel.scss";
@@ -9,16 +8,16 @@ export interface PanelProps {
 }
 
 export class Panel extends Component<PanelProps> {
-  render(props: PanelProps) {
+  render() {
     return (
-      <div className="blocky-command-panel-container">{props.children}</div>
+      <div className="blocky-command-panel-container">{this.props.children}</div>
     );
   }
 }
 
 export class PanelValue extends Component<PanelProps> {
-  render(props: PanelProps) {
-    return <div className="blocky-command-value">{props.children}</div>;
+  render() {
+    return <div className="blocky-command-value">{this.props.children}</div>;
   }
 }
 
@@ -28,12 +27,12 @@ interface PanelItemProps {
 }
 
 export class PanelItem extends PureComponent<PanelItemProps> {
-  render(props: PanelItemProps) {
+  render() {
     let cls = "blocky-panel-item";
-    if (props.selected) {
+    if (this.props.selected) {
       cls += " selected";
     }
-    return <div className={cls}>{props.children}</div>;
+    return <div className={cls}>{this.props.children}</div>;
   }
 }
 
@@ -42,7 +41,7 @@ interface SelectablePanelProps {
   length: number;
   onSelect?: (index: number) => void;
   onClose?: () => void;
-  children?: (index: number) => ComponentChildren;
+  children?: (index: number) => React.ReactNode;
 }
 
 interface SelectablePanelState {
@@ -108,7 +107,7 @@ export class SelectablePanel extends Component<
     }
   };
 
-  render(props: SelectablePanelProps) {
-    return props.children?.(this.state.selectedIndex);
+  render() {
+    return this.props.children?.(this.state.selectedIndex);
   }
 }
