@@ -1,6 +1,6 @@
 {
   "name": "blocky-common",
-  "version": "2.16.0",
+  "version": "3.0.0",
   "description": "The common utilities for the blocky editor.",
   "module": "./es",
   "scripts": {

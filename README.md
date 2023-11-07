@@ -29,7 +29,7 @@ The developers only need to develop their blocks with their favourite UI framewo
 - Core(![npm](https://img.shields.io/npm/v/blocky-core)): The core of the editor. Written in vanilla JS. It can be used standalone without any
   UI frameworks.
   - Gzipped size: ~36kb
-- Preact(![npm](https://img.shields.io/npm/v/blocky-preact)): Wrap the editor in [Preact](https://preactjs.com/). Provide the UI facilities such as
+- React(![npm](https://img.shields.io/npm/v/blocky-react)): Wrap the editor in [React](https://react.dev/). Provide the UI facilities such as
   toolbar and banner.
 - [Example](https://blocky-editor.dev/): The example to demonstrate how to use the editor.
 

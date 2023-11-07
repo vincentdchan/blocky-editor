@@ -1,6 +1,6 @@
 {
   "name": "blocky-react",
-  "version": "2.16.0",
+  "version": "3.0.0",
   "description": "The Preact wrapper of the blocky editor.",
   "main": "dist/index.js",
   "scripts": {
@@ -25,11 +25,11 @@
     "typescript": "^4.7.3"
   },
   "peerDependencies": {
-    "blocky-core": "workspace:^2.16.0",
-    "blocky-data": "workspace:^2.16.0"
+    "blocky-core": "workspace:^3.0.0",
+    "blocky-data": "workspace:^3.0.0"
   },
   "dependencies": {
-    "blocky-common": "workspace:2.16.0",
+    "blocky-common": "workspace:3.0.0",
     "lodash-es": "*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
