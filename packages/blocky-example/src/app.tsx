@@ -6,7 +6,7 @@ import {
   makePreactBanner,
   makePreactToolbar,
   type BannerRenderProps,
-} from "blocky-preact";
+} from "blocky-react";
 import makeStyledTextPlugin from "blocky-core/dist/plugins/styledTextPlugin";
 import makeCodeTextPlugin from "blocky-core/dist/plugins/codeTextPlugin";
 import makeBulletListPlugin from "blocky-core/dist/plugins/bulletListPlugin";

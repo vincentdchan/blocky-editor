@@ -1,5 +1,5 @@
 {
-  "name": "blocky-preact",
+  "name": "blocky-react",
   "version": "2.16.0",
   "description": "The Preact wrapper of the blocky editor.",
   "main": "dist/index.js",

@@ -124,9 +124,9 @@ importers:
       blocky-data:
         specifier: workspace:*
         version: link:../blocky-data
-      blocky-preact:
+      blocky-react:
         specifier: workspace:*
-        version: link:../blocky-preact
+        version: link:../blocky-react
       highlight.js:
         specifier: ^11.6.0
         version: 11.6.0
@@ -177,7 +177,7 @@ importers:
         specifier: ^3.0.9
         version: 3.0.9(sass@1.53.0)
 
-  packages/blocky-preact:
+  packages/blocky-react:
     dependencies:
       blocky-common:
         specifier: workspace:2.16.0

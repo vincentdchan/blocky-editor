@@ -1,6 +1,6 @@
 import type { ComponentChild } from "preact";
 import { PureComponent } from "preact/compat";
-import { makePreactFollowerWidget } from "blocky-preact";
+import { makePreactFollowerWidget } from "blocky-react";
 import { type IDisposable, flattenDisposable } from "blocky-common/es";
 import {
   Panel,

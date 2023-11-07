@@ -4,7 +4,7 @@ import {
   makeReactBlock,
   DefaultBlockOutline,
   type ReactBlockRenderProps,
-} from "blocky-preact";
+} from "blocky-react";
 import { type RefObject, createRef } from "preact";
 import { PureComponent } from "preact/compat";
 import Button from "@pkg/components/button";
