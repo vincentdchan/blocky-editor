@@ -605,6 +605,21 @@ export interface DocumentInitProps {
   bodyChildren: DataBaseNode[];
 }
 
+/**
+ * The data model in Blocky Editor is represented as an XML Document:
+ * 
+ * <document>
+ *   <head>
+ *     <Title />
+ *   </head>
+ *   <body>
+ *     <Text />
+ *     <Text />
+ *     <Image src="" />
+ *     </Text>
+ *   </body>
+ * </document>
+ */
 export class BlockyDocument extends DataBaseElement {
   readonly title: BlockDataElement;
   readonly head: DataBaseElement;
