@@ -82,8 +82,8 @@ importers:
         specifier: ^4.7.3
         version: 4.7.3
       vite:
-        specifier: ^2.9.12
-        version: 2.9.14
+        specifier: ^4.5.0
+        version: 4.5.0(@types/node@17.0.45)(sass@1.53.0)
       vitest:
         specifier: ^0.14.2
         version: 0.14.2(jsdom@20.0.0)
@@ -107,8 +107,8 @@ importers:
         specifier: ^4.17.6
         version: 4.17.6
       vite:
-        specifier: ^2.9.12
-        version: 2.9.14
+        specifier: ^4.5.0
+        version: 4.5.0(@types/node@17.0.45)(sass@1.53.0)
       vitest:
         specifier: ^0.14.2
         version: 0.14.2(jsdom@20.0.0)
@@ -2742,30 +2742,6 @@ packages:
 
   /v8-compile-cache@2.3.0:
     resolution: {integrity: sha512-l8lCEmLcLYZh4nbunNZvQCJc5pv7+RCwa8q/LdUx8u7lsWvPDKmpodJAJNwkAhJC//dFY48KuIEmjtd4RViDrA==}
-    dev: true
-
-  /vite@2.9.14:
-    resolution: {integrity: sha512-P/UCjSpSMcE54r4mPak55hWAZPlyfS369svib/gpmz8/01L822lMPOJ/RYW6tLCe1RPvMvOsJ17erf55bKp4Hw==}
-    engines: {node: '>=12.2.0'}
-    hasBin: true
-    peerDependencies:
-      less: '*'
-      sass: '*'
-      stylus: '*'
-    peerDependenciesMeta:
-      less:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-    dependencies:
-      esbuild: 0.14.49
-      postcss: 8.4.14
-      resolve: 1.22.0
-      rollup: 2.76.0
-    optionalDependencies:
-      fsevents: 2.3.3
     dev: true
 
   /vite@2.9.16:
