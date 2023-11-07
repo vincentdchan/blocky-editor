@@ -1,5 +1,5 @@
 import { test, expect, describe } from "vitest";
-import { BlockyElement, BlockyTextModel, BlockyDocument } from "..";
+import { DataBaseElement, BlockyTextModel, BlockyDocument } from "..";
 import Delta from "quill-delta-es";
 
 describe("BlockyDocument", () => {
@@ -15,9 +15,9 @@ describe("BlockyDocument", () => {
 
 describe("tree operation", () => {
   test("tree append", () => {
-    const parent = new BlockyElement("block");
-    const firstChild = new BlockyElement("first-child");
-    const secondChild = new BlockyElement("second-child");
+    const parent = new DataBaseElement("block");
+    const firstChild = new DataBaseElement("first-child");
+    const secondChild = new DataBaseElement("second-child");
 
     parent.__insertChildAt(parent.childrenLength, firstChild);
 
@@ -35,9 +35,9 @@ describe("tree operation", () => {
   });
 
   test("tree insert at first", () => {
-    const parent = new BlockyElement("block");
-    const firstChild = new BlockyElement("first-child");
-    const secondChild = new BlockyElement("second-child");
+    const parent = new DataBaseElement("block");
+    const firstChild = new DataBaseElement("first-child");
+    const secondChild = new DataBaseElement("second-child");
 
     parent.__insertChildAt(parent.childrenLength, firstChild);
 
@@ -55,7 +55,7 @@ describe("tree operation", () => {
   });
 
   test("tree set attribute", () => {
-    const node = new BlockyElement("block");
+    const node = new DataBaseElement("block");
 
     let callbackIsCalled = false;
     node.changed.subscribe((e) => {
@@ -72,10 +72,10 @@ describe("tree operation", () => {
   });
 
   test("tree insert at index", () => {
-    const parent = new BlockyElement("block");
-    const firstChild = new BlockyElement("first-child");
-    const secondChild = new BlockyElement("second-child");
-    const thirdChild = new BlockyElement("third-child");
+    const parent = new DataBaseElement("block");
+    const firstChild = new DataBaseElement("first-child");
+    const secondChild = new DataBaseElement("second-child");
+    const thirdChild = new DataBaseElement("third-child");
 
     parent.__insertChildAt(parent.childrenLength, firstChild);
     parent.__insertChildAt(parent.childrenLength, thirdChild);
@@ -87,10 +87,10 @@ describe("tree operation", () => {
   });
 
   test("tree delete children at index", () => {
-    const parent = new BlockyElement("block");
-    const firstChild = new BlockyElement("first-child");
-    const secondChild = new BlockyElement("second-child");
-    const thirdChild = new BlockyElement("third-child");
+    const parent = new DataBaseElement("block");
+    const firstChild = new DataBaseElement("first-child");
+    const secondChild = new DataBaseElement("second-child");
+    const thirdChild = new DataBaseElement("third-child");
 
     parent.__insertChildAt(parent.childrenLength, firstChild);
     parent.__insertChildAt(parent.childrenLength, secondChild);
@@ -106,11 +106,11 @@ describe("tree operation", () => {
   });
 
   test("child validation", () => {
-    const element = new BlockyElement("name");
+    const element = new DataBaseElement("name");
     expect(() => {
       element.__insertChildAt(element.childrenLength, element);
     }).toThrowError("Can not add ancestors of a node as child");
-    const firstChild = new BlockyElement("child");
+    const firstChild = new DataBaseElement("child");
     element.__insertChildAt(element.childrenLength, firstChild);
     expect(() => {
       element.__insertChildAt(1, element);
@@ -120,13 +120,13 @@ describe("tree operation", () => {
 
 describe("toJSON()", () => {
   test("basic", () => {
-    const element = new BlockyElement("node");
+    const element = new DataBaseElement("node");
     const json = element.toJSON();
     expect(json).toEqual({ nodeName: "node" });
   });
 
   test("attribute", () => {
-    const element = new BlockyElement("node");
+    const element = new DataBaseElement("node");
     element.__setAttribute("name", "123");
     const json = element.toJSON();
     console.log("json", json);
@@ -138,7 +138,7 @@ describe("toJSON()", () => {
     });
   });
   test("preserved attributes", () => {
-    const element = new BlockyElement("node");
+    const element = new DataBaseElement("node");
     expect(() => {
       element.__setAttribute("children", "123");
     }).toThrow("'children' is preserved");

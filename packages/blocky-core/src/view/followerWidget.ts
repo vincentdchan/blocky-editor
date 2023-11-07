@@ -3,7 +3,7 @@ import { type IDisposable, flattenDisposable } from "blocky-common/es";
 import { Subject, takeUntil } from "rxjs";
 import type { EditorController } from "./controller";
 import {
-  BlockElement,
+  BlockDataElement,
   CursorState,
   CursorStateUpdateReason,
   type CursorStateUpdateEvent,
@@ -16,7 +16,7 @@ import {
  */
 export class FollowerWidget extends ContainerWithCoord {
   protected editingValue = "";
-  protected focusedNode: BlockElement | undefined;
+  protected focusedNode: BlockDataElement | undefined;
   protected disposables: IDisposable[] = [];
   startCursorState: CursorState | undefined;
   readonly dispose$ = new Subject<void>();

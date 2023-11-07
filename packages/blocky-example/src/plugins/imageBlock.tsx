@@ -1,4 +1,4 @@
-import { BlockElement } from "blocky-data";
+import { BlockDataElement } from "blocky-data";
 import { type TryParsePastedDOMEvent, type IPlugin } from "blocky-core";
 import {
   makeReactBlock,
@@ -12,7 +12,7 @@ import "./imageBlock.scss";
 export const ImageBlockName = "Image";
 
 interface ImageBlockProps {
-  blockElement: BlockElement;
+  blockElement: BlockDataElement;
 }
 
 interface ImageBlockState {
@@ -102,7 +102,7 @@ export function makeImageBlockPlugin(): IPlugin {
                 src: src,
               };
             }
-            const element = new BlockElement(ImageBlockName, newId, attributes);
+            const element = new BlockDataElement(ImageBlockName, newId, attributes);
             return element;
           }
         },

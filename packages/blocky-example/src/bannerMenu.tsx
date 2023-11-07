@@ -1,6 +1,6 @@
 import { Component, type RefObject, createRef } from "react";
 import { type EditorController } from "blocky-core";
-import { BlockElement, TextType } from "blocky-data";
+import { BlockDataElement, TextType } from "blocky-data";
 import Dropdown from "@pkg/components/dropdown";
 import { Menu, MenuItem, Divider } from "@pkg/components/menu";
 import { ImageBlockName } from "@pkg/plugins/imageBlock";
@@ -9,7 +9,7 @@ import "./bannerMenu.scss";
 
 export interface BannerProps {
   editorController: EditorController;
-  focusedNode?: BlockElement;
+  focusedNode?: BlockDataElement;
 }
 
 interface BannerState {
@@ -106,7 +106,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
       return;
     }
     const newId = editorController.editor!.idGenerator.mkBlockId();
-    const imgElement = new BlockElement(ImageBlockName, newId);
+    const imgElement = new BlockDataElement(ImageBlockName, newId);
     editorController.insertBlockAfterId(imgElement, focusedNode.id, {
       autoFocus: true,
     });

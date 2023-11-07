@@ -13,9 +13,9 @@ import { EditorState } from "@pkg/model";
 import {
   type AttributesObject,
   BlockyTextModel,
-  BlockyElement,
-  BlockyNode,
-  BlockElement,
+  DataBaseElement,
+  DataBaseNode,
+  BlockDataElement,
   Changeset,
   TextType,
   Delta,
@@ -60,7 +60,7 @@ class CheckboxRenderer extends LeftPadRenderer {
   constructor(
     container: HTMLDivElement,
     private state: EditorState,
-    private blockElement: BlockElement
+    private blockElement: BlockDataElement
   ) {
     super(container);
     this.#checkboxContainer = elem("div", "blocky-checkbox");
@@ -112,7 +112,7 @@ export class TextBlock extends Block {
     editorController,
     node: container,
     converter,
-  }: BlockPasteEvent): BlockElement | undefined {
+  }: BlockPasteEvent): BlockDataElement | undefined {
     return TextBlock.#getTextElementFromDOM(
       editorController,
       container,
@@ -127,11 +127,11 @@ export class TextBlock extends Block {
     editorController: EditorController,
     node: HTMLElement,
     converter: HTMLConverter
-  ): BlockElement {
+  ): BlockDataElement {
     const newId = editorController.idGenerator.mkBlockId();
 
     const attributes = Object.create(null);
-    const childrenContainer: BlockyNode[] = [];
+    const childrenContainer: DataBaseNode[] = [];
 
     // TODO: Maybe using querySelector is slow.
     // Should make a benchmark here
@@ -181,12 +181,12 @@ export class TextBlock extends Block {
       attributes.textType = TextType.Bulleted;
     }
 
-    const childrenNode: BlockyNode[] = [];
+    const childrenNode: DataBaseNode[] = [];
     if (childrenContainer.length > 0) {
       childrenNode.push(...childrenContainer);
     }
 
-    return new BlockElement(
+    return new BlockDataElement(
       TextBlock.Name,
       newId,
       {
@@ -204,7 +204,7 @@ export class TextBlock extends Block {
   #embeds: Set<Embed> = new Set();
 
   private getTextType(): TextType {
-    return getTextTypeForTextBlock(this.elementData as BlockElement);
+    return getTextTypeForTextBlock(this.elementData as BlockDataElement);
   }
 
   override getCursorHeight(): number {
@@ -463,7 +463,7 @@ export class TextBlock extends Block {
     this.#checkEmbed();
   }
 
-  override renderChildren(): BlockyNode | void | null {
+  override renderChildren(): DataBaseNode | void | null {
     return this.props.firstChild;
   }
 
@@ -839,14 +839,14 @@ export class TextBlock extends Block {
   }
 
   override onIndent(): void {
-    const prevElement = this.props.prevSibling as BlockElement | undefined;
+    const prevElement = this.props.prevSibling as BlockDataElement | undefined;
     if (!prevElement) {
       return;
     }
     this.#makeThisTextBlockIndent(prevElement);
   }
 
-  #makeThisTextBlockIndent(prevElement: BlockElement) {
+  #makeThisTextBlockIndent(prevElement: BlockDataElement) {
     if (prevElement.nodeName !== TextBlock.Name) {
       return;
     }
@@ -863,7 +863,7 @@ export class TextBlock extends Block {
     const change = new Changeset(this.editor.state);
     change.removeNode(this.props);
 
-    const prevBlockyElement = prevElement as BlockElement;
+    const prevBlockyElement = prevElement as BlockDataElement;
 
     change.insertChildrenAfter(
       prevBlockyElement,
@@ -888,7 +888,7 @@ export class TextBlock extends Block {
 
     const prevCursorState = this.editor.state.cursorState;
 
-    const parentElement = this.props.parent! as BlockyElement;
+    const parentElement = this.props.parent! as DataBaseElement;
 
     const copy = this.props.clone();
     let ptr = this.props.nextSibling;
@@ -914,11 +914,11 @@ export class TextBlock extends Block {
     change.apply();
   }
 
-  #findParentBlockElement(): BlockElement | undefined {
+  #findParentBlockElement(): BlockDataElement | undefined {
     let result = this.props.parent;
 
     while (result) {
-      if (result instanceof BlockElement) {
+      if (result instanceof BlockDataElement) {
         return result;
       }
 
@@ -978,6 +978,6 @@ function isRangeEqual(
   );
 }
 
-export function getTextTypeForTextBlock(blockElement: BlockElement): TextType {
+export function getTextTypeForTextBlock(blockElement: BlockDataElement): TextType {
   return blockElement.getAttribute("textType") ?? TextType.Normal;
 }

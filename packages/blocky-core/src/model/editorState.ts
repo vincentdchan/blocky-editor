@@ -2,9 +2,9 @@ import { isUndefined } from "lodash-es";
 import { Subject, takeUntil } from "rxjs";
 import {
   type AttributesObject,
-  type BlockyNode,
+  type DataBaseNode,
   type JSONNode,
-  BlockElement,
+  BlockDataElement,
   BlockyDocument,
   BlockyTextModel,
   traverseNode,
@@ -36,11 +36,11 @@ export interface IEditorStateInitOptions {
  *
  */
 export class EditorState extends State {
-  #idMap: Map<string, BlockElement> = new Map();
+  #idMap: Map<string, BlockDataElement> = new Map();
   readonly domMap: Map<string, Node> = new Map();
   readonly blocks: Map<string, Block> = new Map();
   readonly newBlockCreated: Subject<Block> = new Subject();
-  readonly blockWillDelete: Subject<BlockElement> = new Subject();
+  readonly blockWillDelete: Subject<BlockDataElement> = new Subject();
   readonly blockRegistry: BlockRegistry;
   readonly idGenerator: IdGenerator;
   readonly dispose$ = new Subject<void>();
@@ -52,25 +52,25 @@ export class EditorState extends State {
     this.idGenerator = options.idGenerator ?? makeDefaultIdGenerator();
     const { document } = options;
 
-    traverseNode(document, (node: BlockyNode) => {
-      if (node instanceof BlockElement) {
+    traverseNode(document, (node: DataBaseNode) => {
+      if (node instanceof BlockDataElement) {
         this.#handleNewBlockMounted(node);
       }
     });
 
     document.blockElementAdded
       .pipe(takeUntil(this.dispose$))
-      .subscribe((blockElement: BlockElement) =>
+      .subscribe((blockElement: BlockDataElement) =>
         this.#handleNewBlockMounted(blockElement)
       );
     document.blockElementRemoved
       .pipe(takeUntil(this.dispose$))
-      .subscribe((blockElement: BlockElement) =>
+      .subscribe((blockElement: BlockDataElement) =>
         this.#unmountBlock(blockElement)
       );
   }
 
-  getBlockElementById(id: string): BlockElement | undefined {
+  getBlockElementById(id: string): BlockDataElement | undefined {
     return this.#idMap.get(id);
   }
 
@@ -78,7 +78,7 @@ export class EditorState extends State {
     return this.#idMap.has(id);
   }
 
-  isTextLike(node: BlockyNode) {
+  isTextLike(node: DataBaseNode) {
     return (
       node.nodeName === TextBlock.Name || node.nodeName === TitleBlock.Name
     );
@@ -87,15 +87,15 @@ export class EditorState extends State {
   createTextElement(
     delta?: Delta | undefined,
     attributes?: AttributesObject,
-    children?: BlockyNode[]
-  ): BlockElement {
+    children?: DataBaseNode[]
+  ): BlockDataElement {
     if (isUndefined(attributes)) {
       attributes = {};
     }
     if (isUndefined(attributes.textContent)) {
       attributes.textContent = new BlockyTextModel(delta);
     }
-    return new BlockElement(
+    return new BlockDataElement(
       TextBlock.Name,
       this.idGenerator.mkBlockId(),
       attributes,
@@ -103,7 +103,7 @@ export class EditorState extends State {
     );
   }
 
-  #handleNewBlockMounted(blockElement: BlockElement) {
+  #handleNewBlockMounted(blockElement: BlockDataElement) {
     this.#insertElement(blockElement);
 
     if (blockElement.nodeName === "Title") {
@@ -125,7 +125,7 @@ export class EditorState extends State {
     this.newBlockCreated.next(block);
   }
 
-  #unmountBlock(blockElement: BlockElement): boolean {
+  #unmountBlock(blockElement: BlockDataElement): boolean {
     const blockId = blockElement.id;
     this.blockWillDelete.next(blockElement);
 
@@ -142,7 +142,7 @@ export class EditorState extends State {
     this.domMap.set(blockId, dom);
   }
 
-  #insertElement(element: BlockElement) {
+  #insertElement(element: BlockDataElement) {
     const { id } = element;
     if (isUndefined(id)) {
       throw new Error(
@@ -172,7 +172,7 @@ export class EditorState extends State {
 
     while (traverser.peek()) {
       const currentNode = traverser.next()!;
-      if (currentNode instanceof BlockElement) {
+      if (currentNode instanceof BlockDataElement) {
         let startOffset = 0;
         let endOffset = 0;
         if (currentNode.nodeName === TextBlock.Name) {
@@ -236,12 +236,12 @@ export class EditorState extends State {
 }
 
 export class NodeTraverser {
-  #node: BlockyNode | null;
-  constructor(readonly state: EditorState, beginNode: BlockyNode) {
+  #node: DataBaseNode | null;
+  constructor(readonly state: EditorState, beginNode: DataBaseNode) {
     this.#node = beginNode;
   }
 
-  peek(): BlockyNode | null {
+  peek(): DataBaseNode | null {
     return this.#node;
   }
 
@@ -273,7 +273,7 @@ export class NodeTraverser {
     return current;
   }
 
-  #findLeadingChildOfNode(node: BlockyNode): BlockyNode {
+  #findLeadingChildOfNode(node: DataBaseNode): DataBaseNode {
     while (node.firstChild !== null) {
       node = node.firstChild;
     }

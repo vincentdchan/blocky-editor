@@ -1,10 +1,10 @@
 import { type IDisposable } from "blocky-common/es";
 import type { EditorController } from "@pkg/view/controller";
-import type { BlockElement } from "blocky-data";
+import type { BlockDataElement } from "blocky-data";
 import { UIDelegate } from "./uiDelegate";
 
 export interface BannerInstance extends IDisposable {
-  onFocusedNodeChanged?(focusedNode: BlockElement | undefined): void;
+  onFocusedNodeChanged?(focusedNode: BlockDataElement | undefined): void;
 }
 
 export type BannerFactory = (
@@ -14,13 +14,13 @@ export type BannerFactory = (
 
 export class BannerDelegate extends UIDelegate {
   #instance: BannerInstance | undefined;
-  #focusedNode: BlockElement | undefined;
+  #focusedNode: BlockDataElement | undefined;
 
-  get focusedNode(): BlockElement | undefined {
+  get focusedNode(): BlockDataElement | undefined {
     return this.#focusedNode;
   }
 
-  set focusedNode(v: BlockElement | undefined) {
+  set focusedNode(v: BlockDataElement | undefined) {
     this.#focusedNode = v;
     this.#instance?.onFocusedNodeChanged?.(v);
   }

@@ -1,6 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import type { BlockElement } from "blocky-data";
+import type { BlockDataElement } from "blocky-data";
 import type {
   BannerFactory,
   EditorController,
@@ -9,7 +9,7 @@ import type {
 
 export interface RenderProps {
   editorController: EditorController;
-  focusedNode?: BlockElement;
+  focusedNode?: BlockDataElement;
 }
 
 export type Renderer = (props: RenderProps) => React.ReactNode;
@@ -19,14 +19,14 @@ export function makeReactBanner(renderer: Renderer): BannerFactory {
     container: HTMLDivElement,
     editorController: EditorController
   ): BannerInstance => {
-    let focusedNode: BlockElement | undefined;
+    let focusedNode: BlockDataElement | undefined;
     const root = createRoot(container);
     const renderFn = () => {
       root.render(renderer({ editorController, focusedNode }));
     };
     renderFn();
     return {
-      onFocusedNodeChanged(n: BlockElement) {
+      onFocusedNodeChanged(n: BlockDataElement) {
         focusedNode = n;
         renderFn();
       },

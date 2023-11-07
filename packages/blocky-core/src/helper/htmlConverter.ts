@@ -1,14 +1,14 @@
 import { isObject } from "lodash-es";
-import { BlockElement, BlockyTextModel } from "blocky-data";
+import { BlockDataElement, BlockyTextModel } from "blocky-data";
 import { TextBlock } from "@pkg/block/textBlock";
 import { removeLineBreaks } from "blocky-common/es";
 import { textToDeltaWithURL } from "@pkg/helper/urlHelper";
 import type { IdGenerator } from "@pkg/helper/idHelper";
 
-function createTextElement(id: string, content: string): BlockElement {
+function createTextElement(id: string, content: string): BlockDataElement {
   content = removeLineBreaks(content);
   const textModel = new BlockyTextModel(textToDeltaWithURL(content));
-  return new BlockElement(TextBlock.Name, id, {
+  return new BlockDataElement(TextBlock.Name, id, {
     textContent: textModel,
   });
 }
@@ -22,7 +22,7 @@ function isLeafElement(node: Node): node is HTMLElement {
   );
 }
 
-export type ElementHandler = (node: Node) => BlockElement | void | boolean;
+export type ElementHandler = (node: Node) => BlockDataElement | void | boolean;
 
 export interface HTMLConverterOptions {
   idGenerator: IdGenerator;
@@ -54,14 +54,14 @@ export class HTMLConverter {
     return node instanceof HTMLUListElement || node instanceof HTMLDivElement;
   }
 
-  parseFromString(content: string): BlockElement[] {
+  parseFromString(content: string): BlockDataElement[] {
     const domParser = new DOMParser();
     const doc = domParser.parseFromString(content, "text/html");
     return this.parseBody(doc.body);
   }
 
-  parseBody(doc: HTMLElement): BlockElement[] {
-    const result: BlockElement[] = [];
+  parseBody(doc: HTMLElement): BlockDataElement[] {
+    const result: BlockDataElement[] = [];
 
     let ptr = doc.firstChild;
     while (ptr) {
@@ -72,7 +72,7 @@ export class HTMLConverter {
     return result;
   }
 
-  #pushTextIfPossible(node: Node, result: BlockElement[]) {
+  #pushTextIfPossible(node: Node, result: BlockDataElement[]) {
     const { textContent } = node;
     if (textContent) {
       const lines = textContent.split("\n");
@@ -85,7 +85,7 @@ export class HTMLConverter {
     }
   }
 
-  #tryParseNode(node: Node, result: BlockElement[]) {
+  #tryParseNode(node: Node, result: BlockDataElement[]) {
     if (node instanceof Text) {
       this.#pushTextIfPossible(node, result);
     } else if (isLeafElement(node)) {
@@ -114,8 +114,8 @@ export class HTMLConverter {
     }
   }
 
-  parseContainerElement(container: HTMLElement): BlockElement[] {
-    const result: BlockElement[] = [];
+  parseContainerElement(container: HTMLElement): BlockDataElement[] {
+    const result: BlockDataElement[] = [];
     let ptr = container.firstChild;
     while (ptr) {
       this.#tryParseNode(ptr, result);

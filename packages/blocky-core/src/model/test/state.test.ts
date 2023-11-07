@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import {
-  BlockElement,
+  BlockDataElement,
   BlockyDocument,
   BlockyTextModel,
   JSONNode,
@@ -23,7 +23,7 @@ test("serialize", () => {
   const idGenerator = makeDefaultIdGenerator();
   const doc = new BlockyDocument({
     bodyChildren: [
-      new BlockElement("Text", idGenerator.mkBlockId(), {
+      new BlockDataElement("Text", idGenerator.mkBlockId(), {
         textContent: new BlockyTextModel(
           new Delta([{ insert: "Hello world" }])
         ),

@@ -1,7 +1,7 @@
 import { isWhiteSpace } from "blocky-common/es";
 import { isNumber, isString } from "lodash-es";
 import {
-  BlockElement,
+  BlockDataElement,
   CursorState,
   Changeset,
   TextType,
@@ -20,7 +20,7 @@ function makeBulletListPlugin(): IPlugin {
   const turnTextBlockIntoBulletList = (
     editor: Editor,
     blockId: string,
-    textElement: BlockElement
+    textElement: BlockDataElement
   ) => {
     new Changeset(editor.state)
       .updateAttributes(textElement, {

@@ -1,10 +1,10 @@
 import Delta from "quill-delta-es";
 import {
-  type BlockyElement,
+  type DataBaseElement,
   type BlockyTextModel,
   type AttributesObject,
-  type BlockyNode,
-  type BlockElement,
+  type DataBaseNode,
+  type BlockDataElement,
   JSONNode,
 } from "./tree";
 import {
@@ -41,7 +41,7 @@ export interface ChangesetStateLogger {
   userId: string;
   get appliedVersion(): number;
   get cursorState(): CursorState | null;
-  getLocationOfNode(node: BlockyNode): NodeLocation;
+  getLocationOfNode(node: DataBaseNode): NodeLocation;
   apply(changeset: FinalizedChangeset): void;
 }
 
@@ -68,7 +68,7 @@ export class Changeset {
    * Update the attributes of a `BlockyNode`.
    */
   updateAttributes(
-    node: BlockyElement,
+    node: DataBaseElement,
     attributes: AttributesObject
   ): Changeset {
     const oldAttributes = Object.create(null);
@@ -97,7 +97,7 @@ export class Changeset {
   /**
    * Append a node at the end of another node.
    */
-  appendChild(node: BlockyElement, child: BlockyNode): Changeset {
+  appendChild(node: DataBaseElement, child: DataBaseNode): Changeset {
     const parentLoc = this.state.getLocationOfNode(node);
     const index = node.childrenLength;
     this.push({
@@ -108,7 +108,7 @@ export class Changeset {
     return this;
   }
 
-  removeChild(parent: BlockyElement, child: BlockyNode): Changeset {
+  removeChild(parent: DataBaseElement, child: DataBaseNode): Changeset {
     const parentLoc = this.state.getLocationOfNode(parent);
     const index = parent.indexOf(child);
     this.push({
@@ -122,7 +122,7 @@ export class Changeset {
   /**
    * Remove a node from the parent.
    */
-  removeNode(node: BlockyNode): Changeset {
+  removeNode(node: DataBaseNode): Changeset {
     return this.removeChild(node.parent!, node);
   }
 
@@ -130,7 +130,7 @@ export class Changeset {
    * Delete a sequences of children of a node.
    */
   deleteChildrenAt(
-    parent: BlockyElement,
+    parent: DataBaseElement,
     index: number,
     count: number
   ): Changeset {
@@ -163,9 +163,9 @@ export class Changeset {
    * Insert a sequences of children after another node.
    */
   insertChildrenAfter(
-    parent: BlockyElement,
-    children: BlockyNode[],
-    after?: BlockyNode | null
+    parent: DataBaseElement,
+    children: DataBaseNode[],
+    after?: DataBaseNode | null
   ): Changeset {
     const parentLoc = this.state.getLocationOfNode(parent);
     let index = 0;
@@ -184,9 +184,9 @@ export class Changeset {
    * Insert children at the position of a node.
    */
   insertChildrenAt(
-    parent: BlockyElement,
+    parent: DataBaseElement,
     index: number,
-    children: BlockyNode[]
+    children: DataBaseNode[]
   ): Changeset {
     const parentLoc = this.state.getLocationOfNode(parent);
     this.push({
@@ -202,7 +202,7 @@ export class Changeset {
    * For a `Text` block, the `propName` is usually called `textContent`.
    */
   textEdit(
-    node: BlockElement,
+    node: BlockDataElement,
     propName: string,
     delta: () => Delta
   ): Changeset {
@@ -227,7 +227,7 @@ export class Changeset {
   }
 
   textConcat(
-    node: BlockElement,
+    node: BlockDataElement,
     propName: string,
     delta: () => Delta
   ): Changeset {

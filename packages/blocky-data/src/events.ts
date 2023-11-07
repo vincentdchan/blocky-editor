@@ -1,4 +1,4 @@
-import type { BlockyNode } from "./tree";
+import type { DataBaseNode } from "./tree";
 
 export interface ElementSetAttributeEvent {
   type: "element-set-attrib";
@@ -9,15 +9,15 @@ export interface ElementSetAttributeEvent {
 
 export interface ElementRemoveChildEvent {
   type: "element-remove-child";
-  parent: BlockyNode;
-  child: BlockyNode;
+  parent: DataBaseNode;
+  child: DataBaseNode;
   index: number;
 }
 
 export interface ElementInsertChildEvent {
   type: "element-insert-child";
-  parent: BlockyNode;
-  child: BlockyNode;
+  parent: DataBaseNode;
+  child: DataBaseNode;
   index: number;
 }
 

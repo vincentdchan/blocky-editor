@@ -1,4 +1,4 @@
-import type { BlockElement } from "blocky-data";
+import type { BlockDataElement } from "blocky-data";
 import {
   type IBlockDefinition,
   type EditorController,
@@ -10,13 +10,13 @@ import { createRoot, type Root } from "react-dom/client"
 
 export interface ReactBlockRenderProps {
   controller: EditorController;
-  blockElement: BlockElement;
+  blockElement: BlockDataElement;
 }
 
 export interface ReactBlockOptions {
   name: string;
   component: (props: ReactBlockRenderProps) => React.ReactNode;
-  tryParsePastedDOM?(e: TryParsePastedDOMEvent): BlockElement | void;
+  tryParsePastedDOM?(e: TryParsePastedDOMEvent): BlockDataElement | void;
 }
 
 export interface IReactBlockContext {

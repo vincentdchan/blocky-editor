@@ -3,7 +3,7 @@ import { FixedSizeStack, HistoryItem, UndoManager } from "../undoManager";
 import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { EditorState } from "../editorState";
 import {
-  BlockElement,
+  BlockDataElement,
   BlockyDocument,
   BlockyTextModel,
   Changeset,
@@ -57,13 +57,13 @@ describe("UndoManager", () => {
 
   test("delete", () => {
     const idGenerator = makeDefaultIdGenerator();
-    const e1 = new BlockElement("Text", idGenerator.mkBlockId(), {
+    const e1 = new BlockDataElement("Text", idGenerator.mkBlockId(), {
       textContent: new BlockyTextModel(new Delta().insert("0")),
     });
-    const e2 = new BlockElement("Text", idGenerator.mkBlockId(), {
+    const e2 = new BlockDataElement("Text", idGenerator.mkBlockId(), {
       textContent: new BlockyTextModel(new Delta().insert("1")),
     });
-    const e3 = new BlockElement("Text", idGenerator.mkBlockId(), {
+    const e3 = new BlockDataElement("Text", idGenerator.mkBlockId(), {
       textContent: new BlockyTextModel(new Delta().insert("2")),
     });
     const doc = new BlockyDocument({

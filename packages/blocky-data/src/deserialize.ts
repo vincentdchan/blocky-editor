@@ -1,10 +1,10 @@
 import { isUndefined } from "lodash-es";
 import { isUpperCase } from "blocky-common/es";
 import {
-  type BlockyNode,
+  type DataBaseNode,
   type JSONNode,
-  BlockElement,
-  BlockyElement,
+  BlockDataElement,
+  DataBaseElement,
   BlockyDocument,
   AttributesObject,
   BlockyTextModel,
@@ -12,7 +12,7 @@ import {
 } from "./tree";
 import Delta from "quill-delta-es";
 
-export function blockyNodeFromJsonNode(jsonNode: JSONNode): BlockyNode {
+export function blockyNodeFromJsonNode(jsonNode: JSONNode): DataBaseNode {
   const { nodeName } = jsonNode;
   if (nodeName === "document") {
     return documentFromJsonNode(jsonNode);
@@ -38,7 +38,7 @@ export function documentFromJsonNode(jsonNode: JSONNode): BlockyDocument {
   return new BlockyDocument({ head, body });
 }
 
-export function blockElementFromJsonNode(jsonNode: JSONNode): BlockElement {
+export function blockElementFromJsonNode(jsonNode: JSONNode): BlockDataElement {
   const { nodeName, id, children, attributes: jsonAttribs } = jsonNode;
   if (isUndefined(id)) {
     throw new TypeError("id is missing for jsonNode");
@@ -47,18 +47,18 @@ export function blockElementFromJsonNode(jsonNode: JSONNode): BlockElement {
   const childrenNode = children?.map((child) => {
     return blockyNodeFromJsonNode(child);
   });
-  return new BlockElement(nodeName, id, attributes, childrenNode);
+  return new BlockDataElement(nodeName, id, attributes, childrenNode);
 }
 
-export function blockyElementFromJsonNode(jsonNode: JSONNode): BlockyElement {
+export function blockyElementFromJsonNode(jsonNode: JSONNode): DataBaseElement {
   const { nodeName, children, attributes: jsonAttribs } = jsonNode;
   const attributes = getAttributesByMeta(jsonAttribs, jsonNode);
-  const childrenNode: BlockyNode[] =
+  const childrenNode: DataBaseNode[] =
     children?.map((child) => {
       return blockyNodeFromJsonNode(child);
     }) ?? [];
 
-  return new BlockyElement(nodeName, attributes, childrenNode);
+  return new DataBaseElement(nodeName, attributes, childrenNode);
 }
 
 function getAttributesByMeta(

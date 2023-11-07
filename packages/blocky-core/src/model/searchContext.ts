@@ -1,7 +1,7 @@
 import { IDisposable } from "blocky-common/es";
 import { Subject } from "rxjs";
 import { elem, removeNode, ContainerWithCoord } from "blocky-common/es/dom";
-import { BlockElement, BlockyNode } from "blocky-data";
+import { BlockDataElement, DataBaseNode } from "blocky-data";
 import { isString, isObject } from "lodash-es";
 import { Editor } from "@pkg/view/editor";
 
@@ -209,8 +209,8 @@ export class SearchContext implements IDisposable {
     return index - origin;
   }
 
-  #iterateNode(node: BlockyNode) {
-    if (node instanceof BlockElement) {
+  #iterateNode(node: DataBaseNode) {
+    if (node instanceof BlockDataElement) {
       this.#searchBlockElement(node);
     }
 
@@ -221,7 +221,7 @@ export class SearchContext implements IDisposable {
     }
   }
 
-  #searchBlockElement(blockElement: BlockElement) {
+  #searchBlockElement(blockElement: BlockDataElement) {
     const textModel = blockElement.getTextModel("textContent");
     if (!textModel) {
       return;

@@ -3,8 +3,8 @@ import { isUndefined } from "lodash-es";
 import { type IBlockDefinition } from "@pkg/block/basic";
 import {
   type BlockyDocument,
-  type BlockyNode,
-  BlockElement,
+  type DataBaseNode,
+  BlockDataElement,
   BlockyTextModel,
 } from "blocky-data";
 import type { Editor } from "@pkg/view/editor";
@@ -111,7 +111,7 @@ export class DocRenderer {
     );
   }
 
-  protected renderTitle(dom: HTMLElement, titleElement: BlockElement) {
+  protected renderTitle(dom: HTMLElement, titleElement: BlockDataElement) {
     if (isUndefined(dom._mgNode)) {
       dom._mgNode = titleElement;
       const block = this.editor.state.blocks.get(titleElement.id)!;
@@ -142,7 +142,7 @@ export class DocRenderer {
 
   #clearDeletedBlock(dom: Node | null): Node | null {
     while (dom?._mgNode) {
-      const treeNode = dom?._mgNode as BlockElement;
+      const treeNode = dom?._mgNode as BlockDataElement;
       const id = treeNode.id;
       if (!this.editor.state.containsBlockElement(id)) {
         const next = dom.nextSibling;
@@ -159,7 +159,7 @@ export class DocRenderer {
   protected renderBlocks(
     blocksContainer: HTMLElement,
     beginChild: ChildNode | null,
-    beginBlockyNode: BlockyNode | null
+    beginBlockyNode: DataBaseNode | null
   ) {
     let nodePtr = beginBlockyNode;
 
@@ -178,12 +178,12 @@ export class DocRenderer {
     let prevPtr: Node | undefined;
 
     while (nodePtr) {
-      if (!(nodePtr instanceof BlockElement)) {
+      if (!(nodePtr instanceof BlockDataElement)) {
         // skip this element
         nodePtr = nodePtr.nextSibling;
         continue;
       }
-      const blockElement = nodePtr as BlockElement;
+      const blockElement = nodePtr as BlockDataElement;
       const id = blockElement.id;
       const blockDef = this.editor.registry.block.getBlockDefByName(
         blockElement.nodeName
@@ -254,7 +254,7 @@ export class DocRenderer {
 
   #initBlockContainer(
     blockContainer: HTMLElement,
-    blockNode: BlockElement,
+    blockNode: BlockDataElement,
     blockDef: IBlockDefinition
   ) {
     const { editor, clsPrefix } = this;

@@ -29,18 +29,18 @@ export interface JSONNode {
 
 export type JSONChild = JSONNode;
 
-export interface BlockyNode {
+export interface DataBaseNode {
   doc?: BlockyDocument;
 
   nodeName: string;
-  parent: BlockyElement | null;
-  nextSibling: BlockyNode | null;
-  prevSibling: BlockyNode | null;
-  firstChild: BlockyNode | null;
-  lastChild: BlockyNode | null;
+  parent: DataBaseElement | null;
+  nextSibling: DataBaseNode | null;
+  prevSibling: DataBaseNode | null;
+  firstChild: DataBaseNode | null;
+  lastChild: DataBaseNode | null;
   childrenLength: number;
 
-  clone(): BlockyNode;
+  clone(): DataBaseNode;
   toJSON(): JSONNode;
 }
 
@@ -143,16 +143,16 @@ interface InternAttributes {
   [key: string]: any;
 }
 
-export class BlockyElement implements BlockyNode {
+export class DataBaseElement implements DataBaseNode {
   doc?: BlockyDocument;
-  parent: BlockyElement | null = null;
-  nextSibling: BlockyNode | null = null;
-  prevSibling: BlockyNode | null = null;
+  parent: DataBaseElement | null = null;
+  nextSibling: DataBaseNode | null = null;
+  prevSibling: DataBaseNode | null = null;
 
   childrenLength = 0;
 
-  #firstChild: BlockyNode | null = null;
-  #lastChild: BlockyNode | null = null;
+  #firstChild: DataBaseNode | null = null;
+  #lastChild: DataBaseNode | null = null;
   #attributes: InternAttributes = {};
 
   changed: Subject<ElementChangedEvent> = new Subject();
@@ -160,7 +160,7 @@ export class BlockyElement implements BlockyNode {
   constructor(
     public nodeName: string,
     attributes?: AttributesObject,
-    children?: BlockyNode[]
+    children?: DataBaseNode[]
   ) {
     if (nodeName === "#text") {
       throw new Error("illegal nodeName for an element");
@@ -175,17 +175,17 @@ export class BlockyElement implements BlockyNode {
     }
   }
 
-  get firstChild(): BlockyNode | null {
+  get firstChild(): DataBaseNode | null {
     return this.#firstChild;
   }
 
-  get lastChild(): BlockyNode | null {
+  get lastChild(): DataBaseNode | null {
     return this.#lastChild;
   }
 
-  indexOf(node: BlockyNode): number {
+  indexOf(node: DataBaseNode): number {
     let cnt = 0;
-    let ptr: BlockyNode | null = node.prevSibling;
+    let ptr: DataBaseNode | null = node.prevSibling;
     while (ptr) {
       cnt++;
       ptr = ptr.prevSibling;
@@ -193,7 +193,7 @@ export class BlockyElement implements BlockyNode {
     return cnt;
   }
 
-  queryChildByName(nodeName: string): BlockyNode | void {
+  queryChildByName(nodeName: string): DataBaseNode | void {
     let ptr = this.#firstChild;
 
     while (ptr) {
@@ -204,7 +204,7 @@ export class BlockyElement implements BlockyNode {
     }
   }
 
-  #symInsertAfter(node: BlockyNode, after?: BlockyNode) {
+  #symInsertAfter(node: DataBaseNode, after?: DataBaseNode) {
     if (after && after.parent !== this) {
       throw new TypeError("after node is a child of this node");
     }
@@ -241,7 +241,7 @@ export class BlockyElement implements BlockyNode {
 
     let cnt = 0;
     if (after) {
-      let ptr: BlockyNode | null = after;
+      let ptr: DataBaseNode | null = after;
       while (ptr) {
         cnt++;
         ptr = ptr.prevSibling;
@@ -258,8 +258,8 @@ export class BlockyElement implements BlockyNode {
     });
   }
 
-  #validateChild(node: BlockyNode) {
-    let ptr: BlockyElement | null = this;
+  #validateChild(node: DataBaseNode) {
+    let ptr: DataBaseElement | null = this;
     while (ptr) {
       if (ptr === node) {
         throw new Error("Can not add ancestors of a node as child");
@@ -268,7 +268,7 @@ export class BlockyElement implements BlockyNode {
     }
   }
 
-  appendChild(node: BlockyNode) {
+  appendChild(node: DataBaseNode) {
     if (this.doc) {
       throw new Error(
         "this method could only be called when the node is unmounted"
@@ -278,7 +278,7 @@ export class BlockyElement implements BlockyNode {
     this.#appendChildImpl(node);
   }
 
-  #appendChildImpl(node: BlockyNode) {
+  #appendChildImpl(node: DataBaseNode) {
     if (!this.#firstChild) {
       this.#firstChild = node;
     }
@@ -293,7 +293,7 @@ export class BlockyElement implements BlockyNode {
     this.childrenLength++;
   }
 
-  #appendChild(node: BlockyNode) {
+  #appendChild(node: DataBaseNode) {
     this.#validateChild(node);
     const insertIndex = this.childrenLength;
 
@@ -309,8 +309,8 @@ export class BlockyElement implements BlockyNode {
     });
   }
 
-  childAt(index: number): BlockyNode | null {
-    let ptr: BlockyNode | null = this.#firstChild;
+  childAt(index: number): DataBaseNode | null {
+    let ptr: DataBaseNode | null = this.#firstChild;
 
     while (ptr && index >= 1) {
       index--;
@@ -325,7 +325,7 @@ export class BlockyElement implements BlockyNode {
    * If you want to modify the state of the document and
    * notify the editor to update, apply a changeset.
    */
-  __insertChildAt(index: number, node: BlockyNode) {
+  __insertChildAt(index: number, node: DataBaseNode) {
     if (index === this.childrenLength) {
       this.#appendChild(node);
       return;
@@ -336,7 +336,7 @@ export class BlockyElement implements BlockyNode {
       return;
     }
 
-    let ptr: BlockyNode | null = this.#firstChild;
+    let ptr: DataBaseNode | null = this.#firstChild;
 
     while (ptr && index > 1) {
       index--;
@@ -400,7 +400,7 @@ export class BlockyElement implements BlockyNode {
     }
   }
 
-  #removeChild(node: BlockyNode) {
+  #removeChild(node: DataBaseNode) {
     const { parent } = node;
     if (parent !== this) {
       throw new TypeError("node is not the child of this element");
@@ -443,8 +443,8 @@ export class BlockyElement implements BlockyNode {
     });
   }
 
-  clone(): BlockyElement {
-    const result = new BlockyElement(this.nodeName);
+  clone(): DataBaseElement {
+    const result = new DataBaseElement(this.nodeName);
 
     const attribs = this.getAttributes();
     for (const key in attribs) {
@@ -527,12 +527,12 @@ export class BlockyElement implements BlockyNode {
  * A BlockElement can contain a <children-container>
  * at the end of the block to store the children.
  */
-export class BlockElement extends BlockyElement {
+export class BlockDataElement extends DataBaseElement {
   constructor(
     blockName: string,
     readonly id: string,
     attributes?: AttributesObject,
-    children?: BlockyNode[]
+    children?: DataBaseNode[]
   ) {
     super(blockName, attributes, children);
   }
@@ -564,29 +564,29 @@ export class BlockElement extends BlockyElement {
       return 0;
     }
 
-    if (parentNode instanceof BlockElement) {
+    if (parentNode instanceof BlockDataElement) {
       return parentNode.blockLevel() + 1;
     }
     return Number.MAX_SAFE_INTEGER;
   }
 
-  override clone(): BlockElement {
+  override clone(): BlockDataElement {
     return this.cloneWithId(this.id);
   }
 
-  cloneWithId(id: string): BlockElement {
+  cloneWithId(id: string): BlockDataElement {
     const attribs = this.getAttributes();
     delete attribs.id;
 
     let childPtr = this.firstChild;
 
-    const children: BlockyNode[] = [];
+    const children: DataBaseNode[] = [];
     while (childPtr) {
       children.push(childPtr.clone());
       childPtr = childPtr.nextSibling;
     }
 
-    return new BlockElement(this.nodeName, id, attribs, children);
+    return new BlockDataElement(this.nodeName, id, attribs, children);
   }
 
   override toJSON(): JSONNode {
@@ -600,39 +600,39 @@ export class BlockElement extends BlockyElement {
 
 export interface DocumentInitProps {
   title?: string;
-  head?: BlockyElement;
-  body?: BlockyElement;
-  bodyChildren: BlockyNode[];
+  head?: DataBaseElement;
+  body?: DataBaseElement;
+  bodyChildren: DataBaseNode[];
 }
 
-export class BlockyDocument extends BlockyElement {
-  readonly title: BlockElement;
-  readonly head: BlockyElement;
-  readonly body: BlockyElement;
+export class BlockyDocument extends DataBaseElement {
+  readonly title: BlockDataElement;
+  readonly head: DataBaseElement;
+  readonly body: DataBaseElement;
 
-  readonly blockElementAdded = new Subject<BlockElement>();
-  readonly blockElementRemoved = new Subject<BlockElement>();
+  readonly blockElementAdded = new Subject<BlockDataElement>();
+  readonly blockElementRemoved = new Subject<BlockDataElement>();
 
   constructor(props?: Partial<DocumentInitProps>) {
-    let title: BlockElement;
-    let head: BlockyElement | undefined = props?.head;
+    let title: BlockDataElement;
+    let head: DataBaseElement | undefined = props?.head;
     if (isUndefined(head)) {
-      title = new BlockElement("Title", "title", {
+      title = new BlockDataElement("Title", "title", {
         textContent: props?.title
           ? new BlockyTextModel(new Delta([{ insert: props.title }]))
           : new BlockyTextModel(),
       });
-      head = new BlockyElement("head", {}, [title]);
+      head = new DataBaseElement("head", {}, [title]);
     } else {
       const t = head.queryChildByName("Title");
       if (!t) {
         throw new Error("Title not found for head");
       }
-      title = t as BlockElement;
+      title = t as BlockDataElement;
     }
     const body =
       props?.body ??
-      new BlockyElement("body", undefined, props?.bodyChildren ?? []);
+      new DataBaseElement("body", undefined, props?.bodyChildren ?? []);
     super("document", undefined, [head, body]);
 
     this.title = title;
@@ -643,19 +643,19 @@ export class BlockyDocument extends BlockyElement {
     this.reportBlockyNodeInserted(this.body);
   }
 
-  reportBlockyNodeInserted(blockyNode: BlockyNode) {
-    traverseNode(blockyNode, (item: BlockyNode) => {
+  reportBlockyNodeInserted(blockyNode: DataBaseNode) {
+    traverseNode(blockyNode, (item: DataBaseNode) => {
       item.doc = this;
-      if (item instanceof BlockElement) {
+      if (item instanceof BlockDataElement) {
         this.blockElementAdded.next(item);
       }
     });
   }
 
-  reportBlockyNodeRemoved(blockyNode: BlockyNode) {
-    traverseNode(blockyNode, (item: BlockyNode) => {
+  reportBlockyNodeRemoved(blockyNode: DataBaseNode) {
+    traverseNode(blockyNode, (item: DataBaseNode) => {
       item.doc = undefined;
-      if (item instanceof BlockElement) {
+      if (item instanceof BlockDataElement) {
         this.blockElementRemoved.next(item);
       }
     });
@@ -663,12 +663,12 @@ export class BlockyDocument extends BlockyElement {
 }
 
 export function traverseNode(
-  node: BlockyNode,
-  fun: (node: BlockyNode) => void
+  node: DataBaseNode,
+  fun: (node: DataBaseNode) => void
 ) {
   fun(node);
 
-  if (node instanceof BlockyElement) {
+  if (node instanceof DataBaseElement) {
     let ptr = node.firstChild;
     while (ptr) {
       traverseNode(ptr, fun);

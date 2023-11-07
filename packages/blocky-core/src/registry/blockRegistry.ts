@@ -4,7 +4,7 @@ import type {
   IBlockDefinition,
   TryParsePastedDOMEvent,
 } from "@pkg/block/basic";
-import type { BlockElement } from "blocky-data";
+import type { BlockDataElement } from "blocky-data";
 import { Registry } from "./registry";
 import { TextBlock } from "@pkg/block/textBlock";
 import { TitleBlock } from "@pkg/block/titleBlock";
@@ -53,7 +53,7 @@ export class BlockRegistry extends Registry<IBlockDefinition> {
     return this.#nameMap.get(name);
   }
 
-  handlePasteElement(e: TryParsePastedDOMEvent): BlockElement | void {
+  handlePasteElement(e: TryParsePastedDOMEvent): BlockDataElement | void {
     for (const def of this.#types) {
       const test = def.TryParsePastedDOM?.(e);
       if (test) {

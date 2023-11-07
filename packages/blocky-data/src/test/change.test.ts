@@ -1,8 +1,8 @@
 import { test, expect, describe } from "vitest";
 import {
-  BlockElement,
+  BlockDataElement,
   BlockyDocument,
-  BlockyElement,
+  DataBaseElement,
   BlockyTextModel,
   NodeLocation,
   transformOperation,
@@ -13,11 +13,11 @@ import {
 import Delta from "quill-delta-es";
 
 test("test delete", () => {
-  const i1 = new BlockyElement("item");
-  const i2 = new BlockyElement("item");
-  const i3 = new BlockyElement("item");
+  const i1 = new DataBaseElement("item");
+  const i2 = new DataBaseElement("item");
+  const i3 = new DataBaseElement("item");
   const document = new BlockyDocument({
-    bodyChildren: [new BlockyElement("item"), i1, i2, i3],
+    bodyChildren: [new DataBaseElement("item"), i1, i2, i3],
   });
   const state = new State("User-1", document);
   const change = new Changeset(state);
@@ -89,12 +89,12 @@ describe("transform operation", () => {
       {
         op: "insert-nodes",
         location: new NodeLocation([0, 1]),
-        children: [new BlockyElement("node"), new BlockyElement("node")],
+        children: [new DataBaseElement("node"), new DataBaseElement("node")],
       },
       {
         op: "insert-nodes",
         location: new NodeLocation([0, 1]),
-        children: [new BlockyElement("node")],
+        children: [new DataBaseElement("node")],
       }
     );
     expect(t.location.path).toEqual([0, 3]);
@@ -104,12 +104,12 @@ describe("transform operation", () => {
       {
         op: "remove-nodes",
         location: new NodeLocation([0, 1]),
-        children: [new BlockyElement("node"), new BlockyElement("node")],
+        children: [new DataBaseElement("node"), new DataBaseElement("node")],
       },
       {
         op: "remove-nodes",
         location: new NodeLocation([0, 3]),
-        children: [new BlockyElement("node")],
+        children: [new DataBaseElement("node")],
       }
     );
     expect(t.location.path).toEqual([0, 1]);
@@ -147,7 +147,7 @@ describe("transform operation", () => {
 
 describe("merge", () => {
   test("pushWillMerge", () => {
-    const textBlock = new BlockElement("Text", "Blk-text1", {
+    const textBlock = new BlockDataElement("Text", "Blk-text1", {
       textContent: new BlockyTextModel(),
     });
     const document = new BlockyDocument({
@@ -164,10 +164,10 @@ describe("merge", () => {
     expect(first.delta.ops).toEqual([{ insert: "ba" }]);
   });
   test("testWillNotMerge", () => {
-    const textBlock1 = new BlockElement("Text", "Blk-text1", {
+    const textBlock1 = new BlockDataElement("Text", "Blk-text1", {
       textContent: new BlockyTextModel(),
     });
-    const textBlock2 = new BlockElement("Text", "Blk-text2", {
+    const textBlock2 = new BlockDataElement("Text", "Blk-text2", {
       textContent: new BlockyTextModel(),
     });
     const document = new BlockyDocument({

@@ -1,8 +1,8 @@
 import {
-  type BlockyNode,
+  type DataBaseNode,
   type BlockyDocument,
   type BlockyTextModel,
-  BlockyElement,
+  DataBaseElement,
 } from "./tree";
 import { Subject } from "rxjs";
 import { isUndefined } from "lodash-es";
@@ -93,7 +93,7 @@ export class State implements ChangesetStateLogger {
     });
   }
 
-  getLocationOfNode(node: BlockyNode, acc: number[] = []): NodeLocation {
+  getLocationOfNode(node: DataBaseNode, acc: number[] = []): NodeLocation {
     if (this.document === node) {
       return new NodeLocation(acc.reverse());
     }
@@ -198,7 +198,7 @@ export class State implements ChangesetStateLogger {
     const { location, children } = insertOperation;
     const parentLoc = location.slice(0, location.length - 1);
     let index = location.last;
-    const parent = this.findNodeByLocation(parentLoc) as BlockyElement;
+    const parent = this.findNodeByLocation(parentLoc) as DataBaseElement;
     // TODO: optimize insert
     for (const child of children) {
       parent.__insertChildAt(index++, blockyNodeFromJsonNode(child));
@@ -207,7 +207,7 @@ export class State implements ChangesetStateLogger {
 
   #applyUpdateOperation(updateOperation: UpdateNodeOperation) {
     const { location, attributes } = updateOperation;
-    const node = this.findNodeByLocation(location) as BlockyElement;
+    const node = this.findNodeByLocation(location) as DataBaseElement;
     for (const key in attributes) {
       const value = attributes[key];
       node.__setAttribute(key, value);
@@ -218,13 +218,13 @@ export class State implements ChangesetStateLogger {
     const { location, children } = removeOperation;
     const parentLoc = location.slice(0, location.length - 1);
     const index = location.last;
-    const parent = this.findNodeByLocation(parentLoc) as BlockyElement;
+    const parent = this.findNodeByLocation(parentLoc) as DataBaseElement;
     parent.__deleteChildrenAt(index, children.length);
   }
 
   #applyTextEditOperation(textEditOperation: TextEditOperation) {
     const { location, delta } = textEditOperation;
-    const node = this.findNodeByLocation(location) as BlockyElement;
+    const node = this.findNodeByLocation(location) as DataBaseElement;
     const textNode = node.getAttribute(textEditOperation.key) as
       | BlockyTextModel
       | undefined;
@@ -238,12 +238,12 @@ export class State implements ChangesetStateLogger {
     textNode.__applyDelta(delta);
   }
 
-  findNodeByLocation(location: NodeLocation): BlockyNode {
+  findNodeByLocation(location: NodeLocation): DataBaseNode {
     const { path } = location;
-    let ptr: BlockyNode = this.document;
+    let ptr: DataBaseNode = this.document;
     for (let i = 0, len = path.length; i < len; i++) {
       const index = path[i];
-      if (!(ptr instanceof BlockyElement)) {
+      if (!(ptr instanceof DataBaseElement)) {
         throw new Error(`Child is not a BlockyElement at: ${path.toString()}`);
       }
       const child = ptr.childAt(index);

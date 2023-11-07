@@ -1,5 +1,5 @@
 import {
-  BlockElement,
+  BlockDataElement,
   BlockyDocument,
   BlockyTextModel,
   Delta,
@@ -21,13 +21,13 @@ test("search empty", () => {
 test("search text multiple lines", () => {
   const doc = new BlockyDocument({
     bodyChildren: [
-      new BlockElement("Text", "id-1", {
+      new BlockDataElement("Text", "id-1", {
         textContent: new BlockyTextModel(new Delta().insert("Hello World")),
       }),
-      new BlockElement("Text", "id-2", {
+      new BlockDataElement("Text", "id-2", {
         textContent: new BlockyTextModel(new Delta().insert("World Hello")),
       }),
-      new BlockElement("Text", "id-3", {
+      new BlockDataElement("Text", "id-3", {
         textContent: new BlockyTextModel(
           new Delta().insert("World").insert({}).insert(" Hello")
         ),
@@ -59,7 +59,7 @@ test("search text multiple lines", () => {
 test("search text multiple times in one line", () => {
   const doc = new BlockyDocument({
     bodyChildren: [
-      new BlockElement("Text", "id-1", {
+      new BlockDataElement("Text", "id-1", {
         textContent: new BlockyTextModel(
           new Delta().insert("Hello world! Hello world")
         ),

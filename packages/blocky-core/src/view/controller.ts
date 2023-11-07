@@ -4,10 +4,10 @@ import { type Padding } from "blocky-common/es/dom";
 import { EditorState, NodeTraverser } from "@pkg/model";
 import {
   AttributesObject,
-  BlockyElement,
+  DataBaseElement,
   BlockyTextModel,
-  BlockyNode,
-  BlockElement,
+  DataBaseNode,
+  BlockDataElement,
   BlockyDocument,
   CursorState,
   Changeset,
@@ -269,14 +269,14 @@ export class EditorController {
    * trigger the rendering process of the editor.
    */
   insertBlockAfterId(
-    element: BlockElement,
+    element: BlockDataElement,
     afterId: string,
     options?: IInsertOptions
   ): string {
     const editor = this.editor!;
 
     const prevNode = this.state.getBlockElementById(afterId)!;
-    const parentNode = prevNode.parent! as BlockyElement;
+    const parentNode = prevNode.parent! as DataBaseElement;
 
     const updateState = (): Changeset => {
       return new Changeset(editor.state).insertChildrenAfter(
@@ -431,7 +431,7 @@ export class EditorController {
           .apply();
         return newState;
       } else {
-        const next = currentBlockElement.nextSibling as BlockElement | null;
+        const next = currentBlockElement.nextSibling as BlockDataElement | null;
         const changeset = new Changeset(this.state).removeChild(
           currentBlockElement.parent!,
           currentBlockElement
@@ -455,20 +455,20 @@ export class EditorController {
         const item = nodeTraverser.next()!;
 
         if (startNode === item && this.state.isTextLike(startNode)) {
-          const textModel = (item as BlockElement).getTextModel("textContent")!;
-          changeset.textEdit(item as BlockElement, "textContent", () =>
+          const textModel = (item as BlockDataElement).getTextModel("textContent")!;
+          changeset.textEdit(item as BlockDataElement, "textContent", () =>
             new Delta()
               .retain(cursorState.startOffset)
               .delete(textModel.length - cursorState.startOffset)
           );
           changeset.setCursorState(
             CursorState.collapse(
-              (item as BlockElement).id,
+              (item as BlockDataElement).id,
               cursorState.startOffset
             )
           );
         } else if (endNode === item && this.state.isTextLike(endNode)) {
-          const textModel = (item as BlockElement).getTextModel("textContent")!;
+          const textModel = (item as BlockDataElement).getTextModel("textContent")!;
           const tail = textModel.delta.slice(cursorState.endOffset);
           changeset.textEdit(startNode, "textContent", () =>
             new Delta().retain(cursorState.startOffset).concat(tail)
@@ -489,7 +489,7 @@ export class EditorController {
     return null;
   }
 
-  #pasteElementsAtCursor(elements: BlockElement[]) {
+  #pasteElementsAtCursor(elements: BlockDataElement[]) {
     if (elements.length === 0) {
       return;
     }
@@ -512,12 +512,12 @@ export class EditorController {
     }
     const currentBlockElement = this.state.getBlockElementById(cursorState.id)!;
 
-    const parent = currentBlockElement.parent! as BlockyElement;
+    const parent = currentBlockElement.parent! as DataBaseElement;
     const prev = currentBlockElement;
 
     let appendDelta: Delta | undefined;
     const changeset = new Changeset(this.state);
-    const insertChildren: BlockyNode[] = [];
+    const insertChildren: DataBaseNode[] = [];
     for (let i = 0, len = elements.length; i < len; i++) {
       const element = elements[i];
 
@@ -565,19 +565,19 @@ export class EditorController {
         // append to previous element
         const lastChild = insertChildren[
           insertChildren.length - 1
-        ] as BlockElement;
+        ] as BlockDataElement;
         const textModel = lastChild.getTextModel("textContent")!;
         const prevOffset = textModel.delta.length();
         changeset.setCursorState(
           CursorState.collapse(lastChild.id, prevOffset)
         );
-        const childrenOfChildren: BlockyNode[] = [];
+        const childrenOfChildren: DataBaseNode[] = [];
         let ptr = lastChild.firstChild;
         while (ptr) {
           childrenOfChildren.push(ptr);
           ptr = ptr.nextSibling;
         }
-        const newChild = new BlockElement(
+        const newChild = new BlockDataElement(
           TextBlock.Name,
           lastChild.id,
           {
@@ -604,7 +604,7 @@ export class EditorController {
     this.editor?.scrollInViewIfNeed();
   }
 
-  #leafHandler = (node: Node): BlockElement | void => {
+  #leafHandler = (node: Node): BlockDataElement | void => {
     const tryEvt = new TryParsePastedDOMEvent({
       editorController: this,
       node: node as HTMLElement,
@@ -626,7 +626,7 @@ export class EditorController {
     }
   };
 
-  #divHandler = (node: Node): BlockElement | void => {
+  #divHandler = (node: Node): BlockDataElement | void => {
     const element = node as HTMLElement;
     const dataType = element.getAttribute("data-type");
     if (!dataType) {
@@ -641,7 +641,7 @@ export class EditorController {
     if (jsonData) {
       const data = JSON.parse(jsonData);
       const node = blockyNodeFromJsonNode(data);
-      if (node instanceof BlockElement) {
+      if (node instanceof BlockDataElement) {
         return node.cloneWithId(this.idGenerator.mkBlockId());
       }
     }
@@ -697,7 +697,7 @@ export class EditorController {
     this.editor?.insertFollowerWidget(widget);
   }
 
-  getBlockElementAtCursor(): BlockElement | null {
+  getBlockElementAtCursor(): BlockDataElement | null {
     if (this.state.cursorState === null) {
       return null;
     }

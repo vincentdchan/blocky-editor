@@ -24,9 +24,9 @@ import { EditorState, SearchContext } from "@pkg/model";
 import {
   type CursorStateUpdateEvent,
   BlockyTextModel,
-  BlockyElement,
-  BlockElement,
-  BlockyNode,
+  DataBaseElement,
+  BlockDataElement,
+  DataBaseNode,
   CursorState,
   ChangesetRecordOption,
   Changeset,
@@ -105,7 +105,7 @@ export class TextInputEvent {
   constructor(
     readonly beforeDelta: Delta,
     readonly applyDelta: Delta,
-    readonly blockElement: BlockElement
+    readonly blockElement: BlockDataElement
   ) {}
 
   get beforeString(): string {
@@ -252,7 +252,7 @@ export class Editor {
       .subscribe(this.#handleChangesetApplied);
     this.state.blockWillDelete
       .pipe(takeUntil(this.dispose$))
-      .subscribe((blockElement: BlockElement) => {
+      .subscribe((blockElement: BlockDataElement) => {
         const dom = this.state.domMap.get(blockElement.id);
         if (dom) {
           this.destructBlockNode(dom);
@@ -447,7 +447,7 @@ export class Editor {
       parent instanceof HTMLElement &&
       parent.classList.contains(this.#renderer.blockClassName)
     ) {
-      const node = parent._mgNode as BlockElement | undefined;
+      const node = parent._mgNode as BlockDataElement | undefined;
       if (!node) {
         return false;
       }
@@ -469,11 +469,11 @@ export class Editor {
     }
   }
 
-  #findBlockNodeContainer(node: Node): BlockElement | undefined {
+  #findBlockNodeContainer(node: Node): BlockDataElement | undefined {
     let ptr: Node | null = node;
 
     while (ptr) {
-      const node = ptr._mgNode as BlockElement | undefined;
+      const node = ptr._mgNode as BlockDataElement | undefined;
       if (node && isUpperCase(node.nodeName)) {
         return node;
       }
@@ -485,7 +485,7 @@ export class Editor {
   }
 
   #findTextOffsetInBlock(
-    blockNode: BlockElement,
+    blockNode: BlockDataElement,
     focusedNode: Node,
     offsetInNode: number
   ): number {
@@ -639,7 +639,7 @@ export class Editor {
   }
 
   #checkMarkedDom(changeset: Changeset, node: Node, currentOffset?: number) {
-    const treeNode = node._mgNode as BlockElement;
+    const treeNode = node._mgNode as BlockDataElement;
     if (!node.parentNode) {
       // dom has been removed
 
@@ -658,7 +658,7 @@ export class Editor {
   #checkBlockContent(
     changeset: Changeset,
     node: Node,
-    blockNode: BlockElement,
+    blockNode: BlockDataElement,
     currentOffset?: number
   ) {
     const block = this.state.blocks.get(blockNode.id);
@@ -785,7 +785,7 @@ export class Editor {
     return this.#searchContext;
   }
 
-  placeBannerAt(blockContainer: HTMLElement, node: BlockElement) {
+  placeBannerAt(blockContainer: HTMLElement, node: BlockDataElement) {
     const block = this.state.blocks.get(node.id);
     if (!block) {
       return;
@@ -809,7 +809,7 @@ export class Editor {
    */
   destructBlockNode(node: Node) {
     if (node._mgNode) {
-      const treeNode = node._mgNode as BlockElement;
+      const treeNode = node._mgNode as BlockDataElement;
 
       const block = this.state.blocks.get(treeNode.id);
       block?.dispose();
@@ -925,7 +925,7 @@ export class Editor {
     }
   }
 
-  #insertEmptyTextBeforeBlock(element: BlockElement) {
+  #insertEmptyTextBeforeBlock(element: BlockDataElement) {
     const newTextElement = this.state.createTextElement();
     const parent = element.parent!;
 
@@ -935,7 +935,7 @@ export class Editor {
       .apply();
   }
 
-  #insertEmptyTextAfterBlock(element: BlockElement) {
+  #insertEmptyTextAfterBlock(element: BlockDataElement) {
     const newTextElement = this.state.createTextElement();
     const parent = element.parent!;
 
@@ -987,7 +987,7 @@ export class Editor {
         attributes.textType = textType;
       }
 
-      const children: BlockyNode[] = [];
+      const children: DataBaseNode[] = [];
       let ptr = blockElement.firstChild;
       while (ptr) {
         children.push(ptr.clone());
@@ -1008,7 +1008,7 @@ export class Editor {
           newTextElement,
         ]);
       } else {
-        const parentElement = blockElement.parent! as BlockyElement;
+        const parentElement = blockElement.parent! as DataBaseElement;
         changeset
           .deleteChildrenAt(blockElement, 0, children.length)
           .insertChildrenAfter(parentElement, [newTextElement], blockElement);
@@ -1176,13 +1176,13 @@ export class Editor {
    * Technically, prevSibling is not the previous element.
    * The answer is the bottom most element.
    */
-  #findPreviousElement(node: BlockElement): BlockElement | undefined {
-    let ptr = node.prevSibling as BlockElement | undefined;
+  #findPreviousElement(node: BlockDataElement): BlockDataElement | undefined {
+    let ptr = node.prevSibling as BlockDataElement | undefined;
     if (!ptr) {
       return ptr;
     }
     while (ptr.lastChild) {
-      ptr = ptr!.lastChild as BlockElement;
+      ptr = ptr!.lastChild as BlockDataElement;
     }
     return ptr;
   }
@@ -1245,7 +1245,7 @@ export class Editor {
     return true;
   }
 
-  #getBlockElementAtCollapsedCursor(): BlockElement | undefined {
+  #getBlockElementAtCollapsedCursor(): BlockDataElement | undefined {
     const { cursorState } = this.state;
     if (!cursorState) {
       return;
@@ -1289,7 +1289,7 @@ export class Editor {
     return true;
   }
 
-  #focusEndOfNode(changeset: Changeset, node: BlockElement) {
+  #focusEndOfNode(changeset: Changeset, node: BlockDataElement) {
     if (node.nodeName === TextBlock.Name) {
       const textModel = node.getTextModel("textContent")!;
       changeset.setCursorState(CursorState.collapse(node.id, textModel.length));
@@ -1404,7 +1404,7 @@ export class Editor {
    * Otherwise, focus on the outline?
    */
   #focusBlock(sel: Selection, blockDom: HTMLDivElement, cursor: CursorState) {
-    const node = blockDom._mgNode as BlockElement | undefined;
+    const node = blockDom._mgNode as BlockDataElement | undefined;
     if (!node) {
       return;
     }
@@ -1554,7 +1554,7 @@ export class Editor {
         .delete(remainLength)
         .concat(lines[0])
     );
-    const appendElements: BlockElement[] = [];
+    const appendElements: BlockDataElement[] = [];
     for (let i = 1; i < lines.length; i++) {
       let delta = lines[i];
       if (i === lines.length - 1) {
@@ -1580,7 +1580,7 @@ export class Editor {
     changeset.apply();
   }
 
-  getTextElementByBlockId(blockId: string): BlockElement | undefined {
+  getTextElementByBlockId(blockId: string): BlockDataElement | undefined {
     const treeNode = this.state.getBlockElementById(blockId);
     if (!treeNode) {
       return;

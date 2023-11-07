@@ -2,9 +2,9 @@ import { type IDisposable, type Position } from "blocky-common/es";
 import { elem } from "blocky-common/es/dom";
 import { type HTMLConverter } from "@pkg/helper/htmlConverter";
 import {
-  type BlockyNode,
-  BlockElement,
-  BlockyElement,
+  type DataBaseNode,
+  BlockDataElement,
+  DataBaseElement,
   CursorState,
   Changeset,
   Delta,
@@ -15,12 +15,12 @@ import { type EditorController } from "@pkg/view/controller";
 export interface BlockDidMountEvent {
   element: HTMLElement;
   blockDef: IBlockDefinition;
-  blockElement: BlockElement;
+  blockElement: BlockDataElement;
   clsPrefix: string;
 }
 
 export interface BlockCreatedEvent {
-  blockElement: BlockElement;
+  blockElement: BlockDataElement;
 }
 
 export interface CursorDomResult {
@@ -90,7 +90,7 @@ export interface BlockBlurEvent {
 export interface BlockContentChangedEvent {
   changeset: Changeset;
   node: HTMLDivElement;
-  blockElement: BlockElement;
+  blockElement: BlockDataElement;
   offset?: number;
 }
 
@@ -111,7 +111,7 @@ export interface IBlockDefinition {
    * If you want to handle the HTML pasted from another
    * source, please implement [[tryParsePastedDOM]].
    */
-  OnPaste?(e: BlockPasteEvent): BlockElement | undefined;
+  OnPaste?(e: BlockPasteEvent): BlockDataElement | undefined;
 
   /**
    *
@@ -129,7 +129,7 @@ export interface IBlockDefinition {
    * or handle it with default handler if no plugins handles.
    *
    */
-  TryParsePastedDOM?(e: TryParsePastedDOMEvent): BlockElement | void;
+  TryParsePastedDOM?(e: TryParsePastedDOMEvent): BlockDataElement | void;
 
   new (e: BlockCreatedEvent): Block;
 }
@@ -151,13 +151,13 @@ export class Block implements IDisposable {
     return null;
   }
 
-  props: BlockElement;
+  props: BlockDataElement;
 
   constructor(evt: BlockCreatedEvent) {
     this.props = evt.blockElement;
   }
 
-  get elementData(): BlockyElement {
+  get elementData(): DataBaseElement {
     return this.props;
   }
 
@@ -202,7 +202,7 @@ export class Block implements IDisposable {
    * If the block wants the renderer to render children of
    * current block, return the head of the children
    */
-  renderChildren?(): BlockyNode | void | null;
+  renderChildren?(): DataBaseNode | void | null;
 
   getCursorDomByOffset?(offset: number): CursorDomResult | undefined;
 
@@ -278,7 +278,7 @@ export class ContentBlock extends Block {
       );
       changeset.forceUpdate = true;
       changeset.insertChildrenAfter(
-        this.props!.parent as BlockyElement,
+        this.props!.parent as DataBaseElement,
         [newElement],
         this.props
       );
