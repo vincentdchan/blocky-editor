@@ -44,7 +44,9 @@ export function makeReactBlock(options: ReactBlockOptions): IBlockDefinition {
 
     override render() {
       const { component } = options;
-      this.#rendered = createRoot(this.contentContainer);
+      if (!this.#rendered) {
+        this.#rendered = createRoot(this.contentContainer);
+      }
       const editorController = this.editor.controller;
       this.#rendered.render(
         <ReactBlockContext.Provider
