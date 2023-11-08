@@ -76,26 +76,29 @@ export class DocRenderer {
     dom._mgNode = document;
 
     const { clsPrefix } = this;
-    const titleContainer = ensureChild(
-      dom,
-      0,
-      "div",
-      `${clsPrefix}-editor-title-container ${this.blockClassName}`,
-      (elem: HTMLElement) => {
-        const { padding } = this.editor;
-        const { right, left } = padding;
-        elem.style.paddingLeft = `${left}px`;
-        elem.style.paddingRight = `${right}px`;
+    let renderCounter = 0;
+    if (document.title) {
+      const titleContainer = ensureChild(
+        dom,
+        renderCounter++,
+        "div",
+        `${clsPrefix}-editor-title-container ${this.blockClassName}`,
+        (elem: HTMLElement) => {
+          const { padding } = this.editor;
+          const { right, left } = padding;
+          elem.style.paddingLeft = `${left}px`;
+          elem.style.paddingRight = `${right}px`;
 
-        if (this.editor.controller?.options?.titleEditable === false) {
-          elem.contentEditable = "false";
+          if (this.editor.controller?.options?.titleEditable === false) {
+            elem.contentEditable = "false";
+          }
         }
-      }
-    );
-    this.renderTitle(titleContainer, document.title);
+      );
+      this.renderTitle(titleContainer, document.title);
+    }
     const blocksContainer = ensureChild(
       dom,
-      1,
+      renderCounter++,
       "div",
       `${clsPrefix}-editor-blocks-container`,
       (elem: HTMLElement) => {
@@ -186,12 +189,12 @@ export class DocRenderer {
       const blockElement = nodePtr as BlockDataElement;
       const id = blockElement.id;
       const blockDef = this.editor.registry.block.getBlockDefByName(
-        blockElement.nodeName
+        blockElement.t
       );
       domPtr = this.#clearDeletedBlock(domPtr);
 
       if (!blockDef) {
-        throw new Error(`id not found: ${blockElement.nodeName}`);
+        throw new Error(`id not found: ${blockElement.t}`);
       }
 
       if (

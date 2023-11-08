@@ -10,11 +10,6 @@ export const resolveByProjectRootDir = (...pathSegments: string[]) => {
 
 export default defineConfig(() => {
   return {
-    // public path field.
-    // see: https://vitejs.dev/config/#base
-    // base: env.command === 'build'
-    //   ? `https://assets-cdn.xindiancad.com/${getVersionQuery()}/`
-    //   : '',
     plugins: [
       react({
         exclude: [/blocky-core/, /node_modules/],
@@ -38,7 +33,7 @@ export default defineConfig(() => {
       // assetsInlineLimit: 6 * 1024, // 6 KB
     },
     optimizeDeps: {
-      exclude: ["blocky-common", "blocky-core", "blocky-preact"],
+      exclude: ["blocky-common", "blocky-core", "blocky-react"],
     },
   };
 });

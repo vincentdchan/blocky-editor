@@ -151,7 +151,9 @@ export class EditorController {
   readonly idGenerator: IdGenerator;
   readonly state: EditorState;
   readonly cursorChanged: Subject<CursorChangedEvent> = new Subject();
-  readonly beforeApplyCursorChanged: Subject<CursorChangedEvent> = new Subject();
+  readonly beforeApplyCursorChanged: Subject<CursorChangedEvent> =
+    new Subject();
+
   readonly emptyPlaceholder: string;
 
   /**
@@ -225,6 +227,10 @@ export class EditorController {
     editor.drawCollaborativeCursor(id, evt.state);
   }
 
+  focus() {
+    this.editor?.focus();
+  }
+
   /**
    * Apply the delta if the cursor is pointing at a
    * TextBlock. This method will auto set the cursor for you.
@@ -237,7 +243,7 @@ export class EditorController {
     if (!element) {
       return;
     }
-    if (element.nodeName !== TextBlock.Name) {
+    if (element.t !== TextBlock.Name) {
       return;
     }
     const offset = this.state.cursorState?.startOffset;
@@ -334,7 +340,7 @@ export class EditorController {
 
     for (const state of states) {
       const blockElement = this.state.getBlockElementById(state.endId)!;
-      if (blockElement.nodeName !== TextBlock.Name) {
+      if (blockElement.t !== TextBlock.Name) {
         continue;
       }
 
@@ -390,7 +396,7 @@ export class EditorController {
       return;
     }
 
-    if (!isUpperCase(blockNode.nodeName)) {
+    if (!isUpperCase(blockNode.t)) {
       return;
     }
 
@@ -455,7 +461,9 @@ export class EditorController {
         const item = nodeTraverser.next()!;
 
         if (startNode === item && this.state.isTextLike(startNode)) {
-          const textModel = (item as BlockDataElement).getTextModel("textContent")!;
+          const textModel = (item as BlockDataElement).getTextModel(
+            "textContent"
+          )!;
           changeset.textEdit(item as BlockDataElement, "textContent", () =>
             new Delta()
               .retain(cursorState.startOffset)
@@ -468,7 +476,9 @@ export class EditorController {
             )
           );
         } else if (endNode === item && this.state.isTextLike(endNode)) {
-          const textModel = (item as BlockDataElement).getTextModel("textContent")!;
+          const textModel = (item as BlockDataElement).getTextModel(
+            "textContent"
+          )!;
           const tail = textModel.delta.slice(cursorState.endOffset);
           changeset.textEdit(startNode, "textContent", () =>
             new Delta().retain(cursorState.startOffset).concat(tail)

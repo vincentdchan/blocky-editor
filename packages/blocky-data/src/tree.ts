@@ -20,11 +20,13 @@ export interface AttributesObject {
 }
 
 export interface JSONNode {
-  nodeName: string;
+  t: string;
   id?: string;
   ["#meta"]?: AttributesObject;
   attributes?: AttributesObject;
   children?: JSONChild[];
+  title?: JSONChild;
+  body?: JSONChild;
 }
 
 export type JSONChild = JSONNode;
@@ -32,7 +34,7 @@ export type JSONChild = JSONNode;
 export interface DataBaseNode {
   doc?: BlockyDocument;
 
-  nodeName: string;
+  t: string;
   parent: DataBaseElement | null;
   nextSibling: DataBaseNode | null;
   prevSibling: DataBaseNode | null;
@@ -158,11 +160,11 @@ export class DataBaseElement implements DataBaseNode {
   changed: Subject<ElementChangedEvent> = new Subject();
 
   constructor(
-    public nodeName: string,
+    public t: string,
     attributes?: AttributesObject,
     children?: DataBaseNode[]
   ) {
-    if (nodeName === "#text") {
+    if (t === "#text") {
       throw new Error("illegal nodeName for an element");
     }
     if (typeof attributes === "object") {
@@ -197,14 +199,14 @@ export class DataBaseElement implements DataBaseNode {
     let ptr = this.#firstChild;
 
     while (ptr) {
-      if (ptr.nodeName === nodeName) {
+      if (ptr.t === nodeName) {
         return ptr;
       }
       ptr = ptr.nextSibling;
     }
   }
 
-  #symInsertAfter(node: DataBaseNode, after?: DataBaseNode) {
+  protected __symInsertAfter(node: DataBaseNode, after?: DataBaseNode) {
     if (after && after.parent !== this) {
       throw new TypeError("after node is a child of this node");
     }
@@ -332,7 +334,7 @@ export class DataBaseElement implements DataBaseNode {
     }
 
     if (index === 0) {
-      this.#symInsertAfter(node);
+      this.__symInsertAfter(node);
       return;
     }
 
@@ -343,7 +345,7 @@ export class DataBaseElement implements DataBaseNode {
       ptr = ptr.nextSibling;
     }
 
-    this.#symInsertAfter(node, ptr ?? undefined);
+    this.__symInsertAfter(node, ptr ?? undefined);
   }
 
   /**
@@ -444,7 +446,7 @@ export class DataBaseElement implements DataBaseNode {
   }
 
   clone(): DataBaseElement {
-    const result = new DataBaseElement(this.nodeName);
+    const result = new DataBaseElement(this.t);
 
     const attribs = this.getAttributes();
     for (const key in attribs) {
@@ -466,7 +468,7 @@ export class DataBaseElement implements DataBaseNode {
 
   toJSON(): JSONNode {
     const result: JSONNode = {
-      nodeName: this.nodeName,
+      t: this.t,
     };
 
     const meta: any = {};
@@ -474,7 +476,7 @@ export class DataBaseElement implements DataBaseNode {
     let hasMeta = false;
     let hasAttributes = false;
     for (const key in this.#attributes) {
-      if (key === "nodeName" || key === "type" || key === "children") {
+      if (key === "t" || key === "type" || key === "children") {
         continue;
       }
       const value = this.#attributes[key];
@@ -560,7 +562,7 @@ export class BlockDataElement extends DataBaseElement {
       return Number.MAX_SAFE_INTEGER;
     }
 
-    if (parentNode.nodeName === "document") {
+    if (parentNode.t === "document") {
       return 0;
     }
 
@@ -586,7 +588,7 @@ export class BlockDataElement extends DataBaseElement {
       childPtr = childPtr.nextSibling;
     }
 
-    return new BlockDataElement(this.nodeName, id, attribs, children);
+    return new BlockDataElement(this.t, id, attribs, children);
   }
 
   override toJSON(): JSONNode {
@@ -599,19 +601,16 @@ export class BlockDataElement extends DataBaseElement {
 }
 
 export interface DocumentInitProps {
-  title?: string;
-  head?: DataBaseElement;
+  title?: string | BlockDataElement;
   body?: DataBaseElement;
   bodyChildren: DataBaseNode[];
 }
 
 /**
  * The data model in Blocky Editor is represented as an XML Document:
- * 
+ *
  * <document>
- *   <head>
- *     <Title />
- *   </head>
+ *   <Title /> <!-- Optional -->
  *   <body>
  *     <Text />
  *     <Text />
@@ -621,40 +620,38 @@ export interface DocumentInitProps {
  * </document>
  */
 export class BlockyDocument extends DataBaseElement {
-  readonly title: BlockDataElement;
-  readonly head: DataBaseElement;
+  readonly title?: BlockDataElement;
   readonly body: DataBaseElement;
 
   readonly blockElementAdded = new Subject<BlockDataElement>();
   readonly blockElementRemoved = new Subject<BlockDataElement>();
 
   constructor(props?: Partial<DocumentInitProps>) {
-    let title: BlockDataElement;
-    let head: DataBaseElement | undefined = props?.head;
-    if (isUndefined(head)) {
-      title = new BlockDataElement("Title", "title", {
-        textContent: props?.title
-          ? new BlockyTextModel(new Delta([{ insert: props.title }]))
-          : new BlockyTextModel(),
-      });
-      head = new DataBaseElement("head", {}, [title]);
-    } else {
-      const t = head.queryChildByName("Title");
-      if (!t) {
-        throw new Error("Title not found for head");
+    let title: BlockDataElement | undefined;
+    if (!isUndefined(props?.title)) {
+      if (props?.title instanceof BlockDataElement) {
+        title = props.title;
+      } else if (isString(props?.title)) {
+        title = new BlockDataElement("Title", "title", {
+          textContent: props?.title
+            ? new BlockyTextModel(new Delta([{ insert: props.title }]))
+            : new BlockyTextModel(),
+        });
       }
-      title = t as BlockDataElement;
     }
     const body =
       props?.body ??
       new DataBaseElement("body", undefined, props?.bodyChildren ?? []);
-    super("document", undefined, [head, body]);
+    super("document", undefined, []);
 
     this.title = title;
-    this.head = head;
     this.body = body;
 
-    this.reportBlockyNodeInserted(this.head);
+    if (this.title) {
+      this.__symInsertAfter(this.title);
+      this.reportBlockyNodeInserted(this.title);
+    }
+    this.__symInsertAfter(this.body);
     this.reportBlockyNodeInserted(this.body);
   }
 

@@ -3,14 +3,13 @@ import { EditorController, darkTheme, type IPlugin } from "blocky-core";
 import {
   BlockyEditor,
   makeReactBanner,
-  makePreactToolbar,
+  makeReactToolbar,
   type BannerRenderProps,
 } from "blocky-react";
 import makeStyledTextPlugin from "blocky-core/dist/plugins/styledTextPlugin";
 import makeCodeTextPlugin from "blocky-core/dist/plugins/codeTextPlugin";
 import makeBulletListPlugin from "blocky-core/dist/plugins/bulletListPlugin";
 import makeHeadingsPlugin from "blocky-core/dist/plugins/headingsPlugin";
-import AppLogo from "@pkg/components/appLogo";
 import SearchBox from "@pkg/components/searchBox";
 import { makeImageBlockPlugin } from "./plugins/imageBlock";
 import { makeCommandPanelPlugin } from "./plugins/commandPanel";
@@ -19,13 +18,13 @@ import BannerMenu from "./bannerMenu";
 import ToolbarMenu from "./toolbarMenu";
 import TianShuiWeiImage from "./tianshuiwei.jpg";
 import { ReadMeContent } from "./readme";
-import { Link } from "react-router-dom";
-import { ThemeSwitch, Theme } from "./themeSwitch";
+import { Theme } from "./themeSwitch";
 import { isHotkey } from "is-hotkey";
 import { Subject, takeUntil } from "rxjs";
 import "blocky-core/css/styled-text-plugin.css";
 import "blocky-core/css/blocky-core.css";
 import "./app.scss";
+import Sidebar from "./components/sidebar";
 
 function makeEditorPlugins(): IPlugin[] {
   return [
@@ -83,7 +82,7 @@ function makeController(
      * Tell the editor how to render the banner.
      * We use a toolbar written in Preact here.
      */
-    toolbarFactory: makePreactToolbar((editorController: EditorController) => {
+    toolbarFactory: makeReactToolbar((editorController: EditorController) => {
       return <ToolbarMenu editorController={editorController} />;
     }),
 
@@ -116,47 +115,47 @@ class App extends Component<unknown> {
     );
 
     this.editorControllerLeft.state.changesetApplied
-    .pipe(takeUntil(this.dispose$))
-    .subscribe((changeset) => {
-      // simulate the net work
-      setTimeout(() => {
-        this.editorControllerRight.state.apply({
-          ...changeset,
-          afterCursor: undefined,
-          options: {
-            ...changeset.options,
-            updateView: true,
-          },
+      .pipe(takeUntil(this.dispose$))
+      .subscribe((changeset) => {
+        // simulate the net work
+        setTimeout(() => {
+          this.editorControllerRight.state.apply({
+            ...changeset,
+            afterCursor: undefined,
+            options: {
+              ...changeset.options,
+              updateView: true,
+            },
+          });
         });
       });
-    });
 
     this.editorControllerRight.state.changesetApplied
-    .pipe(takeUntil(this.dispose$))
-    .subscribe((changeset) => {
-      setTimeout(() => {
-        this.editorControllerLeft.state.apply({
-          ...changeset,
-          afterCursor: undefined,
-          options: {
-            ...changeset.options,
-            updateView: true,
-          },
+      .pipe(takeUntil(this.dispose$))
+      .subscribe((changeset) => {
+        setTimeout(() => {
+          this.editorControllerLeft.state.apply({
+            ...changeset,
+            afterCursor: undefined,
+            options: {
+              ...changeset.options,
+              updateView: true,
+            },
+          });
         });
       });
-    });
 
     this.editorControllerLeft.cursorChanged
-    .pipe(takeUntil(this.dispose$))
-    .subscribe((evt) => {
-      this.editorControllerRight.applyCursorChangedEvent(evt);
-    });
+      .pipe(takeUntil(this.dispose$))
+      .subscribe((evt) => {
+        this.editorControllerRight.applyCursorChangedEvent(evt);
+      });
 
     this.editorControllerRight.cursorChanged
-    .pipe(takeUntil(this.dispose$))
-    .subscribe((evt) => {
-      this.editorControllerLeft.applyCursorChangedEvent(evt);
-    });
+      .pipe(takeUntil(this.dispose$))
+      .subscribe((evt) => {
+        this.editorControllerLeft.applyCursorChangedEvent(evt);
+      });
 
     // paste before the editor initialized
     this.editorControllerLeft.pasteHTMLAtCursor(ReadMeContent);
@@ -172,44 +171,7 @@ class App extends Component<unknown> {
   render() {
     return (
       <div className="blocky-example-app-window">
-        <div className="blocky-example-sidebar-container">
-          <header>
-            <Link to="/">
-              <AppLogo />
-            </Link>
-            <div className="blocky-example-badge-container">
-              <a
-                href="https://github.com/vincentdchan/blocky-editor"
-                target="_blank"
-              >
-                <img
-                  alt="GitHub Repo stars"
-                  src="https://img.shields.io/github/stars/vincentdchan/blocky-editor?style=social"
-                />
-              </a>
-            </div>
-            <div
-              className="blocky-example-badge-container"
-              style={{ marginTop: 8 }}
-            >
-              <a href="https://twitter.com/cdz_solo" target="_blank">
-                <img
-                  alt="Twitter Follow"
-                  src="https://img.shields.io/twitter/follow/cdz_solo?style=social"
-                ></img>
-              </a>
-            </div>
-            <ThemeSwitch />
-          </header>
-          <div>
-            <Link className="blocky-example-link" to="/doc/get-started">
-              Get started
-            </Link>
-            <Link className="blocky-example-link" to="/doc/api">
-              Api
-            </Link>
-          </div>
-        </div>
+        <Sidebar />
         <div className="blocky-example-container">
           <BlockyEditorWithSearchBoxAndTitle
             containerRef={this.containerLeftRef}

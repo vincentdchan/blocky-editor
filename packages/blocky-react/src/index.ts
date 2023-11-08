@@ -11,5 +11,5 @@ export {
   makeReactBanner,
   type RenderProps as BannerRenderProps,
 } from "./banner";
-export { makePreactToolbar } from "./toolbar";
+export { makeReactToolbar } from "./toolbar";
 export { DefaultBlockOutline, type DefaultBlockOutlineProps };

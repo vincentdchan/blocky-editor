@@ -81,7 +81,7 @@ export function makeAtPanelPlugin(): IPlugin {
           if (!blockElement) {
             return;
           }
-          if (blockElement.nodeName !== TextBlock.Name) {
+          if (blockElement.t !== TextBlock.Name) {
             return;
           }
           editor.insertFollowerWidget(

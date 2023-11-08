@@ -8,6 +8,7 @@ import ApiDoc from "./docs/api.md?raw";
 import FaqDoc from "./docs/faq.md?raw";
 import BuiltinPluginsDoc from "./docs/builtin-plugins.md?raw";
 import { ThemeProvider } from "./themeSwitch";
+import NoTitle from "./noTitle";
 
 const Documentation = lazy(() => import("./documentations"));
 
@@ -68,7 +69,7 @@ interface RedirectProps {
 function Redirect(props: RedirectProps) {
   const navigate = useNavigate();
   useEffect(() => {
-    navigate(props.to)
+    navigate(props.to);
   }, [props.to, navigate]);
   return null;
 }
@@ -80,50 +81,27 @@ root.render(
     <Suspense fallback={null}>
       <BrowserRouter>
         <Routes>
-          <Route
-          path="/"
-          element={<App />}
-          />
+          <Route path="/" element={<App />} />
+          <Route path="/noTitle" element={<NoTitle />} />
           <Route
             path="/doc/get-started"
-            element={
-              <Documentation items={docItems}
-                content={docItems[0]}
-              />
-            }
+            element={<Documentation items={docItems} content={docItems[0]} />}
           />
           <Route
-            path="/doc/api" 
-            element={
-              <Documentation items={docItems} content={docItems[1]} />
-            }
+            path="/doc/api"
+            element={<Documentation items={docItems} content={docItems[1]} />}
           />
           <Route
             path="/doc/builtin-plugins"
-            element={
-              <Documentation
-                items={docItems}
-                content={docItems[2]}
-              />
-            }
+            element={<Documentation items={docItems} content={docItems[2]} />}
           />
           <Route
             path="/doc/faq"
-            element={
-              <Documentation
-                items={docItems}
-                content={docItems[3]}
-              />
-            }
+            element={<Documentation items={docItems} content={docItems[3]} />}
           />
-          <Route
-            path="/doc"
-            element={
-              <Redirect to="/doc/get-started" />
-            }
-          />
+          <Route path="/doc" element={<Redirect to="/doc/get-started" />} />
         </Routes>
       </BrowserRouter>
     </Suspense>
-  </ThemeProvider>,
+  </ThemeProvider>
 );

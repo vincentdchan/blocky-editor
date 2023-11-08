@@ -17,6 +17,13 @@ function removeId(node: JSONNode) {
   if (node.children) {
     node.children.map(removeId);
   }
+
+  if (node.title) {
+    removeId(node.title);
+  }
+  if (node.body) {
+    removeId(node.body);
+  }
 }
 
 test("serialize", () => {
@@ -38,27 +45,62 @@ test("serialize", () => {
   const json = state.toJSON();
   removeId(json);
   expect(json).toEqual({
-    nodeName: "document",
-    children: [
-      {
-        nodeName: "head",
-        children: [
-          {
-            nodeName: "Title",
-            attributes: {
-              textContent: [],
-            },
-            "#meta": {
-              textContent: "rich-text",
-            },
+    t: "document",
+    body: {
+      t: "body",
+      children: [
+        {
+          t: "Text",
+          attributes: {
+            textContent: [
+              {
+                insert: "Hello world",
+              },
+            ],
           },
-        ],
+          "#meta": {
+            textContent: "rich-text",
+          },
+        },
+      ],
+    },
+  });
+
+  test("serialize with title", () => {
+    const idGenerator = makeDefaultIdGenerator();
+    const doc = new BlockyDocument({
+      title: "",
+      bodyChildren: [
+        new BlockDataElement("Text", idGenerator.mkBlockId(), {
+          textContent: new BlockyTextModel(
+            new Delta([{ insert: "Hello world" }])
+          ),
+        }),
+      ],
+    });
+    const state = new EditorState({
+      userId: "User-1",
+      document: doc,
+      idGenerator,
+    });
+    const json = state.toJSON();
+    removeId(json);
+    expect(json).toEqual({
+      t: "document",
+      title: {
+        t: "Title",
+        attributes: {
+          textContent: [],
+        },
+        "#meta": {
+          textContent: "rich-text",
+        },
       },
-      {
-        nodeName: "body",
+      body: {
+        t: "body",
         children: [
           {
-            nodeName: "Text",
+            t: "Text",
             attributes: {
               textContent: [
                 {
@@ -72,6 +114,6 @@ test("serialize", () => {
           },
         ],
       },
-    ],
+    });
   });
 });

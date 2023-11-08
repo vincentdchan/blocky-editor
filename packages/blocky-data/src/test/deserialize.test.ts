@@ -14,7 +14,7 @@ test("deserialize BlockElement", () => {
   const json = blockElement.toJSON();
   const back = blockyNodeFromJsonNode(json) as BlockDataElement;
   expect(back instanceof BlockDataElement).toBeTruthy();
-  expect(back.nodeName).toBe("Text");
+  expect(back.t).toBe("Text");
   expect(back.id).toBe("Blk-text-1");
 });
 
@@ -38,6 +38,8 @@ test("deserialize document", () => {
   });
   const json = document.toJSON();
   const back = blockyNodeFromJsonNode(json);
-  expect(back.nodeName).toBe("document");
+  expect(back.t).toBe("document");
   expect(back instanceof BlockyDocument).toBeTruthy();
+  const json2 = back.toJSON();
+  expect(json2).toEqual(json);
 });

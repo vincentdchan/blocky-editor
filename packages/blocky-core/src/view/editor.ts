@@ -474,7 +474,7 @@ export class Editor {
 
     while (ptr) {
       const node = ptr._mgNode as BlockDataElement | undefined;
-      if (node && isUpperCase(node.nodeName)) {
+      if (node && isUpperCase(node.t)) {
         return node;
       }
 
@@ -758,7 +758,7 @@ export class Editor {
           // has been deleted?
           continue;
         }
-        if (blockElement.nodeName === TextBlock.Name) {
+        if (blockElement.t === TextBlock.Name) {
           const textModel = blockElement.getTextModel("textContent")!;
           if (textModel.length === 0) {
             const block = this.state.blocks.get(op.id);
@@ -775,11 +775,9 @@ export class Editor {
   createSearchContext(content: string): SearchContext {
     if (!this.#searchContext) {
       this.#searchContext = new SearchContext(this.#container, this);
-      this.#searchContext.dispose$
-        .pipe(take(1))
-        .subscribe(() => {
-          this.#searchContext = undefined;
-        });
+      this.#searchContext.dispose$.pipe(take(1)).subscribe(() => {
+        this.#searchContext = undefined;
+      });
     }
     this.#searchContext.search(content);
     return this.#searchContext;
@@ -1003,7 +1001,7 @@ export class Editor {
         new Delta().retain(cursorOffset).delete(textModel.length - cursorOffset)
       );
 
-      if (blockElement.nodeName === TitleBlock.Name) {
+      if (blockElement.t === TitleBlock.Name) {
         changeset.insertChildrenAfter(this.state.document.body, [
           newTextElement,
         ]);
@@ -1214,7 +1212,7 @@ export class Editor {
       return false;
     }
 
-    if (node.nodeName !== TextBlock.Name) {
+    if (node.t !== TextBlock.Name) {
       return false;
     }
 
@@ -1223,7 +1221,7 @@ export class Editor {
       return true;
     }
 
-    if (prevNode.nodeName !== TextBlock.Name) {
+    if (prevNode.t !== TextBlock.Name) {
       this.state.__setCursorState(
         CursorState.collapse(prevNode.id, 0),
         CursorStateUpdateReason.changeset
@@ -1264,9 +1262,9 @@ export class Editor {
     }
     const prevNode = this.#findPreviousElement(node);
 
-    const blockDef = this.registry.block.getBlockDefByName(node.nodeName);
+    const blockDef = this.registry.block.getBlockDefByName(node.t);
     if (isUndefined(blockDef)) {
-      throw new Error(`definition not found for ${node.nodeName}`);
+      throw new Error(`definition not found for ${node.t}`);
     }
 
     if (blockDef.Editable !== false) {
@@ -1290,7 +1288,7 @@ export class Editor {
   }
 
   #focusEndOfNode(changeset: Changeset, node: BlockDataElement) {
-    if (node.nodeName === TextBlock.Name) {
+    if (node.t === TextBlock.Name) {
       const textModel = node.getTextModel("textContent")!;
       changeset.setCursorState(CursorState.collapse(node.id, textModel.length));
     } else {
@@ -1450,10 +1448,7 @@ export class Editor {
       return;
     }
 
-    if (
-      blockElement.nodeName === TextBlock.Name ||
-      blockElement.nodeName === "Title"
-    ) {
+    if (blockElement.t === TextBlock.Name || blockElement.t === "Title") {
       return;
     }
 
@@ -1463,7 +1458,7 @@ export class Editor {
     e.clipboardData?.setData(
       "text/html",
       `<div data-id="${blockElement.id}" data-type="${
-        blockElement.nodeName
+        blockElement.t
       }" data-content="${JSON.stringify(blockData).replace(
         /"/g,
         "&quot;"
@@ -1586,7 +1581,7 @@ export class Editor {
       return;
     }
 
-    if (treeNode.nodeName === TextBlock.Name) {
+    if (treeNode.t === TextBlock.Name) {
       return treeNode;
     }
   }
@@ -1596,11 +1591,9 @@ export class Editor {
     this.#followerWidget = widget;
     this.#container.insertBefore(widget.container, this.#container.firstChild);
     widget.startCursorState = this.state.cursorState!;
-    widget.dispose$
-      .pipe(take(1))
-      .subscribe(() => {
-        this.#followerWidget = undefined;
-      });
+    widget.dispose$.pipe(take(1)).subscribe(() => {
+      this.#followerWidget = undefined;
+    });
     widget.widgetMounted(this.controller);
 
     window.requestAnimationFrame(() => {
@@ -1669,6 +1662,13 @@ export class Editor {
       }
     }
     return;
+  }
+
+  focus() {
+    if (!this.#renderedDom) {
+      return;
+    }
+    this.#renderedDom.focus();
   }
 
   dispose() {

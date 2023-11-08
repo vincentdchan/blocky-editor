@@ -99,7 +99,7 @@ export class State implements ChangesetStateLogger {
     }
     const parent = node.parent;
     if (!parent) {
-      throw new Error(`node have no parent: ${node.nodeName}`);
+      throw new Error(`node have no parent: ${node.t}`);
     }
 
     let cnt = 0;
@@ -231,7 +231,7 @@ export class State implements ChangesetStateLogger {
     if (isUndefined(textNode)) {
       throw new Error(
         `can not get "${textEditOperation.key}" of element <${
-          node.nodeName
+          node.t
         }>, by location: ${location.toString()}`
       );
     }
