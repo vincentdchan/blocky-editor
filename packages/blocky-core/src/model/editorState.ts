@@ -79,9 +79,7 @@ export class EditorState extends State {
   }
 
   isTextLike(node: DataBaseNode) {
-    return (
-      node.nodeName === TextBlock.Name || node.nodeName === TitleBlock.Name
-    );
+    return node.t === TextBlock.Name || node.t === TitleBlock.Name;
   }
 
   createTextElement(
@@ -106,16 +104,14 @@ export class EditorState extends State {
   #handleNewBlockMounted(blockElement: BlockDataElement) {
     this.#insertElement(blockElement);
 
-    if (blockElement.nodeName === "Title") {
+    if (blockElement.t === "Title") {
       const titleBlock = new TitleBlock({ blockElement });
       this.blocks.set(blockElement.id, titleBlock);
       return;
     }
-    const blockDef = this.blockRegistry.getBlockDefByName(
-      blockElement.nodeName
-    );
+    const blockDef = this.blockRegistry.getBlockDefByName(blockElement.t);
     if (!blockDef) {
-      throw new Error("invalid block name: " + blockElement.nodeName);
+      throw new Error("invalid block name: " + blockElement.t);
     }
 
     const block = new blockDef({ blockElement });
@@ -146,7 +142,7 @@ export class EditorState extends State {
     const { id } = element;
     if (isUndefined(id)) {
       throw new Error(
-        `id could NOT be undefined for a BlockElement: ${element.nodeName}`
+        `id could NOT be undefined for a BlockElement: ${element.t}`
       );
     }
     if (this.#idMap.has(id)) {
@@ -175,7 +171,7 @@ export class EditorState extends State {
       if (currentNode instanceof BlockDataElement) {
         let startOffset = 0;
         let endOffset = 0;
-        if (currentNode.nodeName === TextBlock.Name) {
+        if (currentNode.t === TextBlock.Name) {
           const textModel = currentNode.getAttribute(
             "textContent"
           ) as BlockyTextModel;
@@ -209,24 +205,10 @@ export class EditorState extends State {
 
   toJSON() {
     const result: JSONNode = {
-      nodeName: "document",
+      t: "document",
+      title: this.document.title?.toJSON(),
+      body: this.document.body.toJSON(),
     };
-
-    let ptr = this.document.firstChild;
-
-    // empty
-    if (!ptr) {
-      return result;
-    }
-
-    const children: JSONNode[] = [];
-
-    while (ptr) {
-      children.push(ptr.toJSON());
-      ptr = ptr.nextSibling;
-    }
-
-    result.children = children;
     return result;
   }
 
@@ -251,7 +233,7 @@ export class NodeTraverser {
       return current;
     }
 
-    if (current.nodeName === TitleBlock.Name) {
+    if (current.t === TitleBlock.Name) {
       this.#node = this.state.document.body.firstChild;
       return current;
     }

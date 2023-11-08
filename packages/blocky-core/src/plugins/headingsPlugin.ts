@@ -2,14 +2,14 @@ import { isWhiteSpace } from "blocky-common/es";
 import { type Editor, type IPlugin, TextBlock } from "@pkg/index";
 import { Changeset, TextType, Delta } from "blocky-data";
 import { isNumber, isString } from "lodash-es";
-import { filter} from "rxjs";
+import { filter } from "rxjs";
 
 function makeHeadingsPlugin(): IPlugin {
   return {
     name: "headings",
     onInitialized(editor: Editor) {
       editor.textInput
-        .pipe(filter((evt) => evt.blockElement.nodeName === TextBlock.Name)) // don't apply on Title block
+        .pipe(filter((evt) => evt.blockElement.t === TextBlock.Name)) // don't apply on Title block
         .subscribe((evt) => {
           const { beforeString, blockElement } = evt;
           const { state } = editor;

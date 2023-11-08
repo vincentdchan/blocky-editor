@@ -63,7 +63,7 @@ function makeBulletListPlugin(): IPlugin {
     }
 
     const textElement = editor.getTextElementByBlockId(id);
-    if (!textElement || textElement.nodeName !== TextBlock.Name) {
+    if (!textElement || textElement.t !== TextBlock.Name) {
       return;
     }
 
@@ -130,7 +130,7 @@ function makeBulletListPlugin(): IPlugin {
     name: "bullet-list",
     onInitialized(editor: Editor) {
       editor.textInput
-        .pipe(filter((evt) => evt.blockElement.nodeName === TextBlock.Name))
+        .pipe(filter((evt) => evt.blockElement.t === TextBlock.Name))
         .subscribe(handleTextInputEvent(editor));
       editor.keyDown.subscribe(handleKeydown(editor));
     },

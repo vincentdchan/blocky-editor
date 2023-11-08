@@ -17,6 +17,13 @@ function removeId(node: JSONNode) {
   if (node.children) {
     node.children.map(removeId);
   }
+
+  if (node.title) {
+    removeId(node.title);
+  }
+  if (node.body) {
+    removeId(node.body);
+  }
 }
 
 test("serialize", () => {
@@ -38,35 +45,33 @@ test("serialize", () => {
   const json = state.toJSON();
   removeId(json);
   expect(json).toEqual({
-    nodeName: "document",
-    children: [
-      {
-        nodeName: "Title",
-        attributes: {
-          textContent: [],
-        },
-        "#meta": {
-          textContent: "rich-text",
-        },
+    t: "document",
+    title: {
+      t: "Title",
+      attributes: {
+        textContent: [],
       },
-      {
-        nodeName: "body",
-        children: [
-          {
-            nodeName: "Text",
-            attributes: {
-              textContent: [
-                {
-                  insert: "Hello world",
-                },
-              ],
-            },
-            "#meta": {
-              textContent: "rich-text",
-            },
+      "#meta": {
+        textContent: "rich-text",
+      },
+    },
+    body: {
+      t: "body",
+      children: [
+        {
+          t: "Text",
+          attributes: {
+            textContent: [
+              {
+                insert: "Hello world",
+              },
+            ],
           },
-        ],
-      },
-    ],
+          "#meta": {
+            textContent: "rich-text",
+          },
+        },
+      ],
+    },
   });
 });

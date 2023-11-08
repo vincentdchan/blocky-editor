@@ -8,8 +8,8 @@ describe("BlockyDocument", () => {
       title: "My Title",
     });
 
-    const textModel = document.title.getTextModel("textContent")!;
-    expect(textModel.toString()).toEqual("My Title");
+    const textModel = document.title?.getTextModel("textContent");
+    expect(textModel?.toString()).toEqual("My Title");
   });
 });
 

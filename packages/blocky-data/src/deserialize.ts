@@ -13,7 +13,7 @@ import {
 import Delta from "quill-delta-es";
 
 export function blockyNodeFromJsonNode(jsonNode: JSONNode): DataBaseNode {
-  const { nodeName } = jsonNode;
+  const { t: nodeName } = jsonNode;
   if (nodeName === "document") {
     return documentFromJsonNode(jsonNode);
   }
@@ -25,12 +25,12 @@ export function blockyNodeFromJsonNode(jsonNode: JSONNode): DataBaseNode {
 }
 
 export function documentFromJsonNode(jsonNode: JSONNode): BlockyDocument {
-  const titleNode = jsonNode.children![0];
-  const bodyNode = jsonNode.children![1];
-  if (titleNode.nodeName !== "head") {
-    throw new Error("invalid document head");
+  const titleNode = jsonNode.title;
+  const bodyNode = jsonNode.body;
+  if (titleNode?.t !== "title") {
+    throw new Error("invalid document title");
   }
-  if (bodyNode.nodeName !== "body") {
+  if (bodyNode?.t !== "body") {
     throw new Error("invalid document body");
   }
   const title = blockyElementFromJsonNode(titleNode) as BlockDataElement;
@@ -39,7 +39,7 @@ export function documentFromJsonNode(jsonNode: JSONNode): BlockyDocument {
 }
 
 export function blockElementFromJsonNode(jsonNode: JSONNode): BlockDataElement {
-  const { nodeName, id, children, attributes: jsonAttribs } = jsonNode;
+  const { t: nodeName, id, children, attributes: jsonAttribs } = jsonNode;
   if (isUndefined(id)) {
     throw new TypeError("id is missing for jsonNode");
   }
@@ -51,7 +51,7 @@ export function blockElementFromJsonNode(jsonNode: JSONNode): BlockDataElement {
 }
 
 export function blockyElementFromJsonNode(jsonNode: JSONNode): DataBaseElement {
-  const { nodeName, children, attributes: jsonAttribs } = jsonNode;
+  const { t: nodeName, children, attributes: jsonAttribs } = jsonNode;
   const attributes = getAttributesByMeta(jsonAttribs, jsonNode);
   const childrenNode: DataBaseNode[] =
     children?.map((child) => {

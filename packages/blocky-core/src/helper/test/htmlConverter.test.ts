@@ -15,5 +15,5 @@ test("test ul list", () => {
   const parser = new HTMLConverter({ idGenerator });
   const blocks = parser.parseFromString("<ul><li>content<li></ul>");
   expect(blocks.length).toBe(1);
-  expect(blocks[0].nodeName).toBe(TextBlock.Name);
+  expect(blocks[0].t).toBe(TextBlock.Name);
 });

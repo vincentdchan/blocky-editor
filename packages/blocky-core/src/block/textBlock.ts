@@ -847,7 +847,7 @@ export class TextBlock extends Block {
   }
 
   #makeThisTextBlockIndent(prevElement: BlockDataElement) {
-    if (prevElement.nodeName !== TextBlock.Name) {
+    if (prevElement.t !== TextBlock.Name) {
       return;
     }
 
@@ -978,6 +978,8 @@ function isRangeEqual(
   );
 }
 
-export function getTextTypeForTextBlock(blockElement: BlockDataElement): TextType {
+export function getTextTypeForTextBlock(
+  blockElement: BlockDataElement
+): TextType {
   return blockElement.getAttribute("textType") ?? TextType.Normal;
 }

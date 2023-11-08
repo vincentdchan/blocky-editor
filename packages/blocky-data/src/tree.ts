@@ -20,11 +20,13 @@ export interface AttributesObject {
 }
 
 export interface JSONNode {
-  nodeName: string;
+  t: string;
   id?: string;
   ["#meta"]?: AttributesObject;
   attributes?: AttributesObject;
   children?: JSONChild[];
+  title?: JSONChild;
+  body?: JSONChild;
 }
 
 export type JSONChild = JSONNode;
@@ -32,7 +34,7 @@ export type JSONChild = JSONNode;
 export interface DataBaseNode {
   doc?: BlockyDocument;
 
-  nodeName: string;
+  t: string;
   parent: DataBaseElement | null;
   nextSibling: DataBaseNode | null;
   prevSibling: DataBaseNode | null;
@@ -158,11 +160,11 @@ export class DataBaseElement implements DataBaseNode {
   changed: Subject<ElementChangedEvent> = new Subject();
 
   constructor(
-    public nodeName: string,
+    public t: string,
     attributes?: AttributesObject,
     children?: DataBaseNode[]
   ) {
-    if (nodeName === "#text") {
+    if (t === "#text") {
       throw new Error("illegal nodeName for an element");
     }
     if (typeof attributes === "object") {
@@ -197,7 +199,7 @@ export class DataBaseElement implements DataBaseNode {
     let ptr = this.#firstChild;
 
     while (ptr) {
-      if (ptr.nodeName === nodeName) {
+      if (ptr.t === nodeName) {
         return ptr;
       }
       ptr = ptr.nextSibling;
@@ -444,7 +446,7 @@ export class DataBaseElement implements DataBaseNode {
   }
 
   clone(): DataBaseElement {
-    const result = new DataBaseElement(this.nodeName);
+    const result = new DataBaseElement(this.t);
 
     const attribs = this.getAttributes();
     for (const key in attribs) {
@@ -466,7 +468,7 @@ export class DataBaseElement implements DataBaseNode {
 
   toJSON(): JSONNode {
     const result: JSONNode = {
-      nodeName: this.nodeName,
+      t: this.t,
     };
 
     const meta: any = {};
@@ -474,7 +476,7 @@ export class DataBaseElement implements DataBaseNode {
     let hasMeta = false;
     let hasAttributes = false;
     for (const key in this.#attributes) {
-      if (key === "nodeName" || key === "type" || key === "children") {
+      if (key === "t" || key === "type" || key === "children") {
         continue;
       }
       const value = this.#attributes[key];
@@ -560,7 +562,7 @@ export class BlockDataElement extends DataBaseElement {
       return Number.MAX_SAFE_INTEGER;
     }
 
-    if (parentNode.nodeName === "document") {
+    if (parentNode.t === "document") {
       return 0;
     }
 
@@ -586,7 +588,7 @@ export class BlockDataElement extends DataBaseElement {
       childPtr = childPtr.nextSibling;
     }
 
-    return new BlockDataElement(this.nodeName, id, attribs, children);
+    return new BlockDataElement(this.t, id, attribs, children);
   }
 
   override toJSON(): JSONNode {
@@ -618,7 +620,7 @@ export interface DocumentInitProps {
  * </document>
  */
 export class BlockyDocument extends DataBaseElement {
-  readonly title: BlockDataElement;
+  readonly title?: BlockDataElement;
   readonly body: DataBaseElement;
 
   readonly blockElementAdded = new Subject<BlockDataElement>();

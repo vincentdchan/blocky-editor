@@ -67,7 +67,7 @@ function makeCodeTextPlugin(): IPlugin {
                     const blockElement = editor.state.getBlockElementById(
                       start.id
                     )!;
-                    if (blockElement.nodeName !== TextBlock.Name) {
+                    if (blockElement.t !== TextBlock.Name) {
                       return;
                     }
                     const textModel = blockElement.getTextModel("textContent")!;
