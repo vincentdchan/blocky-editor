@@ -6,6 +6,7 @@ import type {
   EditorController,
   BannerInstance,
 } from "blocky-core";
+import { once } from "lodash-es";
 
 export interface RenderProps {
   editorController: EditorController;
@@ -30,9 +31,11 @@ export function makeReactBanner(renderer: Renderer): BannerFactory {
         focusedNode = n;
         renderFn();
       },
-      dispose() {
-        root.unmount();
-      },
+      dispose: once(() => {
+        setTimeout(() => {
+          root.unmount();
+        }, 0);
+      }),
     };
   };
 }

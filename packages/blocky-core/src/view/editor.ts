@@ -1664,6 +1664,13 @@ export class Editor {
     return;
   }
 
+  focus() {
+    if (!this.#renderedDom) {
+      return;
+    }
+    this.#renderedDom.focus();
+  }
+
   dispose() {
     this.dispose$.next();
     this.#followerWidget?.dispose();

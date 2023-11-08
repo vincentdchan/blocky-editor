@@ -206,7 +206,7 @@ export class DataBaseElement implements DataBaseNode {
     }
   }
 
-  #symInsertAfter(node: DataBaseNode, after?: DataBaseNode) {
+  protected __symInsertAfter(node: DataBaseNode, after?: DataBaseNode) {
     if (after && after.parent !== this) {
       throw new TypeError("after node is a child of this node");
     }
@@ -334,7 +334,7 @@ export class DataBaseElement implements DataBaseNode {
     }
 
     if (index === 0) {
-      this.#symInsertAfter(node);
+      this.__symInsertAfter(node);
       return;
     }
 
@@ -345,7 +345,7 @@ export class DataBaseElement implements DataBaseNode {
       ptr = ptr.nextSibling;
     }
 
-    this.#symInsertAfter(node, ptr ?? undefined);
+    this.__symInsertAfter(node, ptr ?? undefined);
   }
 
   /**
@@ -627,24 +627,31 @@ export class BlockyDocument extends DataBaseElement {
   readonly blockElementRemoved = new Subject<BlockDataElement>();
 
   constructor(props?: Partial<DocumentInitProps>) {
-    let title: BlockDataElement;
-    title =
-      props?.title instanceof BlockDataElement
-        ? props.title
-        : new BlockDataElement("Title", "title", {
-            textContent: props?.title
-              ? new BlockyTextModel(new Delta([{ insert: props.title }]))
-              : new BlockyTextModel(),
-          });
+    let title: BlockDataElement | undefined;
+    if (!isUndefined(props?.title)) {
+      if (props?.title instanceof BlockDataElement) {
+        title = props.title;
+      } else if (isString(props?.title)) {
+        title = new BlockDataElement("Title", "title", {
+          textContent: props?.title
+            ? new BlockyTextModel(new Delta([{ insert: props.title }]))
+            : new BlockyTextModel(),
+        });
+      }
+    }
     const body =
       props?.body ??
       new DataBaseElement("body", undefined, props?.bodyChildren ?? []);
-    super("document", undefined, [title, body]);
+    super("document", undefined, []);
 
     this.title = title;
     this.body = body;
 
-    this.reportBlockyNodeInserted(this.title);
+    if (this.title) {
+      this.__symInsertAfter(this.title);
+      this.reportBlockyNodeInserted(this.title);
+    }
+    this.__symInsertAfter(this.body);
     this.reportBlockyNodeInserted(this.body);
   }
 

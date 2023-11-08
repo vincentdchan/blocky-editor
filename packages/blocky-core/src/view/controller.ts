@@ -153,6 +153,7 @@ export class EditorController {
   readonly cursorChanged: Subject<CursorChangedEvent> = new Subject();
   readonly beforeApplyCursorChanged: Subject<CursorChangedEvent> =
     new Subject();
+
   readonly emptyPlaceholder: string;
 
   /**
@@ -224,6 +225,10 @@ export class EditorController {
     }
 
     editor.drawCollaborativeCursor(id, evt.state);
+  }
+
+  focus() {
+    this.editor?.focus();
   }
 
   /**

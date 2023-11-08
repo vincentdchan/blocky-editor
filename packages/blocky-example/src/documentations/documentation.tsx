@@ -69,14 +69,15 @@ class Documentation extends Component<DocumentationProps, DocumentationState> {
           </a>
         </div>
         <ThemeSwitch />
-        {this.props.items.map((item) => (
-          <div className="page-item">
+        {this.props.items.map((item, index) => (
+          <div className="page-item" key={index.toString()}>
             <Link to={item.href} className="sidebar-item">
               {item.name}
             </Link>
             <div className="headings">
               {item.headings.map((h) => (
                 <Link
+                  key={h.id}
                   onClick={() => {
                     const elm = document.getElementById(h.id);
                     if (!elm) {
