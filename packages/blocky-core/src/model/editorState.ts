@@ -206,9 +206,11 @@ export class EditorState extends State {
   toJSON() {
     const result: JSONNode = {
       t: "document",
-      title: this.document.title?.toJSON(),
       body: this.document.body.toJSON(),
     };
+    if (this.document.title) {
+      result.title = this.document.title?.toJSON();
+    }
     return result;
   }
 
