@@ -25,17 +25,17 @@ export function blockyNodeFromJsonNode(jsonNode: JSONNode): DataBaseNode {
 }
 
 export function documentFromJsonNode(jsonNode: JSONNode): BlockyDocument {
-  const headNode = jsonNode.children![0];
+  const titleNode = jsonNode.children![0];
   const bodyNode = jsonNode.children![1];
-  if (headNode.nodeName !== "head") {
+  if (titleNode.nodeName !== "head") {
     throw new Error("invalid document head");
   }
   if (bodyNode.nodeName !== "body") {
     throw new Error("invalid document body");
   }
-  const head = blockyElementFromJsonNode(headNode);
+  const title = blockyElementFromJsonNode(titleNode) as BlockDataElement;
   const body = blockyElementFromJsonNode(bodyNode);
-  return new BlockyDocument({ head, body });
+  return new BlockyDocument({ title, body });
 }
 
 export function blockElementFromJsonNode(jsonNode: JSONNode): BlockDataElement {

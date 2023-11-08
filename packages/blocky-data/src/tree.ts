@@ -599,19 +599,16 @@ export class BlockDataElement extends DataBaseElement {
 }
 
 export interface DocumentInitProps {
-  title?: string;
-  head?: DataBaseElement;
+  title?: string | BlockDataElement;
   body?: DataBaseElement;
   bodyChildren: DataBaseNode[];
 }
 
 /**
  * The data model in Blocky Editor is represented as an XML Document:
- * 
+ *
  * <document>
- *   <head>
- *     <Title />
- *   </head>
+ *   <Title /> <!-- Optional -->
  *   <body>
  *     <Text />
  *     <Text />
@@ -622,7 +619,6 @@ export interface DocumentInitProps {
  */
 export class BlockyDocument extends DataBaseElement {
   readonly title: BlockDataElement;
-  readonly head: DataBaseElement;
   readonly body: DataBaseElement;
 
   readonly blockElementAdded = new Subject<BlockDataElement>();
@@ -630,31 +626,23 @@ export class BlockyDocument extends DataBaseElement {
 
   constructor(props?: Partial<DocumentInitProps>) {
     let title: BlockDataElement;
-    let head: DataBaseElement | undefined = props?.head;
-    if (isUndefined(head)) {
-      title = new BlockDataElement("Title", "title", {
-        textContent: props?.title
-          ? new BlockyTextModel(new Delta([{ insert: props.title }]))
-          : new BlockyTextModel(),
-      });
-      head = new DataBaseElement("head", {}, [title]);
-    } else {
-      const t = head.queryChildByName("Title");
-      if (!t) {
-        throw new Error("Title not found for head");
-      }
-      title = t as BlockDataElement;
-    }
+    title =
+      props?.title instanceof BlockDataElement
+        ? props.title
+        : new BlockDataElement("Title", "title", {
+            textContent: props?.title
+              ? new BlockyTextModel(new Delta([{ insert: props.title }]))
+              : new BlockyTextModel(),
+          });
     const body =
       props?.body ??
       new DataBaseElement("body", undefined, props?.bodyChildren ?? []);
-    super("document", undefined, [head, body]);
+    super("document", undefined, [title, body]);
 
     this.title = title;
-    this.head = head;
     this.body = body;
 
-    this.reportBlockyNodeInserted(this.head);
+    this.reportBlockyNodeInserted(this.title);
     this.reportBlockyNodeInserted(this.body);
   }
 
