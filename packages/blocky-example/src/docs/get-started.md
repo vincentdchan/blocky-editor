@@ -34,7 +34,7 @@ You can define how the editor render the toolbar.
 
 ```tsx
 import { EditorController } from "blocky-core";
-import { makePreactBanner, makePreactToolbar } from "blocky-preact";
+import { makeReactBanner, makeReactToolbar } from "blocky-react";
 import BannerMenu from "./bannerMenu";
 import ToolbarMenu from "./toolbarMenu";
 import makeStyledTextPlugin from "blocky-core/dist/plugins/styledTextPlugin";
@@ -58,23 +58,23 @@ function makeController(): EditorController {
     ],
     /**
      * Tell the editor how to render the banner.
-     * We use a banner written in Preact here.
+     * We use a banner written in React here.
      */
-    bannerFactory: makePreactBanner((editorController: EditorController) => (
+    bannerFactory: makeReactBanner((editorController: EditorController) => (
       <BannerMenu editorController={editorController} />
     )),
     /**
      * Tell the editor how to render the banner.
      * We use a toolbar written in Preact here.
      */
-    toolbarFactory: makePreactToolbar((editorController: EditorController) => {
+    toolbarFactory: makeReactToolbar((editorController: EditorController) => {
       return <ToolbarMenu editorController={editorController} />;
     }),
   });
 }
 ```
 
-### Preact
+### React
 
 Pass the editor to the component.
 
@@ -196,7 +196,7 @@ export function makeMyBlockPlugin(): IPlugin {
 }
 ```
 
-### Write a block in Preact
+### Write a block in React
 
 Implementing a block in Preact is more easier.
 

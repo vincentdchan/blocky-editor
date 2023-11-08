@@ -3,7 +3,7 @@ import { EditorController, darkTheme, type IPlugin } from "blocky-core";
 import {
   BlockyEditor,
   makeReactBanner,
-  makePreactToolbar,
+  makeReactToolbar,
   type BannerRenderProps,
 } from "blocky-react";
 import makeStyledTextPlugin from "blocky-core/dist/plugins/styledTextPlugin";
@@ -83,7 +83,7 @@ function makeController(
      * Tell the editor how to render the banner.
      * We use a toolbar written in Preact here.
      */
-    toolbarFactory: makePreactToolbar((editorController: EditorController) => {
+    toolbarFactory: makeReactToolbar((editorController: EditorController) => {
       return <ToolbarMenu editorController={editorController} />;
     }),
 

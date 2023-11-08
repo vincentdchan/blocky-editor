@@ -8,7 +8,7 @@ import {
 
 export type Renderer = (editorController: EditorController) => React.ReactNode;
 
-export function makePreactToolbar(
+export function makeReactToolbar(
   renderer: Renderer,
   options?: { yOffset?: number }
 ): ToolbarFactory {
