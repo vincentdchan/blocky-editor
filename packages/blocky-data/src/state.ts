@@ -5,7 +5,7 @@ import {
   DataBaseElement,
 } from "./tree";
 import { Subject } from "rxjs";
-import { isUndefined } from "lodash-es";
+import { isNumber, isUndefined } from "lodash-es";
 import {
   type FinalizedChangeset,
   type ChangesetApplyOptions,
@@ -117,6 +117,7 @@ export class State implements ChangesetStateLogger {
     if (this.#appliedVersion >= changeset.version) {
       return false;
     }
+    console.log("changeset:", changeset);
     this.beforeChangesetApply.next(changeset);
 
     for (const operation of changeset.operations) {
@@ -199,6 +200,9 @@ export class State implements ChangesetStateLogger {
     const parentLoc = location.slice(0, location.length - 1);
     let index = location.last;
     const parent = this.findNodeByLocation(parentLoc) as DataBaseElement;
+    if (!isNumber(index)) {
+      throw new Error(`index is not a number: ${index}`);
+    }
     // TODO: optimize insert
     for (const child of children) {
       parent.__insertChildAt(index++, blockyNodeFromJsonNode(child));
@@ -219,6 +223,9 @@ export class State implements ChangesetStateLogger {
     const parentLoc = location.slice(0, location.length - 1);
     const index = location.last;
     const parent = this.findNodeByLocation(parentLoc) as DataBaseElement;
+    if (!isNumber(index)) {
+      throw new Error(`index is not a number: ${index}`);
+    }
     parent.__deleteChildrenAt(index, children.length);
   }
 

@@ -3,7 +3,7 @@
  * Do NOT split them into several files.
  * It will cause strange compilation errors by Vite.
  */
-import { isUndefined, isString, isObject } from "lodash-es";
+import { isUndefined, isString, isObject, isNumber } from "lodash-es";
 import { Subject } from "rxjs";
 import Delta from "quill-delta-es";
 import type { ElementChangedEvent } from "./events";
@@ -311,15 +311,19 @@ export class DataBaseElement implements DataBaseNode {
     });
   }
 
-  childAt(index: number): DataBaseNode | null {
-    let ptr: DataBaseNode | null = this.#firstChild;
+  childAt(index: number | string): DataBaseNode | null {
+    if (isNumber(index)) {
+      let ptr: DataBaseNode | null = this.#firstChild;
 
-    while (ptr && index >= 1) {
-      index--;
-      ptr = ptr.nextSibling;
+      while (ptr && index >= 1) {
+        index--;
+        ptr = ptr.nextSibling;
+      }
+
+      return ptr;
     }
 
-    return ptr;
+    return this.getAttribute(index) ?? null;
   }
 
   /**

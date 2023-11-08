@@ -1,4 +1,4 @@
-import { isUndefined } from "lodash-es";
+import { isNumber, isUndefined } from "lodash-es";
 import { hashIntArrays } from "blocky-common/es";
 
 export class NodeLocation {
@@ -40,18 +40,21 @@ export class NodeLocation {
     const suffix = location.path.slice(base.length);
     const baseLast = base.path[base.path.length - 1];
     const offsetAtIndex = location.path[base.length - 1];
-    if (baseLast <= offsetAtIndex) {
-      prefix.push(offsetAtIndex + delta);
-    } else {
-      prefix.push(offsetAtIndex);
+    if (isNumber(baseLast) && isNumber(offsetAtIndex)) {
+      if (baseLast <= offsetAtIndex) {
+        prefix.push(offsetAtIndex + delta);
+      } else {
+        prefix.push(offsetAtIndex);
+      }
+      prefix.push(...suffix);
+      return new NodeLocation(prefix);
     }
-    prefix.push(...suffix);
-    return new NodeLocation(prefix);
+    return location;
   }
 
   #hashCode: number | undefined;
-  readonly path: readonly number[];
-  constructor(path: number[]) {
+  readonly path: readonly (number | string)[];
+  constructor(path: (number | string)[]) {
     this.path = Object.freeze(path);
   }
 
@@ -59,7 +62,7 @@ export class NodeLocation {
     return new NodeLocation(this.path.slice(start, end));
   }
 
-  get last(): number {
+  get last(): number | string {
     if (this.path.length === 0) {
       throw new Error("Location is empty");
     }
@@ -76,8 +79,24 @@ export class NodeLocation {
 
   get hashCode() {
     if (isUndefined(this.#hashCode)) {
-      this.#hashCode = hashIntArrays(this.path);
+      const intArray = toIntArray(this.path);
+      this.#hashCode = hashIntArrays(intArray);
     }
     return this.#hashCode;
   }
+}
+
+// if item is string, convert to ASCII array
+function toIntArray(arr: readonly (string | number)[]): number[] {
+  const result: number[] = [];
+  for (const item of arr) {
+    if (typeof item === "string") {
+      for (let i = 0, len = item.length; i < len; i++) {
+        result.push(item.charCodeAt(i));
+      }
+    } else {
+      result.push(item);
+    }
+  }
+  return result;
 }
