@@ -46,7 +46,7 @@ export function blockElementFromJsonNode(jsonNode: JSONNode): BlockDataElement {
   if (isUndefined(id)) {
     throw new TypeError("id is missing for jsonNode");
   }
-  const attributes = getAttributesByMeta(jsonAttribs, jsonNode);
+  const attributes = getAttributesByMeta(jsonAttribs);
   const childrenNode = children?.map((child) => {
     return blockyNodeFromJsonNode(child);
   });
@@ -55,7 +55,7 @@ export function blockElementFromJsonNode(jsonNode: JSONNode): BlockDataElement {
 
 export function blockyElementFromJsonNode(jsonNode: JSONNode): DataBaseElement {
   const { t: nodeName, children, ...jsonAttribs } = jsonNode;
-  const attributes = getAttributesByMeta(jsonAttribs, jsonNode);
+  const attributes = getAttributesByMeta(jsonAttribs);
   const childrenNode: DataBaseNode[] =
     children?.map((child) => {
       return blockyNodeFromJsonNode(child);
@@ -64,10 +64,7 @@ export function blockyElementFromJsonNode(jsonNode: JSONNode): DataBaseElement {
   return new DataElement(nodeName, attributes, childrenNode);
 }
 
-function getAttributesByMeta(
-  attribs: any,
-  jsonNode: JSONNode
-): AttributesObject | undefined {
+function getAttributesByMeta(attribs: any): AttributesObject | undefined {
   if (isUndefined(attribs)) {
     return undefined;
   }

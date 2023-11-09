@@ -3,7 +3,7 @@
  * Do NOT split them into several files.
  * It will cause strange compilation errors by Vite.
  */
-import { isUndefined, isString, isObject, isNumber } from "lodash-es";
+import { isUndefined, isString, isObject } from "lodash-es";
 import { Subject } from "rxjs";
 import Delta from "quill-delta-es";
 import type { ElementChangedEvent } from "./events";
