@@ -116,7 +116,6 @@ export class State implements ChangesetStateLogger {
     if (this.#appliedVersion >= changeset.version) {
       return false;
     }
-    console.log("changeset:", changeset);
     this.beforeChangesetApply.next(changeset);
 
     for (const operation of changeset.operations) {
