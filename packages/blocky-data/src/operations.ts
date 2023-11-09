@@ -133,26 +133,26 @@ export function transformCursorState(
 
 export interface InsertNodeOperationMessage {
   op: "insert-nodes";
-  location: number[];
+  location: (number | string)[];
   children: JSONNode[];
 }
 
 export interface UpdateNodeOperationMessage {
   op: "update-attributes";
-  location: number[];
+  location: (number | string)[];
   attributes: AttributesObject;
   oldAttributes: AttributesObject;
 }
 
 export interface RemoveNodeOperationMessage {
   op: "remove-nodes";
-  location: number[];
+  location: (number | string)[];
   children: JSONNode[];
 }
 
 export interface TextEditOperationMessage {
   op: "text-edit";
-  location: number[];
+  location: (number | string)[];
   id: string;
   key: string;
   delta: Delta;

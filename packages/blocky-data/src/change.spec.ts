@@ -9,7 +9,7 @@ import {
   Changeset,
   State,
   type TextEditOperation,
-} from "..";
+} from "./index";
 import Delta from "quill-delta-es";
 
 test("test delete", () => {

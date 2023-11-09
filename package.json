@@ -12,7 +12,7 @@
     "dev": "pnpm --filter blocky-example dev",
     "build": "tsc --build .",
     "watch": "tsc --build -w .",
-    "test:unit": "pnpm --filter blocky-core test:unit",
+    "test:unit": "pnpm -r --if-present run test:unit",
     "test:e2e": "playwright test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"

@@ -94,7 +94,7 @@ export class DocRenderer {
           }
         }
       );
-      this.renderTitle(titleContainer, document.title);
+      this.renderTitle(titleContainer, document.title as BlockDataElement);
     }
     const blocksContainer = ensureChild(
       dom,

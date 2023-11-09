@@ -13,8 +13,6 @@ export interface DeltaChangedEvent {
   newDelta: Delta;
 }
 
-export const metaKey = "#meta";
-
 export interface AttributesObject {
   [key: string]: any;
 }
@@ -22,11 +20,10 @@ export interface AttributesObject {
 export interface JSONNode {
   t: string;
   id?: string;
-  ["#meta"]?: AttributesObject;
-  attributes?: AttributesObject;
   children?: JSONChild[];
   title?: JSONChild;
   body?: JSONChild;
+  [index: string]: any;
 }
 
 export type JSONChild = JSONNode;
@@ -38,12 +35,17 @@ export interface DataBaseNode {
   parent: DataBaseElement | null;
   nextSibling: DataBaseNode | null;
   prevSibling: DataBaseNode | null;
+
   firstChild: DataBaseNode | null;
   lastChild: DataBaseNode | null;
   childrenLength: number;
 
   clone(): DataBaseNode;
   toJSON(): JSONNode;
+}
+
+export interface DataNode extends DataBaseNode {
+  clone(): DataNode;
 }
 
 export class BlockyTextModel {
@@ -135,35 +137,26 @@ export class BlockyTextModel {
   }
 }
 
-const bannedAttributesName: Set<string> = new Set([
-  "nodeName",
-  "type",
-  "children",
-]);
+const bannedAttributesName: Set<string> = new Set(["t", "type", "children"]);
 
 interface InternAttributes {
   [key: string]: any;
 }
 
 export class DataBaseElement implements DataBaseNode {
+  nextSibling: DataNode | null = null;
+  prevSibling: DataNode | null = null;
+
   doc?: BlockyDocument;
   parent: DataBaseElement | null = null;
-  nextSibling: DataBaseNode | null = null;
-  prevSibling: DataBaseNode | null = null;
-
-  childrenLength = 0;
-
-  #firstChild: DataBaseNode | null = null;
-  #lastChild: DataBaseNode | null = null;
   #attributes: InternAttributes = {};
+  __backMap: WeakMap<DataBaseNode, string> = new WeakMap();
 
   changed: Subject<ElementChangedEvent> = new Subject();
 
-  constructor(
-    public t: string,
-    attributes?: AttributesObject,
-    children?: DataBaseNode[]
-  ) {
+  childrenLength = 0;
+
+  constructor(public t: string, attributes?: AttributesObject) {
     if (t === "#text") {
       throw new Error("illegal nodeName for an element");
     }
@@ -172,17 +165,71 @@ export class DataBaseElement implements DataBaseNode {
         this.#attributes[key] = attributes[key];
       }
     }
-    if (Array.isArray(children)) {
-      children.forEach((child) => this.#appendChild(child));
-    }
   }
 
   get firstChild(): DataBaseNode | null {
-    return this.#firstChild;
+    return null;
   }
 
   get lastChild(): DataBaseNode | null {
-    return this.#lastChild;
+    return null;
+  }
+
+  pathOf(node: DataBaseNode): number | string {
+    const testBack = this.__backMap.get(node);
+    if (testBack) {
+      return testBack;
+    }
+
+    return this.indexOf(node);
+  }
+
+  childAt(index: number | string): DataBaseNode | null {
+    if (isString(index)) {
+      const testAttrs = this.getAttribute(index);
+      if (typeof testAttrs === "object" && typeof testAttrs.t === "string") {
+        return testAttrs as DataBaseNode;
+      }
+      return null;
+    }
+
+    return null;
+  }
+
+  /**
+   * Used internally.
+   * If you want to modify the state of the document and
+   * notify the editor to update, apply a changeset.
+   */
+  __setAttribute(name: string, value: any) {
+    if (bannedAttributesName.has(name)) {
+      throw new Error(`'${name}' is preserved`);
+    }
+    const oldValue = this.#attributes[name];
+    this.#attributes[name] = value;
+
+    if (typeof value === "object" && typeof value.t === "string") {
+      this.__backMap.set(value, name);
+    }
+
+    this.changed.next({
+      type: "element-set-attrib",
+      key: name,
+      value,
+      oldValue,
+    });
+  }
+
+  getAttribute<T = any>(name: string): T | undefined {
+    return this.#attributes[name];
+  }
+
+  getAttributes(): InternAttributes {
+    return { ...this.#attributes };
+  }
+
+  getTextModel(name: string): BlockyTextModel | undefined {
+    return this.getAttribute<BlockyTextModel>(name);
   }
 
   indexOf(node: DataBaseNode): number {
@@ -195,6 +242,116 @@ export class DataBaseElement implements DataBaseNode {
     return cnt;
   }
 
+  clone(): DataBaseElement {
+    const result = new DataBaseElement(this.t);
+
+    const attribs = this.getAttributes();
+    for (const key in attribs) {
+      const value = attribs[key];
+      if (value) {
+        result.__setAttribute(key, value);
+      }
+    }
+
+    return result;
+  }
+
+  toJSON(): JSONNode {
+    const result: JSONNode = {
+      t: this.t,
+    };
+
+    const meta: any = {};
+    const attributes: any = {};
+    let hasAttributes = false;
+    for (const key in this.#attributes) {
+      if (key === "t" || key === "type" || key === "children") {
+        continue;
+      }
+      const value = this.#attributes[key];
+      if (value === null || isUndefined(value)) {
+        continue;
+      }
+      hasAttributes = true;
+      if (value instanceof BlockyTextModel) {
+        meta[key] = "rich-text";
+        attributes[key] = {
+          t: "rich-text",
+          ops: value.delta.ops,
+        };
+      } else {
+        attributes[key] = value;
+      }
+    }
+
+    if (hasAttributes) {
+      Object.assign(result, attributes);
+    }
+
+    return result;
+  }
+}
+
+/**
+ * DataBaseElement with children
+ */
+export class DataElement extends DataBaseElement implements DataNode {
+  #firstChild: DataBaseNode | null = null;
+  #lastChild: DataBaseNode | null = null;
+
+  override get firstChild(): DataBaseNode | null {
+    return this.#firstChild;
+  }
+
+  override get lastChild(): DataBaseNode | null {
+    return this.#lastChild;
+  }
+
+  constructor(
+    t: string,
+    attributes?: AttributesObject,
+    children?: DataBaseNode[]
+  ) {
+    super(t, attributes);
+    if (Array.isArray(children)) {
+      children.forEach((child) => this.#appendChild(child));
+    }
+  }
+
+  #validateChild(node: DataBaseNode) {
+    let ptr: DataBaseElement | null = this;
+    while (ptr) {
+      if (ptr === node) {
+        throw new Error("Can not add ancestors of a node as child");
+      }
+      ptr = ptr.parent;
+    }
+  }
+
+  appendChild(node: DataBaseNode) {
+    if (this.doc) {
+      throw new Error(
+        "this method could only be called when the node is unmounted"
+      );
+    }
+
+    this.#appendChildImpl(node);
+  }
+
+  override childAt(index: number | string): DataBaseNode | null {
+    if (isString(index)) {
+      return super.childAt(index);
+    }
+    let ptr: DataBaseNode | null = this.#firstChild;
+
+    while (ptr && index >= 1) {
+      index--;
+      ptr = ptr.nextSibling;
+    }
+
+    return ptr;
+  }
+
   queryChildByName(nodeName: string): DataBaseNode | void {
     let ptr = this.#firstChild;
 
@@ -204,6 +361,37 @@ export class DataBaseElement implements DataBaseNode {
       }
       ptr = ptr.nextSibling;
     }
+  }
+
+  #appendChildImpl(node: DataBaseNode) {
+    if (!this.#firstChild) {
+      this.#firstChild = node;
+    }
+
+    if (this.#lastChild) {
+      this.#lastChild.nextSibling = node;
+    }
+    node.prevSibling = this.#lastChild;
+    node.nextSibling = null;
+    node.parent = this;
+    this.#lastChild = node;
+    this.childrenLength++;
+  }
+
+  #appendChild(node: DataBaseNode) {
+    this.#validateChild(node);
+    const insertIndex = this.childrenLength;
+
+    this.#appendChildImpl(node);
+
+    this.doc?.reportBlockyNodeInserted(node);
+
+    this.changed.next({
+      type: "element-insert-child",
+      parent: this,
+      child: node,
+      index: insertIndex,
+    });
   }
 
   protected __symInsertAfter(node: DataBaseNode, after?: DataBaseNode) {
@@ -260,68 +448,6 @@ export class DataBaseElement implements DataBaseNode {
     });
   }
 
-  #validateChild(node: DataBaseNode) {
-    let ptr: DataBaseElement | null = this;
-    while (ptr) {
-      if (ptr === node) {
-        throw new Error("Can not add ancestors of a node as child");
-      }
-      ptr = ptr.parent;
-    }
-  }
-
-  appendChild(node: DataBaseNode) {
-    if (this.doc) {
-      throw new Error(
-        "this method could only be called when the node is unmounted"
-      );
-    }
-
-    this.#appendChildImpl(node);
-  }
-
-  #appendChildImpl(node: DataBaseNode) {
-    if (!this.#firstChild) {
-      this.#firstChild = node;
-    }
-
-    if (this.#lastChild) {
-      this.#lastChild.nextSibling = node;
-    }
-    node.prevSibling = this.#lastChild;
-    node.nextSibling = null;
-    node.parent = this;
-    this.#lastChild = node;
-    this.childrenLength++;
-  }
-
-  #appendChild(node: DataBaseNode) {
-    this.#validateChild(node);
-    const insertIndex = this.childrenLength;
-
-    this.#appendChildImpl(node);
-
-    this.doc?.reportBlockyNodeInserted(node);
-
-    this.changed.next({
-      type: "element-insert-child",
-      parent: this,
-      child: node,
-      index: insertIndex,
-    });
-  }
-
-  childAt(index: number): DataBaseNode | null {
-    let ptr: DataBaseNode | null = this.#firstChild;
-
-    while (ptr && index >= 1) {
-      index--;
-      ptr = ptr.nextSibling;
-    }
-
-    return ptr;
-  }
-
   /**
    * Used internally.
    * If you want to modify the state of the document and
@@ -346,38 +472,6 @@ export class DataBaseElement implements DataBaseNode {
     }
 
     this.__symInsertAfter(node, ptr ?? undefined);
-  }
-
-  /**
-   * Used internally.
-   * If you want to modify the state of the document and
-   * notify the editor to update, apply a changeset.
-   */
-  __setAttribute(name: string, value: string) {
-    if (bannedAttributesName.has(name)) {
-      throw new Error(`'${name}' is preserved`);
-    }
-    const oldValue = this.#attributes[name];
-    this.#attributes[name] = value;
-
-    this.changed.next({
-      type: "element-set-attrib",
-      key: name,
-      value,
-      oldValue,
-    });
-  }
-
-  getAttribute<T = any>(name: string): T | undefined {
-    return this.#attributes[name];
-  }
-
-  getAttributes(): InternAttributes {
-    return { ...this.#attributes };
-  }
-
-  getTextModel(name: string): BlockyTextModel | undefined {
-    return this.getAttribute<BlockyTextModel>(name);
   }
 
   /**
@@ -445,8 +539,8 @@ export class DataBaseElement implements DataBaseNode {
     });
   }
 
-  clone(): DataBaseElement {
-    const result = new DataBaseElement(this.t);
+  override clone(): DataElement {
+    const result = new DataElement(this.t);
 
     const attribs = this.getAttributes();
     for (const key in attribs) {
@@ -466,36 +560,8 @@ export class DataBaseElement implements DataBaseNode {
     return result;
   }
 
-  toJSON(): JSONNode {
-    const result: JSONNode = {
-      t: this.t,
-    };
-
-    const meta: any = {};
-    const attributes: any = {};
-    let hasMeta = false;
-    let hasAttributes = false;
-    for (const key in this.#attributes) {
-      if (key === "t" || key === "type" || key === "children") {
-        continue;
-      }
-      const value = this.#attributes[key];
-      if (value === null || isUndefined(value)) {
-        continue;
-      }
-      hasAttributes = true;
-      if (value instanceof BlockyTextModel) {
-        hasMeta = true;
-        meta[key] = "rich-text";
-        attributes[key] = value.delta.ops;
-      } else {
-        attributes[key] = value;
-      }
-    }
-
-    if (hasAttributes) {
-      result.attributes = attributes;
-    }
+  override toJSON(): JSONNode {
+    const result = super.toJSON();
 
     let childPtr = this.#firstChild;
     if (childPtr) {
@@ -514,10 +580,6 @@ export class DataBaseElement implements DataBaseNode {
       result.children = children;
     }
 
-    if (hasMeta) {
-      result[metaKey] = meta;
-    }
-
     return result;
   }
 }
@@ -529,7 +591,7 @@ export class DataBaseElement implements DataBaseNode {
  * A BlockElement can contain a <children-container>
  * at the end of the block to store the children.
  */
-export class BlockDataElement extends DataBaseElement {
+export class BlockDataElement extends DataElement {
   constructor(
     blockName: string,
     readonly id: string,
@@ -619,10 +681,7 @@ export interface DocumentInitProps {
  *   </body>
  * </document>
  */
-export class BlockyDocument extends DataBaseElement {
-  readonly title?: BlockDataElement;
-  readonly body: DataBaseElement;
-
+export class BlockyDocument extends DataElement {
   readonly blockElementAdded = new Subject<BlockDataElement>();
   readonly blockElementRemoved = new Subject<BlockDataElement>();
 
@@ -641,11 +700,11 @@ export class BlockyDocument extends DataBaseElement {
     }
     const body =
       props?.body ??
-      new DataBaseElement("body", undefined, props?.bodyChildren ?? []);
+      new DataElement("body", undefined, props?.bodyChildren ?? []);
     super("document", undefined, []);
 
-    this.title = title;
-    this.body = body;
+    this.__setAttribute("title", title);
+    this.__setAttribute("body", body);
 
     if (this.title) {
       this.__symInsertAfter(this.title);
@@ -653,6 +712,14 @@ export class BlockyDocument extends DataBaseElement {
     }
     this.__symInsertAfter(this.body);
     this.reportBlockyNodeInserted(this.body);
+  }
+
+  get title(): DataBaseElement | undefined {
+    return this.getAttribute("title") as DataBaseElement | undefined;
+  }
+
+  get body(): DataElement {
+    return this.getAttribute("body") as DataElement;
   }
 
   reportBlockyNodeInserted(blockyNode: DataBaseNode) {
@@ -672,6 +739,20 @@ export class BlockyDocument extends DataBaseElement {
       }
     });
   }
+
+  override toJSON(): JSONNode {
+    const result: JSONNode = {
+      t: "document",
+    };
+
+    if (this.title) {
+      result.title = this.title.toJSON();
+    }
+
+    result.body = this.body.toJSON();
+
+    return result;
+  }
 }
 
 export function traverseNode(
@@ -680,7 +761,7 @@ export function traverseNode(
 ) {
   fun(node);
 
-  if (node instanceof DataBaseElement) {
+  if (node instanceof DataElement) {
     let ptr = node.firstChild;
     while (ptr) {
       traverseNode(ptr, fun);

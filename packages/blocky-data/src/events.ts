@@ -3,8 +3,8 @@ import type { DataBaseNode } from "./tree";
 export interface ElementSetAttributeEvent {
   type: "element-set-attrib";
   key: string;
-  value: string;
-  oldValue?: string;
+  value: any;
+  oldValue?: any;
 }
 
 export interface ElementRemoveChildEvent {

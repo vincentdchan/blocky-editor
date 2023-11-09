@@ -89,28 +89,31 @@ describe("UndoManager", () => {
 
     spy.mockImplementationOnce((changeset: FinalizedChangeset) => {
       expect(changeset.operations.length).toBe(3);
-      expect(changeset.operations[0].location.path).toEqual([0, 0]);
+      expect(changeset.operations[0].location.path).toEqual(["body", 0]);
       expect(changeset.operations[0].op).toBe("insert-nodes");
       const insert1 = (changeset.operations[0] as InsertNodeOperation)
         .children[0];
-      expect(insert1.attributes).toEqual({
-        textContent: [{ insert: "2" }],
+      expect(insert1.textContent).toEqual({
+        t: "rich-text",
+        ops: [{ insert: "2" }],
       });
 
-      expect(changeset.operations[1].location.path).toEqual([0, 0]);
+      expect(changeset.operations[1].location.path).toEqual(["body", 0]);
       expect(changeset.operations[1].op).toBe("insert-nodes");
       const insert2 = (changeset.operations[1] as InsertNodeOperation)
         .children[0];
-      expect(insert2.attributes).toEqual({
-        textContent: [{ insert: "1" }],
+      expect(insert2.textContent).toEqual({
+        t: "rich-text",
+        ops: [{ insert: "1" }],
       });
 
-      expect(changeset.operations[2].location.path).toEqual([0, 0]);
+      expect(changeset.operations[2].location.path).toEqual(["body", 0]);
       expect(changeset.operations[2].op).toBe("insert-nodes");
       const insert3 = (changeset.operations[2] as InsertNodeOperation)
         .children[0];
-      expect(insert3.attributes).toEqual({
-        textContent: [{ insert: "0" }],
+      expect(insert3.textContent).toEqual({
+        t: "rich-text",
+        ops: [{ insert: "0" }],
       });
 
       return true;

@@ -1,5 +1,10 @@
 import { test, expect, describe } from "vitest";
-import { DataBaseElement, BlockyTextModel, BlockyDocument } from "..";
+import {
+  DataBaseElement,
+  BlockyTextModel,
+  BlockyDocument,
+  DataElement,
+} from "./index";
 import Delta from "quill-delta-es";
 
 describe("BlockyDocument", () => {
@@ -11,11 +16,29 @@ describe("BlockyDocument", () => {
     const textModel = document.title?.getTextModel("textContent");
     expect(textModel?.toString()).toEqual("My Title");
   });
+
+  test("path of title", () => {
+    const document = new BlockyDocument({
+      title: "My Title",
+    });
+    const path = document.pathOf(document.title!);
+    expect(path).toBe("title");
+    expect(document.childAt("title")).toBe(document.title);
+  });
+
+  test("path of body", () => {
+    const document = new BlockyDocument({
+      title: "My Title",
+    });
+    const body = document.pathOf(document.body!);
+    expect(body).toBe("body");
+    expect(document.childAt("body")).toBe(document.body);
+  });
 });
 
 describe("tree operation", () => {
   test("tree append", () => {
-    const parent = new DataBaseElement("block");
+    const parent = new DataElement("block");
     const firstChild = new DataBaseElement("first-child");
     const secondChild = new DataBaseElement("second-child");
 
@@ -35,7 +58,7 @@ describe("tree operation", () => {
   });
 
   test("tree insert at first", () => {
-    const parent = new DataBaseElement("block");
+    const parent = new DataElement("block");
     const firstChild = new DataBaseElement("first-child");
     const secondChild = new DataBaseElement("second-child");
 
@@ -72,7 +95,7 @@ describe("tree operation", () => {
   });
 
   test("tree insert at index", () => {
-    const parent = new DataBaseElement("block");
+    const parent = new DataElement("block");
     const firstChild = new DataBaseElement("first-child");
     const secondChild = new DataBaseElement("second-child");
     const thirdChild = new DataBaseElement("third-child");
@@ -87,7 +110,7 @@ describe("tree operation", () => {
   });
 
   test("tree delete children at index", () => {
-    const parent = new DataBaseElement("block");
+    const parent = new DataElement("block");
     const firstChild = new DataBaseElement("first-child");
     const secondChild = new DataBaseElement("second-child");
     const thirdChild = new DataBaseElement("third-child");
@@ -106,7 +129,7 @@ describe("tree operation", () => {
   });
 
   test("child validation", () => {
-    const element = new DataBaseElement("name");
+    const element = new DataElement("name");
     expect(() => {
       element.__insertChildAt(element.childrenLength, element);
     }).toThrowError("Can not add ancestors of a node as child");
@@ -122,7 +145,7 @@ describe("toJSON()", () => {
   test("basic", () => {
     const element = new DataBaseElement("node");
     const json = element.toJSON();
-    expect(json).toEqual({ nodeName: "node" });
+    expect(json).toEqual({ t: "node" });
   });
 
   test("attribute", () => {
@@ -131,10 +154,8 @@ describe("toJSON()", () => {
     const json = element.toJSON();
     console.log("json", json);
     expect(json).toEqual({
-      nodeName: "node",
-      attributes: {
-        name: "123",
-      },
+      t: "node",
+      name: "123",
     });
   });
   test("preserved attributes", () => {
@@ -143,8 +164,8 @@ describe("toJSON()", () => {
       element.__setAttribute("children", "123");
     }).toThrow("'children' is preserved");
     expect(() => {
-      element.__setAttribute("nodeName", "123");
-    }).toThrow("'nodeName' is preserved");
+      element.__setAttribute("t", "123");
+    }).toThrow("'t' is preserved");
   });
 });
 
