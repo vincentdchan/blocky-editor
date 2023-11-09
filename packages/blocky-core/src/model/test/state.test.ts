@@ -51,15 +51,13 @@ test("serialize", () => {
       children: [
         {
           t: "Text",
-          attributes: {
-            textContent: [
+          textContent: {
+            t: "rich-text",
+            ops: [
               {
                 insert: "Hello world",
               },
             ],
-          },
-          "#meta": {
-            textContent: "rich-text",
           },
         },
       ],
@@ -89,27 +87,20 @@ test("serialize", () => {
       t: "document",
       title: {
         t: "Title",
-        attributes: {
-          textContent: [],
-        },
-        "#meta": {
-          textContent: "rich-text",
-        },
+        textContent: { t: "rich-text", ops: [] },
       },
       body: {
         t: "body",
         children: [
           {
             t: "Text",
-            attributes: {
-              textContent: [
+            textContent: {
+              t: "rich-text",
+              ops: [
                 {
                   insert: "Hello world",
                 },
               ],
-            },
-            "#meta": {
-              textContent: "rich-text",
             },
           },
         ],

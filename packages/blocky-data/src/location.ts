@@ -79,20 +79,23 @@ export class NodeLocation {
 
   get hashCode() {
     if (isUndefined(this.#hashCode)) {
-      const intArray = toIntArray(this.path);
-      this.#hashCode = hashIntArrays(intArray);
+      this.#hashCode = hashIntArrays(pathToInts(this.path));
     }
     return this.#hashCode;
   }
 }
 
-// if item is string, convert to ASCII array
-function toIntArray(arr: readonly (string | number)[]): number[] {
-  const result: number[] = [];
-  for (const item of arr) {
+/**
+ * convert string to ASCII code
+ */
+function pathToInts(path: readonly (number | string)[]): number[] {
+  const result = [];
+
+  for (let i = 0, len = path.length; i < len; i++) {
+    const item = path[i];
     if (typeof item === "string") {
-      for (let i = 0, len = item.length; i < len; i++) {
-        result.push(item.charCodeAt(i));
+      for (let j = 0, len2 = item.length; j < len2; j++) {
+        result.push(item.charCodeAt(j));
       }
     } else {
       result.push(item);

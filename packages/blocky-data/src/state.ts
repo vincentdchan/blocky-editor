@@ -3,6 +3,7 @@ import {
   type BlockyDocument,
   type BlockyTextModel,
   DataBaseElement,
+  DataElement,
 } from "./tree";
 import { Subject } from "rxjs";
 import { isNumber, isUndefined } from "lodash-es";
@@ -93,7 +94,10 @@ export class State implements ChangesetStateLogger {
     });
   }
 
-  getLocationOfNode(node: DataBaseNode, acc: number[] = []): NodeLocation {
+  getLocationOfNode(
+    node: DataBaseNode,
+    acc: (number | string)[] = []
+  ): NodeLocation {
     if (this.document === node) {
       return new NodeLocation(acc.reverse());
     }
@@ -102,14 +106,9 @@ export class State implements ChangesetStateLogger {
       throw new Error(`node have no parent: ${node.t}`);
     }
 
-    let cnt = 0;
-    let ptr = node.prevSibling;
-    while (ptr) {
-      cnt++;
-      ptr = ptr.prevSibling;
-    }
+    const index = parent.pathOf(node);
 
-    acc.push(cnt);
+    acc.push(index);
     return this.getLocationOfNode(parent, acc);
   }
 
@@ -199,14 +198,18 @@ export class State implements ChangesetStateLogger {
     const { location, children } = insertOperation;
     const parentLoc = location.slice(0, location.length - 1);
     let index = location.last;
-    const parent = this.findNodeByLocation(parentLoc) as DataBaseElement;
-    if (!isNumber(index)) {
-      throw new Error(`index is not a number: ${index}`);
+    if (isNumber(index)) {
+      const parent = this.findNodeByLocation(parentLoc) as DataBaseElement;
+      // TODO: optimize insert
+      for (const child of children) {
+        if (parent instanceof DataElement) {
+          parent.__insertChildAt(index++, blockyNodeFromJsonNode(child));
+        }
+      }
+      return;
     }
-    // TODO: optimize insert
-    for (const child of children) {
-      parent.__insertChildAt(index++, blockyNodeFromJsonNode(child));
-    }
+
+    throw new Error(`can not insert node at: ${location.toString()}`);
   }
 
   #applyUpdateOperation(updateOperation: UpdateNodeOperation) {
@@ -222,11 +225,15 @@ export class State implements ChangesetStateLogger {
     const { location, children } = removeOperation;
     const parentLoc = location.slice(0, location.length - 1);
     const index = location.last;
-    const parent = this.findNodeByLocation(parentLoc) as DataBaseElement;
-    if (!isNumber(index)) {
-      throw new Error(`index is not a number: ${index}`);
+    if (isNumber(index)) {
+      const parent = this.findNodeByLocation(parentLoc) as DataBaseElement;
+      if (parent instanceof DataElement) {
+        parent.__deleteChildrenAt(index, children.length);
+      }
+      return;
     }
-    parent.__deleteChildrenAt(index, children.length);
+
+    throw new Error(`can not remove node at: ${location.toString()}`);
   }
 
   #applyTextEditOperation(textEditOperation: TextEditOperation) {

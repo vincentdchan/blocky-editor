@@ -6,6 +6,7 @@ import {
   type DataBaseNode,
   type BlockDataElement,
   JSONNode,
+  DataNode,
 } from "./tree";
 import {
   type Operation,
@@ -97,7 +98,7 @@ export class Changeset {
   /**
    * Append a node at the end of another node.
    */
-  appendChild(node: DataBaseElement, child: DataBaseNode): Changeset {
+  appendChild(node: DataNode, child: DataBaseNode): Changeset {
     const parentLoc = this.state.getLocationOfNode(node);
     const index = node.childrenLength;
     this.push({

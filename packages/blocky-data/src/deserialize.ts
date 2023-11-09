@@ -8,7 +8,7 @@ import {
   BlockyDocument,
   AttributesObject,
   BlockyTextModel,
-  metaKey,
+  DataElement,
 } from "./tree";
 import Delta from "quill-delta-es";
 
@@ -27,19 +27,22 @@ export function blockyNodeFromJsonNode(jsonNode: JSONNode): DataBaseNode {
 export function documentFromJsonNode(jsonNode: JSONNode): BlockyDocument {
   const titleNode = jsonNode.title;
   const bodyNode = jsonNode.body;
-  if (titleNode?.t !== "title") {
+  if (titleNode && titleNode.t !== "title") {
     throw new Error("invalid document title");
   }
   if (bodyNode?.t !== "body") {
-    throw new Error("invalid document body");
+    throw new Error("invalid document body:\n" + JSON.stringify(bodyNode));
   }
-  const title = blockyElementFromJsonNode(titleNode) as BlockDataElement;
+  let title: BlockDataElement | undefined;
+  if (titleNode) {
+    title = blockyElementFromJsonNode(titleNode) as BlockDataElement;
+  }
   const body = blockyElementFromJsonNode(bodyNode);
   return new BlockyDocument({ title, body });
 }
 
 export function blockElementFromJsonNode(jsonNode: JSONNode): BlockDataElement {
-  const { t: nodeName, id, children, attributes: jsonAttribs } = jsonNode;
+  const { t: nodeName, id, children, ...jsonAttribs } = jsonNode;
   if (isUndefined(id)) {
     throw new TypeError("id is missing for jsonNode");
   }
@@ -51,14 +54,14 @@ export function blockElementFromJsonNode(jsonNode: JSONNode): BlockDataElement {
 }
 
 export function blockyElementFromJsonNode(jsonNode: JSONNode): DataBaseElement {
-  const { t: nodeName, children, attributes: jsonAttribs } = jsonNode;
+  const { t: nodeName, children, ...jsonAttribs } = jsonNode;
   const attributes = getAttributesByMeta(jsonAttribs, jsonNode);
   const childrenNode: DataBaseNode[] =
     children?.map((child) => {
       return blockyNodeFromJsonNode(child);
     }) ?? [];
 
-  return new DataBaseElement(nodeName, attributes, childrenNode);
+  return new DataElement(nodeName, attributes, childrenNode);
 }
 
 function getAttributesByMeta(
@@ -69,14 +72,13 @@ function getAttributesByMeta(
     return undefined;
   }
   const attributes = Object.create(null);
-  const meta = jsonNode[metaKey];
   for (const key in attribs) {
     const value = attribs[key];
     if (isUndefined(value) || value === null) {
       continue;
     }
-    if (meta && meta[key] === "rich-text") {
-      attributes[key] = new BlockyTextModel(new Delta(value));
+    if (typeof value === "object" && value.t === "rich-text") {
+      attributes[key] = new BlockyTextModel(new Delta(value.ops));
     } else {
       attributes[key] = value;
     }
