@@ -1,5 +1,5 @@
 import { test, expect, describe } from "vitest";
-import { DataBaseElement, BlockyTextModel, BlockyDocument } from "..";
+import { DataBaseElement, BlockyTextModel, BlockyDocument } from "./index";
 import Delta from "quill-delta-es";
 
 describe("BlockyDocument", () => {

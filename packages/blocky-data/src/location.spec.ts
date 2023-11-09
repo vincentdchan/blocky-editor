@@ -1,5 +1,5 @@
 import { expect, test, describe } from "vitest";
-import { NodeLocation } from "..";
+import { NodeLocation } from "./index";
 
 describe("NodeLocation", () => {
   test("hashCode", () => {

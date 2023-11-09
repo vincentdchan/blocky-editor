@@ -7,7 +7,7 @@ import {
   DataBaseElement,
   BlockyTextModel,
   blockyNodeFromJsonNode,
-} from "..";
+} from "./index";
 
 test("deserialize BlockElement", () => {
   const blockElement = new BlockDataElement("Text", "Blk-text-1");
