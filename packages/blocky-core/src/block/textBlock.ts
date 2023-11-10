@@ -221,7 +221,7 @@ export class TextBlock extends Block {
     return 18;
   }
 
-  override getBannerOffset(): Position {
+  override getSpannerOffset(): Position {
     const textType = this.getTextType();
     const precedence = textTypePrecedence(textType);
 

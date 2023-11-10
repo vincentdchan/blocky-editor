@@ -5,21 +5,21 @@ import Dropdown from "@pkg/components/dropdown";
 import { Menu, MenuItem, Divider } from "@pkg/components/menu";
 import { ImageBlockName } from "@pkg/plugins/imageBlock";
 import { Subject, takeUntil } from "rxjs";
-import "./bannerMenu.scss";
+import "./spannerMenu.scss";
 
-export interface BannerProps {
+export interface SpannerProps {
   editorController: EditorController;
   focusedNode?: BlockDataElement;
 }
 
-interface BannerState {
+interface SpannerState {
   showDropdown: boolean;
   menuX: number;
   menuY: number;
   showDelete: boolean;
 }
 
-const BannerIcon = `
+const SpannerIcon = `
 <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M16 17L48 17" stroke="#CAC4C4" stroke-width="6" stroke-linecap="round"/>
 <path d="M16 32L48 32" stroke="#CAC4C4" stroke-width="6" stroke-linecap="round"/>
@@ -27,11 +27,11 @@ const BannerIcon = `
 </svg>
 `;
 
-class BannerMenu extends Component<BannerProps, BannerState> {
+class SpannerMenu extends Component<SpannerProps, SpannerState> {
   private bannerRef: RefObject<HTMLDivElement> = createRef();
   private dispose$ = new Subject<void>();
 
-  constructor(props: BannerProps) {
+  constructor(props: SpannerProps) {
     super(props);
     this.state = {
       showDropdown: false,
@@ -53,7 +53,7 @@ class BannerMenu extends Component<BannerProps, BannerState> {
 
     this.handleBlocksChanged();
 
-    this.bannerRef.current!.innerHTML = BannerIcon;
+    this.bannerRef.current!.innerHTML = SpannerIcon;
   }
 
   override componentWillUnmount() {
@@ -175,4 +175,4 @@ class BannerMenu extends Component<BannerProps, BannerState> {
   }
 }
 
-export default BannerMenu;
+export default SpannerMenu;

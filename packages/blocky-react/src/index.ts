@@ -8,8 +8,8 @@ export * from "./reactBlock";
 export * from "./reactFollowerWidget";
 export * from "./blockActiveDetector";
 export {
-  makeReactBanner,
-  type RenderProps as BannerRenderProps,
-} from "./banner";
+  makeReactSpanner,
+  type RenderProps as SpannerRenderProps,
+} from "./spanner";
 export { makeReactToolbar } from "./toolbar";
 export { DefaultBlockOutline, type DefaultBlockOutlineProps };

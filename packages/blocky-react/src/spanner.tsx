@@ -2,9 +2,9 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import type { BlockDataElement } from "blocky-data";
 import type {
-  BannerFactory,
+  SpannerFactory,
   EditorController,
-  BannerInstance,
+  SpannerInstance,
 } from "blocky-core";
 import { once } from "lodash-es";
 
@@ -15,11 +15,11 @@ export interface RenderProps {
 
 export type Renderer = (props: RenderProps) => React.ReactNode;
 
-export function makeReactBanner(renderer: Renderer): BannerFactory {
+export function makeReactSpanner(renderer: Renderer): SpannerFactory {
   return (
     container: HTMLDivElement,
     editorController: EditorController
-  ): BannerInstance => {
+  ): SpannerInstance => {
     let focusedNode: BlockDataElement | undefined;
     const root = createRoot(container);
     const renderFn = () => {

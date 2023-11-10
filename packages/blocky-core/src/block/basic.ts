@@ -173,7 +173,7 @@ export class Block implements IDisposable {
    * Return the offset of the coordinate of the banner
    * relative to the top-right conner of the block.
    */
-  getBannerOffset(): Position {
+  getSpannerOffset(): Position {
     return { x: 0, y: 0 };
   }
 

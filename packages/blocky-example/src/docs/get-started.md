@@ -34,7 +34,7 @@ You can define how the editor render the toolbar.
 
 ```tsx
 import { EditorController } from "blocky-core";
-import { makeReactBanner, makeReactToolbar } from "blocky-react";
+import { makeReactSpanner, makeReactToolbar } from "blocky-react";
 import BannerMenu from "./bannerMenu";
 import ToolbarMenu from "./toolbarMenu";
 import makeStyledTextPlugin from "blocky-core/dist/plugins/styledTextPlugin";
@@ -60,7 +60,7 @@ function makeController(): EditorController {
      * Tell the editor how to render the banner.
      * We use a banner written in React here.
      */
-    bannerFactory: makeReactBanner((editorController: EditorController) => (
+    bannerFactory: makeReactSpanner((editorController: EditorController) => (
       <BannerMenu editorController={editorController} />
     )),
     /**

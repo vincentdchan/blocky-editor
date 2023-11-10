@@ -3,17 +3,17 @@ import type { EditorController } from "@pkg/view/controller";
 import type { BlockDataElement } from "blocky-data";
 import { UIDelegate } from "./uiDelegate";
 
-export interface BannerInstance extends IDisposable {
+export interface SpannerInstance extends IDisposable {
   onFocusedNodeChanged?(focusedNode: BlockDataElement | undefined): void;
 }
 
-export type BannerFactory = (
+export type SpannerFactory = (
   dom: HTMLDivElement,
   editorController: EditorController
-) => BannerInstance | undefined;
+) => SpannerInstance | undefined;
 
-export class BannerDelegate extends UIDelegate {
-  #instance: BannerInstance | undefined;
+export class SpannerDelegate extends UIDelegate {
+  #instance: SpannerInstance | undefined;
   #focusedNode: BlockDataElement | undefined;
 
   get focusedNode(): BlockDataElement | undefined {
@@ -31,28 +31,18 @@ export class BannerDelegate extends UIDelegate {
 
   constructor(
     private editorController: EditorController,
-    private factory?: BannerFactory
+    private factory: SpannerFactory
   ) {
-    super("blocky-editor-banner-delegate blocky-cm-noselect");
+    super("blocky-editor-spanner-delegate blocky-cm-noselect");
   }
 
   override mount(parent: HTMLElement): void {
     super.mount(parent);
 
-    if (this.factory) {
-      this.#instance = this.factory(this.container, this.editorController);
-      if (this.#instance) {
-        this.disposables.push(this.#instance);
-      }
-    } else {
-      this.renderFallback();
+    this.#instance = this.factory(this.container, this.editorController);
+    if (this.#instance) {
+      this.disposables.push(this.#instance);
     }
-  }
-
-  renderFallback() {
-    this.container.style.width = "16px";
-    this.container.style.height = "16px";
-    this.container.style.backgroundColor = "grey";
   }
 
   setPosition(x: number, y: number) {

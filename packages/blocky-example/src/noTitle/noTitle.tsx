@@ -2,9 +2,9 @@ import { Component, ReactNode, createRef } from "react";
 import Sidebar from "@pkg/components/sidebar";
 import {
   BlockyEditor,
-  makeReactBanner,
+  makeReactSpanner,
   makeReactToolbar,
-  type BannerRenderProps,
+  type SpannerRenderProps,
 } from "blocky-react";
 import { EditorController, IPlugin } from "blocky-core";
 import makeStyledTextPlugin from "blocky-core/dist/plugins/styledTextPlugin";
@@ -14,7 +14,7 @@ import makeHeadingsPlugin from "blocky-core/dist/plugins/headingsPlugin";
 import { makeImageBlockPlugin } from "@pkg/plugins/imageBlock";
 import { makeCommandPanelPlugin } from "@pkg/plugins/commandPanel";
 import { makeAtPanelPlugin } from "@pkg/plugins/atPanel";
-import BannerMenu from "@pkg/bannerMenu";
+import SpannerMenu from "@pkg/spannerMenu";
 import ToolbarMenu from "@pkg/toolbarMenu";
 import { timer, Subject, takeUntil } from "rxjs";
 
@@ -39,18 +39,6 @@ function makeController(
      * Define the plugins to implement customize features.
      */
     plugins: makeEditorPlugins(),
-    /**
-     * Tell the editor how to render the banner.
-     * We use a banner written in Preact here.
-     */
-    bannerFactory: makeReactBanner(
-      ({ editorController, focusedNode }: BannerRenderProps) => (
-        <BannerMenu
-          editorController={editorController}
-          focusedNode={focusedNode}
-        />
-      )
-    ),
     /**
      * Tell the editor how to render the banner.
      * We use a toolbar written in Preact here.

@@ -266,7 +266,7 @@ export class DocRenderer {
     editor.state.setDom(blockNode.id, blockContainer);
     blockContainer.setAttribute("data-type", blockDef.name);
     blockContainer.addEventListener("mouseenter", () => {
-      editor.placeBannerAt(blockContainer, blockNode);
+      editor.placeSpannerAt(blockContainer, blockNode);
     });
 
     const block = editor.state.blocks.get(blockNode.id);
