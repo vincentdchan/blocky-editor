@@ -44,7 +44,7 @@ import { SpanRegistry } from "@pkg/registry/spanRegistry";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { textToDeltaWithURL } from "@pkg/helper/urlHelper";
-import { BannerDelegate, type BannerFactory } from "./bannerDelegate";
+import { SpannerDelegate, type SpannerFactory } from "./spannerDelegate";
 import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlock } from "@pkg/block/textBlock";
 import { UndoManager } from "@pkg/model/undoManager";
@@ -80,7 +80,7 @@ export interface IEditorOptions {
   registry: EditorRegistry;
   container: HTMLDivElement;
   idGenerator?: IdGenerator;
-  bannerFactory?: BannerFactory;
+  spannerFactory?: SpannerFactory;
   toolbarFactory?: ToolbarFactory;
   padding?: Partial<Padding>;
   collaborativeCursorFactory?: CollaborativeCursorFactory;
@@ -147,7 +147,7 @@ export class Editor {
 
   readonly onEveryBlock: Subject<Block> = new Subject();
 
-  readonly bannerDelegate: BannerDelegate;
+  readonly spannerDelegate?: SpannerDelegate;
   readonly toolbarDelegate: ToolbarDelegate;
   idGenerator: IdGenerator;
 
@@ -180,7 +180,7 @@ export class Editor {
         block: controller.blockRegistry,
       },
       state: controller.state,
-      bannerFactory: controller.options?.bannerFactory,
+      spannerFactory: controller.options?.spannerFactory,
       toolbarFactory: controller.options?.toolbarFactory,
       padding: controller.options?.padding,
       collaborativeCursorFactory:
@@ -196,7 +196,7 @@ export class Editor {
       state,
       registry,
       idGenerator,
-      bannerFactory,
+      spannerFactory: bannerFactory,
       toolbarFactory,
       padding,
       collaborativeCursorFactory,
@@ -216,9 +216,11 @@ export class Editor {
     );
     this.collaborativeCursorManager.mount(this.#container);
 
-    this.bannerDelegate = new BannerDelegate(controller, bannerFactory);
-    this.bannerDelegate.mount(this.#container);
-    this.disposables.push(this.bannerDelegate);
+    if (bannerFactory) {
+      this.spannerDelegate = new SpannerDelegate(controller, bannerFactory);
+      this.spannerDelegate.mount(this.#container);
+      this.disposables.push(this.spannerDelegate);
+    }
 
     this.toolbarDelegate = new ToolbarDelegate({
       controller,
@@ -233,7 +235,7 @@ export class Editor {
       .pipe(takeUntil(this.dispose$))
       .subscribe(this.handleCursorStateChanged);
 
-    this.disposables.push($on(container, "mouseleave", this.#hideBanner));
+    this.disposables.push($on(container, "mouseleave", this.#hideSpanner));
 
     this.registry.plugin.emitInitPlugins(this);
 
@@ -783,7 +785,10 @@ export class Editor {
     return this.#searchContext;
   }
 
-  placeBannerAt(blockContainer: HTMLElement, node: BlockDataElement) {
+  placeSpannerAt(blockContainer: HTMLElement, node: BlockDataElement) {
+    if (!this.spannerDelegate) {
+      return;
+    }
     const block = this.state.blocks.get(node.id);
     if (!block) {
       return;
@@ -791,15 +796,15 @@ export class Editor {
 
     let { x, y } = this.#getRelativeOffsetByDom(blockContainer);
 
-    const offset = block.getBannerOffset();
+    const offset = block.getSpannerOffset();
     x += offset.x;
     y += offset.y;
 
-    x -= this.bannerDelegate.width;
+    x -= this.spannerDelegate.width;
 
-    this.bannerDelegate.focusedNode = node;
-    this.bannerDelegate.show();
-    this.bannerDelegate.setPosition(x, y);
+    this.spannerDelegate.focusedNode = node;
+    this.spannerDelegate.show();
+    this.spannerDelegate.setPosition(x, y);
   }
 
   /**
@@ -832,8 +837,8 @@ export class Editor {
     };
   }
 
-  #hideBanner = () => {
-    this.bannerDelegate.hide();
+  #hideSpanner = () => {
+    this.spannerDelegate?.hide();
   };
 
   #handleCompositionStart = () => {

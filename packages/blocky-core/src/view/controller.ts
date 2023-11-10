@@ -21,7 +21,7 @@ import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
 import { EmbedRegistry } from "@pkg/registry/embedRegistry";
 import { HTMLConverter } from "@pkg/helper/htmlConverter";
-import { type BannerFactory } from "@pkg/view/bannerDelegate";
+import { type SpannerFactory } from "@pkg/view/spannerDelegate";
 import { type ToolbarFactory } from "@pkg/view/toolbarDelegate";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { BlockPasteEvent, TryParsePastedDOMEvent } from "@pkg/block/basic";
@@ -70,7 +70,7 @@ export interface IEditorControllerOptions {
   blockRegistry?: BlockRegistry;
   embedRegistry?: EmbedRegistry;
   idGenerator?: IdGenerator;
-  bannerFactory?: BannerFactory;
+  spannerFactory?: SpannerFactory;
   toolbarFactory?: ToolbarFactory;
 
   /**

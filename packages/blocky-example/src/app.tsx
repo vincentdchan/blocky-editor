@@ -2,9 +2,9 @@ import { Component, createRef, RefObject, useEffect, useState } from "react";
 import { EditorController, darkTheme, type IPlugin } from "blocky-core";
 import {
   BlockyEditor,
-  makeReactBanner,
+  makeReactSpanner,
   makeReactToolbar,
-  type BannerRenderProps,
+  type SpannerRenderProps,
 } from "blocky-react";
 import makeStyledTextPlugin from "blocky-core/dist/plugins/styledTextPlugin";
 import makeCodeTextPlugin from "blocky-core/dist/plugins/codeTextPlugin";
@@ -14,7 +14,7 @@ import SearchBox from "@pkg/components/searchBox";
 import { makeImageBlockPlugin } from "./plugins/imageBlock";
 import { makeCommandPanelPlugin } from "./plugins/commandPanel";
 import { makeAtPanelPlugin } from "./plugins/atPanel";
-import BannerMenu from "./bannerMenu";
+import SpannerMenu from "./spannerMenu";
 import ToolbarMenu from "./toolbarMenu";
 import TianShuiWeiImage from "./tianshuiwei.jpg";
 import { ReadMeContent } from "./readme";
@@ -70,9 +70,9 @@ function makeController(
      * Tell the editor how to render the banner.
      * We use a banner written in Preact here.
      */
-    bannerFactory: makeReactBanner(
-      ({ editorController, focusedNode }: BannerRenderProps) => (
-        <BannerMenu
+    spannerFactory: makeReactSpanner(
+      ({ editorController, focusedNode }: SpannerRenderProps) => (
+        <SpannerMenu
           editorController={editorController}
           focusedNode={focusedNode}
         />
