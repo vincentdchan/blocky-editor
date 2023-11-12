@@ -575,6 +575,15 @@ export class TextBlock extends Block {
         return;
       }
 
+      case TextType.Numbered: {
+        this.#leftPadRenderer = this.#createBulletRenderer();
+        blockContainer.insertBefore(
+          this.#leftPadRenderer.container,
+          blockContainer.firstChild
+        );
+        return;
+      }
+
       case TextType.Heading1:
       case TextType.Heading2:
       case TextType.Heading3: {
