@@ -7,13 +7,14 @@ import {
   TextType,
   Delta,
 } from "blocky-data";
-import { filter } from "rxjs";
+import { filter, takeUntil } from "rxjs";
 import {
   getTextTypeForTextBlock,
   TextBlock,
   type TextInputEvent,
   type IPlugin,
   type Editor,
+  type PluginContext,
 } from "@pkg/index";
 
 function makeBulletListPlugin(): IPlugin {
@@ -128,11 +129,15 @@ function makeBulletListPlugin(): IPlugin {
   };
   return {
     name: "bullet-list",
-    onInitialized(editor: Editor) {
+    onInitialized(context: PluginContext) {
+      const { editor, dispose$ } = context;
       editor.textInput
-        .pipe(filter((evt) => evt.blockElement.t === TextBlock.Name))
+        .pipe(
+          takeUntil(dispose$),
+          filter((evt) => evt.blockElement.t === TextBlock.Name)
+        )
         .subscribe(handleTextInputEvent(editor));
-      editor.keyDown.subscribe(handleKeydown(editor));
+      editor.keyDown.pipe(takeUntil(dispose$)).subscribe(handleKeydown(editor));
     },
   };
 }

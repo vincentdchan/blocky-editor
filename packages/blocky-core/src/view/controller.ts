@@ -30,7 +30,20 @@ import { type CollaborativeCursorFactory } from "./collaborativeCursors";
 import { Editor } from "./editor";
 import { type FollowerWidget } from "./followerWidget";
 import type { ThemeData } from "@pkg/model/theme";
+import makeStyledTextPlugin from "@pkg/plugins/styledTextPlugin";
+import makeCodeTextPlugin from "@pkg/plugins/codeTextPlugin";
+import makeBulletListPlugin from "@pkg/plugins/bulletListPlugin";
+import makeHeadingsPlugin from "@pkg/plugins/headingsPlugin";
 import { isUndefined } from "lodash-es";
+
+export function makeDefaultEditorPlugins(): IPlugin[] {
+  return [
+    makeStyledTextPlugin(),
+    makeCodeTextPlugin(),
+    makeBulletListPlugin(),
+    makeHeadingsPlugin(),
+  ];
+}
 
 const defaultEmptyContent = "Empty content";
 
@@ -164,7 +177,11 @@ export class EditorController {
     public options?: IEditorControllerOptions
   ) {
     this.pluginRegistry =
-      options?.pluginRegistry ?? new PluginRegistry(options?.plugins);
+      options?.pluginRegistry ??
+      new PluginRegistry([
+        ...makeDefaultEditorPlugins(),
+        ...(options?.plugins ?? []),
+      ]);
     this.spanRegistry = options?.spanRegistry ?? new SpanRegistry();
     this.embedRegistry = options?.embedRegistry ?? new EmbedRegistry();
     this.blockRegistry = options?.blockRegistry ?? new BlockRegistry();
@@ -177,11 +194,11 @@ export class EditorController {
       divHandler: this.#divHandler,
     });
 
-    options?.plugins?.forEach((plugin) => {
+    for (const plugin of this.pluginRegistry.plugins.values()) {
       plugin.blocks?.forEach((block) => this.blockRegistry.register(block));
       plugin.spans?.forEach((span) => this.spanRegistry.register(span));
       plugin.embeds?.forEach((embed) => this.embedRegistry.register(embed));
-    });
+    }
     this.blockRegistry.seal();
     this.spanRegistry.seal();
 
