@@ -1,7 +1,8 @@
-import { type Editor, type IPlugin, TextBlock } from "@pkg/index";
+import { type PluginContext, type IPlugin, TextBlock } from "@pkg/index";
 import { CursorState, Changeset, Delta } from "blocky-data";
 import { isHotkey } from "is-hotkey";
 import { isUndefined } from "lodash-es";
+import { takeUntil } from "rxjs";
 
 class CodeTextDetector {
   #cursor: CursorState;
@@ -45,8 +46,9 @@ function makeCodeTextPlugin(): IPlugin {
         className: "blocky-code-text",
       },
     ],
-    onInitialized(editor: Editor) {
-      editor.keyDown.subscribe((e: KeyboardEvent) => {
+    onInitialized(context: PluginContext) {
+      const { editor, dispose$ } = context;
+      editor.keyDown.pipe(takeUntil(dispose$)).subscribe((e: KeyboardEvent) => {
         if (isHotkey("mod+m", e)) {
           e.preventDefault();
           editor.controller.formatTextOnSelectedText({

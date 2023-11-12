@@ -6,10 +6,6 @@ import {
   makeReactToolbar,
   type SpannerRenderProps,
 } from "blocky-react";
-import makeStyledTextPlugin from "blocky-core/dist/plugins/styledTextPlugin";
-import makeCodeTextPlugin from "blocky-core/dist/plugins/codeTextPlugin";
-import makeBulletListPlugin from "blocky-core/dist/plugins/bulletListPlugin";
-import makeHeadingsPlugin from "blocky-core/dist/plugins/headingsPlugin";
 import SearchBox from "@pkg/components/searchBox";
 import { makeImageBlockPlugin } from "./plugins/imageBlock";
 import { makeCommandPanelPlugin } from "./plugins/commandPanel";
@@ -21,17 +17,12 @@ import { ReadMeContent } from "./readme";
 import { Theme } from "./themeSwitch";
 import { isHotkey } from "is-hotkey";
 import { Subject, takeUntil } from "rxjs";
-import "blocky-core/css/styled-text-plugin.css";
 import "blocky-core/css/blocky-core.css";
 import "./app.scss";
 import Sidebar from "./components/sidebar";
 
 function makeEditorPlugins(): IPlugin[] {
   return [
-    makeStyledTextPlugin(),
-    makeCodeTextPlugin(),
-    makeBulletListPlugin(),
-    makeHeadingsPlugin(),
     makeImageBlockPlugin(),
     makeCommandPanelPlugin(),
     makeAtPanelPlugin(),

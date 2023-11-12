@@ -3,6 +3,7 @@ import type { IBlockDefinition } from "@pkg/block/basic";
 import type { Editor } from "@pkg/view/editor";
 import type { SpanStyle } from "./spanRegistry";
 import type { EmbedDefinition } from "./embedRegistry";
+import { Subject } from "rxjs";
 
 export type AfterFn = () => void;
 
@@ -36,12 +37,24 @@ export interface IPlugin {
   /**
    * Will be triggered when the editor is initialized.
    */
-  onInitialized?(editor: Editor): void;
+  onInitialized?(context: PluginContext): void;
+
+  onDispose?(context: PluginContext): void;
+}
+
+export class PluginContext {
+  dispose$ = new Subject<void>();
+  constructor(public editor: Editor) {}
+
+  dispose() {
+    this.dispose$.next();
+  }
 }
 
 export class PluginRegistry {
   #hook: HookMethods = Object.create(null);
-  #markedPlugin: Set<string> = new Set();
+  plugins: Map<string, IPlugin> = new Map();
+  private contexts: Map<string, PluginContext> = new Map();
 
   constructor(plugins?: IPlugin[]) {
     for (const name of allowHookName) {
@@ -55,10 +68,10 @@ export class PluginRegistry {
 
   register(plugin: IPlugin) {
     const pluginName = plugin.name;
-    if (this.#markedPlugin.has(pluginName)) {
+    if (this.plugins.has(pluginName)) {
       throw new Error(`duplicated plugin: ${pluginName}`);
     }
-    this.#markedPlugin.add(pluginName);
+    this.plugins.set(pluginName, plugin);
 
     for (const name of allowHookName) {
       // @ts-ignore
@@ -68,18 +81,21 @@ export class PluginRegistry {
     }
   }
 
-  private genEmit = (hookName: string) =>
-    ((...args: any[]) => {
-      const plugins = this.#hook[hookName]!;
-      for (const plugin of plugins) {
-        try {
-          // @ts-ignore
-          plugin[hookName]!(...args);
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    }) as any;
+  unload(name: string) {
+    this.plugins.delete(name);
 
-  emitInitPlugins: (editor: Editor) => void = this.genEmit(hookOnInitialized);
+    const context = this.contexts.get(name);
+    if (context) {
+      context.dispose();
+      this.contexts.delete(name);
+    }
+  }
+
+  initAllPlugins(editor: Editor) {
+    for (const plugin of this.plugins.values()) {
+      const context = new PluginContext(editor);
+      this.contexts.set(plugin.name, context);
+      plugin.onInitialized?.(context);
+    }
+  }
 }

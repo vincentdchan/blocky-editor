@@ -2,10 +2,6 @@ import { Component, ReactNode, createRef } from "react";
 import Sidebar from "@pkg/components/sidebar";
 import { BlockyEditor, makeReactToolbar } from "blocky-react";
 import { EditorController, IPlugin } from "blocky-core";
-import makeStyledTextPlugin from "blocky-core/dist/plugins/styledTextPlugin";
-import makeCodeTextPlugin from "blocky-core/dist/plugins/codeTextPlugin";
-import makeBulletListPlugin from "blocky-core/dist/plugins/bulletListPlugin";
-import makeHeadingsPlugin from "blocky-core/dist/plugins/headingsPlugin";
 import { makeImageBlockPlugin } from "@pkg/plugins/imageBlock";
 import { makeCommandPanelPlugin } from "@pkg/plugins/commandPanel";
 import { makeAtPanelPlugin } from "@pkg/plugins/atPanel";
@@ -14,10 +10,6 @@ import { timer, Subject, takeUntil } from "rxjs";
 
 function makeEditorPlugins(): IPlugin[] {
   return [
-    makeStyledTextPlugin(),
-    makeCodeTextPlugin(),
-    makeBulletListPlugin(),
-    makeHeadingsPlugin(),
     makeImageBlockPlugin(),
     makeCommandPanelPlugin(),
     makeAtPanelPlugin(),

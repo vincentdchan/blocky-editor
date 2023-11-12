@@ -6,9 +6,11 @@ import {
   TextBlock,
   Embed,
   type EmbedInitOptions,
+  type PluginContext,
 } from "blocky-core";
 import { makePreactFollowerWidget } from "blocky-react";
 import { Delta } from "blocky-data";
+import { takeUntil } from "rxjs";
 import "./atPanel.scss";
 
 interface AtPanelProps {
@@ -71,8 +73,9 @@ export function makeAtPanelPlugin(): IPlugin {
   return {
     name: "at-panel",
     embeds: [MyEmbed],
-    onInitialized(editor) {
-      editor.keyDown.subscribe((e: KeyboardEvent) => {
+    onInitialized(context: PluginContext) {
+      const { editor, dispose$ } = context;
+      editor.keyDown.pipe(takeUntil(dispose$)).subscribe((e: KeyboardEvent) => {
         if (e.key !== "@") {
           return;
         }

@@ -1,5 +1,6 @@
-import type { Editor, IPlugin } from "@pkg/index";
+import type { IPlugin, PluginContext } from "@pkg/index";
 import { isHotkey } from "is-hotkey";
+import { takeUntil } from "rxjs";
 
 /**
  * This plugin is used to make the editor support bolded text.
@@ -29,8 +30,9 @@ function makeStyledTextPlugin(): IPlugin {
         },
       },
     ],
-    onInitialized(editor: Editor) {
-      editor.keyDown.subscribe((e: KeyboardEvent) => {
+    onInitialized(context: PluginContext) {
+      const { editor, dispose$ } = context;
+      editor.keyDown.pipe(takeUntil(dispose$)).subscribe((e: KeyboardEvent) => {
         if (isHotkey("mod+b", e)) {
           e.preventDefault();
           editor.controller.formatTextOnSelectedText({

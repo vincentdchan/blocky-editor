@@ -37,10 +37,6 @@ import { EditorController } from "blocky-core";
 import { makeReactSpanner, makeReactToolbar } from "blocky-react";
 import BannerMenu from "./bannerMenu";
 import ToolbarMenu from "./toolbarMenu";
-import makeStyledTextPlugin from "blocky-core/dist/plugins/styledTextPlugin";
-import makeBulletListPlugin from "blocky-core/dist/plugins/bulletListPlugin";
-import makeHeadingsPlugin from "blocky-core/dist/plugins/headingsPlugin";
-import "blocky-core/css/styled-text-plugin.css";
 import "blocky-core/css/blocky-core.css";
 
 /**
@@ -51,16 +47,12 @@ function makeController(): EditorController {
     /**
      * Define the plugins to implement customize features.
      */
-    plugins: [
-      makeBoldedTextPlugin(),
-      makeBulletListPlugin(),
-      makeImageBlockPlugin(),
-    ],
+    plugins: [],
     /**
      * Tell the editor how to render the banner.
      * We use a banner written in React here.
      */
-    bannerFactory: makeReactSpanner((editorController: EditorController) => (
+    bannerFactory: makeReactBanner((editorController: EditorController) => (
       <BannerMenu editorController={editorController} />
     )),
     /**

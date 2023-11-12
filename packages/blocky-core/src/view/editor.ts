@@ -237,7 +237,7 @@ export class Editor {
 
     this.disposables.push($on(container, "mouseleave", this.#hideSpanner));
 
-    this.registry.plugin.emitInitPlugins(this);
+    this.registry.plugin.initAllPlugins(this);
 
     this.#renderer = new DocRenderer({
       clsPrefix: "blocky",

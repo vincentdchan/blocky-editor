@@ -7,7 +7,13 @@ import {
   PanelValue,
   SelectablePanel,
 } from "@pkg/components/panel";
-import { type EditorController, type IPlugin, TextBlock } from "blocky-core";
+import {
+  type EditorController,
+  type IPlugin,
+  TextBlock,
+  type PluginContext,
+} from "blocky-core";
+import { takeUntil } from "rxjs";
 
 interface CommandPanelProps {
   controller: EditorController;
@@ -65,8 +71,9 @@ class CommandPanel extends PureComponent<CommandPanelProps> {
 export function makeCommandPanelPlugin(): IPlugin {
   return {
     name: "command-panel",
-    onInitialized(editor) {
-      editor.keyDown.subscribe((e: KeyboardEvent) => {
+    onInitialized(context: PluginContext) {
+      const { editor, dispose$ } = context;
+      editor.keyDown.pipe(takeUntil(dispose$)).subscribe((e: KeyboardEvent) => {
         if (e.key !== "/") {
           return;
         }
