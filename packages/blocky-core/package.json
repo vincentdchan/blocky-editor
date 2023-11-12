@@ -1,6 +1,6 @@
 {
   "name": "blocky-core",
-  "version": "3.1.1",
+  "version": "3.2.0",
   "description": "The core of the blocky editor",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -38,6 +38,6 @@
     "rxjs": "^7.8.1"
   },
   "peerDependencies": {
-    "blocky-data": "workspace:^3.1.1"
+    "blocky-data": "workspace:^3.2.0"
   }
 }
