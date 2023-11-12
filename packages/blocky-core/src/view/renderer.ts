@@ -212,7 +212,7 @@ export class DocRenderer {
           domPtr = existDom;
         } else {
           const newBlockContainer = this.createBlockContainer();
-          newBlockContainer.setAttribute("date-id", blockElement.id);
+          newBlockContainer.setAttribute("data-id", blockElement.id);
           blocksContainer.insertBefore(
             newBlockContainer,
             prevPtr?.nextSibling ?? null
