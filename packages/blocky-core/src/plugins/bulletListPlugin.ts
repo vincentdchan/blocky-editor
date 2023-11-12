@@ -49,7 +49,7 @@ function makeBulletListPlugin(): IPlugin {
       }
     }
   };
-  const handleEnter = (editor: Editor, e: KeyboardEvent) => {
+  const handleEnter = (editor: Editor) => (e: KeyboardEvent) => {
     const { cursorState } = editor.state;
     if (!cursorState) {
       return;
@@ -90,14 +90,7 @@ function makeBulletListPlugin(): IPlugin {
    * If the user presses a Backspace on the start of a bullet list,
    * turn it back to a normal text.
    */
-  const handleKeydown = (editor: Editor) => (e: KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleEnter(editor, e);
-      return;
-    }
-    if (e.key !== "Backspace") {
-      return;
-    }
+  const handleBackspace = (editor: Editor) => (e: KeyboardEvent) => {
     const { cursorState } = editor.state;
     if (!cursorState) {
       return;
@@ -130,14 +123,26 @@ function makeBulletListPlugin(): IPlugin {
   return {
     name: "bullet-list",
     onInitialized(context: PluginContext) {
-      const { editor, dispose$ } = context;
+      const editor = context.editor;
       editor.textInput
         .pipe(
-          takeUntil(dispose$),
+          takeUntil(context.dispose$),
           filter((evt) => evt.blockElement.t === TextBlock.Name)
         )
         .subscribe(handleTextInputEvent(editor));
-      editor.keyDown.pipe(takeUntil(dispose$)).subscribe(handleKeydown(editor));
+      editor.keyDown
+        .pipe(
+          takeUntil(context.dispose$),
+          filter((evt) => evt.key === "Enter")
+        )
+        .subscribe(handleEnter(editor));
+
+      editor.keyDown
+        .pipe(
+          takeUntil(context.dispose$),
+          filter((evt) => evt.key === "Backspace")
+        )
+        .subscribe(handleBackspace(editor));
     },
   };
 }
