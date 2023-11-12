@@ -39,6 +39,18 @@ interface IRendererOptions {
   editor: Editor;
 }
 
+/**
+ * Generally, the renderer only needs to
+ * call the render method of the block.
+ *
+ * But there are still some cases where
+ * the renderer needs to do some extra work
+ * such as number list.
+ *
+ * The renderer needs to know the global status
+ * of the number list, so it needs to be
+ * implemented in the renderer.
+ */
 export class DocRenderer {
   private clsPrefix: string;
   private editor: Editor;
