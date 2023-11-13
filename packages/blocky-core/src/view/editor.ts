@@ -169,7 +169,10 @@ export class Editor {
   readonly compositionStart$ = new Subject<void>();
   readonly compositionEnd$ = new Subject<void>();
 
-  readonly preservedTextType: Set<TextType> = new Set([TextType.Bulleted]);
+  readonly preservedTextType: Set<TextType> = new Set([
+    TextType.Bulleted,
+    TextType.Numbered,
+  ]);
 
   readonly collaborativeCursorManager: CollaborativeCursorManager;
 
@@ -985,10 +988,14 @@ export class Editor {
       const slices = textModel.delta.slice(cursorOffset);
 
       const textType = getTextTypeForTextBlock(blockElement);
+      const num = blockElement.getAttribute("num");
       const attributes = Object.create(null);
       if (this.preservedTextType.has(textType)) {
         // preserved data type
         attributes.textType = textType;
+        if (isNumber(num)) {
+          attributes.num = num + 1;
+        }
       }
 
       const children: DataBaseNode[] = [];

@@ -29,7 +29,9 @@ export function makeNumberListPlugin(): IPlugin {
         textType: TextType.Numbered,
         num,
       })
-      .textEdit(textElement, "textContent", () => new Delta().delete(deleteLen))
+      .textEdit(textElement, "textContent", () =>
+        new Delta().delete(deleteLen + 1)
+      )
       .setCursorState(CursorState.collapse(blockId, 0))
       .apply();
   };
@@ -57,6 +59,44 @@ export function makeNumberListPlugin(): IPlugin {
       } else if (isNumber(op.retain)) {
         index += op.retain;
       }
+    }
+  };
+  const handleEnter = (editor: Editor) => (e: KeyboardEvent) => {
+    const { cursorState } = editor.state;
+    if (!cursorState) {
+      return;
+    }
+    if (cursorState.isOpen) {
+      return;
+    }
+
+    const { id, offset } = cursorState;
+    if (offset !== 0) {
+      return;
+    }
+
+    const textElement = editor.getTextElementByBlockId(id);
+    if (!textElement || textElement.t !== TextBlock.Name) {
+      return;
+    }
+
+    const textType = getTextTypeForTextBlock(textElement);
+    if (textType !== TextType.Numbered) {
+      return;
+    }
+    const textModel = textElement.getTextModel("textContent");
+    if (!textModel) {
+      return;
+    }
+    if (textModel.length === 0) {
+      e.preventDefault();
+      new Changeset(editor.state)
+        .updateAttributes(textElement, {
+          textType: TextType.Normal,
+          num: undefined,
+        })
+        .setCursorState(CursorState.collapse(id, 0))
+        .apply();
     }
   };
   const handleBackspace = (editor: Editor) => (e: KeyboardEvent) => {
@@ -100,6 +140,12 @@ export function makeNumberListPlugin(): IPlugin {
           filter((evt) => evt.blockElement.t === TextBlock.Name)
         )
         .subscribe(handleTextInputEvent(editor));
+      editor.keyDown$
+        .pipe(
+          takeUntil(context.dispose$),
+          filter((evt) => evt.key === "Enter")
+        )
+        .subscribe(handleEnter(editor));
       editor.keyDown$
         .pipe(
           takeUntil(context.dispose$),
