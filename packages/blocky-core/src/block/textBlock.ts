@@ -1,4 +1,4 @@
-import { isObject, isString } from "lodash-es";
+import { isNumber, isObject, isString } from "lodash-es";
 import { elem, removeNode } from "blocky-common/es/dom";
 import { removeLineBreaks, type Position } from "blocky-common/es";
 import {
@@ -210,6 +210,11 @@ export class TextBlock extends Block {
 
   private getTextType(): TextType {
     return getTextTypeForTextBlock(this.elementData as BlockDataElement);
+  }
+
+  private getNumber(): number | undefined {
+    const elem = this.elementData as BlockDataElement;
+    return elem.getAttribute<number | undefined>("num");
   }
 
   override getCursorHeight(): number {
@@ -548,6 +553,22 @@ export class TextBlock extends Block {
     return new LeftPadRenderer(container);
   }
 
+  #createNumberRenderer(): LeftPadRenderer {
+    const container = this.#createLeftPadContainer();
+
+    const num = this.getNumber();
+
+    const numberContent = elem("div", "blocky-number-content");
+
+    if (isNumber(num)) {
+      numberContent.style.setProperty("--pseudoBefore--content", `"${num}."`);
+    }
+
+    container.appendChild(numberContent);
+
+    return new LeftPadRenderer(container);
+  }
+
   #createCheckboxRenderer(): LeftPadRenderer {
     const container = this.#createLeftPadContainer();
 
@@ -581,7 +602,7 @@ export class TextBlock extends Block {
       }
 
       case TextType.Numbered: {
-        this.#leftPadRenderer = this.#createBulletRenderer();
+        this.#leftPadRenderer = this.#createNumberRenderer();
         blockContainer.insertBefore(
           this.#leftPadRenderer.container,
           blockContainer.firstChild
@@ -947,6 +968,10 @@ export class TextBlock extends Block {
       embed.dispose?.();
     }
     this.#embeds.clear();
+
+    this.#leftPadRenderer?.dispose();
+    this.#leftPadRenderer = null;
+
     super.dispose();
   }
 }

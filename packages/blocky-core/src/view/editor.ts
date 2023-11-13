@@ -307,7 +307,7 @@ export class Editor {
     const oldInput = this.#stagedInput;
     this.#stagedInput = newInput;
     for (let i = 0; i < oldInput.length; i++) {
-      this.textInput.next(oldInput[i]);
+      this.textInput$.next(oldInput[i]);
     }
   }
 

@@ -3,6 +3,7 @@ import {
   type TextInputEvent,
   type IPlugin,
   type Editor,
+  getTextTypeForTextBlock,
 } from "@pkg/index";
 import {
   BlockDataElement,
@@ -39,7 +40,7 @@ export function makeNumberListPlugin(): IPlugin {
       if (isString(op.insert)) {
         if (isWhiteSpace(op.insert)) {
           const before = beforeString.slice(0, index);
-          const testResult = /^([0-9]+)\.$/.exec(before);
+          const testResult = /^([0-9]+)\.\s?$/.exec(before);
           if (testResult && isString(testResult[1])) {
             const num = parseInt(testResult[1], 10);
             turnTextBlockIntoNumberList(
@@ -58,6 +59,37 @@ export function makeNumberListPlugin(): IPlugin {
       }
     }
   };
+  const handleBackspace = (editor: Editor) => (e: KeyboardEvent) => {
+    const { cursorState } = editor.state;
+    if (!cursorState) {
+      return;
+    }
+    if (cursorState.isOpen) {
+      return;
+    }
+
+    const { id, offset } = cursorState;
+
+    if (offset !== 0) {
+      return;
+    }
+
+    const textElement = editor.getTextElementByBlockId(id);
+    if (!textElement) {
+      return;
+    }
+    const textType = getTextTypeForTextBlock(textElement);
+    if (textType === TextType.Numbered) {
+      e.preventDefault();
+      new Changeset(editor.state)
+        .updateAttributes(textElement, {
+          textType: TextType.Normal,
+          num: undefined,
+        })
+        .setCursorState(CursorState.collapse(id, 0))
+        .apply();
+    }
+  };
   return {
     name: "number-list",
     onInitialized(context) {
@@ -68,6 +100,12 @@ export function makeNumberListPlugin(): IPlugin {
           filter((evt) => evt.blockElement.t === TextBlock.Name)
         )
         .subscribe(handleTextInputEvent(editor));
+      editor.keyDown$
+        .pipe(
+          takeUntil(context.dispose$),
+          filter((evt) => evt.key === "Backspace")
+        )
+        .subscribe(handleBackspace(editor));
     },
   };
 }
