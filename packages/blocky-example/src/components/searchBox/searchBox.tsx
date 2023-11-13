@@ -1,7 +1,11 @@
 import React, { Component, createRef } from "react";
 import Button from "@pkg/components/button";
-import { type EditorController, type SearchContext } from "blocky-core";
-import { type CursorState, CursorStateUpdateReason } from "blocky-data";
+import {
+  type EditorController,
+  type SearchContext,
+  type CursorState,
+  CursorStateUpdateReason,
+} from "blocky-core";
 import { debounce } from "lodash-es";
 import "./searchBox.scss";
 

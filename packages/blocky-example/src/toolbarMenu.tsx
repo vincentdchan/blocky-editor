@@ -1,19 +1,20 @@
-import type { EditorController } from "blocky-core";
-import { CursorState } from "blocky-data";
+import { type EditorController, CursorState } from "blocky-core";
 import React, { Component, createRef, RefObject, memo } from "react";
 import Mask from "@pkg/components/mask";
 import Button from "./components/button";
 import "./toolbarMenu.scss";
 
-const ToolbarMenuItem = memo((props: React.HTMLAttributes<HTMLButtonElement>) => {
-  const { className = "", ...restProps } = props;
-  return (
-    <button
-      className={`blocky-toolbar-menu-button ${className}`}
-      {...restProps}
-    />
-  );
-});
+const ToolbarMenuItem = memo(
+  (props: React.HTMLAttributes<HTMLButtonElement>) => {
+    const { className = "", ...restProps } = props;
+    return (
+      <button
+        className={`blocky-toolbar-menu-button ${className}`}
+        {...restProps}
+      />
+    );
+  }
+);
 
 interface ToolbarMenuProps {
   editorController: EditorController;

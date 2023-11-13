@@ -1,6 +1,5 @@
 import { Component, type RefObject, createRef } from "react";
-import { type EditorController } from "blocky-core";
-import { BlockDataElement, TextType } from "blocky-data";
+import { type EditorController, BlockDataElement, TextType } from "blocky-core";
 import Dropdown from "@pkg/components/dropdown";
 import { Menu, MenuItem, Divider } from "@pkg/components/menu";
 import { ImageBlockName } from "@pkg/plugins/imageBlock";
