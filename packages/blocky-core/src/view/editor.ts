@@ -1,9 +1,4 @@
-import {
-  $on,
-  isContainNode,
-  removeNode,
-  type Padding,
-} from "blocky-common/es/dom";
+import { isContainNode, removeNode, type Padding } from "blocky-common/es/dom";
 import {
   isUpperCase,
   areEqualShallow,
@@ -11,7 +6,7 @@ import {
   type IDisposable,
   type Position,
 } from "blocky-common/es";
-import { Subject, takeUntil, take } from "rxjs";
+import { Subject, takeUntil, take, fromEvent } from "rxjs";
 import {
   debounce,
   isFunction,
@@ -250,7 +245,9 @@ export class Editor {
       .pipe(takeUntil(this.dispose$))
       .subscribe(this.handleCursorStateChanged);
 
-    this.disposables.push($on(container, "mouseleave", this.#hideSpanner));
+    fromEvent(container, "mouseleave")
+      .pipe(takeUntil(this.dispose$))
+      .subscribe(this.#hideSpanner);
 
     this.registry.plugin.initAllPlugins(this);
 
@@ -417,18 +414,32 @@ export class Editor {
           newDom.spellcheck = false;
         }
 
-        $on(newDom, "input", () => {
-          if (this.composing) {
-            return;
-          }
-          this.#handleContentChanged();
-        });
-        $on(newDom, "compositionstart", this.#handleCompositionStart);
-        $on(newDom, "compositionend", this.#handleCompositionEnd);
-        $on(newDom, "keydown", this.#handleKeyDown);
-        $on(newDom, "copy", this.#handleCopy);
-        $on(newDom, "paste", this.#handlePaste);
-        $on(newDom, "blur", this.#handleEditorBlur);
+        fromEvent(newDom, "input")
+          .pipe(takeUntil(this.dispose$))
+          .subscribe(() => {
+            if (this.composing) {
+              return;
+            }
+            this.#handleContentChanged();
+          });
+        fromEvent(newDom, "compositionstart")
+          .pipe(takeUntil(this.dispose$))
+          .subscribe(this.#handleCompositionStart);
+        fromEvent(newDom, "compositionend")
+          .pipe(takeUntil(this.dispose$))
+          .subscribe(this.#handleCompositionEnd);
+        fromEvent<KeyboardEvent>(newDom, "keydown")
+          .pipe(takeUntil(this.dispose$))
+          .subscribe(this.#handleKeyDown);
+        fromEvent<ClipboardEvent>(newDom, "copy")
+          .pipe(takeUntil(this.dispose$))
+          .subscribe(this.#handleCopy);
+        fromEvent<ClipboardEvent>(newDom, "paste")
+          .pipe(takeUntil(this.dispose$))
+          .subscribe(this.#handlePaste);
+        fromEvent(newDom, "blur")
+          .pipe(takeUntil(this.dispose$))
+          .subscribe(this.#handleEditorBlur);
 
         this.#renderedDom = newDom;
       }

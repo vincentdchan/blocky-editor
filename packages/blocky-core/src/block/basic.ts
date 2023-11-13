@@ -9,6 +9,7 @@ import {
   Changeset,
   Delta,
 } from "blocky-data";
+import { Subject } from "rxjs";
 import { type Editor } from "@pkg/view/editor";
 import { type EditorController } from "@pkg/view/controller";
 
@@ -142,6 +143,7 @@ export interface IBlockDefinition {
  */
 export class Block implements IDisposable {
   #editor: Editor | undefined;
+  readonly dispose$ = new Subject<void>();
 
   get childrenContainerDOM(): HTMLElement | null {
     return null;
@@ -213,6 +215,7 @@ export class Block implements IDisposable {
   findTextOffsetInBlock?(focusedNode: Node, offsetInNode: number): number;
 
   dispose(): void {
+    this.dispose$.next();
     this.#editor = undefined;
   }
 }

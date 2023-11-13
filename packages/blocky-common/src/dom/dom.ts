@@ -105,19 +105,6 @@ export function listenWindow<K extends keyof WindowEventMap>(
   };
 }
 
-export function $on<T extends HTMLElement, K extends keyof HTMLElementEventMap>(
-  element: T,
-  eventName: K,
-  listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any
-): IDisposable {
-  element.addEventListener(eventName, listener);
-  return {
-    dispose: () => {
-      element.removeEventListener(eventName, listener);
-    },
-  };
-}
-
 export class DivContainer implements IDisposable {
   readonly container: HTMLDivElement;
 

@@ -1,5 +1,5 @@
 import { isObject, isString } from "lodash-es";
-import { elem, removeNode, $on } from "blocky-common/es/dom";
+import { elem, removeNode } from "blocky-common/es/dom";
 import { removeLineBreaks, type Position } from "blocky-common/es";
 import {
   type BlockDidMountEvent,
@@ -27,6 +27,7 @@ import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { EditorController } from "@pkg/view/controller";
 import type { SpanStyle } from "@pkg/registry/spanRegistry";
 import type { Embed } from "@pkg/registry/embedRegistry";
+import { Subject, fromEvent, takeUntil } from "rxjs";
 
 const TextContentClass = "blocky-block-text-content";
 
@@ -44,9 +45,11 @@ function textTypeCanIndent(textType: TextType): boolean {
 }
 
 class LeftPadRenderer {
+  readonly dispose$ = new Subject<void>();
   constructor(readonly container: HTMLDivElement) {}
   render() {}
   dispose(): void {
+    this.dispose$.next();
     removeNode(this.container);
   }
 }
@@ -72,7 +75,9 @@ class CheckboxRenderer extends LeftPadRenderer {
     this.#centerElement.style.visibility = "hidden";
     this.#checkboxContainer.style.boxShadow = `0px 0px 0px 1px gray`;
 
-    $on(this.#checkboxContainer, "click", this.#handleClick);
+    fromEvent(this.#checkboxContainer, "click")
+      .pipe(takeUntil(this.dispose$))
+      .subscribe(this.#handleClick);
   }
 
   #handleClick = () => {
@@ -800,11 +805,13 @@ export class TextBlock extends Block {
   #createEmbedDomByOp(op: Op, editor: Editor): Node {
     const embedContainer = elem("span");
     embedContainer.contentEditable = "false";
-    $on(embedContainer, "click", (evt: MouseEvent) => {
-      evt.preventDefault();
-      // TODO: upload the event
-      // restore the selection
-    });
+    fromEvent<MouseEvent>(embedContainer, "click")
+      .pipe(takeUntil(this.dispose$))
+      .subscribe((evt: MouseEvent) => {
+        evt.preventDefault();
+        // TODO: upload the event
+        // restore the selection
+      });
     embedContainer.appendChild(this.#createNoWrapSpan());
 
     const embed = elem("span");
