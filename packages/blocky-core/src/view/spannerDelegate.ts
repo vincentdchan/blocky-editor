@@ -1,6 +1,6 @@
 import { type IDisposable } from "blocky-common/es";
 import type { EditorController } from "@pkg/view/controller";
-import type { BlockDataElement } from "blocky-data";
+import type { BlockDataElement } from "@pkg/data";
 import { UIDelegate } from "./uiDelegate";
 
 export interface SpannerInstance extends IDisposable {

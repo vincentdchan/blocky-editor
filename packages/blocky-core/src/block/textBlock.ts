@@ -18,10 +18,9 @@ import {
   BlockDataElement,
   Changeset,
   TextType,
-  Delta,
-  Op,
   textTypePrecedence,
-} from "blocky-data";
+} from "@pkg/data";
+import Delta, { Op } from "quill-delta-es";
 import { TextInputEvent, type Editor } from "@pkg/view/editor";
 import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { EditorController } from "@pkg/view/controller";

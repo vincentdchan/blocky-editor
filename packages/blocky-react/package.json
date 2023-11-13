@@ -3,6 +3,7 @@
   "version": "3.2.0",
   "description": "The Preact wrapper of the blocky editor.",
   "main": "dist/index.js",
+  "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -21,12 +22,10 @@
     "@types/react-dom": "^18.2.14",
     "blocky-common": "workspace:*",
     "blocky-core": "workspace:*",
-    "blocky-data": "workspace:*",
     "typescript": "^4.7.3"
   },
   "peerDependencies": {
-    "blocky-core": "workspace:^3.2.0",
-    "blocky-data": "workspace:^3.2.0"
+    "blocky-core": "workspace:^3.2.0"
   },
   "dependencies": {
     "blocky-common": "workspace:3.0.0",

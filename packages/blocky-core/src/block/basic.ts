@@ -7,8 +7,8 @@ import {
   DataBaseElement,
   CursorState,
   Changeset,
-  Delta,
-} from "blocky-data";
+} from "@pkg/data";
+import Delta from "quill-delta-es";
 import { Subject } from "rxjs";
 import { type Editor } from "@pkg/view/editor";
 import { type EditorController } from "@pkg/view/controller";

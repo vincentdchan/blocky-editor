@@ -1,3 +1,6 @@
+import Delta, { Op } from "quill-delta-es";
+
+export { Delta, Op };
 export * from "./view/editor";
 export * from "./view/controller";
 export * from "./block/basic";
@@ -37,3 +40,4 @@ export {
   darkTheme,
 } from "./model";
 export { TextBlock } from "./block/textBlock";
+export * from "./data";

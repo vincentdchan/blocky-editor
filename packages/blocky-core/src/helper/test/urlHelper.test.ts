@@ -1,4 +1,4 @@
-import { Delta } from "blocky-data";
+import Delta from "quill-delta-es";
 import { test, expect, describe } from "vitest";
 import { textToDeltaWithURL } from "../urlHelper";
 

@@ -1,4 +1,4 @@
-import { Delta } from "blocky-data";
+import Delta from "quill-delta-es";
 
 /**
  * Reference: https://stackoverflow.com/a/17773849

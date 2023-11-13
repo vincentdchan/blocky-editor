@@ -8,10 +8,10 @@ import {
   BlockyTextModel,
   Changeset,
   ChangesetRecordOption,
-  Delta,
   FinalizedChangeset,
   InsertNodeOperation,
-} from "blocky-data";
+} from "@pkg/data";
+import Delta from "quill-delta-es";
 import "@pkg/index";
 
 describe("FixedSizeStack", () => {

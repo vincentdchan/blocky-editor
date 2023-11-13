@@ -5,7 +5,7 @@ import {
   ChangesetApplyOptions,
   ChangesetRecordOption,
   FinalizedChangeset,
-} from "blocky-data";
+} from "@pkg/data";
 import type { EditorState } from "@pkg/model/editorState";
 
 /**

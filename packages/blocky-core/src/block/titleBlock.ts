@@ -6,7 +6,8 @@ import {
   Block,
 } from "./basic";
 import { TextInputEvent } from "@pkg/view/editor";
-import { BlockyTextModel, Delta } from "blocky-data";
+import { BlockyTextModel } from "@pkg/data";
+import Delta from "quill-delta-es";
 
 export class TitleBlock extends Block {
   static Name = "Title";

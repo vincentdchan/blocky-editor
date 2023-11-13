@@ -10,8 +10,8 @@ import {
   traverseNode,
   CursorState,
   State,
-  Delta,
-} from "blocky-data";
+} from "@pkg/data";
+import Delta from "quill-delta-es";
 import { Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { TextBlock } from "@pkg/block/textBlock";

@@ -1,5 +1,5 @@
 import { isObject } from "lodash-es";
-import { BlockDataElement, BlockyTextModel } from "blocky-data";
+import { BlockDataElement, BlockyTextModel } from "@pkg/data";
 import { TextBlock } from "@pkg/block/textBlock";
 import { removeLineBreaks } from "blocky-common/es";
 import { textToDeltaWithURL } from "@pkg/helper/urlHelper";

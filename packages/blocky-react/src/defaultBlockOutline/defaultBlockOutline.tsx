@@ -1,7 +1,6 @@
 import React, { useCallback } from "react";
 import { ReactBlockContext } from "../reactBlock";
-import { CursorState } from "blocky-data";
-import type { EditorController } from "blocky-core";
+import { type EditorController, CursorState } from "blocky-core";
 import {
   useBlockActive,
   useCollaborativeOutlineColor,

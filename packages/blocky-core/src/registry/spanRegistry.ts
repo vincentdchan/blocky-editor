@@ -1,5 +1,5 @@
 import { Registry } from "./registry";
-import type { AttributesObject } from "blocky-data";
+import type { AttributesObject } from "@pkg/data";
 import { isString } from "lodash-es";
 
 export type SpanRenderer = (

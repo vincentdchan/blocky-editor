@@ -14,8 +14,8 @@ import {
   blockyNodeFromJsonNode,
   CursorStateUpdateReason,
   ChangesetApplyOptions,
-  Delta,
-} from "blocky-data";
+} from "@pkg/data";
+import Delta from "quill-delta-es";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { PluginRegistry, type IPlugin } from "@pkg/registry/pluginRegistry";
 import { SpanRegistry } from "@pkg/registry/spanRegistry";
