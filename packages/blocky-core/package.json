@@ -1,6 +1,6 @@
 {
   "name": "blocky-core",
-  "version": "3.3.0",
+  "version": "3.3.1",
   "description": "The core of the blocky editor",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -36,7 +36,7 @@
     "blocky-common": "workspace:3.3.0",
     "is-hotkey": "^0.2.0",
     "lodash-es": "^4.17.21",
-    "quill-delta-es": "5.2.4",
+    "quill-delta-es": "^5.2.6",
     "rxjs": "^7.8.1"
   }
 }
