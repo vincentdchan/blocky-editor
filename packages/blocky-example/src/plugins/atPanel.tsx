@@ -7,9 +7,9 @@ import {
   Embed,
   type EmbedInitOptions,
   type PluginContext,
+  Delta,
 } from "blocky-core";
 import { makePreactFollowerWidget } from "blocky-react";
-import { Delta } from "blocky-data";
 import { takeUntil } from "rxjs";
 import "./atPanel.scss";
 

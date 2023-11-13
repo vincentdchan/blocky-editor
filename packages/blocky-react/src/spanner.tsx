@@ -1,10 +1,10 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import type { BlockDataElement } from "blocky-data";
 import type {
   SpannerFactory,
   EditorController,
   SpannerInstance,
+  BlockDataElement,
 } from "blocky-core";
 import { once } from "lodash-es";
 

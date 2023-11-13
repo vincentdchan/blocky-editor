@@ -1,12 +1,12 @@
-import type { BlockDataElement } from "blocky-data";
 import {
   type IBlockDefinition,
   type EditorController,
+  type BlockDataElement,
   ContentBlock,
   TryParsePastedDOMEvent,
 } from "blocky-core";
 import React, { createContext } from "react";
-import { createRoot, type Root } from "react-dom/client"
+import { createRoot, type Root } from "react-dom/client";
 
 export interface ReactBlockRenderProps {
   controller: EditorController;
@@ -56,7 +56,7 @@ export function makeReactBlock(options: ReactBlockOptions): IBlockDefinition {
             controller: this.editor.controller,
             blockElement: this.props,
           })}
-        </ReactBlockContext.Provider>,
+        </ReactBlockContext.Provider>
       );
     }
 

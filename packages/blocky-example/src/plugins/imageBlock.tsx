@@ -1,5 +1,8 @@
-import { BlockDataElement } from "blocky-data";
-import { type TryParsePastedDOMEvent, type IPlugin } from "blocky-core";
+import {
+  type TryParsePastedDOMEvent,
+  type IPlugin,
+  BlockDataElement,
+} from "blocky-core";
 import {
   makeReactBlock,
   DefaultBlockOutline,
@@ -102,7 +105,11 @@ export function makeImageBlockPlugin(): IPlugin {
                 src: src,
               };
             }
-            const element = new BlockDataElement(ImageBlockName, newId, attributes);
+            const element = new BlockDataElement(
+              ImageBlockName,
+              newId,
+              attributes
+            );
             return element;
           }
         },

@@ -24,7 +24,6 @@
     "@types/is-hotkey": "^0.1.7",
     "@types/lodash-es": "^4.17.6",
     "@types/node": "^17.0.41",
-    "blocky-data": "workspace:*",
     "c8": "^8.0.1",
     "jsdom": "^20.0.0",
     "tsc-alias": "^1.6.9",
@@ -37,9 +36,7 @@
     "blocky-common": "workspace:3.0.0",
     "is-hotkey": "^0.2.0",
     "lodash-es": "^4.17.21",
+    "quill-delta-es": "5.2.4",
     "rxjs": "^7.8.1"
-  },
-  "peerDependencies": {
-    "blocky-data": "workspace:^3.2.0"
   }
 }

@@ -1,6 +1,3 @@
-import Delta, { Op } from "quill-delta-es";
-
-export { Delta, Op };
 export * from "./tree";
 export * from "./events";
 export * from "./operations";

@@ -6,7 +6,7 @@ import {
   type DataBaseNode,
   BlockDataElement,
   BlockyTextModel,
-} from "blocky-data";
+} from "@pkg/data";
 import type { Editor } from "@pkg/view/editor";
 
 function ensureChild<K extends keyof HTMLElementTagNameMap>(

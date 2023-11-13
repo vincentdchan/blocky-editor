@@ -1,6 +1,7 @@
 import { isWhiteSpace } from "blocky-common/es";
 import { type IPlugin, TextBlock, type PluginContext } from "@pkg/index";
-import { Changeset, TextType, Delta } from "blocky-data";
+import { Changeset, TextType } from "@pkg/data";
+import Delta from "quill-delta-es";
 import { isNumber, isString } from "lodash-es";
 import { filter, takeUntil } from "rxjs";
 

@@ -5,8 +5,8 @@ import {
   BlockyDocument,
   BlockyTextModel,
   JSONNode,
-  Delta,
-} from "blocky-data";
+} from "@pkg/data";
+import Delta from "quill-delta-es";
 import { EditorState } from "../editorState";
 
 function removeId(node: JSONNode) {

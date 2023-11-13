@@ -3,7 +3,7 @@ import { takeUntil, filter } from "rxjs";
 import { isHotkey } from "is-hotkey";
 import { debounce } from "lodash-es";
 import { UndoManager } from "./undoManager";
-import { ChangesetRecordOption, FinalizedChangeset } from "blocky-data";
+import { ChangesetRecordOption, FinalizedChangeset } from "@pkg/data";
 
 function makeUndoPlugin(): IPlugin {
   return {

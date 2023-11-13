@@ -28,8 +28,8 @@ import {
   FinalizedChangeset,
   CursorStateUpdateReason,
   TextType,
-  Delta,
-} from "blocky-data";
+} from "@pkg/data";
+import Delta from "quill-delta-es";
 import {
   IPlugin,
   PluginRegistry,

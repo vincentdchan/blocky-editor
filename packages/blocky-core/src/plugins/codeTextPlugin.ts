@@ -1,5 +1,6 @@
 import { type PluginContext, type IPlugin, TextBlock } from "@pkg/index";
-import { CursorState, Changeset, Delta } from "blocky-data";
+import { CursorState, Changeset } from "@pkg/data";
+import Delta from "quill-delta-es";
 import { isHotkey } from "is-hotkey";
 import { isUndefined } from "lodash-es";
 import { takeUntil } from "rxjs";

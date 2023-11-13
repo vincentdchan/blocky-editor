@@ -5,13 +5,8 @@ import {
   type Editor,
   getTextTypeForTextBlock,
 } from "@pkg/index";
-import {
-  BlockDataElement,
-  CursorState,
-  Changeset,
-  TextType,
-  Delta,
-} from "blocky-data";
+import { BlockDataElement, CursorState, Changeset, TextType } from "@pkg/data";
+import Delta from "quill-delta-es";
 import { isNumber, isString } from "lodash-es";
 import { isWhiteSpace } from "blocky-common/es";
 import { filter, takeUntil } from "rxjs";

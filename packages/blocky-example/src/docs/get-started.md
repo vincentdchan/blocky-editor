@@ -5,13 +5,13 @@
 Install the editor with your favorite package manger:
 
 ```
-npm install blocky-core blocky-data
+npm install blocky-core
 ```
 
-If you want to use the editor with Preact, install the `blocky-preact`:
+If you want to use the editor with React.js, install the `blocky-react`:
 
 ```
-npm install blocky-preact
+npm install blocky-react
 ```
 
 ## Initialize the editor

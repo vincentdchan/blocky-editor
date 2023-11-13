@@ -1,7 +1,7 @@
 import { IDisposable } from "blocky-common/es";
 import { Subject } from "rxjs";
 import { elem, removeNode, ContainerWithCoord } from "blocky-common/es/dom";
-import { BlockDataElement, DataBaseNode } from "blocky-data";
+import { BlockDataElement, DataBaseNode } from "@pkg/data";
 import { isString, isObject } from "lodash-es";
 import { Editor } from "@pkg/view/editor";
 

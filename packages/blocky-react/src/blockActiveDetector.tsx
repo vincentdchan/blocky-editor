@@ -1,6 +1,9 @@
 import { useEffect, useState, useRef } from "react";
-import { type CursorStateUpdateEvent } from "blocky-data";
-import { type EditorController, type CursorChangedEvent } from "blocky-core";
+import {
+  type EditorController,
+  type CursorChangedEvent,
+  type CursorStateUpdateEvent,
+} from "blocky-core";
 
 export interface BlockActiveDetectorProps {
   controller: EditorController;

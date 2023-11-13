@@ -7,7 +7,7 @@ import {
   CursorState,
   CursorStateUpdateReason,
   type CursorStateUpdateEvent,
-} from "blocky-data";
+} from "@pkg/data";
 
 /**
  * {@link FollowerWidget} is a widget can follow the cursor.

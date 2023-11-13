@@ -1,6 +1,5 @@
 import { Component, createRef, type RefObject } from "react";
-import { CursorState } from "blocky-data";
-import { Editor, type EditorController } from "blocky-core";
+import { Editor, type EditorController, CursorState } from "blocky-core";
 
 export interface Props {
   controller: EditorController;

@@ -4,7 +4,7 @@ import type {
   IBlockDefinition,
   TryParsePastedDOMEvent,
 } from "@pkg/block/basic";
-import type { BlockDataElement } from "blocky-data";
+import type { BlockDataElement } from "@pkg/data";
 import { Registry } from "./registry";
 import { TextBlock } from "@pkg/block/textBlock";
 import { TitleBlock } from "@pkg/block/titleBlock";
