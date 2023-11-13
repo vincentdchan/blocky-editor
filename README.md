@@ -25,7 +25,6 @@ The developers only need to develop their blocks with their favourite UI framewo
 
 ![](./packages/blocky-example/src/arch.png)
 
-- Data(![npm](https://img.shields.io/npm/v/blocky-data)): The data structure of the editor. Can be used without browser environment.
 - Core(![npm](https://img.shields.io/npm/v/blocky-core)): The core of the editor. Written in vanilla JS. It can be used standalone without any
   UI frameworks.
   - Gzipped size: ~40kb
