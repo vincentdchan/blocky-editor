@@ -5,3 +5,5 @@ tsconfig.tsbuildinfo
 .eslintrc.cjs
 
 /src
+
+/coverage
