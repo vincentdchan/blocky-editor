@@ -6,7 +6,7 @@ import {
   ChangesetRecordOption,
   FinalizedChangeset,
 } from "blocky-data";
-import type { EditorState } from "./editorState";
+import type { EditorState } from "@pkg/model/editorState";
 
 /**
  * A stack item is used to store

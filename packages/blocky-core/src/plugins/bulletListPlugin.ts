@@ -124,20 +124,20 @@ function makeBulletListPlugin(): IPlugin {
     name: "bullet-list",
     onInitialized(context: PluginContext) {
       const editor = context.editor;
-      editor.textInput
+      editor.textInput$
         .pipe(
           takeUntil(context.dispose$),
           filter((evt) => evt.blockElement.t === TextBlock.Name)
         )
         .subscribe(handleTextInputEvent(editor));
-      editor.keyDown
+      editor.keyDown$
         .pipe(
           takeUntil(context.dispose$),
           filter((evt) => evt.key === "Enter")
         )
         .subscribe(handleEnter(editor));
 
-      editor.keyDown
+      editor.keyDown$
         .pipe(
           takeUntil(context.dispose$),
           filter((evt) => evt.key === "Backspace")

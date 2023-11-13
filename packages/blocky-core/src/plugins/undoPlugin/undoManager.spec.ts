@@ -1,7 +1,7 @@
 import { test, expect, describe, vi } from "vitest";
-import { FixedSizeStack, HistoryItem, UndoManager } from "../undoManager";
+import { FixedSizeStack, HistoryItem, UndoManager } from "./undoManager";
 import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
-import { EditorState } from "../editorState";
+import { EditorState } from "@pkg/model/editorState";
 import {
   BlockDataElement,
   BlockyDocument,

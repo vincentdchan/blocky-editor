@@ -32,24 +32,26 @@ function makeStyledTextPlugin(): IPlugin {
     ],
     onInitialized(context: PluginContext) {
       const { editor, dispose$ } = context;
-      editor.keyDown.pipe(takeUntil(dispose$)).subscribe((e: KeyboardEvent) => {
-        if (isHotkey("mod+b", e)) {
-          e.preventDefault();
-          editor.controller.formatTextOnSelectedText({
-            bold: true,
-          });
-        } else if (isHotkey("mod+i", e)) {
-          e.preventDefault();
-          editor.controller.formatTextOnSelectedText({
-            italic: true,
-          });
-        } else if (isHotkey("mod+u", e)) {
-          e.preventDefault();
-          editor.controller.formatTextOnSelectedText({
-            underline: true,
-          });
-        }
-      });
+      editor.keyDown$
+        .pipe(takeUntil(dispose$))
+        .subscribe((e: KeyboardEvent) => {
+          if (isHotkey("mod+b", e)) {
+            e.preventDefault();
+            editor.controller.formatTextOnSelectedText({
+              bold: true,
+            });
+          } else if (isHotkey("mod+i", e)) {
+            e.preventDefault();
+            editor.controller.formatTextOnSelectedText({
+              italic: true,
+            });
+          } else if (isHotkey("mod+u", e)) {
+            e.preventDefault();
+            editor.controller.formatTextOnSelectedText({
+              underline: true,
+            });
+          }
+        });
     },
   };
 }

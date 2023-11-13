@@ -62,7 +62,7 @@ export function makeNumberListPlugin(): IPlugin {
     name: "number-list",
     onInitialized(context) {
       const editor = context.editor;
-      editor.textInput
+      editor.textInput$
         .pipe(
           takeUntil(context.dispose$),
           filter((evt) => evt.blockElement.t === TextBlock.Name)

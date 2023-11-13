@@ -47,7 +47,6 @@ import { textToDeltaWithURL } from "@pkg/helper/urlHelper";
 import { SpannerDelegate, type SpannerFactory } from "./spannerDelegate";
 import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlock } from "@pkg/block/textBlock";
-import { UndoManager } from "@pkg/model/undoManager";
 import { EditorController } from "./controller";
 import { type FollowerWidget } from "./followerWidget";
 import { Block } from "@pkg/block/basic";
@@ -56,7 +55,6 @@ import {
   CollaborativeCursorManager,
   type CollaborativeCursorFactory,
 } from "./collaborativeCursors";
-import { isHotkey } from "is-hotkey";
 import { TitleBlock } from "@pkg/block/titleBlock";
 import type { ThemeData } from "@pkg/model/theme";
 
@@ -152,12 +150,29 @@ export class Editor {
   idGenerator: IdGenerator;
 
   readonly anchorSpanClass: string = "blocky-text-anchor";
-  readonly undoManager: UndoManager;
 
   readonly state: EditorState;
   readonly registry: EditorRegistry;
-  readonly keyDown = new Subject<KeyboardEvent>();
-  readonly textInput = new Subject<TextInputEvent>();
+
+  /**
+   * @deprecated The method should not be used
+   */
+  get keyDown() {
+    return this.keyDown$;
+  }
+
+  /**
+   * @deprecated The method should not be used
+   */
+  get textInput() {
+    return this.textInput$;
+  }
+
+  readonly keyDown$ = new Subject<KeyboardEvent>();
+  readonly textInput$ = new Subject<TextInputEvent>();
+  readonly contentChanged$ = new Subject<void>();
+  readonly compositionStart$ = new Subject<void>();
+  readonly compositionEnd$ = new Subject<void>();
 
   readonly preservedTextType: Set<TextType> = new Set([TextType.Bulleted]);
 
@@ -260,8 +275,6 @@ export class Editor {
           this.destructBlockNode(dom);
         }
       });
-
-    this.undoManager = new UndoManager(state);
   }
 
   get themeData(): ThemeData | undefined {
@@ -739,7 +752,8 @@ export class Editor {
     // this is essential because the cursor will change
     // after the user typing.
     this.#handleSelectionChanged(CursorStateUpdateReason.contentChanged);
-    this.#debouncedSealUndo();
+
+    this.contentChanged$.next();
   };
 
   /**
@@ -843,17 +857,17 @@ export class Editor {
 
   #handleCompositionStart = () => {
     this.composing = true;
-    this.undoManager.cursorBeforeComposition = this.state.cursorState;
+    this.compositionStart$.next();
   };
 
   #handleCompositionEnd = () => {
     this.composing = false;
     this.#handleContentChanged();
-    this.undoManager.cursorBeforeComposition = null;
+    this.compositionEnd$.next();
   };
 
   #handleKeyDown = (e: KeyboardEvent) => {
-    this.keyDown.next(e);
+    this.keyDown$.next(e);
     if (e.defaultPrevented) {
       return;
     }
@@ -880,32 +894,8 @@ export class Editor {
       this.#handleBackspace(e);
     } else if (e.key === "Delete") {
       this.#handleDelete(e);
-    } else if (isHotkey("mod+z", e)) {
-      e.preventDefault();
-      this.#undo();
-    } else if (isHotkey("mod+shift+z", e)) {
-      e.preventDefault();
-      this.#redo();
     }
   };
-
-  #undo() {
-    try {
-      this.undoManager.undo();
-    } catch (err) {
-      console.error("[Blocky]undo error", err);
-      this.controller.options?.onError?.(err);
-    }
-  }
-
-  #redo() {
-    try {
-      this.undoManager.redo();
-    } catch (err) {
-      console.error("[Blocky]redo error", err);
-      this.controller.options?.onError?.(err);
-    }
-  }
 
   #handleKeyTab(e: KeyboardEvent) {
     e.preventDefault();
@@ -1064,10 +1054,6 @@ export class Editor {
     }
   }
 
-  #debouncedSealUndo = debounce(() => {
-    this.undoManager.seal();
-  }, 1000);
-
   #handleBeforeChangesetApply = (changeset: FinalizedChangeset) => {
     const { afterCursor, options } = changeset;
     if (!isUndefined(afterCursor) || options.refreshCursor) {
@@ -1096,23 +1082,6 @@ export class Editor {
           );
         }
       });
-    }
-
-    if (options.record === ChangesetRecordOption.Undo && isThisUser) {
-      const undoItem = this.undoManager.getAUndoItem();
-      if (undoItem.startVersion < 0) {
-        undoItem.startVersion = changeset.version;
-        undoItem.length = 1;
-      } else {
-        undoItem.length = 1 + (changeset.version - undoItem.startVersion);
-      }
-      this.undoManager.clearRedoStack();
-      this.#debouncedSealUndo();
-    } else if (options.record === ChangesetRecordOption.Redo && isThisUser) {
-      this.undoManager.pushRedoItem(changeset);
-    } else {
-      // applying changeset from another user
-      this.undoManager.seal();
     }
 
     this.#emitStagedInput();
