@@ -49,7 +49,24 @@ export interface CursorStateUpdateEvent {
 
 export class State implements ChangesetStateLogger {
   readonly beforeChangesetApply: Subject<FinalizedChangeset> = new Subject();
-  readonly changesetApplied: Subject<FinalizedChangeset> = new Subject();
+
+  get changesetApplied() {
+    return this.changesetApplied$;
+  }
+
+  /**
+   * Important jobs need to put in the first stage
+   * - Update the editor
+   * - Data sync
+   */
+  readonly changesetApplied$: Subject<FinalizedChangeset> = new Subject();
+
+  /**
+   * Secondary jobs:
+   * - Update toolbar
+   * - Plugins
+   */
+  readonly changesetApplied2$: Subject<FinalizedChangeset> = new Subject();
   readonly versionHistory = new VersionHistory();
   readonly cursorStateChanged: Subject<CursorStateUpdateEvent> = new Subject();
   #appliedVersion: number;
@@ -140,8 +157,11 @@ export class State implements ChangesetStateLogger {
     }
 
     this.#appliedVersion = changeset.version;
-    this.changesetApplied.next(changeset);
+    this.changesetApplied$.next(changeset);
     this.versionHistory.insert(changeset);
+
+    this.changesetApplied2$.next(changeset);
+
     return true;
   }
 

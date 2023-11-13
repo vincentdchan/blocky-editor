@@ -267,6 +267,9 @@ export class Editor {
     this.state.changesetApplied
       .pipe(takeUntil(this.dispose$))
       .subscribe(this.#handleChangesetApplied);
+    this.state.changesetApplied2$
+      .pipe(takeUntil(this.dispose$))
+      .subscribe(this.#handleChangesetApplied2);
     this.state.blockWillDelete
       .pipe(takeUntil(this.dispose$))
       .subscribe((blockElement: BlockDataElement) => {
@@ -1083,6 +1086,7 @@ export class Editor {
     const { options } = changeset;
     const isThisUser = changeset.userId === this.controller.userId;
     const needsRender = options.updateView || changeset.forceUpdate;
+    changeset.needsRender = needsRender;
     if (needsRender) {
       this.render(() => {
         if (!isThisUser) {
@@ -1101,11 +1105,15 @@ export class Editor {
         }
       });
     }
+  };
 
+  #handleChangesetApplied2 = (changeset: FinalizedChangeset) => {
+    // we need to make the state.changesetApplied finished
+    // there should be some data sync jobs
     this.#emitStagedInput();
     this.#refreshSearch();
 
-    if (!needsRender) {
+    if (!changeset.needsRender) {
       this.controller.__emitNextTicks();
     }
   };

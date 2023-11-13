@@ -328,6 +328,7 @@ export interface FinalizedChangeset {
   afterCursor?: CursorState | null;
   forceUpdate: boolean;
   options: ChangesetApplyOptions;
+  needsRender?: boolean;
 }
 
 /**
