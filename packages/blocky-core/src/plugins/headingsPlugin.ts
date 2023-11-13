@@ -9,7 +9,7 @@ function makeHeadingsPlugin(): IPlugin {
     name: "headings",
     onInitialized(context: PluginContext) {
       const { editor, dispose$ } = context;
-      editor.textInput
+      editor.textInput$
         .pipe(
           takeUntil(dispose$),
           filter((evt) => evt.blockElement.t === TextBlock.Name) // don't apply on Title block

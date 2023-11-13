@@ -115,8 +115,13 @@
   min-width: 26px;
 }
 
-.blocky-bullet-content::before {
+.blocky-bullet-content:before {
   content: "•";
+  color: var(--blocky-primary-color);
+}
+
+.blocky-number-content:before {
+  content: var(--pseudoBefore--content);
   color: var(--blocky-primary-color);
 }
 

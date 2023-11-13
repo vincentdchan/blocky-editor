@@ -1,5 +1,10 @@
-import { isWhiteSpace } from "blocky-common/es";
-import { isNumber, isString } from "lodash-es";
+import {
+  TextBlock,
+  type TextInputEvent,
+  type IPlugin,
+  type Editor,
+  getTextTypeForTextBlock,
+} from "@pkg/index";
 import {
   BlockDataElement,
   CursorState,
@@ -7,27 +12,26 @@ import {
   TextType,
   Delta,
 } from "blocky-data";
+import { isNumber, isString } from "lodash-es";
+import { isWhiteSpace } from "blocky-common/es";
 import { filter, takeUntil } from "rxjs";
-import {
-  getTextTypeForTextBlock,
-  TextBlock,
-  type TextInputEvent,
-  type IPlugin,
-  type Editor,
-  type PluginContext,
-} from "@pkg/index";
 
-function makeBulletListPlugin(): IPlugin {
-  const turnTextBlockIntoBulletList = (
+export function makeNumberListPlugin(): IPlugin {
+  const turnTextBlockIntoNumberList = (
     editor: Editor,
     blockId: string,
-    textElement: BlockDataElement
+    textElement: BlockDataElement,
+    num: number,
+    deleteLen: number
   ) => {
     new Changeset(editor.state)
       .updateAttributes(textElement, {
-        textType: TextType.Bulleted,
+        textType: TextType.Numbered,
+        num,
       })
-      .textEdit(textElement, "textContent", () => new Delta().delete(2))
+      .textEdit(textElement, "textContent", () =>
+        new Delta().delete(deleteLen + 1)
+      )
       .setCursorState(CursorState.collapse(blockId, 0))
       .apply();
   };
@@ -36,10 +40,18 @@ function makeBulletListPlugin(): IPlugin {
     let index = 0;
     for (const op of evt.applyDelta.ops) {
       if (isString(op.insert)) {
-        if (index === 1 && isWhiteSpace(op.insert)) {
+        if (isWhiteSpace(op.insert)) {
           const before = beforeString.slice(0, index);
-          if (before === "-") {
-            turnTextBlockIntoBulletList(editor, blockElement.id, blockElement);
+          const testResult = /^([0-9]+)\.\s?$/.exec(before);
+          if (testResult && isString(testResult[1])) {
+            const num = parseInt(testResult[1], 10);
+            turnTextBlockIntoNumberList(
+              editor,
+              blockElement.id,
+              blockElement,
+              num,
+              before.length
+            );
           }
           break;
         }
@@ -69,7 +81,7 @@ function makeBulletListPlugin(): IPlugin {
     }
 
     const textType = getTextTypeForTextBlock(textElement);
-    if (textType !== TextType.Bulleted) {
+    if (textType !== TextType.Numbered) {
       return;
     }
     const textModel = textElement.getTextModel("textContent");
@@ -81,15 +93,12 @@ function makeBulletListPlugin(): IPlugin {
       new Changeset(editor.state)
         .updateAttributes(textElement, {
           textType: TextType.Normal,
+          num: undefined,
         })
         .setCursorState(CursorState.collapse(id, 0))
         .apply();
     }
   };
-  /**
-   * If the user presses a Backspace on the start of a bullet list,
-   * turn it back to a normal text.
-   */
   const handleBackspace = (editor: Editor) => (e: KeyboardEvent) => {
     const { cursorState } = editor.state;
     if (!cursorState) {
@@ -110,19 +119,20 @@ function makeBulletListPlugin(): IPlugin {
       return;
     }
     const textType = getTextTypeForTextBlock(textElement);
-    if (textType === TextType.Bulleted) {
+    if (textType === TextType.Numbered) {
       e.preventDefault();
       new Changeset(editor.state)
         .updateAttributes(textElement, {
           textType: TextType.Normal,
+          num: undefined,
         })
         .setCursorState(CursorState.collapse(id, 0))
         .apply();
     }
   };
   return {
-    name: "bullet-list",
-    onInitialized(context: PluginContext) {
+    name: "number-list",
+    onInitialized(context) {
       const editor = context.editor;
       editor.textInput$
         .pipe(
@@ -136,7 +146,6 @@ function makeBulletListPlugin(): IPlugin {
           filter((evt) => evt.key === "Enter")
         )
         .subscribe(handleEnter(editor));
-
       editor.keyDown$
         .pipe(
           takeUntil(context.dispose$),
@@ -147,4 +156,4 @@ function makeBulletListPlugin(): IPlugin {
   };
 }
 
-export default makeBulletListPlugin;
+export default makeNumberListPlugin;

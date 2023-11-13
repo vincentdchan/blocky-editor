@@ -1,9 +1,4 @@
-import {
-  $on,
-  isContainNode,
-  removeNode,
-  type Padding,
-} from "blocky-common/es/dom";
+import { isContainNode, removeNode, type Padding } from "blocky-common/es/dom";
 import {
   isUpperCase,
   areEqualShallow,
@@ -11,7 +6,7 @@ import {
   type IDisposable,
   type Position,
 } from "blocky-common/es";
-import { Subject, takeUntil, take } from "rxjs";
+import { Subject, takeUntil, take, fromEvent } from "rxjs";
 import {
   debounce,
   isFunction,
@@ -47,7 +42,6 @@ import { textToDeltaWithURL } from "@pkg/helper/urlHelper";
 import { SpannerDelegate, type SpannerFactory } from "./spannerDelegate";
 import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlock } from "@pkg/block/textBlock";
-import { UndoManager } from "@pkg/model/undoManager";
 import { EditorController } from "./controller";
 import { type FollowerWidget } from "./followerWidget";
 import { Block } from "@pkg/block/basic";
@@ -56,7 +50,6 @@ import {
   CollaborativeCursorManager,
   type CollaborativeCursorFactory,
 } from "./collaborativeCursors";
-import { isHotkey } from "is-hotkey";
 import { TitleBlock } from "@pkg/block/titleBlock";
 import type { ThemeData } from "@pkg/model/theme";
 
@@ -152,14 +145,34 @@ export class Editor {
   idGenerator: IdGenerator;
 
   readonly anchorSpanClass: string = "blocky-text-anchor";
-  readonly undoManager: UndoManager;
 
   readonly state: EditorState;
   readonly registry: EditorRegistry;
-  readonly keyDown = new Subject<KeyboardEvent>();
-  readonly textInput = new Subject<TextInputEvent>();
 
-  readonly preservedTextType: Set<TextType> = new Set([TextType.Bulleted]);
+  /**
+   * @deprecated The method should not be used
+   */
+  get keyDown() {
+    return this.keyDown$;
+  }
+
+  /**
+   * @deprecated The method should not be used
+   */
+  get textInput() {
+    return this.textInput$;
+  }
+
+  readonly keyDown$ = new Subject<KeyboardEvent>();
+  readonly textInput$ = new Subject<TextInputEvent>();
+  readonly contentChanged$ = new Subject<void>();
+  readonly compositionStart$ = new Subject<void>();
+  readonly compositionEnd$ = new Subject<void>();
+
+  readonly preservedTextType: Set<TextType> = new Set([
+    TextType.Bulleted,
+    TextType.Numbered,
+  ]);
 
   readonly collaborativeCursorManager: CollaborativeCursorManager;
 
@@ -235,7 +248,9 @@ export class Editor {
       .pipe(takeUntil(this.dispose$))
       .subscribe(this.handleCursorStateChanged);
 
-    this.disposables.push($on(container, "mouseleave", this.#hideSpanner));
+    fromEvent(container, "mouseleave")
+      .pipe(takeUntil(this.dispose$))
+      .subscribe(this.#hideSpanner);
 
     this.registry.plugin.initAllPlugins(this);
 
@@ -260,8 +275,6 @@ export class Editor {
           this.destructBlockNode(dom);
         }
       });
-
-    this.undoManager = new UndoManager(state);
   }
 
   get themeData(): ThemeData | undefined {
@@ -297,7 +310,7 @@ export class Editor {
     const oldInput = this.#stagedInput;
     this.#stagedInput = newInput;
     for (let i = 0; i < oldInput.length; i++) {
-      this.textInput.next(oldInput[i]);
+      this.textInput$.next(oldInput[i]);
     }
   }
 
@@ -404,18 +417,32 @@ export class Editor {
           newDom.spellcheck = false;
         }
 
-        $on(newDom, "input", () => {
-          if (this.composing) {
-            return;
-          }
-          this.#handleContentChanged();
-        });
-        $on(newDom, "compositionstart", this.#handleCompositionStart);
-        $on(newDom, "compositionend", this.#handleCompositionEnd);
-        $on(newDom, "keydown", this.#handleKeyDown);
-        $on(newDom, "copy", this.#handleCopy);
-        $on(newDom, "paste", this.#handlePaste);
-        $on(newDom, "blur", this.#handleEditorBlur);
+        fromEvent(newDom, "input")
+          .pipe(takeUntil(this.dispose$))
+          .subscribe(() => {
+            if (this.composing) {
+              return;
+            }
+            this.#handleContentChanged();
+          });
+        fromEvent(newDom, "compositionstart")
+          .pipe(takeUntil(this.dispose$))
+          .subscribe(this.#handleCompositionStart);
+        fromEvent(newDom, "compositionend")
+          .pipe(takeUntil(this.dispose$))
+          .subscribe(this.#handleCompositionEnd);
+        fromEvent<KeyboardEvent>(newDom, "keydown")
+          .pipe(takeUntil(this.dispose$))
+          .subscribe(this.#handleKeyDown);
+        fromEvent<ClipboardEvent>(newDom, "copy")
+          .pipe(takeUntil(this.dispose$))
+          .subscribe(this.#handleCopy);
+        fromEvent<ClipboardEvent>(newDom, "paste")
+          .pipe(takeUntil(this.dispose$))
+          .subscribe(this.#handlePaste);
+        fromEvent(newDom, "blur")
+          .pipe(takeUntil(this.dispose$))
+          .subscribe(this.#handleEditorBlur);
 
         this.#renderedDom = newDom;
       }
@@ -739,7 +766,8 @@ export class Editor {
     // this is essential because the cursor will change
     // after the user typing.
     this.#handleSelectionChanged(CursorStateUpdateReason.contentChanged);
-    this.#debouncedSealUndo();
+
+    this.contentChanged$.next();
   };
 
   /**
@@ -843,17 +871,17 @@ export class Editor {
 
   #handleCompositionStart = () => {
     this.composing = true;
-    this.undoManager.cursorBeforeComposition = this.state.cursorState;
+    this.compositionStart$.next();
   };
 
   #handleCompositionEnd = () => {
     this.composing = false;
     this.#handleContentChanged();
-    this.undoManager.cursorBeforeComposition = null;
+    this.compositionEnd$.next();
   };
 
   #handleKeyDown = (e: KeyboardEvent) => {
-    this.keyDown.next(e);
+    this.keyDown$.next(e);
     if (e.defaultPrevented) {
       return;
     }
@@ -880,32 +908,8 @@ export class Editor {
       this.#handleBackspace(e);
     } else if (e.key === "Delete") {
       this.#handleDelete(e);
-    } else if (isHotkey("mod+z", e)) {
-      e.preventDefault();
-      this.#undo();
-    } else if (isHotkey("mod+shift+z", e)) {
-      e.preventDefault();
-      this.#redo();
     }
   };
-
-  #undo() {
-    try {
-      this.undoManager.undo();
-    } catch (err) {
-      console.error("[Blocky]undo error", err);
-      this.controller.options?.onError?.(err);
-    }
-  }
-
-  #redo() {
-    try {
-      this.undoManager.redo();
-    } catch (err) {
-      console.error("[Blocky]redo error", err);
-      this.controller.options?.onError?.(err);
-    }
-  }
 
   #handleKeyTab(e: KeyboardEvent) {
     e.preventDefault();
@@ -984,10 +988,14 @@ export class Editor {
       const slices = textModel.delta.slice(cursorOffset);
 
       const textType = getTextTypeForTextBlock(blockElement);
+      const num = blockElement.getAttribute("num");
       const attributes = Object.create(null);
       if (this.preservedTextType.has(textType)) {
         // preserved data type
         attributes.textType = textType;
+        if (isNumber(num)) {
+          attributes.num = num + 1;
+        }
       }
 
       const children: DataBaseNode[] = [];
@@ -1064,10 +1072,6 @@ export class Editor {
     }
   }
 
-  #debouncedSealUndo = debounce(() => {
-    this.undoManager.seal();
-  }, 1000);
-
   #handleBeforeChangesetApply = (changeset: FinalizedChangeset) => {
     const { afterCursor, options } = changeset;
     if (!isUndefined(afterCursor) || options.refreshCursor) {
@@ -1096,23 +1100,6 @@ export class Editor {
           );
         }
       });
-    }
-
-    if (options.record === ChangesetRecordOption.Undo && isThisUser) {
-      const undoItem = this.undoManager.getAUndoItem();
-      if (undoItem.startVersion < 0) {
-        undoItem.startVersion = changeset.version;
-        undoItem.length = 1;
-      } else {
-        undoItem.length = 1 + (changeset.version - undoItem.startVersion);
-      }
-      this.undoManager.clearRedoStack();
-      this.#debouncedSealUndo();
-    } else if (options.record === ChangesetRecordOption.Redo && isThisUser) {
-      this.undoManager.pushRedoItem(changeset);
-    } else {
-      // applying changeset from another user
-      this.undoManager.seal();
     }
 
     this.#emitStagedInput();

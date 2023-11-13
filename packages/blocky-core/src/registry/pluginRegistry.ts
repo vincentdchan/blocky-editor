@@ -82,12 +82,17 @@ export class PluginRegistry {
   }
 
   unload(name: string) {
+    const plugin = this.plugins.get(name);
+    if (!plugin) {
+      return;
+    }
     this.plugins.delete(name);
 
     const context = this.contexts.get(name);
     if (context) {
       context.dispose();
       this.contexts.delete(name);
+      plugin.onDispose?.(context);
     }
   }
 

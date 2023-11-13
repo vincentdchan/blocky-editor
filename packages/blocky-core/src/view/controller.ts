@@ -34,13 +34,17 @@ import makeStyledTextPlugin from "@pkg/plugins/styledTextPlugin";
 import makeCodeTextPlugin from "@pkg/plugins/codeTextPlugin";
 import makeBulletListPlugin from "@pkg/plugins/bulletListPlugin";
 import makeHeadingsPlugin from "@pkg/plugins/headingsPlugin";
+import makeNumberListPlugin from "@pkg/plugins/numberListPlugin";
+import makeUndoPlugin from "@pkg/plugins/undoPlugin";
 import { isUndefined } from "lodash-es";
 
 export function makeDefaultEditorPlugins(): IPlugin[] {
   return [
+    makeUndoPlugin(),
     makeStyledTextPlugin(),
     makeCodeTextPlugin(),
     makeBulletListPlugin(),
+    makeNumberListPlugin(),
     makeHeadingsPlugin(),
   ];
 }

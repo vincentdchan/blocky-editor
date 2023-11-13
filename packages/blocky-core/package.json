@@ -8,7 +8,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
     "test": "vitest",
-    "test:unit": "vitest --run"
+    "test:unit": "vitest --run",
+    "coverage": "vitest run --coverage"
   },
   "homepage": "https://github.com/vincentdchan/blocky-editor",
   "keywords": [
@@ -24,6 +25,7 @@
     "@types/lodash-es": "^4.17.6",
     "@types/node": "^17.0.41",
     "blocky-data": "workspace:*",
+    "c8": "^8.0.1",
     "jsdom": "^20.0.0",
     "tsc-alias": "^1.6.9",
     "tslib": "^2.4.0",

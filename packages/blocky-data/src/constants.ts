@@ -1,6 +1,7 @@
 export enum TextType {
   Checkbox = "checkbox",
   Bulleted = "bulleted",
+  Numbered = "numbered",
   Normal = "normal",
   Heading1 = "h1",
   Heading2 = "h2",
@@ -9,6 +10,9 @@ export enum TextType {
 
 export function textTypePrecedence(textType: TextType): number {
   switch (textType) {
+    case TextType.Numbered:
+      return -3;
+
     case TextType.Checkbox:
       return -2;
 

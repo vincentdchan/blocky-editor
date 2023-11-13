@@ -17,9 +17,9 @@ import { ReadMeContent } from "./readme";
 import { Theme } from "./themeSwitch";
 import { isHotkey } from "is-hotkey";
 import { Subject, takeUntil } from "rxjs";
+import Sidebar from "./components/sidebar";
 import "blocky-core/css/blocky-core.css";
 import "./app.scss";
-import Sidebar from "./components/sidebar";
 
 function makeEditorPlugins(): IPlugin[] {
   return [
