@@ -1,3 +1,12 @@
+## 3.3.0
+
+- depreacate `blocky-data`
+- supports number list
+
+## 3.0.0
+
+- simplify data structures
+
 ## 2.16.0
 
 - New block init API

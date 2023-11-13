@@ -45,7 +45,7 @@ importers:
   packages/blocky-core:
     dependencies:
       blocky-common:
-        specifier: workspace:3.0.0
+        specifier: workspace:3.3.0
         version: link:../blocky-common
       is-hotkey:
         specifier: ^0.2.0
@@ -161,7 +161,7 @@ importers:
   packages/blocky-react:
     dependencies:
       blocky-common:
-        specifier: workspace:3.0.0
+        specifier: workspace:3.3.0
         version: link:../blocky-common
       lodash-es:
         specifier: '*'
