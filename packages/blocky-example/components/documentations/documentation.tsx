@@ -1,6 +1,6 @@
 "use client";
 import Markdown from "@pkg/components/markdown";
-import { ThemeProvider, ThemeSwitch } from "@pkg/app/themeSwitch";
+import { ThemeProvider } from "@pkg/app/themeSwitch";
 import Link from "next/link";
 import Navbar from "../navbar";
 import styles from "./documentation.module.scss";
