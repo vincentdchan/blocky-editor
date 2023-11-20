@@ -5,6 +5,8 @@ import "./app.scss";
 
 export const metadata: Metadata = {
   title: "Blocky Editor Example",
+  description: "Blocky Editor is an editor built with blocks",
+  keywords: ["Notion-like", "editor", "web", "react"],
 };
 
 export default function RootLayout({
