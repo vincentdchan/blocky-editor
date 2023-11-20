@@ -1,8 +1,8 @@
-import { Component } from "react";
+"use client";
 import Markdown from "@pkg/components/markdown";
-import { ThemeSwitch } from "@pkg/themeSwitch";
-import { Link } from "react-router-dom";
+import { ThemeSwitch } from "@pkg/app/themeSwitch";
 import AppLogo from "@pkg/components/appLogo";
+import Link from "next/link";
 import "./documentation.scss";
 
 export interface Heading {
@@ -18,20 +18,12 @@ export interface DocItem {
   headings: Heading[];
 }
 
-interface DocumentationState {
-  selectedContent: string;
-}
-
 export interface DocumentationProps {
   items: DocItem[];
   content: DocItem;
 }
 
-class Documentation extends Component<DocumentationProps, DocumentationState> {
-  constructor(props: DocumentationProps) {
-    super(props);
-  }
-
+function Documentation(props: DocumentationProps) {
   // override componentDidMount() {
   //   setTimeout(() => {
   //     const hash = window.location.hash;
@@ -45,10 +37,10 @@ class Documentation extends Component<DocumentationProps, DocumentationState> {
   //     }
   //   }, 10);
   // }
-  renderSidebar() {
+  const renderSidebar = () => {
     return (
       <div className="sidebar">
-        <Link to="/">
+        <Link href="/">
           <AppLogo />
         </Link>
         <div className="badge-container">
@@ -69,9 +61,9 @@ class Documentation extends Component<DocumentationProps, DocumentationState> {
           </a>
         </div>
         <ThemeSwitch />
-        {this.props.items.map((item, index) => (
+        {props.items.map((item, index) => (
           <div className="page-item" key={index.toString()}>
-            <Link to={item.href} className="sidebar-item">
+            <Link href={item.href} className="sidebar-item">
               {item.name}
             </Link>
             <div className="headings">
@@ -85,7 +77,7 @@ class Documentation extends Component<DocumentationProps, DocumentationState> {
                     }
                     elm.scrollIntoView({ behavior: "smooth" });
                   }}
-                  to={h.href}
+                  href={h.href}
                   className="sidebar-item"
                 >
                   {h.title}
@@ -96,23 +88,18 @@ class Documentation extends Component<DocumentationProps, DocumentationState> {
         ))}
       </div>
     );
-  }
+  };
 
-  render() {
-    return (
-      <div className="blocky-documentations">
-        {this.renderSidebar()}
-        <div className="main-content">
-          <div className="md-content">
-            <Markdown
-              className="md-container"
-              markdown={this.props.content.content}
-            />
-          </div>
+  return (
+    <div className="blocky-documentations">
+      {renderSidebar()}
+      <div className="main-content">
+        <div className="md-content">
+          <Markdown className="md-container" markdown={props.content.content} />
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
 
 export default Documentation;

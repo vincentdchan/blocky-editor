@@ -1,3 +1,4 @@
+"use client";
 import { Component, createRef } from "react";
 import * as marked from "marked";
 import hljs from "highlight.js";

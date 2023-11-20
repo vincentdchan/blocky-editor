@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import LogoImg from "./logo.png";
 import DarkLogoImg from "./logo-dark.png";
