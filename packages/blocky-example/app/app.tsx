@@ -17,7 +17,7 @@ import ToolbarMenu from "./toolbarMenu";
 import TianShuiWeiImage from "./tianshuiwei.jpg";
 import Image from "next/image";
 import { ReadMeContent } from "./readme";
-import { Theme, ThemeProvider } from "./themeSwitch";
+import { Theme } from "./themeSwitch";
 import { isHotkey } from "is-hotkey";
 import { Subject, takeUntil } from "rxjs";
 import "blocky-core/css/blocky-core.css";

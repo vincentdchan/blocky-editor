@@ -33,7 +33,6 @@ export function makeReactSpanner(renderer: Renderer): SpannerFactory {
       },
       dispose: once(() => {
         setTimeout(() => {
-          console.log("unmount");
           root?.unmount();
           root = null;
         }, 0);

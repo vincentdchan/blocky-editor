@@ -1,6 +1,6 @@
 "use client";
 import Markdown from "@pkg/components/markdown";
-import { Theme, ThemeProvider, ThemeSwitch } from "@pkg/app/themeSwitch";
+import { ThemeProvider, ThemeSwitch } from "@pkg/app/themeSwitch";
 import AppLogo from "@pkg/components/appLogo";
 import Link from "next/link";
 import "./documentation.scss";

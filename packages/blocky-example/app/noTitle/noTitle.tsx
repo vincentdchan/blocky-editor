@@ -1,11 +1,10 @@
 import { Component, ReactNode, createRef } from "react";
-import Sidebar from "@pkg/components/sidebar";
 import { BlockyEditor, makeReactToolbar } from "blocky-react";
 import { EditorController, IPlugin } from "blocky-core";
-import { makeImageBlockPlugin } from "@pkg/plugins/imageBlock";
-import { makeCommandPanelPlugin } from "@pkg/plugins/commandPanel";
-import { makeAtPanelPlugin } from "@pkg/plugins/atPanel";
-import ToolbarMenu from "@pkg/toolbarMenu";
+import { makeImageBlockPlugin } from "@pkg/app/plugins/imageBlock";
+import { makeCommandPanelPlugin } from "@pkg/app/plugins/commandPanel";
+import { makeAtPanelPlugin } from "@pkg/app/plugins/atPanel";
+import ToolbarMenu from "@pkg/app/toolbarMenu";
 import { timer, Subject, takeUntil } from "rxjs";
 
 function makeEditorPlugins(): IPlugin[] {
@@ -70,15 +69,4 @@ class NoTitleEditor extends Component {
   }
 }
 
-function NoTitle() {
-  return (
-    <div className="blocky-example-app-window">
-      <Sidebar />
-      <div className="blocky-example-container">
-        <NoTitleEditor />
-      </div>
-    </div>
-  );
-}
-
-export default NoTitle;
+export default NoTitleEditor;
