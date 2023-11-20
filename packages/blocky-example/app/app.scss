@@ -10,6 +10,7 @@
 
 .blocky-example-sidebar-container {
   min-width: 260px;
+  max-width: 260px;
   border-right-style: solid;
   border-right-width: 1px;
   border-right-color: grey;
@@ -98,8 +99,7 @@ body {
   top: 0px;
   width: 100%;
   height: 100%;
-  overflow-x: scroll;
-  overflow-y: scroll;
+  overflow: auto;
 }
 
 .blocky-example-user {
