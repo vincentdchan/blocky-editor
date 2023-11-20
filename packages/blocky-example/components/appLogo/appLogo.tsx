@@ -6,7 +6,11 @@ import DarkLogoImg from "./logo-dark.png";
 import { Theme } from "@pkg/app/themeSwitch";
 import Image from "next/image";
 
-function AppLogo() {
+export interface AppLogoProps {
+  style?: React.CSSProperties;
+}
+
+function AppLogo(props: AppLogoProps) {
   return (
     <Theme.Consumer>
       {(options: any) => (
@@ -16,10 +20,12 @@ function AppLogo() {
           alt="logo"
           sizes="100vw"
           // Make the image display full width
-          style={{
-            width: "100%",
-            height: "auto",
-          }}
+          style={
+            props.style ?? {
+              width: "100%",
+              height: "auto",
+            }
+          }
         />
       )}
     </Theme.Consumer>

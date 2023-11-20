@@ -4,6 +4,7 @@ import { lazy, useState, useEffect, Suspense } from "react";
 import Sidebar from "@pkg/components/sidebar";
 import "blocky-core/css/blocky-core.css";
 import { ThemeProvider } from "../themeSwitch";
+import Navbar from "@pkg/components/navbar";
 
 const NoTitleEditor = lazy(() => import("./noTitle"));
 
@@ -15,13 +16,16 @@ function NoTitlePage() {
   return (
     <ThemeProvider>
       <div className="blocky-example-app-window">
-        <Sidebar />
-        <div className="blocky-example-container">
-          {isClient && (
-            <Suspense>
-              <NoTitleEditor />
-            </Suspense>
-          )}
+        <Navbar />
+        <div className="blocky-example-app-body">
+          <Sidebar />
+          <div className="blocky-example-container">
+            {isClient && (
+              <Suspense>
+                <NoTitleEditor />
+              </Suspense>
+            )}
+          </div>
         </div>
       </div>
     </ThemeProvider>

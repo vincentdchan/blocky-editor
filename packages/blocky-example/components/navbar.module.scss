@@ -1,0 +1,31 @@
+
+.container {
+  min-height: 48px;
+  max-height: 48px;
+  height: 48px;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  display: flex;
+  border-bottom: 1px solid gray;
+  background-color: var(--bg-color);
+}
+
+.brand {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  flex: 1;
+
+  a {
+    height: var(--brand-height);
+  }
+}
+
+.rightPart {
+  display: flex;
+  align-items: center;
+
+  a {
+    margin-left: 16px;
+  }
+}

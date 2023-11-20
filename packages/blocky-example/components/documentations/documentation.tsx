@@ -1,9 +1,9 @@
 "use client";
 import Markdown from "@pkg/components/markdown";
-import { ThemeProvider, ThemeSwitch } from "@pkg/app/themeSwitch";
-import AppLogo from "@pkg/components/appLogo";
+import { ThemeProvider } from "@pkg/app/themeSwitch";
 import Link from "next/link";
-import "./documentation.scss";
+import Navbar from "../navbar";
+import styles from "./documentation.module.scss";
 
 export interface Heading {
   title: string;
@@ -26,34 +26,13 @@ export interface DocumentationProps {
 function Documentation(props: DocumentationProps) {
   const renderSidebar = () => {
     return (
-      <div className="sidebar">
-        <Link href="/">
-          <AppLogo />
-        </Link>
-        <div className="badge-container">
-          <a
-            href="https://github.com/vincentdchan/blocky-editor"
-            target="_blank"
-          >
-            <img
-              alt="GitHub Repo stars"
-              src="https://img.shields.io/github/stars/vincentdchan/blocky-editor?style=social"
-            />
-          </a>
-          <a href="https://twitter.com/cdz_solo" target="_blank">
-            <img
-              alt="Twitter Follow"
-              src="https://img.shields.io/twitter/follow/cdz_solo?style=social"
-            ></img>
-          </a>
-        </div>
-        <ThemeSwitch />
+      <div className={styles.sidebar}>
         {props.items.map((item, index) => (
-          <div className="page-item" key={index.toString()}>
-            <Link href={item.href} className="sidebar-item">
+          <div className={styles.pageItem} key={index.toString()}>
+            <Link href={item.href} className={styles.sidebarItem}>
               {item.name}
             </Link>
-            <div className="headings">
+            <div className={styles.headings}>
               {item.headings.map((h) => (
                 <Link
                   key={h.id}
@@ -65,7 +44,7 @@ function Documentation(props: DocumentationProps) {
                     elm.scrollIntoView({ behavior: "smooth" });
                   }}
                   href={h.href}
-                  className="sidebar-item"
+                  className={styles.sidebarItem}
                 >
                   {h.title}
                 </Link>
@@ -79,9 +58,12 @@ function Documentation(props: DocumentationProps) {
 
   return (
     <ThemeProvider>
-      <div className="blocky-documentations">
+      <div className={styles.navbarContainer}>
+        <Navbar />
+      </div>
+      <div className={styles.documentations}>
         {renderSidebar()}
-        <div className="main-content">
+        <div className={styles.mainContent}>
           <div className="md-content">
             <Markdown
               className="md-container"
