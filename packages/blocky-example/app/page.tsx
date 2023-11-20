@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState, Suspense, lazy } from "react";
 import Sidebar from "@pkg/components/sidebar";
+import { ThemeProvider } from "./themeSwitch";
 import "./app.scss";
 
 const App = lazy(() => import("./app"));
@@ -11,18 +12,20 @@ function Page() {
     setIsClient(true);
   }, []);
   return (
-    <div className="blocky-example-app-window">
-      <Sidebar />
-      <div className="blocky-example-container">
-        {isClient ? (
-          <Suspense>
-            <App />
-          </Suspense>
-        ) : (
-          <div className="blocky-example-app-loading" />
-        )}
+    <ThemeProvider>
+      <div className="blocky-example-app-window">
+        <Sidebar />
+        <div className="blocky-example-container">
+          {isClient ? (
+            <Suspense>
+              <App />
+            </Suspense>
+          ) : (
+            <div className="blocky-example-app-loading" />
+          )}
+        </div>
       </div>
-    </div>
+    </ThemeProvider>
   );
 }
 
