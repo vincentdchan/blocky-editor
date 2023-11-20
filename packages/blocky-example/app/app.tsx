@@ -21,7 +21,6 @@ import { Theme } from "./themeSwitch";
 import { isHotkey } from "is-hotkey";
 import { Subject, takeUntil } from "rxjs";
 import "blocky-core/css/blocky-core.css";
-import "./app.scss";
 
 function makeEditorPlugins(): IPlugin[] {
   return [
@@ -163,7 +162,7 @@ class App extends Component<unknown> {
 
   render() {
     return (
-      <div className="blocky-example-container">
+      <>
         <BlockyEditorWithSearchBoxAndTitle
           containerRef={this.containerLeftRef}
           className="blocky-example-editor-container left"
@@ -174,7 +173,7 @@ class App extends Component<unknown> {
           className="blocky-example-editor-container right"
           controller={this.editorControllerRight}
         />
-      </div>
+      </>
     );
   }
 }
