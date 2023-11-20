@@ -13,7 +13,7 @@
   "author": "Vincent Chan <okcdz@diverse.space>",
   "license": "MIT",
   "devDependencies": {
-    "typescript": "^4.7.3",
+    "typescript": "^5.2.2",
     "vitest": "^0.14.2"
   }
 }

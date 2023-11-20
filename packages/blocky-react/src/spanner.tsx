@@ -1,5 +1,5 @@
 import React from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, Root } from "react-dom/client";
 import type {
   SpannerFactory,
   EditorController,
@@ -21,9 +21,9 @@ export function makeReactSpanner(renderer: Renderer): SpannerFactory {
     editorController: EditorController
   ): SpannerInstance => {
     let focusedNode: BlockDataElement | undefined;
-    const root = createRoot(container);
+    let root: Root | null = createRoot(container);
     const renderFn = () => {
-      root.render(renderer({ editorController, focusedNode }));
+      root?.render(renderer({ editorController, focusedNode }));
     };
     renderFn();
     return {
@@ -33,7 +33,8 @@ export function makeReactSpanner(renderer: Renderer): SpannerFactory {
       },
       dispose: once(() => {
         setTimeout(() => {
-          root.unmount();
+          root?.unmount();
+          root = null;
         }, 0);
       }),
     };

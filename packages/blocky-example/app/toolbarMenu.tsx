@@ -1,7 +1,7 @@
 import { type EditorController, CursorState } from "blocky-core";
 import React, { Component, createRef, RefObject, memo } from "react";
 import Mask from "@pkg/components/mask";
-import Button from "./components/button";
+import Button from "@pkg/components/button";
 import "./toolbarMenu.scss";
 
 const ToolbarMenuItem = memo(

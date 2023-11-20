@@ -1,3 +1,5 @@
+"use client";
+
 import React, { Component, createContext } from "react";
 
 export interface ThemeContext {
