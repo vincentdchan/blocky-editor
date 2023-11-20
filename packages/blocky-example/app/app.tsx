@@ -16,7 +16,6 @@ import SpannerMenu from "./spannerMenu";
 import ToolbarMenu from "./toolbarMenu";
 import TianShuiWeiImage from "./tianshuiwei.jpg";
 import Image from "next/image";
-import { ReadMeContent } from "./readme";
 import { Theme } from "./themeSwitch";
 import { isHotkey } from "is-hotkey";
 import { Subject, takeUntil } from "rxjs";
@@ -84,14 +83,18 @@ function makeController(
   });
 }
 
-class App extends Component<unknown> {
+export interface AppProps {
+  initContent: string;
+}
+
+class App extends Component<AppProps> {
   private editorControllerLeft: EditorController;
   private editorControllerRight: EditorController;
   private containerLeftRef = createRef<HTMLDivElement>();
   private containerRightRef = createRef<HTMLDivElement>();
   private dispose$ = new Subject<void>();
 
-  constructor(props: unknown) {
+  constructor(props: AppProps) {
     super(props);
 
     this.editorControllerLeft = makeController(
@@ -150,7 +153,7 @@ class App extends Component<unknown> {
       });
 
     // paste before the editor initialized
-    this.editorControllerLeft.pasteHTMLAtCursor(ReadMeContent);
+    this.editorControllerLeft.pasteHTMLAtCursor(props.initContent);
   }
 
   componentWillUnmount(): void {
