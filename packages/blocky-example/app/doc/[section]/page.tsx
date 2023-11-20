@@ -5,6 +5,7 @@ import Documentation, {
   Heading,
 } from "@pkg/components/documentations";
 import { redirect } from "next/navigation";
+import "@pkg/app/app.scss";
 
 export interface SectionPageProps {
   params: { section: string };
