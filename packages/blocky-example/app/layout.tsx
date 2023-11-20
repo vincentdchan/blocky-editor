@@ -16,6 +16,10 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="icon" type="image/png" href="/favicon.png" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
+          rel="stylesheet"
+        ></link>
         <Script
           async
           src="https://www.googletagmanager.com/gtag/js?id=G-PS6NK1TQ06"
