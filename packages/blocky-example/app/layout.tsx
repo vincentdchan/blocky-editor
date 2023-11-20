@@ -1,6 +1,7 @@
 import React from "react";
 import Script from "next/script";
 import { Metadata } from "next";
+import "./app.scss";
 
 export const metadata: Metadata = {
   title: "Blocky Editor Example",

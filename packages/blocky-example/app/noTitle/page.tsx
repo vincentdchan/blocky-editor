@@ -2,7 +2,6 @@
 
 import { lazy, useState, useEffect, Suspense } from "react";
 import Sidebar from "@pkg/components/sidebar";
-import "@pkg/app/app.scss";
 import "blocky-core/css/blocky-core.css";
 import { ThemeProvider } from "../themeSwitch";
 

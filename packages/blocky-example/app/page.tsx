@@ -2,7 +2,6 @@
 import React, { useEffect, useState, Suspense, lazy } from "react";
 import Sidebar from "@pkg/components/sidebar";
 import { ThemeProvider } from "./themeSwitch";
-import "./app.scss";
 
 const App = lazy(() => import("./app"));
 
