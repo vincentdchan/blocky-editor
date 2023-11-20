@@ -25,7 +25,7 @@ export class BlockyEditor extends Component<Props> {
     if (this.props.ignoreInitEmpty !== true) {
       editor.initFirstEmptyBlock();
     }
-    editor.render(() => {
+    editor.fullRender(() => {
       if (autoFocus) {
         controller.setCursorState(CursorState.collapse("title", 0));
       }

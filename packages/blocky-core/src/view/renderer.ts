@@ -6,8 +6,11 @@ import {
   type DataBaseNode,
   BlockDataElement,
   BlockyTextModel,
+  FinalizedChangeset,
+  Operation,
 } from "@pkg/data";
 import type { Editor } from "@pkg/view/editor";
+import { TextBlock } from "@pkg/block/textBlock";
 
 function ensureChild<K extends keyof HTMLElementTagNameMap>(
   dom: HTMLElement,
@@ -39,6 +42,27 @@ interface IRendererOptions {
   editor: Editor;
 }
 
+export enum RenderFlag {
+  Full = 0x01,
+  Incremental = 0x02,
+}
+
+export interface RenderOption {
+  changeset?: FinalizedChangeset;
+  operation?: Operation;
+  flags: number;
+}
+
+function isChangesetAllTextEdit(changeset: FinalizedChangeset): boolean {
+  for (let i = 0, len = changeset.operations.length; i < len; i++) {
+    if (changeset.operations[i].op !== "text-edit") {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 /**
  * Generally, the renderer only needs to
  * call the render method of the block.
@@ -64,7 +88,7 @@ export class DocRenderer {
     this.blockClassName = `${clsPrefix}-editor-block`;
   }
 
-  render(oldDom?: Node) {
+  render(option: RenderOption, oldDom?: Node) {
     const { editor, clsPrefix } = this;
     const { state } = editor;
     const createNewDocument = () => {
@@ -72,19 +96,64 @@ export class DocRenderer {
         "div",
         `${clsPrefix}-documents ${clsPrefix}-default-fonts`
       );
-      this.renderDocument(state.document, newDom);
+      this.renderDocument(option, state.document, newDom);
       return newDom;
     };
 
     if (oldDom && oldDom instanceof HTMLDivElement) {
-      this.renderDocument(state.document, oldDom);
+      const { changeset } = option;
+      if (
+        option.flags === RenderFlag.Incremental &&
+        changeset &&
+        isChangesetAllTextEdit(changeset)
+      ) {
+        for (let i = 0, len = changeset.operations.length; i < len; i++) {
+          const op = changeset.operations[i];
+          this.renderTextBlockByOperation(changeset, op);
+        }
+
+        return oldDom;
+      }
+
+      this.renderDocument(option, state.document, oldDom);
       return oldDom;
     } else {
       return createNewDocument();
     }
   }
 
-  protected renderDocument(document: BlockyDocument, dom: HTMLDivElement) {
+  renderTextBlockByOperation(
+    changeset: FinalizedChangeset,
+    operation: Operation
+  ) {
+    if (operation.op !== "text-edit") {
+      throw new Error("op error:" + operation.op);
+    }
+    const state = this.editor.state;
+    const blockElement = state.getBlockElementById(operation.id);
+    if (!blockElement) {
+      // has been deleted?
+      return;
+    }
+    if (blockElement.t !== TextBlock.Name) {
+      return;
+    }
+    const block = state.blocks.get(operation.id);
+    const dom = state.domMap.get(operation.id);
+    if (block && dom) {
+      block.render?.(dom as HTMLElement, {
+        changeset,
+        operation,
+        flags: RenderFlag.Incremental,
+      });
+    }
+  }
+
+  protected renderDocument(
+    option: RenderOption,
+    document: BlockyDocument,
+    dom: HTMLDivElement
+  ) {
     dom._mgNode = document;
 
     const { clsPrefix } = this;
@@ -120,6 +189,7 @@ export class DocRenderer {
       }
     );
     this.renderBlocks(
+      option,
       blocksContainer,
       blocksContainer.firstChild,
       document.body.firstChild
@@ -172,6 +242,7 @@ export class DocRenderer {
   }
 
   protected renderBlocks(
+    option: RenderOption,
     blocksContainer: HTMLElement,
     beginChild: ChildNode | null,
     beginBlockyNode: DataBaseNode | null
@@ -238,7 +309,7 @@ export class DocRenderer {
       if (!block) {
         throw new Error(`block not found for id: ${id}`);
       }
-      block.render?.(domPtr as HTMLElement);
+      block.render?.(domPtr as HTMLElement, option);
 
       nodePtr = nodePtr.nextSibling;
       prevPtr = domPtr;
@@ -249,6 +320,7 @@ export class DocRenderer {
         const { childrenContainerDOM, childrenBeginDOM } = block;
         if (childrenContainerDOM) {
           this.renderBlocks(
+            option,
             childrenContainerDOM,
             childrenBeginDOM,
             childrenBeginElement

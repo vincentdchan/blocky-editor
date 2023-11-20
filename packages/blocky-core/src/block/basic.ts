@@ -12,6 +12,7 @@ import Delta from "quill-delta-es";
 import { Subject } from "rxjs";
 import { type Editor } from "@pkg/view/editor";
 import { type EditorController } from "@pkg/view/controller";
+import { RenderOption } from "@pkg/view/renderer";
 
 export interface BlockDidMountEvent {
   element: HTMLElement;
@@ -198,7 +199,7 @@ export class Block implements IDisposable {
 
   blockContentChanged?(e: BlockContentChangedEvent): void;
 
-  render?(container: HTMLElement): void;
+  render?(container: HTMLElement, option: RenderOption): void;
 
   /**
    * If the block wants the renderer to render children of

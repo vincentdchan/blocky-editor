@@ -14,7 +14,7 @@ import {
   isString,
   isNumber,
 } from "lodash-es";
-import { DocRenderer } from "@pkg/view/renderer";
+import { DocRenderer, RenderFlag, RenderOption } from "@pkg/view/renderer";
 import { EditorState, SearchContext } from "@pkg/model";
 import {
   type CursorStateUpdateEvent,
@@ -410,9 +410,18 @@ export class Editor {
     }, 15);
   }
 
-  render(done?: AfterFn) {
+  fullRender(done?: AfterFn) {
+    this.render(
+      {
+        flags: RenderFlag.Full,
+      },
+      done
+    );
+  }
+
+  render(option: RenderOption, done?: AfterFn) {
     try {
-      const newDom = this.#renderer.render(this.#renderedDom);
+      const newDom = this.#renderer.render(option, this.#renderedDom);
       if (!this.#renderedDom) {
         this.#container.appendChild(newDom);
         newDom.contentEditable = "true";
@@ -732,12 +741,17 @@ export class Editor {
     this.#handleSelectionChanged(CursorStateUpdateReason.contentChanged);
     const storedCursorState = this.state.cursorState;
     this.state.__setCursorState(null, CursorStateUpdateReason.changeset);
-    this.render(() => {
-      this.state.__setCursorState(
-        storedCursorState,
-        CursorStateUpdateReason.changeset
-      );
-    });
+    this.render(
+      {
+        flags: RenderFlag.Full,
+      },
+      () => {
+        this.state.__setCursorState(
+          storedCursorState,
+          CursorStateUpdateReason.changeset
+        );
+      }
+    );
   }
 
   #handleContentChanged = () => {
@@ -785,23 +799,10 @@ export class Editor {
    */
   #rerenderEmptyLines(changeset: FinalizedChangeset) {
     for (const op of changeset.operations) {
-      if (op.op === "text-edit") {
-        const blockElement = this.state.getBlockElementById(op.id);
-        if (!blockElement) {
-          // has been deleted?
-          continue;
-        }
-        if (blockElement.t === TextBlock.Name) {
-          const textModel = blockElement.getTextModel("textContent")!;
-          if (textModel.length === 0) {
-            const block = this.state.blocks.get(op.id);
-            const dom = this.state.domMap.get(op.id);
-            if (block && dom) {
-              block.render?.(dom as HTMLElement);
-            }
-          }
-        }
+      if (op.op !== "text-edit") {
+        continue;
       }
+      this.#renderer.renderTextBlockByOperation(changeset, op);
     }
   }
 
@@ -1088,22 +1089,28 @@ export class Editor {
     const needsRender = options.updateView || changeset.forceUpdate;
     changeset.needsRender = needsRender;
     if (needsRender) {
-      this.render(() => {
-        if (!isThisUser) {
-          return;
+      this.render(
+        {
+          changeset,
+          flags: RenderFlag.Incremental,
+        },
+        () => {
+          if (!isThisUser) {
+            return;
+          }
+          if (!isUndefined(changeset.afterCursor)) {
+            this.state.__setCursorState(
+              changeset.afterCursor,
+              CursorStateUpdateReason.changeset
+            );
+          } else if (options.refreshCursor) {
+            this.state.__setCursorState(
+              changeset.beforeCursor,
+              CursorStateUpdateReason.changeset
+            );
+          }
         }
-        if (!isUndefined(changeset.afterCursor)) {
-          this.state.__setCursorState(
-            changeset.afterCursor,
-            CursorStateUpdateReason.changeset
-          );
-        } else if (options.refreshCursor) {
-          this.state.__setCursorState(
-            changeset.beforeCursor,
-            CursorStateUpdateReason.changeset
-          );
-        }
-      });
+      );
     }
   };
 
