@@ -27,7 +27,6 @@ import { EditorController } from "@pkg/view/controller";
 import type { SpanStyle } from "@pkg/registry/spanRegistry";
 import type { Embed } from "@pkg/registry/embedRegistry";
 import { Subject, fromEvent, takeUntil } from "rxjs";
-import { RenderOption } from "@pkg/view/renderer";
 
 const TextContentClass = "blocky-block-text-content";
 
@@ -460,7 +459,7 @@ export class TextBlock extends Block {
     return this.props.getAttribute<BlockyTextModel>("textContent")!;
   }
 
-  override render(container: HTMLElement, option: RenderOption) {
+  override render(container: HTMLElement) {
     this.#container = container;
 
     const textModel = this.textModel;

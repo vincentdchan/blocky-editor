@@ -28,7 +28,6 @@ import {
   FinalizedChangeset,
   CursorStateUpdateReason,
   TextType,
-  Operation,
 } from "@pkg/data";
 import Delta from "quill-delta-es";
 import {
