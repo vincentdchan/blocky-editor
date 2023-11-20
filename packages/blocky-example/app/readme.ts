@@ -1,5 +1,3 @@
-import ArchImageUrl from "./arch.png?url";
-
 export const ReadMeContent = `
 <p>Blocky Editor is an editor which supports the concept of blocks. It can help you to build an editor like Notion. It's tiny, fast and extensible. You can extend it with blocks.</p>
 <h2>Why?</h2>
@@ -21,7 +19,7 @@ export const ReadMeContent = `
 </ul>
 <h2>Packages</h2>
 <p>
-  <img src=${ArchImageUrl} />
+  <img src="/arch.png" />
 </p>
 <ul>
   <li>

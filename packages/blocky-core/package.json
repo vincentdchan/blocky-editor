@@ -36,7 +36,7 @@
     "blocky-common": "workspace:3.3.0",
     "is-hotkey": "^0.2.0",
     "lodash-es": "^4.17.21",
-    "quill-delta-es": "^5.2.6",
+    "quill-delta-es": "^5.2.10",
     "rxjs": "^7.8.1"
   }
 }

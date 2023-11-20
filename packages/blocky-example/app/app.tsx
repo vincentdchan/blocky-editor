@@ -1,3 +1,5 @@
+"use client";
+
 import { Component, createRef, RefObject, useEffect, useState } from "react";
 import { EditorController, darkTheme, type IPlugin } from "blocky-core";
 import {
@@ -13,11 +15,11 @@ import { makeAtPanelPlugin } from "./plugins/atPanel";
 import SpannerMenu from "./spannerMenu";
 import ToolbarMenu from "./toolbarMenu";
 import TianShuiWeiImage from "./tianshuiwei.jpg";
+import Image from "next/image";
 import { ReadMeContent } from "./readme";
 import { Theme } from "./themeSwitch";
 import { isHotkey } from "is-hotkey";
 import { Subject, takeUntil } from "rxjs";
-import Sidebar from "./components/sidebar";
 import "blocky-core/css/blocky-core.css";
 import "./app.scss";
 
@@ -161,20 +163,17 @@ class App extends Component<unknown> {
 
   render() {
     return (
-      <div className="blocky-example-app-window">
-        <Sidebar />
-        <div className="blocky-example-container">
-          <BlockyEditorWithSearchBoxAndTitle
-            containerRef={this.containerLeftRef}
-            className="blocky-example-editor-container left"
-            controller={this.editorControllerLeft}
-          />
-          <BlockyEditorWithSearchBoxAndTitle
-            containerRef={this.containerRightRef}
-            className="blocky-example-editor-container right"
-            controller={this.editorControllerRight}
-          />
-        </div>
+      <div className="blocky-example-container">
+        <BlockyEditorWithSearchBoxAndTitle
+          containerRef={this.containerLeftRef}
+          className="blocky-example-editor-container left"
+          controller={this.editorControllerLeft}
+        />
+        <BlockyEditorWithSearchBoxAndTitle
+          containerRef={this.containerRightRef}
+          className="blocky-example-editor-container right"
+          controller={this.editorControllerRight}
+        />
       </div>
     );
   }
@@ -235,7 +234,16 @@ function BlockyEditorWithSearchBoxAndTitle(
       )}
       <div className="blocky-example-content-container">
         <div className="blocky-example-image">
-          <img src={TianShuiWeiImage} />
+          <Image
+            src={TianShuiWeiImage}
+            alt=""
+            sizes="100vw"
+            // Make the image display full width
+            style={{
+              width: "100%",
+              height: "auto",
+            }}
+          />
         </div>
         <Theme.Consumer>
           {(options) => (
