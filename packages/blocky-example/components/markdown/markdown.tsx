@@ -1,5 +1,5 @@
 "use client";
-import { Component, createRef } from "react";
+import { useMemo } from "react";
 import * as marked from "marked";
 import hljs from "highlight.js";
 import javascript from "highlight.js/lib/languages/javascript";
@@ -22,27 +22,20 @@ marked.marked.setOptions({
   },
 });
 
-class Markdown extends Component<MarkdownProps> {
-  #ref = createRef<HTMLDivElement>();
-  override componentDidMount() {
-    const htmlContent = marked.marked(this.props.markdown, {
-      baseUrl: this.props.baseUrl,
+function Markdown(props: MarkdownProps) {
+  const htmlContent = useMemo(() => {
+    const htmlContent = marked.marked(props.markdown, {
+      baseUrl: props.baseUrl,
     });
-    this.#ref.current!.innerHTML = htmlContent;
-  }
+    return htmlContent;
+  }, [props.baseUrl, props.markdown]);
 
-  override componentWillReceiveProps(nextProps: MarkdownProps) {
-    if (this.props.markdown !== nextProps.markdown) {
-      const htmlContent = marked.marked(nextProps.markdown, {
-        baseUrl: this.props.baseUrl,
-      });
-      this.#ref.current!.innerHTML = htmlContent;
-    }
-  }
-
-  render() {
-    return <div className={this.props.className} ref={this.#ref}></div>;
-  }
+  return (
+    <div
+      className={props.className}
+      dangerouslySetInnerHTML={{ __html: htmlContent }}
+    ></div>
+  );
 }
 
 export default Markdown;

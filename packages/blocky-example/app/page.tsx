@@ -2,7 +2,8 @@
 import React, { useEffect, useState, Suspense, lazy } from "react";
 import Sidebar from "@pkg/components/sidebar";
 import { ThemeProvider } from "./themeSwitch";
-import "./app.scss";
+import { ReadMeContent } from "./readme";
+import Markdown from "@pkg/components/markdown";
 
 const App = lazy(() => import("./app"));
 
@@ -18,10 +19,12 @@ function Page() {
         <div className="blocky-example-container">
           {isClient ? (
             <Suspense>
-              <App />
+              <App initContent={ReadMeContent} />
             </Suspense>
           ) : (
-            <div className="blocky-example-app-loading" />
+            <div className="blocky-seo">
+              <Markdown markdown={ReadMeContent} />
+            </div>
           )}
         </div>
       </div>

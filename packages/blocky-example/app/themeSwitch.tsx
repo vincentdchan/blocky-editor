@@ -59,25 +59,23 @@ export class ThemeProvider extends Component<
   }
 }
 
-export class ThemeSwitch extends Component {
-  render() {
-    return (
-      <Theme.Consumer>
-        {(theme) => (
-          <div className="theme-switch-wrapper">
-            <label className="theme-switch">
-              <input
-                type="checkbox"
-                id="checkbox"
-                checked={theme.darkMode}
-                onChange={() => theme.toggle()}
-              />
-              <div className="slider round"></div>
-            </label>
-            <p>Enable Dark Mode</p>
-          </div>
-        )}
-      </Theme.Consumer>
-    );
-  }
+export function ThemeSwitch() {
+  return (
+    <Theme.Consumer>
+      {(theme) => (
+        <div className="theme-switch-wrapper">
+          <label className="theme-switch">
+            <input
+              type="checkbox"
+              id="checkbox"
+              checked={theme.darkMode}
+              onChange={() => theme.toggle()}
+            />
+            <div className="slider round"></div>
+          </label>
+          <p>Enable Dark Mode</p>
+        </div>
+      )}
+    </Theme.Consumer>
+  );
 }
