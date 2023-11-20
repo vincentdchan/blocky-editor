@@ -31,5 +31,8 @@
     "ts-patch": "^3.0.2",
     "typescript": "^5.2.2",
     "typescript-transform-paths": "^3.4.6"
+  },
+  "dependencies": {
+    "next": "13"
   }
 }
