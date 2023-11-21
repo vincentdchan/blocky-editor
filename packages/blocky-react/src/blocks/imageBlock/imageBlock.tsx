@@ -1,12 +1,6 @@
-import React, {
-  useState,
-  useEffect,
-  memo,
-  useContext,
-  useCallback,
-} from "react";
+import React, { useState, useEffect, memo, useCallback } from "react";
 import { BlockDataElement } from "blocky-core";
-import { DefaultBlockOutline, ReactBlockContext, useBlockActive } from "../../";
+import { DefaultBlockOutline, useBlockActive } from "../../";
 import ImageBlockContent from "./imageBlockContent";
 import { css } from "@emotion/react";
 
@@ -23,47 +17,51 @@ export type ImageBlockPlaceholderRenderer = (props: {
 }) => React.ReactNode;
 
 interface ImageBlockProps {
+  minWidth: number;
   blockElement: BlockDataElement;
   placeholder: ImageBlockPlaceholderRenderer;
 }
 
-const ImageBlock = memo(({ blockElement, placeholder }: ImageBlockProps) => {
-  const blockContext = useContext(ReactBlockContext)!;
-  const active = useBlockActive({
-    controller: blockContext.editorController,
-    blockId: blockContext.blockId,
-  });
-  const [hover, setHover] = useState(false);
-  const [data, setData] = useState<string | undefined>(
-    blockElement.getAttribute("src")
-  );
+const ImageBlock = memo(
+  ({ blockElement, placeholder, minWidth }: ImageBlockProps) => {
+    const active = useBlockActive();
+    const [hover, setHover] = useState(false);
+    const [data, setData] = useState<string | undefined>(
+      blockElement.getAttribute("src")
+    );
 
-  useEffect(() => {
-    setData(blockElement.getAttribute("src"));
-  }, [blockElement]);
+    useEffect(() => {
+      setData(blockElement.getAttribute("src"));
+    }, [blockElement]);
 
-  const handleMouseEnter = useCallback(() => setHover(true), []);
+    const handleMouseEnter = useCallback(() => setHover(true), []);
 
-  const handleMouseLeave = useCallback(() => setHover(false), []);
+    const handleMouseLeave = useCallback(() => setHover(false), []);
 
-  return (
-    <DefaultBlockOutline>
-      <div
-        css={imageBlockStyle}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
-        {typeof data === "undefined" ? (
-          placeholder({
-            setSrc: setData,
-          })
-        ) : (
-          <ImageBlockContent active={active} hover={hover} src={data} />
-        )}
-      </div>
-    </DefaultBlockOutline>
-  );
-});
+    return (
+      <DefaultBlockOutline>
+        <div
+          css={imageBlockStyle}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          {typeof data === "undefined" ? (
+            placeholder({
+              setSrc: setData,
+            })
+          ) : (
+            <ImageBlockContent
+              active={active}
+              hover={hover}
+              src={data}
+              minWidth={minWidth}
+            />
+          )}
+        </div>
+      </DefaultBlockOutline>
+    );
+  }
+);
 
 ImageBlock.displayName = "ImageBlock";
 

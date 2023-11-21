@@ -1,5 +1,8 @@
-import { memo } from "react";
+import { memo, useContext, useEffect, useRef } from "react";
 import { css } from "@emotion/react";
+import { fromEvent, Subject, takeUntil } from "rxjs";
+import { ReactBlockContext } from "../../reactBlock";
+import { Changeset } from "blocky-core";
 
 const resizeHandleStyle = css({
   position: "absolute",
@@ -59,14 +62,64 @@ export interface ImageBlockContentProps {
   hover?: boolean;
   active?: boolean;
   src: string;
+  minWidth: number;
 }
 
 const ImageBlockContent = memo((props: ImageBlockContentProps) => {
-  const { hover, active, src } = props;
+  const { hover, active, src, minWidth } = props;
   const shouldShowHandles = hover || active;
+  const dispose$ = useRef<Subject<void>>();
+
+  useEffect(() => {
+    const d = new Subject<void>();
+    dispose$.current = d;
+
+    return () => {
+      d.next();
+      d.complete();
+    };
+  }, []);
+
+  const { editorController, blockId, blockContainer } =
+    useContext(ReactBlockContext)!;
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
+    const mouseMove$ = fromEvent<MouseEvent>(document, "mousemove");
+    const mouseUp$ = fromEvent<MouseEvent>(document, "mouseup");
+
+    const startRect = blockContainer.getBoundingClientRect();
+    const startWidth = startRect.width;
+    const startClientX = e.clientX;
+    let newWidth = startWidth;
+
+    mouseMove$
+      .pipe(takeUntil(mouseUp$), takeUntil(dispose$.current!))
+      .subscribe((evt) => {
+        evt.preventDefault();
+
+        const clientXDiff = evt.clientX - startClientX;
+        newWidth = Math.round(startWidth + clientXDiff);
+        newWidth = Math.max(newWidth, minWidth);
+        if (newWidth === startWidth) {
+          blockContainer.style.removeProperty("width");
+        } else {
+          blockContainer.style.width = `${newWidth}px`;
+        }
+      });
+
+    mouseUp$.pipe(takeUntil(dispose$.current!)).subscribe(() => {
+      const element = editorController.state.getBlockElementById(blockId);
+      if (!element) {
+        return;
+      }
+
+      new Changeset(editorController.state)
+        .updateAttributes(element, {
+          width: newWidth,
+        })
+        .apply();
+    });
   };
 
   return (

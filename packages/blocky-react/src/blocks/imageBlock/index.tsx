@@ -8,7 +8,10 @@ import { makeReactBlock, type ReactBlockRenderProps } from "../../";
 
 export const ImageBlockName = "Image";
 
+const defaultMinWidth = 100;
+
 export interface ImageBlockOptions {
+  minWidth?: number;
   placeholder: ImageBlockPlaceholderRenderer;
 }
 
@@ -21,6 +24,7 @@ export function makeImageBlockPlugin(options: ImageBlockOptions): IPlugin {
         name: ImageBlockName,
         component: (props: ReactBlockRenderProps) => (
           <ImageBlock
+            minWidth={options.minWidth ?? defaultMinWidth}
             blockElement={props.blockElement}
             placeholder={placeholder}
           />
