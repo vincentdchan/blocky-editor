@@ -27,6 +27,7 @@
     "blocky-core": "workspace:^3.3.0"
   },
   "dependencies": {
+    "@emotion/react": "^11.11.1",
     "blocky-common": "workspace:3.3.0",
     "lodash-es": "*",
     "react": "^18.2.0",

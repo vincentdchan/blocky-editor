@@ -1,6 +1,7 @@
 "use client";
 import { useRef } from "react";
 import Button from "@pkg/components/button";
+import styles from "./imagePlaceholder.module.css";
 
 function ImagePlaceholder({ setSrc }: { setSrc: (src: string) => void }) {
   const selectorRef = useRef<HTMLInputElement>(null);
@@ -24,7 +25,7 @@ function ImagePlaceholder({ setSrc }: { setSrc: (src: string) => void }) {
       <input
         type="file"
         accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*"
-        className="blocky-image-block-file-selector"
+        className={styles.fileSelector}
         onChange={handleSelectedFileChanged}
         ref={selectorRef}
       />

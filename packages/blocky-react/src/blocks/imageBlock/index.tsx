@@ -1,55 +1,12 @@
-import React, { useState, useEffect, memo } from "react";
+import ImageBlock, { ImageBlockPlaceholderRenderer } from "./imageBlock";
 import {
   type TryParsePastedDOMEvent,
   type IPlugin,
   BlockDataElement,
 } from "blocky-core";
-import {
-  makeReactBlock,
-  DefaultBlockOutline,
-  type ReactBlockRenderProps,
-} from "../";
-// import Button from "@pkg/components/button";
-// import "./imageBlock.scss";
+import { makeReactBlock, type ReactBlockRenderProps } from "../../";
 
 export const ImageBlockName = "Image";
-
-export type ImageBlockPlaceholderRenderer = (props: {
-  setSrc: (src: string) => void;
-}) => React.ReactNode;
-
-interface ImageBlockProps {
-  blockElement: BlockDataElement;
-  placeholder: ImageBlockPlaceholderRenderer;
-}
-
-const ImageBlock = memo(({ blockElement, placeholder }: ImageBlockProps) => {
-  const [data, setData] = useState<string | undefined>(
-    blockElement.getAttribute("src")
-  );
-
-  useEffect(() => {
-    setData(blockElement.getAttribute("src"));
-  }, [blockElement]);
-
-  const renderBlockContent = () => {
-    if (typeof data === "undefined") {
-      return placeholder({
-        setSrc: setData,
-      });
-    }
-
-    return <img src={data} alt="" />;
-  };
-
-  return (
-    <DefaultBlockOutline>
-      <div className="blocky-image-block">{renderBlockContent()}</div>
-    </DefaultBlockOutline>
-  );
-});
-
-ImageBlock.displayName = "ImageBlock";
 
 export interface ImageBlockOptions {
   placeholder: ImageBlockPlaceholderRenderer;

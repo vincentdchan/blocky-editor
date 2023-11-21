@@ -1,0 +1,8 @@
+.fileSelector {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  top: 0px;
+  left: 0px;
+  opacity: 0;
+}
