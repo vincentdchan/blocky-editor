@@ -23,7 +23,7 @@ The developers only need to develop their blocks with their favourite UI framewo
 
 ## Packages
 
-![](./packages/blocky-example/src/arch.png)
+![](./packages/blocky-example/public/arch.png)
 
 - Core(![npm](https://img.shields.io/npm/v/blocky-core)): The core of the editor. Written in vanilla JS. It can be used standalone without any
   UI frameworks.
