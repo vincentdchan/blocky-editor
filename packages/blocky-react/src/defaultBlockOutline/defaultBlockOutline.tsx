@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useContext } from "react";
 import { ReactBlockContext } from "../reactBlock";
 import { type EditorController, CursorState } from "blocky-core";
 import {
@@ -64,15 +64,12 @@ export interface DefaultBlockOutlineProps {
 }
 
 export function DefaultBlockOutline(props: DefaultBlockOutlineProps) {
+  const ctx = useContext(ReactBlockContext)!;
   return (
-    <ReactBlockContext.Consumer>
-      {(ctx) => (
-        <DefaultBlockOutlineInternal
-          editorController={ctx!.editorController}
-          blockId={ctx!.blockId}
-          {...props}
-        />
-      )}
-    </ReactBlockContext.Consumer>
+    <DefaultBlockOutlineInternal
+      editorController={ctx.editorController}
+      blockId={ctx.blockId}
+      {...props}
+    />
   );
 }

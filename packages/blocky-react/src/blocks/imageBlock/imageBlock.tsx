@@ -1,6 +1,12 @@
-import React, { useState, useEffect, memo } from "react";
+import React, {
+  useState,
+  useEffect,
+  memo,
+  useContext,
+  useCallback,
+} from "react";
 import { BlockDataElement } from "blocky-core";
-import { DefaultBlockOutline } from "../../";
+import { DefaultBlockOutline, ReactBlockContext, useBlockActive } from "../../";
 import ImageBlockContent from "./imageBlockContent";
 import { css } from "@emotion/react";
 
@@ -22,6 +28,12 @@ interface ImageBlockProps {
 }
 
 const ImageBlock = memo(({ blockElement, placeholder }: ImageBlockProps) => {
+  const blockContext = useContext(ReactBlockContext)!;
+  const active = useBlockActive({
+    controller: blockContext.editorController,
+    blockId: blockContext.blockId,
+  });
+  const [hover, setHover] = useState(false);
   const [data, setData] = useState<string | undefined>(
     blockElement.getAttribute("src")
   );
@@ -30,15 +42,23 @@ const ImageBlock = memo(({ blockElement, placeholder }: ImageBlockProps) => {
     setData(blockElement.getAttribute("src"));
   }, [blockElement]);
 
+  const handleMouseEnter = useCallback(() => setHover(true), []);
+
+  const handleMouseLeave = useCallback(() => setHover(false), []);
+
   return (
     <DefaultBlockOutline>
-      <div css={imageBlockStyle}>
+      <div
+        css={imageBlockStyle}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
         {typeof data === "undefined" ? (
           placeholder({
             setSrc: setData,
           })
         ) : (
-          <ImageBlockContent src={data} />
+          <ImageBlockContent active={active} hover={hover} src={data} />
         )}
       </div>
     </DefaultBlockOutline>
