@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect, memo } from "react";
 import {
   type TryParsePastedDOMEvent,
   type IPlugin,
@@ -8,7 +9,6 @@ import {
   DefaultBlockOutline,
   type ReactBlockRenderProps,
 } from "blocky-react";
-import { type RefObject, createRef, PureComponent } from "react";
 import Button from "@pkg/components/button";
 import "./imageBlock.scss";
 
@@ -18,71 +18,59 @@ interface ImageBlockProps {
   blockElement: BlockDataElement;
 }
 
-interface ImageBlockState {
-  data?: string;
-}
+const ImageBlock = memo(({ blockElement }: ImageBlockProps) => {
+  const selectorRef = useRef<HTMLInputElement>(null);
+  const [data, setData] = useState<string | undefined>(
+    blockElement.getAttribute("src")
+  );
 
-class ImageBlock extends PureComponent<ImageBlockProps, ImageBlockState> {
-  private selectorRef: RefObject<HTMLInputElement> = createRef();
-
-  constructor(props: ImageBlockProps) {
-    super(props);
-
-    this.state = {
-      data: props.blockElement.getAttribute("src"),
-    };
-  }
-
-  private handleUpload = () => {
-    this.selectorRef.current!.click();
+  const handleUpload = () => {
+    selectorRef.current?.click();
   };
 
-  private handleSelectedFileChanged = () => {
-    const files = this.selectorRef.current!.files;
+  useEffect(() => {
+    setData(blockElement.getAttribute("src"));
+  }, [blockElement]);
+
+  const handleSelectedFileChanged = () => {
+    const files = selectorRef.current?.files;
     if (!files || files.length === 0) {
       return;
     }
     const fr = new FileReader();
     fr.onload = () => {
-      this.setState({
-        data: fr.result as string,
-      });
+      setData(fr.result as string);
     };
     fr.readAsDataURL(files[0]);
   };
 
-  override componentWillUnmount() {
-    console.log("image unmounted");
-  }
-
-  renderBlockContent() {
-    const { data } = this.state;
+  const renderBlockContent = () => {
     if (typeof data === "undefined") {
       return (
         <>
-          <Button onClick={this.handleUpload}>Upload</Button>
+          <Button onClick={handleUpload}>Upload</Button>
           <input
             type="file"
             accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*"
             className="blocky-image-block-file-selector"
-            onChange={this.handleSelectedFileChanged}
-            ref={this.selectorRef}
+            onChange={handleSelectedFileChanged}
+            ref={selectorRef}
           />
         </>
       );
     }
 
     return <img src={data} alt="" />;
-  }
+  };
 
-  render() {
-    return (
-      <DefaultBlockOutline>
-        <div className="blocky-image-block">{this.renderBlockContent()}</div>
-      </DefaultBlockOutline>
-    );
-  }
-}
+  return (
+    <DefaultBlockOutline>
+      <div className="blocky-image-block">{renderBlockContent()}</div>
+    </DefaultBlockOutline>
+  );
+});
+
+ImageBlock.displayName = "ImageBlock";
 
 export function makeImageBlockPlugin(): IPlugin {
   return {
