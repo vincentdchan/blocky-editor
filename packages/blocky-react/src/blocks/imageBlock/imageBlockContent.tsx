@@ -63,10 +63,11 @@ export interface ImageBlockContentProps {
   active?: boolean;
   src: string;
   minWidth: number;
+  setWidth: (width?: number) => void;
 }
 
 const ImageBlockContent = memo((props: ImageBlockContentProps) => {
-  const { hover, active, src, minWidth } = props;
+  const { hover, active, src, minWidth, setWidth } = props;
   const shouldShowHandles = hover || active;
   const dispose$ = useRef<Subject<void>>();
 
@@ -102,9 +103,9 @@ const ImageBlockContent = memo((props: ImageBlockContentProps) => {
         newWidth = Math.round(startWidth + clientXDiff);
         newWidth = Math.max(newWidth, minWidth);
         if (newWidth === startWidth) {
-          blockContainer.style.removeProperty("width");
+          setWidth(undefined);
         } else {
-          blockContainer.style.width = `${newWidth}px`;
+          setWidth(newWidth);
         }
       });
 
