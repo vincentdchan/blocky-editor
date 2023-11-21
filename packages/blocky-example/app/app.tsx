@@ -6,10 +6,11 @@ import {
   BlockyEditor,
   makeReactSpanner,
   makeReactToolbar,
+  makeImageBlockPlugin,
   type SpannerRenderProps,
 } from "blocky-react";
 import SearchBox from "@pkg/components/searchBox";
-import { makeImageBlockPlugin } from "./plugins/imageBlock";
+import ImagePlaceholder from "@pkg/components/imagePlaceholder";
 import { makeCommandPanelPlugin } from "./plugins/commandPanel";
 import { makeAtPanelPlugin } from "./plugins/atPanel";
 import SpannerMenu from "./spannerMenu";
@@ -23,7 +24,9 @@ import "blocky-core/css/blocky-core.css";
 
 function makeEditorPlugins(): IPlugin[] {
   return [
-    makeImageBlockPlugin(),
+    makeImageBlockPlugin({
+      placeholder: ({ setSrc }) => <ImagePlaceholder setSrc={setSrc} />,
+    }),
     makeCommandPanelPlugin(),
     makeAtPanelPlugin(),
   ];

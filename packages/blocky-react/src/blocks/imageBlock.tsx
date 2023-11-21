@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, memo } from "react";
+import React, { useState, useEffect, memo } from "react";
 import {
   type TryParsePastedDOMEvent,
   type IPlugin,
@@ -8,56 +8,35 @@ import {
   makeReactBlock,
   DefaultBlockOutline,
   type ReactBlockRenderProps,
-} from "blocky-react";
-import Button from "@pkg/components/button";
-import "./imageBlock.scss";
+} from "../";
+// import Button from "@pkg/components/button";
+// import "./imageBlock.scss";
 
 export const ImageBlockName = "Image";
 
+export type ImageBlockPlaceholderRenderer = (props: {
+  setSrc: (src: string) => void;
+}) => React.ReactNode;
+
 interface ImageBlockProps {
   blockElement: BlockDataElement;
+  placeholder: ImageBlockPlaceholderRenderer;
 }
 
-const ImageBlock = memo(({ blockElement }: ImageBlockProps) => {
-  const selectorRef = useRef<HTMLInputElement>(null);
+const ImageBlock = memo(({ blockElement, placeholder }: ImageBlockProps) => {
   const [data, setData] = useState<string | undefined>(
     blockElement.getAttribute("src")
   );
-
-  const handleUpload = () => {
-    selectorRef.current?.click();
-  };
 
   useEffect(() => {
     setData(blockElement.getAttribute("src"));
   }, [blockElement]);
 
-  const handleSelectedFileChanged = () => {
-    const files = selectorRef.current?.files;
-    if (!files || files.length === 0) {
-      return;
-    }
-    const fr = new FileReader();
-    fr.onload = () => {
-      setData(fr.result as string);
-    };
-    fr.readAsDataURL(files[0]);
-  };
-
   const renderBlockContent = () => {
     if (typeof data === "undefined") {
-      return (
-        <>
-          <Button onClick={handleUpload}>Upload</Button>
-          <input
-            type="file"
-            accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*"
-            className="blocky-image-block-file-selector"
-            onChange={handleSelectedFileChanged}
-            ref={selectorRef}
-          />
-        </>
-      );
+      return placeholder({
+        setSrc: setData,
+      });
     }
 
     return <img src={data} alt="" />;
@@ -72,14 +51,22 @@ const ImageBlock = memo(({ blockElement }: ImageBlockProps) => {
 
 ImageBlock.displayName = "ImageBlock";
 
-export function makeImageBlockPlugin(): IPlugin {
+export interface ImageBlockOptions {
+  placeholder: ImageBlockPlaceholderRenderer;
+}
+
+export function makeImageBlockPlugin(options: ImageBlockOptions): IPlugin {
+  const { placeholder } = options;
   return {
     name: ImageBlockName,
     blocks: [
       makeReactBlock({
         name: ImageBlockName,
         component: (props: ReactBlockRenderProps) => (
-          <ImageBlock blockElement={props.blockElement} />
+          <ImageBlock
+            blockElement={props.blockElement}
+            placeholder={placeholder}
+          />
         ),
         tryParsePastedDOM(e: TryParsePastedDOMEvent) {
           const { node, editorController } = e;

@@ -5,6 +5,7 @@ import {
 
 export * from "./editor";
 export * from "./reactBlock";
+export * from "./blocks";
 export * from "./reactFollowerWidget";
 export * from "./blockActiveDetector";
 export {
