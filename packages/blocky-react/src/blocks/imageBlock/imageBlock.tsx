@@ -1,6 +1,7 @@
 import React, { useState, useEffect, memo } from "react";
 import { BlockDataElement } from "blocky-core";
 import { DefaultBlockOutline } from "../../";
+import ImageBlockContent from "./imageBlockContent";
 import { css } from "@emotion/react";
 
 const imageBlockStyle = css({
@@ -9,9 +10,6 @@ const imageBlockStyle = css({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  img: {
-    maxWidth: "100%",
-  },
 });
 
 export type ImageBlockPlaceholderRenderer = (props: {
@@ -32,19 +30,17 @@ const ImageBlock = memo(({ blockElement, placeholder }: ImageBlockProps) => {
     setData(blockElement.getAttribute("src"));
   }, [blockElement]);
 
-  const renderBlockContent = () => {
-    if (typeof data === "undefined") {
-      return placeholder({
-        setSrc: setData,
-      });
-    }
-
-    return <img src={data} alt="" />;
-  };
-
   return (
     <DefaultBlockOutline>
-      <div css={imageBlockStyle}>{renderBlockContent()}</div>
+      <div css={imageBlockStyle}>
+        {typeof data === "undefined" ? (
+          placeholder({
+            setSrc: setData,
+          })
+        ) : (
+          <ImageBlockContent src={data} />
+        )}
+      </div>
     </DefaultBlockOutline>
   );
 });
