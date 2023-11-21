@@ -1,10 +1,9 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useContext } from "react";
 import { ReactBlockContext } from "../reactBlock";
 import { type EditorController, CursorState } from "blocky-core";
 import {
   useBlockActive,
   useCollaborativeOutlineColor,
-  type BlockActiveDetectorProps,
 } from "../blockActiveDetector";
 import { isString } from "lodash-es";
 
@@ -21,12 +20,8 @@ const userFocusedColor = `rgb(52, 184, 220)`;
 
 function DefaultBlockOutlineInternal(props: DefaultBlockOutlineInternalProps) {
   const { focusOutlineColor, outlineColor, editorController, blockId } = props;
-  const detectProps: BlockActiveDetectorProps = {
-    controller: editorController,
-    blockId: blockId,
-  };
-  const active = useBlockActive(detectProps);
-  const collaborativeOutlineColor = useCollaborativeOutlineColor(detectProps);
+  const active = useBlockActive();
+  const collaborativeOutlineColor = useCollaborativeOutlineColor();
 
   const handleContainerClicked = useCallback(() => {
     editorController.setCursorState(CursorState.collapse(blockId, 0));
@@ -64,15 +59,12 @@ export interface DefaultBlockOutlineProps {
 }
 
 export function DefaultBlockOutline(props: DefaultBlockOutlineProps) {
+  const ctx = useContext(ReactBlockContext)!;
   return (
-    <ReactBlockContext.Consumer>
-      {(ctx) => (
-        <DefaultBlockOutlineInternal
-          editorController={ctx!.editorController}
-          blockId={ctx!.blockId}
-          {...props}
-        />
-      )}
-    </ReactBlockContext.Consumer>
+    <DefaultBlockOutlineInternal
+      editorController={ctx.editorController}
+      blockId={ctx.blockId}
+      {...props}
+    />
   );
 }

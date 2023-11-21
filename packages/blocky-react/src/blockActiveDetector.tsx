@@ -1,22 +1,18 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import {
-  type EditorController,
   type CursorChangedEvent,
   type CursorStateUpdateEvent,
 } from "blocky-core";
+import { ReactBlockContext } from "./reactBlock";
 
-export interface BlockActiveDetectorProps {
-  controller: EditorController;
-  blockId: string;
-}
-
-export function useBlockActive(props: BlockActiveDetectorProps): boolean {
+export function useBlockActive(): boolean {
+  const ctx = useContext(ReactBlockContext)!;
   const [active, setActive] = useState<boolean>(false);
   const cursorUpdateHandler = useRef<
     ((e: CursorStateUpdateEvent) => void) | undefined
   >(undefined);
 
-  const { controller, blockId } = props;
+  const { editorController: controller, blockId } = ctx;
 
   useEffect(() => {
     cursorUpdateHandler.current = (evt: CursorStateUpdateEvent) => {
@@ -43,13 +39,12 @@ export function useBlockActive(props: BlockActiveDetectorProps): boolean {
   return active;
 }
 
-export function useCollaborativeOutlineColor(
-  props: BlockActiveDetectorProps
-): string | undefined {
+export function useCollaborativeOutlineColor(): string | undefined {
+  const ctx = useContext(ReactBlockContext)!;
   const [collaborativeOutlineColor, setCollaborativeOutlineColor] = useState<
     string | undefined
   >(undefined);
-  const { controller, blockId } = props;
+  const { editorController: controller, blockId } = ctx;
   const applyCursorChangedEventHandler = useRef<
     ((e: CursorChangedEvent) => void) | undefined
   >(undefined);
@@ -57,10 +52,10 @@ export function useCollaborativeOutlineColor(
   useEffect(() => {
     applyCursorChangedEventHandler.current = (evt: CursorChangedEvent) => {
       const { state } = evt;
+      const { editorController: controller, blockId } = ctx;
       const shouldShowOutline =
-        state !== null && state.isCollapsed && state.id === props.blockId;
+        state !== null && state.isCollapsed && state.id === blockId;
 
-      const { controller } = props;
       const { editor } = controller;
       if (!editor) {
         return;

@@ -22,6 +22,7 @@ export interface ReactBlockOptions {
 export interface IReactBlockContext {
   editorController: EditorController;
   blockId: string;
+  blockContainer: HTMLElement;
 }
 
 export const ReactBlockContext = createContext<IReactBlockContext | undefined>(
@@ -50,7 +51,11 @@ export function makeReactBlock(options: ReactBlockOptions): IBlockDefinition {
       const editorController = this.editor.controller;
       this.#rendered.render(
         <ReactBlockContext.Provider
-          value={{ editorController, blockId: this.props.id }}
+          value={{
+            editorController,
+            blockId: this.props.id,
+            blockContainer: this.contentContainer,
+          }}
         >
           {component({
             controller: this.editor.controller,

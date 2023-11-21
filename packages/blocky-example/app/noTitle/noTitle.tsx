@@ -1,7 +1,11 @@
 import { Component, ReactNode, createRef } from "react";
-import { BlockyEditor, makeReactToolbar } from "blocky-react";
+import {
+  BlockyEditor,
+  makeReactToolbar,
+  makeImageBlockPlugin,
+} from "blocky-react";
 import { EditorController, IPlugin } from "blocky-core";
-import { makeImageBlockPlugin } from "@pkg/app/plugins/imageBlock";
+import ImagePlaceholder from "@pkg/components/imagePlaceholder";
 import { makeCommandPanelPlugin } from "@pkg/app/plugins/commandPanel";
 import { makeAtPanelPlugin } from "@pkg/app/plugins/atPanel";
 import ToolbarMenu from "@pkg/app/toolbarMenu";
@@ -9,7 +13,9 @@ import { timer, Subject, takeUntil } from "rxjs";
 
 function makeEditorPlugins(): IPlugin[] {
   return [
-    makeImageBlockPlugin(),
+    makeImageBlockPlugin({
+      placeholder: ({ setSrc }) => <ImagePlaceholder setSrc={setSrc} />,
+    }),
     makeCommandPanelPlugin(),
     makeAtPanelPlugin(),
   ];

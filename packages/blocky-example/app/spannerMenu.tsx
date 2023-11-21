@@ -2,7 +2,7 @@ import { Component, type RefObject, createRef } from "react";
 import { type EditorController, BlockDataElement, TextType } from "blocky-core";
 import Dropdown from "@pkg/components/dropdown";
 import { Menu, MenuItem, Divider } from "@pkg/components/menu";
-import { ImageBlockName } from "@pkg/app/plugins/imageBlock";
+import { ImageBlockName } from "blocky-react";
 import { Subject, takeUntil } from "rxjs";
 import "./spannerMenu.scss";
 
