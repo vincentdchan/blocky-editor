@@ -2,6 +2,7 @@ import { type IDisposable } from "blocky-common/es";
 import type { EditorController } from "@pkg/view/controller";
 import type { BlockDataElement } from "@pkg/data";
 import { UIDelegate } from "./uiDelegate";
+import { fromEvent, takeUntil } from "rxjs";
 
 export interface SpannerInstance extends IDisposable {
   onFocusedNodeChanged?(focusedNode: BlockDataElement | undefined): void;
@@ -34,6 +35,21 @@ export class SpannerDelegate extends UIDelegate {
     private factory: SpannerFactory
   ) {
     super("blocky-editor-spanner-delegate blocky-cm-noselect");
+    // draggable
+    this.container.setAttribute("draggable", "true");
+
+    const dragStart$ = fromEvent<DragEvent>(this.container, "dragstart");
+    dragStart$
+      .pipe(takeUntil(this.dispose$))
+      .subscribe(this.#handleDragStart.bind(this));
+  }
+
+  #handleDragStart() {
+    const editor = this.editorController.editor;
+    if (!editor) {
+      return;
+    }
+    editor.darggingNode = this.focusedNode;
   }
 
   override mount(parent: HTMLElement): void {

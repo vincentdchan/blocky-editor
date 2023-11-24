@@ -1,6 +1,10 @@
 import { elem, removeNode } from "blocky-common/es/dom";
 import { isUndefined } from "lodash-es";
-import { type IBlockDefinition } from "@pkg/block/basic";
+import {
+  BlockDragOverState,
+  ContentBlock,
+  type IBlockDefinition,
+} from "@pkg/block/basic";
 import {
   type BlockyDocument,
   type DataBaseNode,
@@ -339,6 +343,15 @@ export class DocRenderer {
     }
   }
 
+  #resetPrevDragOverBlock() {
+    const editor = this.editor;
+    if (!editor.prevDragOverBlock) {
+      return;
+    }
+    editor.prevDragOverBlock.setDragOverState(BlockDragOverState.None);
+    editor.prevDragOverBlock = null;
+  }
+
   #initBlockContainer(
     blockContainer: HTMLElement,
     blockNode: BlockDataElement,
@@ -348,7 +361,7 @@ export class DocRenderer {
 
     blockContainer._mgNode = blockNode;
     editor.state.setDom(blockNode.id, blockContainer);
-    blockContainer.setAttribute("data-type", blockDef.name);
+    blockContainer.setAttribute("data-type", blockDef.Name);
     blockContainer.addEventListener("mouseenter", () => {
       editor.placeSpannerAt(blockContainer, blockNode);
     });
@@ -363,6 +376,24 @@ export class DocRenderer {
       blockElement: blockNode,
       clsPrefix,
     });
+
+    if (block instanceof ContentBlock) {
+      block.dragOver$.subscribe((e) => {
+        e.preventDefault();
+        if (editor.prevDragOverBlock === block) {
+          return;
+        }
+        this.#resetPrevDragOverBlock();
+        editor.prevDragOverBlock = block;
+        block.setDragOverState(BlockDragOverState.Bottom);
+      });
+      block.drop$.subscribe((e) => {
+        e.preventDefault();
+        this.#resetPrevDragOverBlock();
+
+        editor.handleHandleBlockDrop(block);
+      });
+    }
   }
 
   protected typeOfDomNode(node: Node): number | undefined {

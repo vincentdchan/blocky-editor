@@ -2,7 +2,7 @@ import {
   type IBlockDefinition,
   type EditorController,
   type BlockDataElement,
-  ContentBlock,
+  CustomBlock,
   TryParsePastedDOMEvent,
 } from "blocky-core";
 import React, { createContext } from "react";
@@ -35,7 +35,7 @@ export const ReactBlockContext = createContext<IReactBlockContext | undefined>(
  */
 export function makeReactBlock(options: ReactBlockOptions): IBlockDefinition {
   const { name, tryParsePastedDOM } = options;
-  return class ReactBlock extends ContentBlock {
+  return class ReactBlock extends CustomBlock {
     static Name = name;
     static Editable = false;
     static TryParsePastedDOM =
@@ -44,6 +44,9 @@ export function makeReactBlock(options: ReactBlockOptions): IBlockDefinition {
     #rendered: Root | undefined;
 
     override render() {
+      if (!this.contentContainer) {
+        return;
+      }
       const { component } = options;
       if (!this.#rendered) {
         this.#rendered = createRoot(this.contentContainer);

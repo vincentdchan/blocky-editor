@@ -102,6 +102,7 @@
 .blocky-editor-block {
   margin-top: 2px;
   display: flex;
+  position: relative;
 }
 
 .blocky-content {
@@ -201,4 +202,12 @@
   font-size: 85%;
   background-color: var(--color-neutral-muted);
   border-radius: 6px;
+}
+
+.blocky-drag-over-bar {
+  position: absolute;
+  width: 100%;
+  background-color: rgb(171, 211, 222);
+  left: 0px;
+  height: 2px;
 }
