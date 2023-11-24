@@ -30,7 +30,7 @@ The developers only need to develop their blocks with their favourite UI framewo
   - Gzipped size: ~40kb
 - React bindings(![npm](https://img.shields.io/npm/v/blocky-react)): Wrap the editor in [React](https://react.dev/). Provide the UI facilities such as
   toolbar and spanner.
-  - Gzipped size(including Core): ~80kb
+  - Gzipped size(including Core): ~48kb
 - [Example](https://blocky-editor.dev/): The example to demonstrate how to use the editor.
 
 ## Resources

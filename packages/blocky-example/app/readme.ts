@@ -32,7 +32,7 @@ export const ReadMeContent = `
   <li>
     React bindings: Wrap the editor in <a href="https://react.dev/">React</a>. Provide the UI facilities such as toolbar and spanner.
     <ul>
-      <li>Gzipped size(including Core): ~80kb</li>
+      <li>Gzipped size(including Core): ~48kb</li>
     </ul>
   </li>
   <li>
