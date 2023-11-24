@@ -136,6 +136,12 @@ export interface IBlockDefinition {
   new (e: BlockCreatedEvent): Block;
 }
 
+export enum BlockDragOverState {
+  None = 0,
+  Top = 1,
+  Bottom = 2,
+}
+
 /**
  * Base class for all the blocks in the editor.
  *
@@ -144,15 +150,6 @@ export interface IBlockDefinition {
  */
 export class Block implements IDisposable {
   #editor: Editor | undefined;
-  readonly #dragOver = new Subject<DragEvent>();
-  readonly #drop = new Subject<DragEvent>();
-
-  get dragOver$(): Observable<DragEvent> {
-    return this.#dragOver.pipe(takeUntil(this.dispose$));
-  }
-  get drop$(): Observable<DragEvent> {
-    return this.#drop.pipe(takeUntil(this.dispose$));
-  }
   readonly dispose$ = new Subject<void>();
 
   get childrenContainerDOM(): HTMLElement | null {
@@ -190,21 +187,6 @@ export class Block implements IDisposable {
   }
 
   blockDidMount?(e: BlockDidMountEvent): void;
-
-  protected initBlockDnd(contentContainer: HTMLElement) {
-    fromEvent<DragEvent>(contentContainer, "dragover").subscribe(
-      this.#dragOver
-    );
-    fromEvent<DragEvent>(contentContainer, "drop").subscribe(this.#drop);
-  }
-
-  protected handleDragOver(e: DragEvent) {
-    e.preventDefault();
-  }
-
-  protected handleDrop(e: DragEvent) {
-    e.preventDefault();
-  }
 
   onDedent?(e: KeyboardEvent): void;
 
@@ -245,6 +227,81 @@ export class Block implements IDisposable {
   }
 }
 
+/**
+ * Blocks except "title"
+ *
+ * Supports:
+ * - copy & paste selection.
+ * - drag & drop
+ */
+export class ContentBlock extends Block {
+  static DragOverClassName = "blocky-drag-over";
+
+  container: HTMLElement | null = null;
+  contentContainer: HTMLElement | null = null;
+
+  readonly #dragOver = new Subject<DragEvent>();
+  readonly #drop = new Subject<DragEvent>();
+
+  #dragOverBar: HTMLElement | undefined;
+
+  blockDidMount(e: BlockDidMountEvent): void {
+    this.container = e.element;
+  }
+
+  get dragOver$(): Observable<DragEvent> {
+    return this.#dragOver.pipe(takeUntil(this.dispose$));
+  }
+  get drop$(): Observable<DragEvent> {
+    return this.#drop.pipe(takeUntil(this.dispose$));
+  }
+
+  setDragOverState(state: BlockDragOverState): void {
+    const container = this.container;
+    if (!container) {
+      return;
+    }
+    switch (state) {
+      case BlockDragOverState.None:
+        container.classList.remove(ContentBlock.DragOverClassName);
+        if (this.#dragOverBar) {
+          this.#dragOverBar.remove();
+          this.#dragOverBar = undefined;
+        }
+        break;
+      case BlockDragOverState.Top:
+      case BlockDragOverState.Bottom: {
+        container.classList.add(ContentBlock.DragOverClassName);
+        const bar = this.createDragOverBar(state === BlockDragOverState.Top);
+        this.#dragOverBar = bar;
+        if (state === BlockDragOverState.Top) {
+          container.prepend(bar);
+        } else {
+          container.append(bar);
+        }
+        break;
+      }
+    }
+  }
+
+  protected initBlockDnd(contentContainer: HTMLElement) {
+    fromEvent<DragEvent>(contentContainer, "dragover").subscribe(
+      this.#dragOver
+    );
+    fromEvent<DragEvent>(contentContainer, "drop").subscribe(this.#drop);
+  }
+
+  protected createDragOverBar(isTop: boolean): HTMLElement {
+    const result = elem("div", "blocky-drag-over-bar");
+    if (isTop) {
+      result.style.top = "0px";
+    } else {
+      result.style.bottom = "0px";
+    }
+    return result;
+  }
+}
+
 export const zeroWidthChar = "\u200b";
 
 /**
@@ -253,21 +310,14 @@ export const zeroWidthChar = "\u200b";
  *
  * If you want to write a custom block, extend this class
  */
-export class ContentBlock extends Block {
-  #contentContainer: HTMLElement | undefined;
+export class CustomBlock extends ContentBlock {
   #selectSpan: HTMLSpanElement | undefined;
 
-  /**
-   * You elements should be rendered under the contentContainer
-   */
-  get contentContainer() {
-    return this.#contentContainer!;
-  }
-
   override blockDidMount(e: BlockDidMountEvent): void {
+    super.blockDidMount(e);
     const { element, blockDef } = e;
     const contentContainer = elem("div", "blocky-content");
-    this.#contentContainer = contentContainer;
+    this.contentContainer = contentContainer;
 
     if (!blockDef.Editable) {
       contentContainer.contentEditable = "false";

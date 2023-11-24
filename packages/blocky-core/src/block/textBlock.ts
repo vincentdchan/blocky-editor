@@ -7,7 +7,7 @@ import {
   type BlockContentChangedEvent,
   type BlockPasteEvent,
   type CursorDomResult,
-  Block,
+  ContentBlock,
 } from "./basic";
 import { EditorState } from "@pkg/model";
 import {
@@ -108,7 +108,7 @@ class CheckboxRenderer extends LeftPadRenderer {
  * TextBlock is a very special block in the editor.
  * It's handling all the editable element.
  */
-export class TextBlock extends Block {
+export class TextBlock extends ContentBlock {
   static Name = "Text";
   static Editable = true;
 
@@ -203,7 +203,6 @@ export class TextBlock extends Block {
 
   #container: HTMLElement | undefined;
   #bodyContainer: HTMLElement | null = null;
-  #contentContainer: HTMLElement | null = null;
   #leftPadRenderer: LeftPadRenderer | null = null;
   #embeds: Set<Embed> = new Set();
 
@@ -288,24 +287,26 @@ export class TextBlock extends Block {
   }
 
   protected findContentContainer(): HTMLElement {
-    const e = this.#contentContainer;
+    const e = this.contentContainer;
     if (!e) {
       throw new Error("content not found");
     }
     return e;
   }
 
-  override blockDidMount({ element }: BlockDidMountEvent): void {
+  override blockDidMount(e: BlockDidMountEvent): void {
+    super.blockDidMount(e);
+    const { element } = e;
     element.classList.add("blocky-flex");
 
     this.#bodyContainer = this.#createTextBodyContainer();
 
-    this.#contentContainer = this.#createContentContainer();
-    this.#bodyContainer.append(this.#contentContainer);
+    this.contentContainer = this.#createContentContainer();
+    this.#bodyContainer.append(this.contentContainer);
 
     element.appendChild(this.#bodyContainer);
 
-    this.initBlockDnd(this.#contentContainer);
+    this.initBlockDnd(this.contentContainer);
   }
 
   override blockFocused({ selection, cursor }: BlockFocusedEvent): void {
@@ -641,11 +642,11 @@ export class TextBlock extends Block {
     }
 
     if (renderedType !== textType) {
-      this.#bodyContainer?.removeChild(this.#contentContainer!);
+      this.#bodyContainer?.removeChild(this.contentContainer!);
 
       const newContainer = this.#createContentContainer();
       this.#bodyContainer?.insertBefore(newContainer, null);
-      this.#contentContainer = newContainer;
+      this.contentContainer = newContainer;
 
       this.#forceRenderContentStyle(blockContainer, newContainer, textType);
 
@@ -660,7 +661,7 @@ export class TextBlock extends Block {
   }
 
   override get childrenBeginDOM(): HTMLElement | null {
-    return this.#contentContainer;
+    return this.contentContainer;
   }
 
   #isSpanNodeMatch(op: Op, dom: Node): boolean {
@@ -704,7 +705,7 @@ export class TextBlock extends Block {
   ) {
     const contentContainer = this.#ensureContentContainerStyle(
       blockContainer,
-      this.#contentContainer!
+      this.contentContainer!
     );
     this.#leftPadRenderer?.render();
 

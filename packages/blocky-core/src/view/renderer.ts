@@ -1,6 +1,10 @@
 import { elem, removeNode } from "blocky-common/es/dom";
 import { isUndefined } from "lodash-es";
-import { type IBlockDefinition } from "@pkg/block/basic";
+import {
+  BlockDragOverState,
+  ContentBlock,
+  type IBlockDefinition,
+} from "@pkg/block/basic";
 import {
   type BlockyDocument,
   type DataBaseNode,
@@ -339,6 +343,16 @@ export class DocRenderer {
     }
   }
 
+  prevDragOverBlock: ContentBlock | null = null;
+
+  #resetPrevDragOverBlock() {
+    if (!this.prevDragOverBlock) {
+      return;
+    }
+    this.prevDragOverBlock.setDragOverState(BlockDragOverState.None);
+    this.prevDragOverBlock = null;
+  }
+
   #initBlockContainer(
     blockContainer: HTMLElement,
     blockNode: BlockDataElement,
@@ -364,12 +378,21 @@ export class DocRenderer {
       clsPrefix,
     });
 
-    block.dragOver$.subscribe((e) => {
-      e.preventDefault();
-    });
-    block.drop$.subscribe((e) => {
-      e.preventDefault();
-    });
+    if (block instanceof ContentBlock) {
+      block.dragOver$.subscribe((e) => {
+        e.preventDefault();
+        if (this.prevDragOverBlock === block) {
+          return;
+        }
+        this.#resetPrevDragOverBlock();
+        this.prevDragOverBlock = block;
+        block.setDragOverState(BlockDragOverState.Bottom);
+      });
+      block.drop$.subscribe((e) => {
+        e.preventDefault();
+        this.#resetPrevDragOverBlock();
+      });
+    }
   }
 
   protected typeOfDomNode(node: Node): number | undefined {
