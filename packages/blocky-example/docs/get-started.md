@@ -71,19 +71,26 @@ function makeController(): EditorController {
 Pass the editor to the component.
 
 ```tsx
+import {
+  BlockyEditor,
+  makeReactToolbar,
+  makeImageBlockPlugin,
+  useBlockyController,
+} from "blocky-react";
 import { EditorController } from "blocky-core";
 
-class App extends Component {
-  private editorController: EditorController;
+function App() {
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  constructor(props: {}) {
-    super(props);
-    this.editorController = makeController();
-  }
+  const controller = useBlockyController(() => {
+    return makeController("user", () => containerRef.current!);
+  }, []);
 
-  render() {
-    return <BlockyEditor controller={this.editorController} />;
-  }
+  return (
+    <div ref={containerRef} style={{ width: "100%", display: "flex" }}>
+      <BlockyEditor controller={controller} autoFocus />
+    </div>
+  );
 }
 ```
 
@@ -103,24 +110,49 @@ The data model in Blocky Editor is represented as an XML Document:
 
 Example:
 
-```xml
-<document>
-  <head>
-    <Title />
-  </head>
-  <body>
-    <Text />
-    <Text />
-      <Image src="" />
-    </Text>
-  </body>
-</document>
+```json
+{
+  "t": "document",
+  "title": {
+    "t": "title",
+    "textContent": { "t": "rich-text", "ops": [] }
+  },
+  "body": {
+    "t": "body",
+    "children": [
+      /** Content */
+    ]
+  }
+}
 ```
 
-## Write a block
+## Define a block
 
 You can use the plugin mechanism to extend the editor with
 your custom block.
+
+### Define a block with React
+
+Implementing a block in Preact is more easier.
+
+```tsx
+import { type Editor, type IPlugin } from "blocky-core";
+import { makeReactBlock, DefaultBlockOutline } from "blocky-preact";
+
+export function makeMyBlockPlugin(): IPlugin {
+  return {
+    name: "plugin-name",
+    blocks: [
+      makeReactBlock({
+        name: "BlockName",
+        component: () => (
+          <DefaultBlockOutline>Write the block in Preact</DefaultBlockOutline>
+        ),
+      }),
+    ],
+  };
+}
+```
 
 ### VanillaJS
 
@@ -184,29 +216,6 @@ export function makeMyBlockPlugin(): IPlugin {
   return {
     name: "plugin-name",
     blocks: [MyBlock],
-  };
-}
-```
-
-### Write a block in React
-
-Implementing a block in Preact is more easier.
-
-```tsx
-import { type Editor, type IPlugin } from "blocky-core";
-import { makeReactBlock, DefaultBlockOutline } from "blocky-preact";
-
-export function makeMyBlockPlugin(): IPlugin {
-  return {
-    name: "plugin-name",
-    blocks: [
-      makeReactBlock({
-        name: "BlockName",
-        component: () => (
-          <DefaultBlockOutline>Write the block in Preact</DefaultBlockOutline>
-        ),
-      }),
-    ],
   };
 }
 ```

@@ -18,32 +18,9 @@ interface TextBlockAttributes {
 Builtin types:
 
 - Checkbox
+- Numbered
 - Bulleted
 - Normal
 - Heading1
 - Heading2
 - Heading3
-
-## Styled text plugin
-
-Add styles of bold/italic/underline.
-
-```typescript
-import makeStyledTextPlugin from "blocky-core/dist/plugins/styledTextPlugin";
-```
-
-## Headings plugin
-
-Add styles of h1/h2/h3.
-
-```typescript
-import makeHeadingsPlugin from "blocky-core/dist/plugins/headingsPlugin";
-```
-
-## Bullet list plugin
-
-Add commands of bullet list.
-
-```typescript
-import makeBulletListPlugin from "blocky-core/dist/plugins/bulletListPlugin";
-```

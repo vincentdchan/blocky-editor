@@ -1,8 +1,26 @@
-import { Component, createRef, type RefObject } from "react";
-import { Editor, type EditorController, CursorState } from "blocky-core";
+import React, { useEffect, useState, useRef } from "react";
+import { Editor, EditorController, CursorState } from "blocky-core";
+
+export function useBlockyController(
+  generator: () => EditorController,
+  deps?: React.DependencyList | undefined
+): EditorController | null {
+  const [controller, setController] = useState<EditorController | null>(null);
+
+  useEffect(() => {
+    const controller = generator();
+    setController(controller);
+
+    return () => {
+      controller.dispose();
+    };
+  }, deps);
+
+  return controller;
+}
 
 export interface Props {
-  controller: EditorController;
+  controller: EditorController | null;
 
   /**
    * If this flag is false,
@@ -14,32 +32,35 @@ export interface Props {
   autoFocus?: boolean;
 }
 
-export class BlockyEditor extends Component<Props> {
-  private editor: Editor | undefined;
-  private containerRef: RefObject<HTMLDivElement> = createRef();
+export function BlockyEditor(props: Props) {
+  const { controller, autoFocus, ignoreInitEmpty } = props;
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  override componentDidMount() {
-    const { controller, autoFocus } = this.props;
-    this.editor = Editor.fromController(this.containerRef.current!, controller);
-    const editor = this.editor;
-    if (this.props.ignoreInitEmpty !== true) {
+  useEffect(() => {
+    if (!controller) {
+      return;
+    }
+    const editor = Editor.fromController(containerRef.current!, controller);
+    if (ignoreInitEmpty !== true) {
       editor.initFirstEmptyBlock();
     }
     editor.fullRender(() => {
       if (autoFocus) {
-        controller.setCursorState(CursorState.collapse("title", 0));
+        if (controller.state.document.title) {
+          controller.setCursorState(CursorState.collapse("title", 0));
+        } else {
+          controller.focus();
+        }
       }
     });
-  }
 
-  override componentWillUnmount() {
-    this.editor?.dispose();
-    this.editor = undefined;
-  }
+    return () => {
+      editor.dispose();
+    };
+  }, [controller, autoFocus, ignoreInitEmpty]);
 
-  render() {
-    return (
-      <div className="blocky-editor-container" ref={this.containerRef}></div>
-    );
+  if (!controller) {
+    return null;
   }
+  return <div className="blocky-editor-container" ref={containerRef}></div>;
 }
