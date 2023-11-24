@@ -1082,7 +1082,10 @@ export class Editor {
   #handleBeforeChangesetApply = (changeset: FinalizedChangeset) => {
     const { afterCursor, options } = changeset;
     if (!isUndefined(afterCursor) || options.refreshCursor) {
-      this.state.__setCursorState(null, CursorStateUpdateReason.changeset);
+      this.state.__setCursorState(
+        null,
+        CursorStateUpdateReason.beforeChangeset
+      );
     }
   };
 

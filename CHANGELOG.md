@@ -1,3 +1,7 @@
+## 3.4.1
+
+- Introduce `CursorStateUpdateReason.beforeChangeset`
+
 ## 3.4.0
 
 - Drag and drop blocks

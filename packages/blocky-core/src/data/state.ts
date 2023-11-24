@@ -27,6 +27,7 @@ import { VersionHistory } from "./versionHistory";
 import { type CursorState } from "./cursor";
 
 export enum CursorStateUpdateReason {
+  beforeChangeset = "beforeChangeset",
   /**
    * The user changed the cursor manually through the changeset
    */
