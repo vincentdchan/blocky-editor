@@ -154,6 +154,24 @@ When the user begins to type, the content will be passed to the widget by the me
 
 As usual, there are two ways to implement a follower widget: using the raw API or using Preact.
 
+### React
+
+Use the method `makePreactFollowerWidget`.
+
+```tsx
+import { makeReactFollowerWidget } from "blocky-react";
+
+editor.insertFollowerWidget(
+  makeReactFollowerWidget(({ controller, editingValue, closeWidget }) => (
+    <CommandPanel
+      controller={controller}
+      editingValue={editingValue}
+      closeWidget={closeWidget}
+    />
+  ))
+);
+```
+
 ### VanillaJS
 
 Extend the class `FollowerWidget`.
@@ -177,22 +195,4 @@ export class MyFollowWidget extends FollowerWidget {
 }
 
 editor.insertFollowerWidget(new MyFollowWidget());
-```
-
-### Preact
-
-Use the method `makePreactFollowerWidget`.
-
-```tsx
-import { makePreactFollowerWidget } from "blocky-preact";
-
-editor.insertFollowerWidget(
-  makePreactFollowerWidget(({ controller, editingValue, closeWidget }) => (
-    <CommandPanel
-      controller={controller}
-      editingValue={editingValue}
-      closeWidget={closeWidget}
-    />
-  ))
-);
 ```
