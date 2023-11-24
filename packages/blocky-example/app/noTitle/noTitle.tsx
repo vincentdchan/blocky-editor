@@ -1,15 +1,15 @@
-import { Component, ReactNode, createRef } from "react";
+import { useRef } from "react";
 import {
   BlockyEditor,
   makeReactToolbar,
   makeImageBlockPlugin,
+  useBlockyController,
 } from "blocky-react";
 import { EditorController, IPlugin } from "blocky-core";
 import ImagePlaceholder from "@pkg/components/imagePlaceholder";
 import { makeCommandPanelPlugin } from "@pkg/app/plugins/commandPanel";
 import { makeAtPanelPlugin } from "@pkg/app/plugins/atPanel";
 import ToolbarMenu from "@pkg/app/toolbarMenu";
-import { timer, Subject, takeUntil } from "rxjs";
 
 function makeEditorPlugins(): IPlugin[] {
   return [
@@ -44,35 +44,18 @@ function makeController(
   });
 }
 
-class NoTitleEditor extends Component {
-  controller: EditorController;
-  containerRef = createRef<HTMLDivElement>();
-  dispose$ = new Subject<void>();
+function NoTitleEditor() {
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  constructor(props: any) {
-    super(props);
-    this.controller = makeController("user", () => this.containerRef.current!);
-  }
+  const controller = useBlockyController(() => {
+    return makeController("user", () => containerRef.current!);
+  }, []);
 
-  componentDidMount(): void {
-    timer(0)
-      .pipe(takeUntil(this.dispose$))
-      .subscribe(() => {
-        this.controller.focus();
-      });
-  }
-
-  componentWillUnmount(): void {
-    this.dispose$.next();
-  }
-
-  render(): ReactNode {
-    return (
-      <div ref={this.containerRef} style={{ width: "100%", display: "flex" }}>
-        <BlockyEditor controller={this.controller} />
-      </div>
-    );
-  }
+  return (
+    <div ref={containerRef} style={{ width: "100%", display: "flex" }}>
+      <BlockyEditor controller={controller} autoFocus />
+    </div>
+  );
 }
 
 export default NoTitleEditor;
