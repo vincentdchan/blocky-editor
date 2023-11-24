@@ -44,7 +44,7 @@ export class SpannerDelegate extends UIDelegate {
       .subscribe(this.#handleDragStart.bind(this));
   }
 
-  #handleDragStart(e: DragEvent) {
+  #handleDragStart() {
     const editor = this.editorController.editor;
     if (!editor) {
       return;

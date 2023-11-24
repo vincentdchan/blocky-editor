@@ -13,7 +13,6 @@ import {
   isUndefined,
   isString,
   isNumber,
-  drop,
 } from "lodash-es";
 import { DocRenderer, RenderFlag, RenderOption } from "@pkg/view/renderer";
 import { EditorState, SearchContext } from "@pkg/model";

@@ -252,6 +252,7 @@ export class ContentBlock extends Block {
   get dragOver$(): Observable<DragEvent> {
     return this.#dragOver.pipe(takeUntil(this.dispose$));
   }
+
   get drop$(): Observable<DragEvent> {
     return this.#drop.pipe(takeUntil(this.dispose$));
   }
