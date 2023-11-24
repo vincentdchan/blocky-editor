@@ -1,9 +1,11 @@
 import { type IDisposable, flattenDisposable } from "blocky-common/es";
 import { DivContainer } from "blocky-common/es/dom";
+import { Subject } from "rxjs";
 
 export class UIDelegate extends DivContainer {
   protected shown = false;
   protected disposables: IDisposable[] = [];
+  dispose$ = new Subject<void>();
 
   constructor(clsName?: string) {
     super(clsName);
@@ -11,6 +13,7 @@ export class UIDelegate extends DivContainer {
   }
 
   override dispose() {
+    this.dispose$.next();
     flattenDisposable(this.disposables).dispose();
     super.dispose();
   }

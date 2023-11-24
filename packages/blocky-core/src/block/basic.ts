@@ -9,7 +9,7 @@ import {
   Changeset,
 } from "@pkg/data";
 import Delta from "quill-delta-es";
-import { Subject } from "rxjs";
+import { Observable, Subject, fromEvent, takeUntil } from "rxjs";
 import { type Editor } from "@pkg/view/editor";
 import { type EditorController } from "@pkg/view/controller";
 import { RenderOption } from "@pkg/view/renderer";
@@ -144,6 +144,15 @@ export interface IBlockDefinition {
  */
 export class Block implements IDisposable {
   #editor: Editor | undefined;
+  readonly #dragOver = new Subject<DragEvent>();
+  readonly #drop = new Subject<DragEvent>();
+
+  get dragOver$(): Observable<DragEvent> {
+    return this.#dragOver.pipe(takeUntil(this.dispose$));
+  }
+  get drop$(): Observable<DragEvent> {
+    return this.#drop.pipe(takeUntil(this.dispose$));
+  }
   readonly dispose$ = new Subject<void>();
 
   get childrenContainerDOM(): HTMLElement | null {
@@ -181,6 +190,21 @@ export class Block implements IDisposable {
   }
 
   blockDidMount?(e: BlockDidMountEvent): void;
+
+  protected initBlockDnd(contentContainer: HTMLElement) {
+    fromEvent<DragEvent>(contentContainer, "dragover").subscribe(
+      this.#dragOver
+    );
+    fromEvent<DragEvent>(contentContainer, "drop").subscribe(this.#drop);
+  }
+
+  protected handleDragOver(e: DragEvent) {
+    e.preventDefault();
+  }
+
+  protected handleDrop(e: DragEvent) {
+    e.preventDefault();
+  }
 
   onDedent?(e: KeyboardEvent): void;
 
@@ -255,6 +279,8 @@ export class ContentBlock extends Block {
     this.#selectSpan.setAttribute("data-id", e.blockElement.id);
     this.#selectSpan.appendChild(nonWidthChar);
     element.append(this.#selectSpan);
+
+    this.initBlockDnd(contentContainer);
   }
 
   /**

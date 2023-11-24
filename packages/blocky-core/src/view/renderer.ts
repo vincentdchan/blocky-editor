@@ -363,6 +363,13 @@ export class DocRenderer {
       blockElement: blockNode,
       clsPrefix,
     });
+
+    block.dragOver$.subscribe((e) => {
+      e.preventDefault();
+    });
+    block.drop$.subscribe((e) => {
+      e.preventDefault();
+    });
   }
 
   protected typeOfDomNode(node: Node): number | undefined {

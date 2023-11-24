@@ -304,6 +304,8 @@ export class TextBlock extends Block {
     this.#bodyContainer.append(this.#contentContainer);
 
     element.appendChild(this.#bodyContainer);
+
+    this.initBlockDnd(this.#contentContainer);
   }
 
   override blockFocused({ selection, cursor }: BlockFocusedEvent): void {
