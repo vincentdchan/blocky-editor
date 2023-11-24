@@ -1,3 +1,8 @@
+## 3.4.0
+
+- Drag and drop blocks
+- Resize images
+
 ## 3.3.0
 
 - depreacate `blocky-data`
