@@ -343,14 +343,13 @@ export class DocRenderer {
     }
   }
 
-  prevDragOverBlock: ContentBlock | null = null;
-
   #resetPrevDragOverBlock() {
-    if (!this.prevDragOverBlock) {
+    const editor = this.editor;
+    if (!editor.prevDragOverBlock) {
       return;
     }
-    this.prevDragOverBlock.setDragOverState(BlockDragOverState.None);
-    this.prevDragOverBlock = null;
+    editor.prevDragOverBlock.setDragOverState(BlockDragOverState.None);
+    editor.prevDragOverBlock = null;
   }
 
   #initBlockContainer(
@@ -381,16 +380,18 @@ export class DocRenderer {
     if (block instanceof ContentBlock) {
       block.dragOver$.subscribe((e) => {
         e.preventDefault();
-        if (this.prevDragOverBlock === block) {
+        if (editor.prevDragOverBlock === block) {
           return;
         }
         this.#resetPrevDragOverBlock();
-        this.prevDragOverBlock = block;
+        editor.prevDragOverBlock = block;
         block.setDragOverState(BlockDragOverState.Bottom);
       });
       block.drop$.subscribe((e) => {
         e.preventDefault();
         this.#resetPrevDragOverBlock();
+
+        editor.handleHandleBlockDrop(block);
       });
     }
   }

@@ -45,7 +45,11 @@ export class SpannerDelegate extends UIDelegate {
   }
 
   #handleDragStart(e: DragEvent) {
-    console.log("drag start:", e);
+    const editor = this.editorController.editor;
+    if (!editor) {
+      return;
+    }
+    editor.darggingNode = this.focusedNode;
   }
 
   override mount(parent: HTMLElement): void {

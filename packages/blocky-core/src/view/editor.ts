@@ -13,6 +13,7 @@ import {
   isUndefined,
   isString,
   isNumber,
+  drop,
 } from "lodash-es";
 import { DocRenderer, RenderFlag, RenderOption } from "@pkg/view/renderer";
 import { EditorState, SearchContext } from "@pkg/model";
@@ -44,7 +45,7 @@ import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlock } from "@pkg/block/textBlock";
 import { EditorController } from "./controller";
 import { type FollowerWidget } from "./followerWidget";
-import { Block } from "@pkg/block/basic";
+import { Block, ContentBlock } from "@pkg/block/basic";
 import { getTextTypeForTextBlock } from "@pkg/block/textBlock";
 import {
   CollaborativeCursorManager,
@@ -135,6 +136,9 @@ export class Editor {
   #stagedInput: TextInputEvent[] = [];
   #themeData?: ThemeData;
   #searchContext: SearchContext | undefined;
+
+  darggingNode: BlockDataElement | undefined;
+  prevDragOverBlock: ContentBlock | null = null;
 
   readonly dispose$ = new Subject<void>();
 
@@ -1591,6 +1595,23 @@ export class Editor {
     if (treeNode.t === TextBlock.Name) {
       return treeNode;
     }
+  }
+
+  handleHandleBlockDrop(block: ContentBlock) {
+    if (!this.darggingNode) {
+      return;
+    }
+    const dropBlockElement = block.elementData as BlockDataElement;
+    if (this.darggingNode.id === dropBlockElement.id) {
+      // it's the same
+      return;
+    }
+
+    const cloned = this.darggingNode.clone();
+    new Changeset(this.state)
+      .removeChild(this.darggingNode.parent!, this.darggingNode)
+      .insertChildrenAfter(dropBlockElement, [cloned])
+      .apply();
   }
 
   insertFollowerWidget(widget: FollowerWidget) {
