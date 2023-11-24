@@ -29,7 +29,12 @@ export const ReadMeContent = `
       <li>Gzipped size: ~40kb</li>
     </ul>
   </li>
-  <li>React: Wrap the editor in <a href="https://react.dev/">React</a>. Provide the UI facilities such as toolbar and spanner.</li>
+  <li>
+    React bindings: Wrap the editor in <a href="https://react.dev/">React</a>. Provide the UI facilities such as toolbar and spanner.
+    <ul>
+      <li>Gzipped size(including Core): ~80kb</li>
+    </ul>
+  </li>
   <li>
     Example(this page): The example to demonstrate how to use the editor.
   </li>
