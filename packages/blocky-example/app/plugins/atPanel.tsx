@@ -10,21 +10,29 @@ import {
   Delta,
 } from "blocky-core";
 import { makeReactFollowerWidget } from "blocky-react";
-import { takeUntil } from "rxjs";
+import { takeUntil, filter } from "rxjs";
+import { get } from "lodash-es";
 import "./atPanel.scss";
 
 interface AtPanelProps {
   closeWidget: () => void;
+  startOffset: number;
   controller: EditorController;
 }
 
 const AtPanel = memo((props: AtPanelProps) => {
-  const { controller, closeWidget } = props;
+  const { startOffset, controller, closeWidget } = props;
   const handleSelect = useCallback(() => {
-    controller.applyDeltaAtCursor((index) =>
+    const currentCursor = controller.state.cursorState;
+    if (!currentCursor?.isCollapsed) {
+      return;
+    }
+    const endIndex = currentCursor.endOffset;
+    const deleteLen = Math.max(endIndex - startOffset + 1, 1);
+    controller.applyDeltaAtCursor(() =>
       new Delta()
-        .retain(Math.max(index - 1, 0))
-        .delete(1)
+        .retain(Math.max(startOffset - 1, 0))
+        .delete(deleteLen)
         .insert({
           type: "mention",
           mention: "Vincent Chan",
@@ -59,12 +67,9 @@ class MyEmbed extends Embed {
 
   constructor(props: EmbedInitOptions) {
     super(props);
+    const content = get(props.record, ["mention"], "");
     this.container.className = "blocky-mention";
-    this.container.textContent = "@Vincent";
-  }
-
-  dispose() {
-    console.log("delete mention");
+    this.container.textContent = "@" + content;
   }
 }
 
@@ -75,11 +80,11 @@ export function makeAtPanelPlugin(): IPlugin {
     onInitialized(context: PluginContext) {
       const { editor, dispose$ } = context;
       editor.keyDown$
-        .pipe(takeUntil(dispose$))
-        .subscribe((e: KeyboardEvent) => {
-          if (e.key !== "@") {
-            return;
-          }
+        .pipe(
+          takeUntil(dispose$),
+          filter((e: KeyboardEvent) => e.key === "@")
+        )
+        .subscribe(() => {
           editor.controller.enqueueNextTick(() => {
             const blockElement = editor.controller.getBlockElementAtCursor();
             if (!blockElement) {
@@ -88,9 +93,18 @@ export function makeAtPanelPlugin(): IPlugin {
             if (blockElement.t !== TextBlock.Name) {
               return;
             }
+            const currentCursor = editor.controller.state.cursorState;
+            if (!currentCursor?.isCollapsed) {
+              return;
+            }
+            const startOffset = currentCursor.startOffset;
             editor.insertFollowerWidget(
               makeReactFollowerWidget(({ controller, closeWidget }) => (
-                <AtPanel controller={controller} closeWidget={closeWidget} />
+                <AtPanel
+                  startOffset={startOffset}
+                  controller={controller}
+                  closeWidget={closeWidget}
+                />
               ))
             );
           });
