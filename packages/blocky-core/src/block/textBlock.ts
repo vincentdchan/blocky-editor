@@ -117,7 +117,7 @@ export class TextBlock extends ContentBlock {
     node: container,
     converter,
   }: BlockPasteEvent): BlockDataElement | undefined {
-    return TextBlock.#getTextElementFromDOM(
+    return TextBlock.getTextElementFromDOM(
       editorController,
       container,
       converter
@@ -127,7 +127,7 @@ export class TextBlock extends ContentBlock {
   /**
    * Rebuild the data structure from the pasted html.
    */
-  static #getTextElementFromDOM(
+  static getTextElementFromDOM(
     editorController: EditorController,
     node: HTMLElement,
     converter: HTMLConverter
@@ -158,7 +158,20 @@ export class TextBlock extends ContentBlock {
         if (childPtr instanceof Text) {
           delta.insert(removeLineBreaks(childPtr.textContent));
         } else if (childPtr instanceof HTMLElement) {
-          if (converter.isContainerElement(childPtr)) {
+          const tagName = childPtr.tagName;
+          if (tagName === "CODE") {
+            delta.insert(removeLineBreaks(childPtr.textContent), {
+              code: true,
+            });
+          } else if (["B", "STRONG"].includes(tagName)) {
+            delta.insert(removeLineBreaks(childPtr.textContent), {
+              bold: true,
+            });
+          } else if (tagName === "I") {
+            delta.insert(removeLineBreaks(childPtr.textContent), {
+              italic: true,
+            });
+          } else if (converter.isContainerElement(childPtr)) {
             const childElements = converter.parseContainerElement(childPtr);
             childrenContainer.push(...childElements);
           } else {
