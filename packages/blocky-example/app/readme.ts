@@ -1,5 +1,12 @@
 export const ReadMeContent = `
 <p>Blocky Editor is an editor which supports the concept of blocks. It can help you to build an editor like Notion. It's tiny, fast and extensible. You can extend it with blocks.</p>
+<h2>Usage</h2>
+<ul>
+  <li>Click on the text to input content</li>
+  <li>Type <code>\/</code> to trigger command panel</li>
+  <li>Type <code>@</code> to trigger mention panel</li>
+  <li>Drag the handle to re-order the blocks</li>
+</ul>
 <h2>Why?</h2>
 <p>
   The main goal of this project is to provide an editor which is small and fast enough to be embedded in Notion-like apps.
