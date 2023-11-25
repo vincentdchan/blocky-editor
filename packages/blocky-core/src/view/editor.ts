@@ -6,7 +6,7 @@ import {
   type IDisposable,
   type Position,
 } from "blocky-common/es";
-import { Subject, takeUntil, take, fromEvent } from "rxjs";
+import { Subject, takeUntil, take, fromEvent, BehaviorSubject } from "rxjs";
 import {
   debounce,
   isFunction,
@@ -15,7 +15,7 @@ import {
   isNumber,
 } from "lodash-es";
 import { DocRenderer, RenderFlag, RenderOption } from "@pkg/view/renderer";
-import { EditorState, SearchContext } from "@pkg/model";
+import { EditorState, SearchContext, blockyDefaultFonts } from "@pkg/model";
 import {
   type CursorStateUpdateEvent,
   BlockyTextModel,
@@ -133,7 +133,7 @@ export class Editor {
    * So we need an array to store them.
    */
   #stagedInput: TextInputEvent[] = [];
-  #themeData?: ThemeData;
+  #themeData = new BehaviorSubject<ThemeData | undefined>(undefined);
   #searchContext: SearchContext | undefined;
 
   darggingNode: BlockDataElement | undefined;
@@ -284,20 +284,11 @@ export class Editor {
   }
 
   get themeData(): ThemeData | undefined {
-    return this.#themeData;
+    return this.#themeData.value;
   }
 
   set themeData(themeData: ThemeData | undefined) {
-    this.#themeData = themeData;
-
-    if (isString(themeData?.primary?.color)) {
-      this.#container.style.setProperty(
-        "--blocky-primary-color",
-        themeData!.primary!.color
-      );
-    } else {
-      this.#container.style.setProperty("--blocky-primary-color", null);
-    }
+    this.#themeData.next(themeData);
   }
 
   addStagedInput(inputEvent: TextInputEvent) {
@@ -431,6 +422,31 @@ export class Editor {
         if (this.controller.options?.spellcheck === false) {
           newDom.spellcheck = false;
         }
+
+        this.#themeData
+          .pipe(takeUntil(this.dispose$))
+          .subscribe((themeData) => {
+            if (isString(themeData?.primary?.color)) {
+              this.#container.style.setProperty(
+                "--blocky-primary-color",
+                themeData!.primary!.color
+              );
+            } else {
+              this.#container.style.setProperty("--blocky-primary-color", null);
+            }
+
+            if (isString(themeData?.font)) {
+              this.#container.style.setProperty(
+                "--blocky-font",
+                themeData!.font!
+              );
+            } else {
+              this.#container.style.setProperty(
+                "--blocky-font",
+                blockyDefaultFonts
+              );
+            }
+          });
 
         fromEvent(newDom, "input")
           .pipe(takeUntil(this.dispose$))

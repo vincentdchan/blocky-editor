@@ -17,7 +17,7 @@ import SpannerMenu from "./spannerMenu";
 import ToolbarMenu from "./toolbarMenu";
 import TianShuiWeiImage from "./tianshuiwei.jpg";
 import Image from "next/image";
-import { Theme } from "./themeSwitch";
+import { blockyExampleFont, Theme } from "./themeSwitch";
 import { isHotkey } from "is-hotkey";
 import { Subject, takeUntil } from "rxjs";
 import "blocky-core/css/blocky-core.css";
@@ -195,9 +195,14 @@ function BlockyEditorWithTheme(props: BlockyEditorWithThemeProps) {
   const { darkMode, controller } = props;
   useEffect(() => {
     if (darkMode) {
-      controller.themeData = darkTheme;
+      controller.themeData = {
+        ...darkTheme,
+        font: blockyExampleFont,
+      };
     } else {
-      controller.themeData = undefined;
+      controller.themeData = {
+        font: blockyExampleFont,
+      };
     }
   }, [darkMode]);
   return (

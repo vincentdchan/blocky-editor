@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Component, createContext } from "react";
+import React, { Component, createContext, useEffect, useState } from "react";
 
 export interface ThemeContext {
   darkMode: boolean;
@@ -16,47 +16,38 @@ export interface ThemeProviderProps {
   children?: React.ReactNode;
 }
 
-interface ThemeProviderState {
-  darkMode: boolean;
-}
+export const blockyExampleFont = `Inter, system-ui, -apple-system, BlinkMacSystemFont, Roboto, 'Open Sans', 'Helvetica Neue', sans-serif`;
 
-export class ThemeProvider extends Component<
-  ThemeProviderProps,
-  ThemeProviderState
-> {
-  constructor(props: ThemeProviderProps) {
-    super(props);
-    this.state = {
-      darkMode: false,
-    };
-  }
-
-  override componentDidUpdate(
-    prevProps: unknown,
-    prevState: ThemeProviderState
-  ) {
-    if (!prevState.darkMode && this.state.darkMode) {
+export function ThemeProvider(props: ThemeProviderProps) {
+  const [darkMode, setDarkMode] = useState(false);
+  useEffect(() => {
+    if (darkMode) {
       document.documentElement.setAttribute("data-theme", "dark");
     } else {
       document.documentElement.setAttribute("data-theme", "light");
     }
-  }
+  }, [darkMode]);
 
-  #toggle = () => {
-    this.setState({
-      darkMode: !this.state.darkMode,
-    });
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--blocky-example-font",
+      blockyExampleFont
+    );
+
+    return () => {
+      document.documentElement.style.removeProperty("--blocky-example-font");
+    };
+  }, []);
+
+  const toggle = () => {
+    setDarkMode(!darkMode);
   };
 
-  render() {
-    return (
-      <Theme.Provider
-        value={{ darkMode: this.state.darkMode, toggle: this.#toggle }}
-      >
-        {this.props.children}
-      </Theme.Provider>
-    );
-  }
+  return (
+    <Theme.Provider value={{ darkMode, toggle }}>
+      {props.children}
+    </Theme.Provider>
+  );
 }
 
 export function ThemeSwitch() {
