@@ -60,25 +60,30 @@
   color: rgb(52, 184, 220);
 }
 
+.blocky-block-text-content {
+  font-weight: 400;
+  font-size: 15px;
+}
+
 .blocky-h1 {
   padding-top: 8px;
   padding-bottom: 4px;
   font-size: 28px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .blocky-h2 {
   padding-top: 8px;
   padding-bottom: 4px;
   font-size: 24px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .blocky-h3 {
   padding-top: 8px;
   padding-bottom: 4px;
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .blocky-default-block-outline {
