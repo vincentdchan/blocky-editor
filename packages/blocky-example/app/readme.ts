@@ -3,7 +3,7 @@ export const ReadMeContent = `
 <h2>Usage</h2>
 <ul>
   <li>Click on the text to input content</li>
-  <li>Type <code>\/</code> to trigger command panel</li>
+  <li>Type <code>/</code> to trigger command panel</li>
   <li>Type <code>@</code> to trigger mention panel</li>
   <li>Drag the handle to re-order the blocks</li>
 </ul>
