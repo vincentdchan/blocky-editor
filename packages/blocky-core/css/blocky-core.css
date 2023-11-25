@@ -156,6 +156,7 @@
 
 .blocky-follow-widget {
   position: absolute;
+  z-index: 10;
 }
 
 .blocky-checkbox {

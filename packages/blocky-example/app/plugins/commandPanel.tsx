@@ -1,5 +1,5 @@
 import { PureComponent } from "react";
-import { makePreactFollowerWidget } from "blocky-react";
+import { makeReactFollowerWidget } from "blocky-react";
 import { type IDisposable, flattenDisposable } from "blocky-common/es";
 import {
   Panel,
@@ -73,33 +73,35 @@ export function makeCommandPanelPlugin(): IPlugin {
     name: "command-panel",
     onInitialized(context: PluginContext) {
       const { editor, dispose$ } = context;
-      editor.keyDown.pipe(takeUntil(dispose$)).subscribe((e: KeyboardEvent) => {
-        if (e.key !== "/") {
-          return;
-        }
+      editor.keyDown$
+        .pipe(takeUntil(dispose$))
+        .subscribe((e: KeyboardEvent) => {
+          if (e.key !== "/") {
+            return;
+          }
 
-        editor.controller.enqueueNextTick(() => {
-          const blockElement = editor.controller.getBlockElementAtCursor();
-          if (!blockElement) {
-            return;
-          }
-          if (blockElement.t !== TextBlock.Name) {
-            return;
-          }
-          editor.insertFollowerWidget(
-            makePreactFollowerWidget(
-              ({ controller, editingValue, closeWidget }) => (
-                <CommandPanel
-                  controller={controller}
-                  editingValue={editingValue}
-                  closeWidget={closeWidget}
-                />
-              ),
-              { maxHeight: 80 }
-            )
-          );
+          editor.controller.enqueueNextTick(() => {
+            const blockElement = editor.controller.getBlockElementAtCursor();
+            if (!blockElement) {
+              return;
+            }
+            if (blockElement.t !== TextBlock.Name) {
+              return;
+            }
+            editor.insertFollowerWidget(
+              makeReactFollowerWidget(
+                ({ controller, editingValue, closeWidget }) => (
+                  <CommandPanel
+                    controller={controller}
+                    editingValue={editingValue}
+                    closeWidget={closeWidget}
+                  />
+                ),
+                { maxHeight: 80 }
+              )
+            );
+          });
         });
-      });
     },
   };
 }
