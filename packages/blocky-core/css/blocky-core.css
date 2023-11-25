@@ -21,6 +21,7 @@
 
 .blocky-editor-toolbar-delegate {
   position: absolute;
+  z-index: 11;
 }
 
 /* https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlighting */
