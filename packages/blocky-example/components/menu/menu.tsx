@@ -10,7 +10,7 @@ export class Menu extends Component<MenuProps> {
   override render() {
     const { children, style } = this.props;
     return (
-      <div className="blocky-menu blocky-default-fonts" style={style}>
+      <div className="blocky-menu" style={style}>
         {children}
       </div>
     );
@@ -27,7 +27,11 @@ export class MenuItem extends Component<MenuItemProps> {
   override render() {
     const { style, onClick, children } = this.props;
     return (
-      <div className="blocky-menu-item blocky-cm-noselect" onClick={onClick} style={style}>
+      <div
+        className="blocky-menu-item blocky-cm-noselect"
+        onClick={onClick}
+        style={style}
+      >
         {children}
       </div>
     );
@@ -35,7 +39,5 @@ export class MenuItem extends Component<MenuItemProps> {
 }
 
 export function Divider() {
-  return (
-    <div className="blocky-menu-divider"></div>
-  )
+  return <div className="blocky-menu-divider"></div>;
 }

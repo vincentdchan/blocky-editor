@@ -19,7 +19,7 @@ export interface PreactFollowWidgetOptions {
   maxHeight?: number;
 }
 
-export class PreactFollowWidget extends FollowerWidget {
+export class ReactFollowWidget extends FollowerWidget {
   #renderer: FollowerWidgetRenderer;
   #controller: EditorController | undefined;
   #yOffset: number | undefined;
@@ -74,7 +74,7 @@ export class PreactFollowWidget extends FollowerWidget {
         editingValue: this.editingValue,
         atTop: this.atTop,
         closeWidget: () => this.dispose(),
-      }),
+      })
     );
   }
 
@@ -84,9 +84,9 @@ export class PreactFollowWidget extends FollowerWidget {
   }
 }
 
-export function makePreactFollowerWidget(
+export function makeReactFollowerWidget(
   renderer: FollowerWidgetRenderer,
   options?: PreactFollowWidgetOptions
 ): FollowerWidget {
-  return new PreactFollowWidget(renderer, options);
+  return new ReactFollowWidget(renderer, options);
 }

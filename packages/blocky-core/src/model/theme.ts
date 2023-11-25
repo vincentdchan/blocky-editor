@@ -1,3 +1,5 @@
+export const blockyDefaultFonts = `system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif`;
+
 export interface ParagraphStyle {
   color?: string;
   fontFamily?: string;
@@ -5,6 +7,8 @@ export interface ParagraphStyle {
 }
 
 export interface ThemeData {
+  font?: string;
+
   /**
    * The style of primary text
    */

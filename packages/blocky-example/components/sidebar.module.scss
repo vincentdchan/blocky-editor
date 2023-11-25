@@ -7,7 +7,7 @@
   padding: 0px 20px;
   color: var(--primary-text-color);
   text-decoration: none;
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, Roboto, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--blocky-example-font);
   font-size: 14px;
 
   &:hover {
@@ -21,7 +21,7 @@
 }
 
 .subTitle {
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, Roboto, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--blocky-example-font);
   font-size: 13px;
   padding-left: 20px;
   font-weight: 500;
