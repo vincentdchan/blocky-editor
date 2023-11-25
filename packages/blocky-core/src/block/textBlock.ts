@@ -704,7 +704,15 @@ export class TextBlock extends ContentBlock {
       if (key === "href") {
         continue;
       }
-      if (attributes[key] && !span.classList.contains(key)) {
+      const spanDef = this.editor.registry.span.styles.get(key);
+      if (!spanDef) {
+        return false;
+      }
+      if (
+        attributes[key] &&
+        isString(spanDef.className) &&
+        !span.classList.contains(spanDef.className)
+      ) {
         return false;
       }
     }
@@ -790,6 +798,7 @@ export class TextBlock extends ContentBlock {
     } else {
       // is old
       if (!this.#isSpanNodeMatch(op, domPtr)) {
+        console.log("not match", op, domPtr);
         const oldDom = domPtr;
         const newNode = this.#createDomByOp(op, this.editor);
 

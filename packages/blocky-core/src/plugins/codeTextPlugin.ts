@@ -3,7 +3,7 @@ import { CursorState, Changeset } from "@pkg/data";
 import Delta from "quill-delta-es";
 import { isHotkey } from "is-hotkey";
 import { isUndefined } from "lodash-es";
-import { takeUntil } from "rxjs";
+import { takeUntil, filter } from "rxjs";
 
 class CodeTextDetector {
   #cursor: CursorState;
@@ -50,15 +50,20 @@ function makeCodeTextPlugin(): IPlugin {
     onInitialized(context: PluginContext) {
       const { editor, dispose$ } = context;
       editor.keyDown$
+        .pipe(
+          takeUntil(dispose$),
+          filter((e: KeyboardEvent) => isHotkey("mod+m", e))
+        )
+        .subscribe((e: KeyboardEvent) => {
+          e.preventDefault();
+          editor.controller.formatTextOnSelectedText({
+            code: true,
+          });
+        });
+
+      editor.keyDown$
         .pipe(takeUntil(dispose$))
         .subscribe((e: KeyboardEvent) => {
-          if (isHotkey("mod+m", e)) {
-            e.preventDefault();
-            editor.controller.formatTextOnSelectedText({
-              code: true,
-            });
-            return;
-          }
           if (editor.composing) {
             return;
           }
@@ -107,12 +112,13 @@ function makeCodeTextPlugin(): IPlugin {
                 }
               }
             }
-          } else {
-            if (codeTextDetector) {
-              if (!codeTextDetector.emitNonDot(editor.state.cursorState)) {
-                codeTextDetector = undefined;
-              }
-            }
+            return;
+          }
+          if (
+            codeTextDetector &&
+            !codeTextDetector.emitNonDot(editor.state.cursorState)
+          ) {
+            codeTextDetector = undefined;
           }
         });
     },
