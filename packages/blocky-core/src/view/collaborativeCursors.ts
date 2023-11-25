@@ -175,6 +175,7 @@ export class CollaborativeCursor {
       cursorRect.x = rect.x;
       cursorRect.y = rect.y;
       cursorRect.setWidth(Math.max(minWidthOfCursor, rect.width));
+      cursorRect.setHeight(rect.height);
       this.#rects.push(cursorRect);
     }
 

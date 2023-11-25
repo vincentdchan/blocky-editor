@@ -6,7 +6,14 @@ import {
   type IDisposable,
   type Position,
 } from "blocky-common/es";
-import { Subject, takeUntil, take, fromEvent, BehaviorSubject } from "rxjs";
+import {
+  Subject,
+  takeUntil,
+  take,
+  fromEvent,
+  BehaviorSubject,
+  timer,
+} from "rxjs";
 import {
   debounce,
   isFunction,
@@ -15,7 +22,12 @@ import {
   isNumber,
 } from "lodash-es";
 import { DocRenderer, RenderFlag, RenderOption } from "@pkg/view/renderer";
-import { EditorState, SearchContext, blockyDefaultFonts } from "@pkg/model";
+import {
+  EditorState,
+  NodeTraverser,
+  SearchContext,
+  blockyDefaultFonts,
+} from "@pkg/model";
 import {
   type CursorStateUpdateEvent,
   BlockyTextModel,
@@ -49,6 +61,7 @@ import { getTextTypeForTextBlock } from "@pkg/block/textBlock";
 import {
   CollaborativeCursorManager,
   type CollaborativeCursorFactory,
+  CollaborativeCursor,
 } from "./collaborativeCursors";
 import { TitleBlock } from "@pkg/block/titleBlock";
 import type { ThemeData } from "@pkg/model/theme";
@@ -328,80 +341,163 @@ export class Editor {
   }
 
   drawCollaborativeCursor(id: string, state: CursorState | null) {
-    setTimeout(() => {
-      if (!state) {
-        this.collaborativeCursorManager.deleteById(id);
-        return;
-      }
-      const cursor = this.collaborativeCursorManager.getOrInit(id);
-
-      const containerRect = this.#container.getBoundingClientRect();
-      if (state.isCollapsed) {
-        const blockId = state.id;
-        const offset = state.offset;
-
-        const block = this.state.blocks.get(blockId);
-        if (!block) {
+    timer(15)
+      .pipe(takeUntil(this.dispose$))
+      .subscribe(() => {
+        if (!state) {
           this.collaborativeCursorManager.deleteById(id);
           return;
         }
-        cursor.height = block.getCursorHeight();
+        const cursor = this.collaborativeCursorManager.getOrInit(id);
 
-        const cursorDom = block.getCursorDomByOffset?.(offset);
-        if (!cursorDom) {
-          this.collaborativeCursorManager.deleteById(id);
-          return;
-        }
-        const range = document.createRange();
-        range.setStart(cursorDom.node, cursorDom.offset);
-        range.setEnd(cursorDom.node, cursorDom.offset);
-
-        const rects = range.getClientRects();
-        if (rects.length === 0) {
+        const containerRect = this.#container.getBoundingClientRect();
+        if (state.isCollapsed) {
+          this.#indeedDrawCollabCollapsedCursor(
+            id,
+            state,
+            cursor,
+            containerRect
+          );
           return;
         }
 
-        const firstRect = rects[0];
-
-        cursor.drawCollapsedRect(
-          firstRect.x - containerRect.x,
-          firstRect.y - containerRect.y
-        );
-        return;
-      }
-
-      if (state.startId != state.endId) {
-        return;
-      }
-
-      const block = this.state.blocks.get(state.startId);
-      if (!block) {
-        this.collaborativeCursorManager.deleteById(id);
-        return;
-      }
-
-      cursor.height = block.getCursorHeight();
-
-      const startCursorDom = block.getCursorDomByOffset?.(state.startOffset);
-      const endCursorDom = block.getCursorDomByOffset?.(state.endOffset);
-      if (!startCursorDom || !endCursorDom) {
-        this.collaborativeCursorManager.deleteById(id);
-        return;
-      }
-      const range = document.createRange();
-      range.setStart(startCursorDom.node, startCursorDom.offset);
-      range.setEnd(endCursorDom.node, endCursorDom.offset);
-
-      const rects = [...range.getClientRects()].map((rect) => {
-        return new DOMRect(
-          rect.x - containerRect.x,
-          rect.y - containerRect.y,
-          rect.width,
-          rect.height
-        );
+        this.#indeedDrawCollabOpenCursor(id, state, cursor, containerRect);
       });
-      cursor.drawRects(rects);
-    }, 15);
+  }
+
+  #indeedDrawCollabCollapsedCursor(
+    id: string,
+    state: CursorState,
+    cursor: CollaborativeCursor,
+    containerRect: DOMRect
+  ) {
+    const blockId = state.id;
+    const offset = state.offset;
+
+    const block = this.state.blocks.get(blockId);
+    if (!block) {
+      this.collaborativeCursorManager.deleteById(id);
+      return;
+    }
+    cursor.height = block.getCursorHeight();
+
+    const cursorDom = block.getCursorDomByOffset?.(offset);
+    if (!cursorDom) {
+      this.collaborativeCursorManager.deleteById(id);
+      return;
+    }
+    const range = document.createRange();
+    range.setStart(cursorDom.node, cursorDom.offset);
+    range.setEnd(cursorDom.node, cursorDom.offset);
+
+    const rects = range.getClientRects();
+    if (rects.length === 0) {
+      return;
+    }
+
+    const firstRect = rects[0];
+
+    cursor.drawCollapsedRect(
+      firstRect.x - containerRect.x,
+      firstRect.y - containerRect.y
+    );
+  }
+
+  #indeedDrawCollabOpenCursor(
+    id: string,
+    state: CursorState,
+    cursor: CollaborativeCursor,
+    containerRect: DOMRect
+  ) {
+    const startBlock = this.state.blocks.get(state.startId);
+    if (!startBlock) {
+      this.collaborativeCursorManager.deleteById(id);
+      return;
+    }
+
+    const endBlock = this.state.blocks.get(state.endId);
+    if (!endBlock) {
+      this.collaborativeCursorManager.deleteById(id);
+      return;
+    }
+
+    const traverser = new NodeTraverser(this.state, startBlock.elementData);
+
+    const rects: DOMRect[] = [];
+
+    while (traverser.peek()) {
+      const currentNode = traverser.next();
+
+      if (currentNode instanceof BlockDataElement) {
+        let startOffset = 0;
+        let endOffset = 0;
+        if (currentNode.t === TextBlock.Name) {
+          const textModel = currentNode.getAttribute(
+            "textContent"
+          ) as BlockyTextModel;
+
+          if (currentNode === startBlock.elementData) {
+            startOffset = state.startOffset;
+          }
+
+          if (currentNode === endBlock.elementData) {
+            endOffset = state.endOffset;
+          } else {
+            endOffset = textModel.length;
+          }
+
+          const block = this.state.blocks.get(currentNode.id)!;
+          this.#collectDrawOneBlockForOpenCursorRect(
+            block,
+            cursor,
+            containerRect,
+            startOffset,
+            endOffset,
+            rects
+          );
+        }
+      }
+
+      if (currentNode === endBlock.elementData) {
+        break;
+      }
+    }
+
+    if (rects.length === 0) {
+      return;
+    }
+
+    cursor.drawRects(rects);
+  }
+
+  #collectDrawOneBlockForOpenCursorRect(
+    block: Block,
+    cursor: CollaborativeCursor,
+    containerRect: DOMRect,
+    startOffset: number,
+    endOffset: number,
+    rects: DOMRect[]
+  ) {
+    cursor.height = block.getCursorHeight();
+
+    const startCursorDom = block.getCursorDomByOffset?.(startOffset);
+    const endCursorDom = block.getCursorDomByOffset?.(endOffset);
+    if (!startCursorDom || !endCursorDom) {
+      return;
+    }
+    const range = document.createRange();
+    range.setStart(startCursorDom.node, startCursorDom.offset);
+    range.setEnd(endCursorDom.node, endCursorDom.offset);
+
+    const blockRects = [...range.getClientRects()].map((rect) => {
+      return new DOMRect(
+        rect.x - containerRect.x,
+        rect.y - containerRect.y,
+        rect.width,
+        rect.height
+      );
+    });
+    rects.push(...blockRects);
   }
 
   fullRender(done?: AfterFn) {
@@ -1482,7 +1578,6 @@ export class Editor {
     }
 
     const blockData = blockElement.toJSON();
-    console.log(JSON.stringify(blockData).replace(/"/g, '\\"'));
     e.clipboardData?.clearData();
     e.clipboardData?.setData(
       "text/html",
