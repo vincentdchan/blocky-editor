@@ -1,10 +1,7 @@
 import { elem, removeNode } from "blocky-common/es/dom";
 import { isUndefined } from "lodash-es";
-import {
-  BlockDragOverState,
-  ContentBlock,
-  type IBlockDefinition,
-} from "@pkg/block/basic";
+import { BlockDragOverState, type IBlockDefinition } from "@pkg/block/basic";
+import { ContentBlock } from "@pkg/block/contentBlock";
 import {
   type BlockyDocument,
   type DataBaseNode,
@@ -15,6 +12,7 @@ import {
 } from "@pkg/data";
 import type { Editor } from "@pkg/view/editor";
 import { TextBlock } from "@pkg/block/textBlock";
+import { fromEvent, takeUntil, filter } from "rxjs";
 
 function ensureChild<K extends keyof HTMLElementTagNameMap>(
   dom: HTMLElement,
@@ -192,6 +190,17 @@ export class DocRenderer {
         elem.style.padding = `${top}px ${right}px ${bottom}px ${left}px`;
       }
     );
+
+    const mousemove$ = fromEvent<MouseEvent>(blocksContainer, "mousemove");
+    mousemove$
+      .pipe(
+        takeUntil(this.editor.dispose$),
+        filter((e) => e.target === blocksContainer)
+      )
+      .subscribe((e: MouseEvent) => {
+        this.editor.handleBlocksContainerMouseMove(e);
+      });
+
     this.renderBlocks(
       option,
       blocksContainer,
@@ -362,9 +371,6 @@ export class DocRenderer {
     blockContainer._mgNode = blockNode;
     editor.state.setDom(blockNode.id, blockContainer);
     blockContainer.setAttribute("data-type", blockDef.Name);
-    blockContainer.addEventListener("mouseenter", () => {
-      editor.placeSpannerAt(blockContainer, blockNode);
-    });
 
     const block = editor.state.blocks.get(blockNode.id);
     if (!block) {
@@ -378,6 +384,10 @@ export class DocRenderer {
     });
 
     if (block instanceof ContentBlock) {
+      block.mouseEnter$.subscribe(() => {
+        editor.placeSpannerAt(blockContainer, blockNode);
+      });
+
       block.dragOver$.subscribe((e) => {
         e.preventDefault();
         if (editor.prevDragOverBlock === block) {

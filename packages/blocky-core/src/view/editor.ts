@@ -14,13 +14,7 @@ import {
   BehaviorSubject,
   timer,
 } from "rxjs";
-import {
-  debounce,
-  isFunction,
-  isUndefined,
-  isString,
-  isNumber,
-} from "lodash-es";
+import { debounce, isUndefined, isString, isNumber } from "lodash-es";
 import { DocRenderer, RenderFlag, RenderOption } from "@pkg/view/renderer";
 import {
   EditorState,
@@ -56,7 +50,8 @@ import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlock } from "@pkg/block/textBlock";
 import { EditorController } from "./controller";
 import { type FollowerWidget } from "./followerWidget";
-import { Block, ContentBlock } from "@pkg/block/basic";
+import { Block } from "@pkg/block/basic";
+import { ContentBlock } from "@pkg/block/contentBlock";
 import { getTextTypeForTextBlock } from "@pkg/block/textBlock";
 import {
   CollaborativeCursorManager,
@@ -64,6 +59,7 @@ import {
   CollaborativeCursor,
 } from "./collaborativeCursors";
 import { TitleBlock } from "@pkg/block/titleBlock";
+import { requestIdleCallback } from "./utils";
 import type { ThemeData } from "@pkg/model/theme";
 
 const arrowKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
@@ -104,6 +100,11 @@ function makeDefaultPadding(): Padding {
     bottom: 72,
     left: 56,
   };
+}
+
+interface BlockSizeInfo {
+  id: string;
+  rect: DOMRect;
 }
 
 export class TextInputEvent {
@@ -164,6 +165,12 @@ export class Editor {
 
   readonly state: EditorState;
   readonly registry: EditorRegistry;
+
+  /**
+   * The container can scroll.
+   * When the user types, the element will scroll.
+   */
+  scrollContainer?: HTMLElement | (() => HTMLElement);
 
   /**
    * @deprecated The method should not be used
@@ -572,6 +579,14 @@ export class Editor {
           .subscribe(this.#handleEditorBlur);
 
         this.#renderedDom = newDom;
+
+        const scrollContainer = this.#getScrollContainer();
+        if (scrollContainer) {
+          const scroll$ = fromEvent(scrollContainer, "scroll");
+          scroll$.pipe(takeUntil(this.dispose$)).subscribe(() => {
+            this.debouncedCollectBlockSize();
+          });
+        }
       }
 
       if (done) {
@@ -579,6 +594,7 @@ export class Editor {
       } else {
         this.#handleSelectionChanged(CursorStateUpdateReason.contentChanged);
       }
+      this.#afterRender();
     } catch (err) {
       console.error(err);
       this.controller.options?.onError?.(err);
@@ -586,6 +602,38 @@ export class Editor {
     }
 
     this.controller.__emitNextTicks();
+  }
+
+  debouncedCollectBlockSize = debounce(() => {
+    this.#collectBlocksSize();
+  }, 200);
+
+  #afterRender() {
+    requestIdleCallback(() => {
+      this.#collectBlocksSize();
+    });
+  }
+
+  blockSizes: BlockSizeInfo[] = [];
+
+  #collectBlocksSize() {
+    this.blockSizes.length = 0;
+
+    const blocks = this.state.blocks.keys();
+    for (const blockId of blocks) {
+      const blockContainer = this.state.domMap.get(blockId);
+      if (!blockContainer) {
+        continue;
+      }
+      if (!(blockContainer instanceof HTMLElement)) {
+        return;
+      }
+      const rect = blockContainer.getBoundingClientRect();
+      this.blockSizes.push({
+        id: blockId,
+        rect,
+      });
+    }
   }
 
   #handleEditorBlur = () => {
@@ -1157,17 +1205,8 @@ export class Editor {
   }
 
   #indeedScrollInView() {
-    const scrollContainerGetter = this.controller.options?.scrollContainer;
-    if (isUndefined(scrollContainerGetter)) {
-      return;
-    }
-    let scrollContainer: HTMLElement;
-    if (isFunction(scrollContainerGetter)) {
-      scrollContainer = scrollContainerGetter();
-    } else {
-      scrollContainer = scrollContainerGetter;
-    }
-    if (isUndefined(scrollContainer)) {
+    const scrollContainer = this.#getScrollContainer();
+    if (!scrollContainer) {
       return;
     }
     const selection = window.getSelection()!;
@@ -1789,10 +1828,7 @@ export class Editor {
     followerWidget: FollowerWidget
   ): number | undefined {
     const { maxHeight } = followerWidget;
-    let scrollContainer = this.controller.options?.scrollContainer;
-    if (isFunction(scrollContainer)) {
-      scrollContainer = scrollContainer();
-    }
+    const scrollContainer = this.#getScrollContainer();
     if (!scrollContainer) {
       return;
     }
@@ -1803,6 +1839,32 @@ export class Editor {
       }
     }
     return;
+  }
+
+  #getScrollContainer() {
+    const scrollContainer = this.scrollContainer;
+    if (scrollContainer instanceof HTMLElement) {
+      return scrollContainer;
+    }
+    if (typeof scrollContainer === "function") {
+      const container = scrollContainer();
+      return container;
+    }
+    return undefined;
+  }
+
+  handleBlocksContainerMouseMove(e: MouseEvent) {
+    const y = e.clientY;
+    for (const block of this.blockSizes) {
+      if (block.rect.top <= y && block.rect.bottom >= y) {
+        const blockContainer = this.state.domMap.get(block.id) as HTMLElement;
+        const blockNode = blockContainer?._mgNode as BlockDataElement;
+        if (blockContainer) {
+          this.placeSpannerAt(blockContainer, blockNode);
+        }
+        return;
+      }
+    }
   }
 
   focus() {
