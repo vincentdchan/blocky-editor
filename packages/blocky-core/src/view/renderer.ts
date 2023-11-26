@@ -12,7 +12,6 @@ import {
 } from "@pkg/data";
 import type { Editor } from "@pkg/view/editor";
 import { TextBlock } from "@pkg/block/textBlock";
-import { fromEvent, takeUntil, filter } from "rxjs";
 
 function ensureChild<K extends keyof HTMLElementTagNameMap>(
   dom: HTMLElement,
