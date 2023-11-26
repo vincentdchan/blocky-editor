@@ -21,10 +21,7 @@ function makeEditorPlugins(): IPlugin[] {
   ];
 }
 
-function makeController(
-  userId: string,
-  scrollContainer: () => HTMLElement
-): EditorController {
+function makeController(userId: string): EditorController {
   return new EditorController(userId, {
     /**
      * Define the plugins to implement customize features.
@@ -38,8 +35,6 @@ function makeController(
       return <ToolbarMenu editorController={editorController} />;
     }),
 
-    scrollContainer,
-
     spellcheck: false,
   });
 }
@@ -48,12 +43,16 @@ function NoTitleEditor() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const controller = useBlockyController(() => {
-    return makeController("user", () => containerRef.current!);
+    return makeController("user");
   }, []);
 
   return (
     <div ref={containerRef} style={{ width: "100%", display: "flex" }}>
-      <BlockyEditor controller={controller} autoFocus />
+      <BlockyEditor
+        controller={controller}
+        scrollContainer={containerRef}
+        autoFocus
+      />
     </div>
   );
 }
