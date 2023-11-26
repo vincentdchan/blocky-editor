@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, RefObject } from "react";
 import { Editor, EditorController, CursorState } from "blocky-core";
 
 export function useBlockyController(
@@ -30,10 +30,12 @@ export interface Props {
   ignoreInitEmpty?: boolean;
 
   autoFocus?: boolean;
+
+  scrollContainer?: RefObject<HTMLElement>;
 }
 
 export function BlockyEditor(props: Props) {
-  const { controller, autoFocus, ignoreInitEmpty } = props;
+  const { controller, autoFocus, ignoreInitEmpty, scrollContainer } = props;
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,6 +46,11 @@ export function BlockyEditor(props: Props) {
     if (ignoreInitEmpty !== true) {
       editor.initFirstEmptyBlock();
     }
+
+    if (scrollContainer) {
+      editor.scrollContainer = scrollContainer.current!;
+    }
+
     editor.fullRender(() => {
       if (autoFocus) {
         if (controller.state.document.title) {
@@ -57,7 +64,7 @@ export function BlockyEditor(props: Props) {
     return () => {
       editor.dispose();
     };
-  }, [controller, autoFocus, ignoreInitEmpty]);
+  }, [controller, autoFocus, ignoreInitEmpty, scrollContainer]);
 
   if (!controller) {
     return null;

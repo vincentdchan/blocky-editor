@@ -1,6 +1,13 @@
 "use client";
 
-import { Component, createRef, RefObject, useEffect, useState } from "react";
+import {
+  Component,
+  createRef,
+  RefObject,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { EditorController, darkTheme, type IPlugin } from "blocky-core";
 import {
   BlockyEditor,
@@ -38,11 +45,7 @@ const User2Color = "rgb(246 187 80)";
 /**
  * The controller is used to control the editor.
  */
-function makeController(
-  userId: string,
-  title: string,
-  scrollContainer: () => HTMLElement
-): EditorController {
+function makeController(userId: string, title: string): EditorController {
   return new EditorController(userId, {
     title,
     collaborativeCursorFactory: (id: string) => ({
@@ -80,8 +83,6 @@ function makeController(
       return <ToolbarMenu editorController={editorController} />;
     }),
 
-    scrollContainer,
-
     spellcheck: false,
   });
 }
@@ -93,24 +94,14 @@ export interface AppProps {
 class App extends Component<AppProps> {
   private editorControllerLeft: EditorController;
   private editorControllerRight: EditorController;
-  private containerLeftRef = createRef<HTMLDivElement>();
-  private containerRightRef = createRef<HTMLDivElement>();
   private dispose$ = new Subject<void>();
 
   constructor(props: AppProps) {
     super(props);
 
-    this.editorControllerLeft = makeController(
-      "User-1",
-      "Blocky Editor",
-      () => this.containerLeftRef.current!
-    );
+    this.editorControllerLeft = makeController("User-1", "Blocky Editor");
 
-    this.editorControllerRight = makeController(
-      "User-2",
-      "Blocky Editor",
-      () => this.containerRightRef.current!
-    );
+    this.editorControllerRight = makeController("User-2", "Blocky Editor");
 
     this.editorControllerLeft.state.changesetApplied
       .pipe(takeUntil(this.dispose$))
@@ -170,12 +161,10 @@ class App extends Component<AppProps> {
     return (
       <>
         <BlockyEditorWithSearchBoxAndTitle
-          containerRef={this.containerLeftRef}
           className="blocky-example-editor-container left"
           controller={this.editorControllerLeft}
         />
         <BlockyEditorWithSearchBoxAndTitle
-          containerRef={this.containerRightRef}
           className="blocky-example-editor-container right"
           controller={this.editorControllerRight}
         />
@@ -189,10 +178,11 @@ interface BlockyEditorWithThemeProps {
   ignoreInitEmpty?: boolean;
   autoFocus?: boolean;
   darkMode?: boolean;
+  scrollContainer?: RefObject<HTMLElement>;
 }
 
 function BlockyEditorWithTheme(props: BlockyEditorWithThemeProps) {
-  const { darkMode, controller } = props;
+  const { darkMode, controller, scrollContainer } = props;
   useEffect(() => {
     if (darkMode) {
       controller.themeData = {
@@ -210,12 +200,12 @@ function BlockyEditorWithTheme(props: BlockyEditorWithThemeProps) {
       controller={props.controller}
       autoFocus={props.autoFocus}
       ignoreInitEmpty={props.ignoreInitEmpty}
+      scrollContainer={scrollContainer}
     />
   );
 }
 
 interface BlockyEditorWithSearchBoxAndTitleProps {
-  containerRef: RefObject<HTMLDivElement>;
   className: string;
   controller: EditorController;
 }
@@ -225,6 +215,7 @@ function BlockyEditorWithSearchBoxAndTitle(
 ) {
   const { controller } = props;
   const [showSearchBox, setShowSearchBox] = useState(false);
+  const scrollContainer = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const s = controller.editor?.keyDown.subscribe((e: KeyboardEvent) => {
       if (isHotkey("mod+f", e)) {
@@ -235,14 +226,14 @@ function BlockyEditorWithSearchBoxAndTitle(
     return () => s?.unsubscribe();
   }, [controller]);
   return (
-    <div ref={props.containerRef} className={props.className}>
+    <div className={props.className}>
       {showSearchBox && (
         <SearchBox
           controller={controller}
           onClose={() => setShowSearchBox(false)}
         />
       )}
-      <div className="blocky-example-content-container">
+      <div className="blocky-example-content-container" ref={scrollContainer}>
         <div className="blocky-example-image">
           <Image
             src={TianShuiWeiImage}
@@ -260,6 +251,7 @@ function BlockyEditorWithSearchBoxAndTitle(
             <BlockyEditorWithTheme
               controller={controller}
               darkMode={options.darkMode}
+              scrollContainer={scrollContainer}
               ignoreInitEmpty
             />
           )}

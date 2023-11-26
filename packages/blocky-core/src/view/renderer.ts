@@ -12,6 +12,7 @@ import {
 } from "@pkg/data";
 import type { Editor } from "@pkg/view/editor";
 import { TextBlock } from "@pkg/block/textBlock";
+import { fromEvent, takeUntil, filter } from "rxjs";
 
 function ensureChild<K extends keyof HTMLElementTagNameMap>(
   dom: HTMLElement,
@@ -189,6 +190,17 @@ export class DocRenderer {
         elem.style.padding = `${top}px ${right}px ${bottom}px ${left}px`;
       }
     );
+
+    const mousemove$ = fromEvent<MouseEvent>(blocksContainer, "mousemove");
+    mousemove$
+      .pipe(
+        takeUntil(this.editor.dispose$),
+        filter((e) => e.target === blocksContainer)
+      )
+      .subscribe((e: MouseEvent) => {
+        this.editor.handleBlocksContainerMouseMove(e);
+      });
+
     this.renderBlocks(
       option,
       blocksContainer,

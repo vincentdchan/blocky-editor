@@ -97,12 +97,6 @@ export interface IEditorControllerOptions {
 
   collaborativeCursorFactory?: CollaborativeCursorFactory;
 
-  /**
-   * The container can scroll.
-   * When the user types, the element will scroll.
-   */
-  scrollContainer?: HTMLElement | (() => HTMLElement);
-
   emptyPlaceholder?: string;
 
   /**
