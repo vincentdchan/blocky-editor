@@ -13,6 +13,7 @@ import {
   fromEvent,
   BehaviorSubject,
   timer,
+  filter,
 } from "rxjs";
 import { debounce, isUndefined, isString, isNumber } from "lodash-es";
 import { DocRenderer, RenderFlag, RenderOption } from "@pkg/view/renderer";
@@ -550,6 +551,26 @@ export class Editor {
               );
             }
           });
+
+        fromEvent<MouseEvent>(this.#container, "mousemove")
+          .pipe(
+            takeUntil(this.dispose$),
+            filter((e: MouseEvent) => {
+              // find if ancestors container class 'blocky-editor-block'
+
+              let ptr: HTMLElement | null = e.target as HTMLElement;
+
+              while (ptr) {
+                if (ptr.classList.contains("blocky-editor-block")) {
+                  return false;
+                }
+                ptr = ptr.parentElement;
+              }
+
+              return true;
+            })
+          )
+          .subscribe(this.handleBlocksContainerMouseMove.bind(this));
 
         fromEvent(newDom, "input")
           .pipe(takeUntil(this.dispose$))

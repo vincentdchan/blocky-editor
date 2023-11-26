@@ -191,16 +191,6 @@ export class DocRenderer {
       }
     );
 
-    const mousemove$ = fromEvent<MouseEvent>(blocksContainer, "mousemove");
-    mousemove$
-      .pipe(
-        takeUntil(this.editor.dispose$),
-        filter((e) => e.target === blocksContainer)
-      )
-      .subscribe((e: MouseEvent) => {
-        this.editor.handleBlocksContainerMouseMove(e);
-      });
-
     this.renderBlocks(
       option,
       blocksContainer,
