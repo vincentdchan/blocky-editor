@@ -359,9 +359,6 @@ export class DocRenderer {
     blockContainer._mgNode = blockNode;
     editor.state.setDom(blockNode.id, blockContainer);
     blockContainer.setAttribute("data-type", blockDef.Name);
-    blockContainer.addEventListener("mouseenter", () => {
-      editor.placeSpannerAt(blockContainer, blockNode);
-    });
 
     const block = editor.state.blocks.get(blockNode.id);
     if (!block) {
@@ -375,6 +372,10 @@ export class DocRenderer {
     });
 
     if (block instanceof ContentBlock) {
+      block.mouseEnter$.subscribe(() => {
+        editor.placeSpannerAt(blockContainer, blockNode);
+      });
+
       block.dragOver$.subscribe((e) => {
         e.preventDefault();
         if (editor.prevDragOverBlock === block) {

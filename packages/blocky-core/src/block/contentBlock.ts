@@ -16,6 +16,8 @@ export class ContentBlock extends Block {
   container: HTMLElement | null = null;
   contentContainer: HTMLElement | null = null;
 
+  readonly #mouseEnter = new Subject<MouseEvent>();
+  readonly #mouseLeave = new Subject<MouseEvent>();
   readonly #dragOver = new Subject<DragEvent>();
   readonly #drop = new Subject<DragEvent>();
 
@@ -23,6 +25,12 @@ export class ContentBlock extends Block {
 
   blockDidMount(e: BlockDidMountEvent): void {
     this.container = e.element;
+    fromEvent<MouseEvent>(this.container, "mouseenter").subscribe(
+      this.#mouseEnter
+    );
+    fromEvent<MouseEvent>(this.container, "mouseleave").subscribe(
+      this.#mouseLeave
+    );
   }
 
   get dragOver$(): Observable<DragEvent> {
@@ -31,6 +39,14 @@ export class ContentBlock extends Block {
 
   get drop$(): Observable<DragEvent> {
     return this.#drop.pipe(takeUntil(this.dispose$));
+  }
+
+  get mouseEnter$(): Observable<MouseEvent> {
+    return this.#mouseEnter.pipe(takeUntil(this.dispose$));
+  }
+
+  get mouseLeave$(): Observable<MouseEvent> {
+    return this.#mouseLeave.pipe(takeUntil(this.dispose$));
   }
 
   setDragOverState(state: BlockDragOverState): void {

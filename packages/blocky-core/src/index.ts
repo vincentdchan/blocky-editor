@@ -4,6 +4,8 @@ export { Delta, Op };
 export * from "./view/editor";
 export * from "./view/controller";
 export * from "./block/basic";
+export { ContentBlock } from "./block/contentBlock";
+export { CustomBlock } from "./block/customBlock";
 export { makeDefaultIdGenerator, type IdGenerator } from "./helper/idHelper";
 export {
   type SpannerFactory,
