@@ -13,6 +13,7 @@ export type ToolbarFactory = (
 ) => Toolbar | undefined;
 
 const DebounceDelay = 250;
+const toolbarYOffset = -24;
 
 export interface ToolbarDelegateInitOptions {
   controller: EditorController;
@@ -35,7 +36,7 @@ export class ToolbarDelegate extends UIDelegate {
   }
 
   get offsetY(): number {
-    return this.#toolbar?.yOffset ?? -16;
+    return this.#toolbar?.yOffset ?? toolbarYOffset;
   }
 
   override mount(parent: HTMLElement): void {

@@ -26,6 +26,10 @@
     "outDir": "./dist",
     "composite": true,
     "rootDir": "src",
+    "plugins": [
+      { "transform": "typescript-transform-paths" },
+      { "transform": "typescript-transform-paths", "afterDeclarations": true }
+    ],
     "paths": {
       "@pkg/*": [
         "./src/*"

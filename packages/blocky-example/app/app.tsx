@@ -8,13 +8,14 @@ import {
   makeReactToolbar,
   makeImageBlockPlugin,
   type SpannerRenderProps,
+  DefaultToolbarMenu,
 } from "blocky-react";
 import SearchBox from "@pkg/components/searchBox";
 import ImagePlaceholder from "@pkg/components/imagePlaceholder";
 import { makeCommandPanelPlugin } from "./plugins/commandPanel";
 import { makeAtPanelPlugin } from "./plugins/atPanel";
 import SpannerMenu from "./spannerMenu";
-import ToolbarMenu from "./toolbarMenu";
+// import ToolbarMenu from "./toolbarMenu";
 import TianShuiWeiImage from "./tianshuiwei.jpg";
 import Image from "next/image";
 import { blockyExampleFont, Theme } from "./themeSwitch";
@@ -73,7 +74,7 @@ function makeController(userId: string, title: string): EditorController {
      * We use a toolbar written in Preact here.
      */
     toolbarFactory: makeReactToolbar((editorController: EditorController) => {
-      return <ToolbarMenu editorController={editorController} />;
+      return <DefaultToolbarMenu editorController={editorController} />;
     }),
 
     spellcheck: false,
