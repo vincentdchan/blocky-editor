@@ -38,7 +38,9 @@ export const toolbarMenuButton = css({
 export const anchorToolbarStyle = css(toolbarContainerStyle, {
   position: "fixed",
   padding: "4px 8px",
+  height: 32,
   input: {
+    height: "100%",
     border: "none",
     marginRight: 8,
     "&:focus": {
@@ -46,6 +48,7 @@ export const anchorToolbarStyle = css(toolbarContainerStyle, {
     },
   },
   button: {
+    height: "100%",
     fontSize: 12,
     padding: "2px 4px",
   },
