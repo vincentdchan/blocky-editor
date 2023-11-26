@@ -56,7 +56,8 @@ import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlock } from "@pkg/block/textBlock";
 import { EditorController } from "./controller";
 import { type FollowerWidget } from "./followerWidget";
-import { Block, ContentBlock } from "@pkg/block/basic";
+import { Block } from "@pkg/block/basic";
+import { ContentBlock } from "@pkg/block/contentBlock";
 import { getTextTypeForTextBlock } from "@pkg/block/textBlock";
 import {
   CollaborativeCursorManager,

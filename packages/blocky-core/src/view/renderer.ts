@@ -1,10 +1,7 @@
 import { elem, removeNode } from "blocky-common/es/dom";
 import { isUndefined } from "lodash-es";
-import {
-  BlockDragOverState,
-  ContentBlock,
-  type IBlockDefinition,
-} from "@pkg/block/basic";
+import { BlockDragOverState, type IBlockDefinition } from "@pkg/block/basic";
+import { ContentBlock } from "@pkg/block/contentBlock";
 import {
   type BlockyDocument,
   type DataBaseNode,

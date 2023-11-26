@@ -7,8 +7,8 @@ import {
   type BlockContentChangedEvent,
   type BlockPasteEvent,
   type CursorDomResult,
-  ContentBlock,
 } from "./basic";
+import { ContentBlock } from "./contentBlock";
 import { EditorState } from "@pkg/model";
 import {
   type AttributesObject,
