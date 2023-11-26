@@ -8,6 +8,7 @@ export * from "./reactBlock";
 export * from "./blocks";
 export * from "./reactFollowerWidget";
 export * from "./blockActiveDetector";
+export * from "./defaultToolbar";
 export {
   makeReactSpanner,
   type RenderProps as SpannerRenderProps,

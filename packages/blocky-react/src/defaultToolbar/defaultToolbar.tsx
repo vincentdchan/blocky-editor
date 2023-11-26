@@ -2,13 +2,65 @@ import { type EditorController, CursorState } from "blocky-core";
 import React, { Component, createRef, RefObject, memo } from "react";
 import Mask from "@pkg/components/mask";
 import Button from "@pkg/components/button";
-import "./toolbarMenu.scss";
+import { css } from "@emotion/react";
+
+const toolbarContainerStyle = css({
+  backgroundColor: "var(--bg-color)",
+  boxShadow: "0px 0px 4px rgba(0, 0, 0, 0.2)",
+  padding: 0,
+  borderRadius: 4,
+  overflow: "hidden",
+  boxSizing: "border-box",
+});
+
+const toolbarMenuButton = css({
+  backgroundColor: "var(--bg-color)",
+  color: "var(--primary-text-color)",
+  border: "none",
+  margin: 0,
+  height: 24,
+  "&.rect": {
+    width: 24,
+  },
+  "&:hover": {
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
+  },
+  "&.bold": {
+    fontFamily: `'Times New Roman', Times, serif`,
+    fontWeight: 600,
+  },
+  "&.italic": {
+    fontFamily: `'Times New Roman', Times, serif`,
+    fontStyle: "italic",
+  },
+  "&.underline": {
+    fontFamily: `'Times New Roman', Times, serif`,
+    textDecoration: "underline",
+  },
+});
+
+const anchorToolbarStyle = css(toolbarContainerStyle, {
+  position: "fixed",
+  padding: "4px 8px",
+  input: {
+    border: "none",
+    marginRight: 8,
+    "&:focus": {
+      outline: "none",
+    },
+  },
+  button: {
+    fontSize: 12,
+    padding: "2px 4px",
+  },
+});
 
 const ToolbarMenuItem = memo(
   (props: React.HTMLAttributes<HTMLButtonElement>) => {
     const { className = "", ...restProps } = props;
     return (
       <button
+        css={toolbarMenuButton}
         className={`blocky-toolbar-menu-button ${className}`}
         {...restProps}
       />
@@ -101,10 +153,7 @@ class ToolbarMenu extends Component<ToolbarMenuProps, ToolbarMenuState> {
     const { showAnchorToolbar, anchorToolbarX, anchorToolbarY } = this.state;
     return (
       <>
-        <div
-          ref={this.containerRef}
-          className="blocky-example-toolbar-container"
-        >
+        <div ref={this.containerRef} css={toolbarContainerStyle}>
           <ToolbarMenuItem className="bold rect" onClick={this.handleBold}>
             B
           </ToolbarMenuItem>
@@ -205,7 +254,8 @@ class AnchorToolbar extends Component<AnchorToolbarProps, AnchorToolbarState> {
       <div
         onClick={this.handleClicked}
         style={style}
-        className="blocky-example-toolbar-container blocky-example-anchor-toolbar"
+        css={anchorToolbarStyle}
+        className="blocky-example-toolbar-container"
       >
         <input
           ref={this.inputRef}
