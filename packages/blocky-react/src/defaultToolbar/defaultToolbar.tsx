@@ -1,5 +1,14 @@
 import { type EditorController, CursorState } from "blocky-core";
-import React, { Component, createRef, RefObject, memo } from "react";
+import React, {
+  Component,
+  createRef,
+  RefObject,
+  memo,
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import Mask from "@pkg/components/mask";
 import Button from "@pkg/components/button";
 import { css } from "@emotion/react";
@@ -191,11 +200,6 @@ interface AnchorToolbarProps {
   onSubmitLink?: (link: string) => void;
 }
 
-interface AnchorToolbarState {
-  content: string;
-  valid: boolean;
-}
-
 function isUrl(text: string): boolean {
   try {
     const url = new URL(text);
@@ -206,70 +210,66 @@ function isUrl(text: string): boolean {
   }
 }
 
-class AnchorToolbar extends Component<AnchorToolbarProps, AnchorToolbarState> {
-  private inputRef: RefObject<HTMLInputElement> = createRef();
+function AnchorToolbar(props: AnchorToolbarProps) {
+  const { style, onSubmitLink } = props;
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [content, setContent] = useState("");
+  const [valid, setValid] = useState(false);
 
-  constructor(props: AnchorToolbarProps) {
-    super(props);
-    this.state = {
-      content: "",
-      valid: false,
-    };
-  }
-
-  private handleClicked = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleClicked = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
-  };
+  }, []);
 
-  private handleConfirmed = () => {
-    this.props.onSubmitLink?.(this.state.content);
-  };
+  const handleConfirmed = useCallback(() => {
+    onSubmitLink?.(content);
+  }, [onSubmitLink]);
 
-  private handleContentChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const content = (e.target! as any).value as string;
-    const valid = isUrl(content);
-    this.setState({
-      content,
-      valid,
-    });
-  };
+  const handleContentChanged = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const content = e.target.value as string;
+      const valid = isUrl(content);
+      setContent(content);
+      setValid(valid);
+    },
+    []
+  );
 
-  private handleKeydown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (!this.state.valid) {
-        return;
+  const handleKeydown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (!valid) {
+          return;
+        }
+        handleConfirmed();
       }
-      this.handleConfirmed();
-    }
-  };
+    },
+    [valid, handleClicked]
+  );
 
-  override componentDidMount() {
-    this.inputRef.current?.focus();
-  }
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
-  override render() {
-    const { style } = this.props;
-    return (
-      <div
-        onClick={this.handleClicked}
-        style={style}
-        css={anchorToolbarStyle}
-        className="blocky-example-toolbar-container"
-      >
-        <input
-          ref={this.inputRef}
-          placeholder="Link"
-          value={this.state.content}
-          onChange={this.handleContentChanged}
-          onKeyDown={this.handleKeydown}
-        />
-        <Button disabled={!this.state.valid} onClick={this.handleConfirmed}>
-          Confirm
-        </Button>
-      </div>
-    );
-  }
+  return (
+    <div
+      onClick={handleClicked}
+      style={style}
+      css={anchorToolbarStyle}
+      className="blocky-example-toolbar-container"
+    >
+      <input
+        ref={inputRef}
+        placeholder="Link"
+        value={content}
+        onChange={handleContentChanged}
+        onKeyDown={handleKeydown}
+      />
+      <Button disabled={!valid} onClick={handleConfirmed}>
+        Confirm
+      </Button>
+    </div>
+  );
 }
 
 export default ToolbarMenu;
