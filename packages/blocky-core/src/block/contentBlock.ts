@@ -25,12 +25,6 @@ export class ContentBlock extends Block {
 
   blockDidMount(e: BlockDidMountEvent): void {
     this.container = e.element;
-    fromEvent<MouseEvent>(this.container, "mouseenter").subscribe(
-      this.#mouseEnter
-    );
-    fromEvent<MouseEvent>(this.container, "mouseleave").subscribe(
-      this.#mouseLeave
-    );
   }
 
   get dragOver$(): Observable<DragEvent> {
@@ -82,6 +76,12 @@ export class ContentBlock extends Block {
       this.#dragOver
     );
     fromEvent<DragEvent>(contentContainer, "drop").subscribe(this.#drop);
+    fromEvent<MouseEvent>(contentContainer, "mouseenter").subscribe(
+      this.#mouseEnter
+    );
+    fromEvent<MouseEvent>(contentContainer, "mouseleave").subscribe(
+      this.#mouseLeave
+    );
   }
 
   protected createDragOverBar(isTop: boolean): HTMLElement {

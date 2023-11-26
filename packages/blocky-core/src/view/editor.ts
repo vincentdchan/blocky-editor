@@ -129,6 +129,8 @@ export class TextInputEvent {
   }
 }
 
+const spannerIgnoreBlockTypes = new Set([TitleBlock.Name]);
+
 /**
  * The internal view layer object of the editor.
  * It's not recommended to manipulate this class by the user.
@@ -605,7 +607,7 @@ export class Editor {
         if (scrollContainer) {
           const scroll$ = fromEvent(scrollContainer, "scroll");
           scroll$.pipe(takeUntil(this.dispose$)).subscribe(() => {
-            this.debouncedCollectBlockSize();
+            this.#resetBlockSizeArray();
           });
         }
       }
@@ -615,7 +617,7 @@ export class Editor {
       } else {
         this.#handleSelectionChanged(CursorStateUpdateReason.contentChanged);
       }
-      this.#afterRender();
+      this.#delayResetBlockRects();
     } catch (err) {
       console.error(err);
       this.controller.options?.onError?.(err);
@@ -625,36 +627,53 @@ export class Editor {
     this.controller.__emitNextTicks();
   }
 
-  debouncedCollectBlockSize = debounce(() => {
-    this.#collectBlocksSize();
-  }, 200);
+  #resetBlockSizeArray() {
+    this.blockSizes = null;
+  }
 
-  #afterRender() {
+  #delayResetBlockRects() {
     requestIdleCallback(() => {
-      this.#collectBlocksSize();
+      this.#resetBlockSizeArray();
     });
   }
 
-  blockSizes: BlockSizeInfo[] = [];
+  blockSizes: BlockSizeInfo[] | null = null;
 
-  #collectBlocksSize() {
-    this.blockSizes.length = 0;
+  #collectBlocksSize(): BlockSizeInfo[] {
+    if (Array.isArray(this.blockSizes)) {
+      return this.blockSizes;
+    }
 
+    const newArray: BlockSizeInfo[] = [];
+
+    const innerHeight = window.innerHeight;
     const blocks = this.state.blocks.keys();
     for (const blockId of blocks) {
+      const block = this.state.blocks.get(blockId);
+      if (spannerIgnoreBlockTypes.has(block?.elementData.t ?? "")) {
+        continue;
+      }
       const blockContainer = this.state.domMap.get(blockId);
       if (!blockContainer) {
         continue;
       }
       if (!(blockContainer instanceof HTMLElement)) {
-        return;
+        break;
       }
       const rect = blockContainer.getBoundingClientRect();
-      this.blockSizes.push({
+      // rect is out of the view
+      // ignore it
+      if (rect.bottom < 0 || rect.top > innerHeight) {
+        continue;
+      }
+      newArray.push({
         id: blockId,
         rect,
       });
     }
+
+    this.blockSizes = newArray;
+    return newArray;
   }
 
   #handleEditorBlur = () => {
@@ -1300,6 +1319,7 @@ export class Editor {
 
     if (!changeset.needsRender) {
       this.controller.__emitNextTicks();
+      this.#delayResetBlockRects();
     }
   };
 
@@ -1876,7 +1896,8 @@ export class Editor {
 
   handleBlocksContainerMouseMove(e: MouseEvent) {
     const y = e.clientY;
-    for (const block of this.blockSizes) {
+    const blockSizes = this.#collectBlocksSize();
+    for (const block of blockSizes) {
       if (block.rect.top <= y && block.rect.bottom >= y) {
         const blockContainer = this.state.domMap.get(block.id) as HTMLElement;
         const blockNode = blockContainer?._mgNode as BlockDataElement;

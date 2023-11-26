@@ -18,6 +18,7 @@
 .blocky-editor-spanner-delegate {
   position: absolute;
   transition: top 0.1s linear;
+  z-index: 8;
 }
 
 .blocky-editor-toolbar-delegate {
