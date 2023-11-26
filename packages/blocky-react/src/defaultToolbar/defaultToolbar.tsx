@@ -1,5 +1,6 @@
+import React, { useState, memo, useRef, useCallback } from "react";
+import ReactDOM from "react-dom";
 import { type EditorController, CursorState } from "blocky-core";
-import React, { Component, createRef, RefObject, memo } from "react";
 import Mask from "@pkg/components/mask";
 import { AnchorToolbar } from "./anchorToolbar";
 import { toolbarMenuButton, toolbarContainerStyle } from "./style";
@@ -27,112 +28,94 @@ interface ToolbarMenuState {
   anchorToolbarY: number;
 }
 
-class ToolbarMenu extends Component<ToolbarMenuProps, ToolbarMenuState> {
-  private containerRef: RefObject<HTMLDivElement> = createRef();
-  private cursorState: CursorState | null = null;
+interface Coord {
+  x: number;
+  y: number;
+}
 
-  constructor(props: ToolbarMenuProps) {
-    super(props);
-    this.state = {
-      showAnchorToolbar: false,
-      anchorToolbarX: 0,
-      anchorToolbarY: 0,
-    };
-  }
+function ToolbarMenu(props: ToolbarMenuProps) {
+  const { editorController } = props;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [showAnchorToolbar, setShowAnchorToolbar] = useState(false);
+  const [anchorToolbarCoord, setAnchorToolbarCoord] = useState<Coord | null>(
+    null
+  );
+  const cursorState = useRef<CursorState | null>(null);
 
-  private handleBold = () => {
-    const { editorController } = this.props;
+  const handleBold = useCallback(() => {
     editorController.formatTextOnSelectedText({
       bold: true,
     });
-  };
+  }, [editorController]);
 
-  private handleItalic = () => {
-    const { editorController } = this.props;
+  const handleItalic = useCallback(() => {
     editorController.formatTextOnSelectedText({
       italic: true,
     });
-  };
+  }, [editorController]);
 
-  private handleUnderline = () => {
-    const { editorController } = this.props;
+  const handleUnderline = useCallback(() => {
     editorController.formatTextOnSelectedText({
       underline: true,
     });
-  };
+  }, [editorController]);
 
-  private handleLinkClicked = () => {
-    const { editorController } = this.props;
+  const handleLinkClicked = () => {
     // save the cursor state
-    this.cursorState = editorController.editor!.state.cursorState;
+    cursorState.current = editorController.editor!.state.cursorState;
 
-    const container = this.containerRef.current!;
+    const container = containerRef.current!;
     const rect = container.getBoundingClientRect();
-    this.setState({
-      showAnchorToolbar: true,
-      anchorToolbarX: rect.x,
-      anchorToolbarY: rect.y - 36,
+    ReactDOM.unstable_batchedUpdates(() => {
+      setShowAnchorToolbar(true);
+      setAnchorToolbarCoord({
+        x: rect.x,
+        y: rect.y - 36,
+      });
     });
   };
 
-  private handleMaskClicked = () => {
-    this.setState({
-      showAnchorToolbar: false,
+  const handleMaskClicked = useCallback(() => {
+    setShowAnchorToolbar(false);
+  }, []);
+
+  const handleSubmitLink = (link: string) => {
+    setShowAnchorToolbar(false);
+    if (!cursorState.current) {
+      return;
+    }
+    editorController.formatTextOnCursor(cursorState.current, {
+      href: link,
     });
   };
 
-  private handleSubmitLink = (link: string) => {
-    this.setState(
-      {
-        showAnchorToolbar: false,
-      },
-      () => {
-        if (!this.cursorState) {
-          return;
-        }
-        const { editorController } = this.props;
-        editorController.formatTextOnCursor(this.cursorState, {
-          href: link,
-        });
-      }
-    );
-  };
-
-  override render() {
-    const { showAnchorToolbar, anchorToolbarX, anchorToolbarY } = this.state;
-    return (
-      <>
-        <div ref={this.containerRef} css={toolbarContainerStyle}>
-          <ToolbarMenuItem className="bold rect" onClick={this.handleBold}>
-            B
-          </ToolbarMenuItem>
-          <ToolbarMenuItem className="italic rect" onClick={this.handleItalic}>
-            I
-          </ToolbarMenuItem>
-          <ToolbarMenuItem
-            className="underline rect"
-            onClick={this.handleUnderline}
-          >
-            U
-          </ToolbarMenuItem>
-          <ToolbarMenuItem onClick={this.handleLinkClicked}>
-            Link
-          </ToolbarMenuItem>
-        </div>
-        {showAnchorToolbar && (
-          <Mask onClick={this.handleMaskClicked}>
-            <AnchorToolbar
-              onSubmitLink={this.handleSubmitLink}
-              style={{
-                top: anchorToolbarY + "px",
-                left: anchorToolbarX + "px",
-              }}
-            />
-          </Mask>
-        )}
-      </>
-    );
-  }
+  return (
+    <>
+      <div ref={containerRef} css={toolbarContainerStyle}>
+        <ToolbarMenuItem className="bold rect" onClick={handleBold}>
+          B
+        </ToolbarMenuItem>
+        <ToolbarMenuItem className="italic rect" onClick={handleItalic}>
+          I
+        </ToolbarMenuItem>
+        <ToolbarMenuItem className="underline rect" onClick={handleUnderline}>
+          U
+        </ToolbarMenuItem>
+        <ToolbarMenuItem onClick={handleLinkClicked}>Link</ToolbarMenuItem>
+      </div>
+      {showAnchorToolbar && (
+        <Mask onClick={handleMaskClicked}>
+          <AnchorToolbar
+            onSubmitLink={handleSubmitLink}
+            style={{
+              top: (anchorToolbarCoord?.y ?? 0) + "px",
+              left: (anchorToolbarCoord?.x ?? 0) + "px",
+            }}
+          />
+        </Mask>
+      )}
+    </>
+  );
 }
 
 export default ToolbarMenu;
