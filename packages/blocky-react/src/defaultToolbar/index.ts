@@ -1,3 +1,3 @@
-import ToolbarMenu from "./defaultToolbar";
+import DefaultToolbarMenu from "./defaultToolbar";
 
-export { ToolbarMenu };
+export { DefaultToolbarMenu };

@@ -18,7 +18,7 @@ const ToolbarMenuItem = memo(
   }
 );
 
-interface ToolbarMenuProps {
+interface DefaultToolbarMenuProps {
   editorController: EditorController;
 }
 
@@ -33,7 +33,7 @@ interface Coord {
   y: number;
 }
 
-function ToolbarMenu(props: ToolbarMenuProps) {
+function DefaultToolbarMenu(props: DefaultToolbarMenuProps) {
   const { editorController } = props;
   const containerRef = useRef<HTMLDivElement>(null);
   const [showAnchorToolbar, setShowAnchorToolbar] = useState(false);
@@ -118,4 +118,4 @@ function ToolbarMenu(props: ToolbarMenuProps) {
   );
 }
 
-export default ToolbarMenu;
+export default DefaultToolbarMenu;

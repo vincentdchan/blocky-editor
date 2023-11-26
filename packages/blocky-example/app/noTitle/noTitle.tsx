@@ -4,7 +4,7 @@ import {
   makeReactToolbar,
   makeImageBlockPlugin,
   useBlockyController,
-  ToolbarMenu,
+  DefaultToolbarMenu,
 } from "blocky-react";
 import { EditorController, IPlugin } from "blocky-core";
 import ImagePlaceholder from "@pkg/components/imagePlaceholder";
@@ -32,7 +32,7 @@ function makeController(userId: string): EditorController {
      * We use a toolbar written in Preact here.
      */
     toolbarFactory: makeReactToolbar((editorController: EditorController) => {
-      return <ToolbarMenu editorController={editorController} />;
+      return <DefaultToolbarMenu editorController={editorController} />;
     }),
 
     spellcheck: false,
