@@ -14,9 +14,9 @@ export const toolbarMenuButton = css({
   color: "var(--primary-text-color)",
   border: "none",
   margin: 0,
-  height: 24,
+  height: 32,
   "&.rect": {
-    width: 24,
+    width: 32,
   },
   "&:hover": {
     backgroundColor: "rgba(0, 0, 0, 0.1)",

@@ -22,12 +22,6 @@ interface DefaultToolbarMenuProps {
   editorController: EditorController;
 }
 
-interface ToolbarMenuState {
-  showAnchorToolbar: boolean;
-  anchorToolbarX: number;
-  anchorToolbarY: number;
-}
-
 interface Coord {
   x: number;
   y: number;
