@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Component,
-  createRef,
-  RefObject,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { Component, RefObject, useEffect, useRef, useState } from "react";
 import { EditorController, darkTheme, type IPlugin } from "blocky-core";
 import {
   BlockyEditor,

@@ -14,13 +14,7 @@ import {
   BehaviorSubject,
   timer,
 } from "rxjs";
-import {
-  debounce,
-  isFunction,
-  isUndefined,
-  isString,
-  isNumber,
-} from "lodash-es";
+import { debounce, isUndefined, isString, isNumber } from "lodash-es";
 import { DocRenderer, RenderFlag, RenderOption } from "@pkg/view/renderer";
 import {
   EditorState,
