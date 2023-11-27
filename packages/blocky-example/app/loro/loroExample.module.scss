@@ -1,0 +1,13 @@
+
+.editorContainer {
+  width: 100%;
+  display: flex;
+
+  :global(.blocky-editor-container) {
+    flex: 1;
+  }
+
+  :global(.blocky-documents) {
+    width: 580px;
+  }
+}

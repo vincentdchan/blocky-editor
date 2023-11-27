@@ -5,6 +5,9 @@ import {
   makeImageBlockPlugin,
   useBlockyController,
   DefaultToolbarMenu,
+  DefaultSpannerMenu,
+  makeReactSpanner,
+  type SpannerRenderProps,
 } from "blocky-react";
 import {
   BlockyTextModel,
@@ -19,6 +22,7 @@ import { makeCommandPanelPlugin } from "@pkg/app/plugins/commandPanel";
 import { makeAtPanelPlugin } from "@pkg/app/plugins/atPanel";
 import { Loro, LoroMap } from "loro-crdt";
 import { takeUntil } from "rxjs";
+import styles from "./loroExample.module.scss";
 
 function isPrimitive(value: any) {
   return (
@@ -83,14 +87,12 @@ function syncDocumentToLoro(
   doc.changed.pipe(takeUntil(ctx.dispose$)).subscribe((evt) => {
     switch (evt.type) {
       case "element-insert-child": {
-        const children = loroMap.setContainer("children", "List");
         const loroChild = children.insertContainer(evt.index, "Map");
         syncDocumentToLoro(ctx, evt.child as DataBaseElement, loroChild);
         break;
       }
 
       case "element-remove-child": {
-        const children = loroMap.setContainer("children", "List");
         children.delete(evt.index, 1);
         break;
       }
@@ -107,21 +109,21 @@ function syncDocumentToLoro(
   });
 }
 
-function makeLoroPlugin(): IPlugin {
-  return {
-    name: "rolo",
-    onInitialized(context) {
-      const loro = new Loro();
+class LoroPlugin implements IPlugin {
+  name = "loro";
+  loro: Loro<Record<string, undefined>> | undefined;
 
-      const state = context.editor.state;
+  onInitialized(context: PluginContext) {
+    const loro = new Loro();
+    const state = context.editor.state;
+    this.loro = loro;
 
-      const documentMap = loro.getMap("document");
-      syncDocumentToLoro(context, state.document, documentMap);
+    const documentMap = loro.getMap("document");
+    syncDocumentToLoro(context, state.document, documentMap);
 
-      console.log("loro:", loro.toJson());
-      console.log("doc:", state.document);
-    },
-  };
+    console.log("loro:", loro.toJson());
+    console.log("doc:", state.document);
+  }
 }
 
 function makeEditorPlugins(): IPlugin[] {
@@ -131,7 +133,7 @@ function makeEditorPlugins(): IPlugin[] {
     }),
     makeCommandPanelPlugin(),
     makeAtPanelPlugin(),
-    makeLoroPlugin(),
+    new LoroPlugin(),
   ];
 }
 
@@ -142,6 +144,14 @@ function makeController(userId: string): EditorController {
      * Define the plugins to implement customize features.
      */
     plugins: makeEditorPlugins(),
+    spannerFactory: makeReactSpanner(
+      ({ editorController, focusedNode }: SpannerRenderProps) => (
+        <DefaultSpannerMenu
+          editorController={editorController}
+          focusedNode={focusedNode}
+        />
+      )
+    ),
     /**
      * Tell the editor how to render the banner.
      * We use a toolbar written in Preact here.
@@ -162,7 +172,7 @@ function LoroExample() {
   }, []);
 
   return (
-    <div ref={containerRef} style={{ width: "100%", display: "flex" }}>
+    <div className={styles.editorContainer} ref={containerRef}>
       <BlockyEditor
         controller={controller}
         scrollContainer={containerRef}
