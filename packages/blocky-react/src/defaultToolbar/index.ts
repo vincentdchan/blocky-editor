@@ -1,3 +1,5 @@
-import DefaultToolbarMenu from "./defaultToolbar";
+import DefaultToolbarMenu, {
+  type DefaultToolbarMenuProps,
+} from "./defaultToolbar";
 
-export { DefaultToolbarMenu };
+export { DefaultToolbarMenu, type DefaultToolbarMenuProps };

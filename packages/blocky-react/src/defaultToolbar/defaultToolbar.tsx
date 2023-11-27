@@ -18,7 +18,7 @@ const ToolbarMenuItem = memo(
   }
 );
 
-interface DefaultToolbarMenuProps {
+export interface DefaultToolbarMenuProps {
   editorController: EditorController;
 }
 

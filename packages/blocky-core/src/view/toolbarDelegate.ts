@@ -58,6 +58,7 @@ export class ToolbarDelegate extends UIDelegate {
       this.#debounced = undefined;
     }
     super.hide();
+    this.container.style.opacity = "0";
   }
 
   override show() {
@@ -77,6 +78,7 @@ export class ToolbarDelegate extends UIDelegate {
     }
     this.#debounced = undefined;
     this.container.style.display = "";
+    this.container.style.opacity = "1";
     this.shown = true;
     if (this.shown) {
       this.container.style.top = this.#y + "px";

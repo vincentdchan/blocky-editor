@@ -1,12 +1,17 @@
 import { css } from "@emotion/react";
 
 export const toolbarContainerStyle = css({
+  fontFamily: `var(--blocky-font)`,
+  fontWeight: 400,
   backgroundColor: "var(--bg-color)",
   boxShadow: "0px 0px 4px rgba(0, 0, 0, 0.2)",
   padding: 0,
   borderRadius: 4,
   overflow: "hidden",
   boxSizing: "border-box",
+  transitionProperty: "opacity, transform",
+  transitionDuration: "200ms",
+  transitionTimingFunction: "ease",
 });
 
 export const toolbarMenuButton = css({
@@ -22,15 +27,15 @@ export const toolbarMenuButton = css({
     backgroundColor: "rgba(0, 0, 0, 0.1)",
   },
   "&.bold": {
-    fontFamily: `'Times New Roman', Times, serif`,
+    // fontFamily: `'Times New Roman', Times, serif`,
     fontWeight: 600,
   },
   "&.italic": {
-    fontFamily: `'Times New Roman', Times, serif`,
+    // fontFamily: `'Times New Roman', Times, serif`,
     fontStyle: "italic",
   },
   "&.underline": {
-    fontFamily: `'Times New Roman', Times, serif`,
+    // fontFamily: `'Times New Roman', Times, serif`,
     textDecoration: "underline",
   },
 });

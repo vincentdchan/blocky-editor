@@ -9,13 +9,12 @@ import {
   makeImageBlockPlugin,
   type SpannerRenderProps,
   DefaultToolbarMenu,
+  DefaultSpannerMenu,
 } from "blocky-react";
 import SearchBox from "@pkg/components/searchBox";
 import ImagePlaceholder from "@pkg/components/imagePlaceholder";
 import { makeCommandPanelPlugin } from "./plugins/commandPanel";
 import { makeAtPanelPlugin } from "./plugins/atPanel";
-import SpannerMenu from "./spannerMenu";
-// import ToolbarMenu from "./toolbarMenu";
 import TianShuiWeiImage from "./tianshuiwei.jpg";
 import Image from "next/image";
 import { blockyExampleFont, Theme } from "./themeSwitch";
@@ -63,7 +62,7 @@ function makeController(userId: string, title: string): EditorController {
      */
     spannerFactory: makeReactSpanner(
       ({ editorController, focusedNode }: SpannerRenderProps) => (
-        <SpannerMenu
+        <DefaultSpannerMenu
           editorController={editorController}
           focusedNode={focusedNode}
         />
