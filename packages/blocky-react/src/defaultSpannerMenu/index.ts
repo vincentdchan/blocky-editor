@@ -1,3 +1,3 @@
-import SpannerMenu from "./defaultSpannerMenu";
+import DefaultSpannerMenu from "./defaultSpannerMenu";
 
-export { SpannerMenu };
+export { DefaultSpannerMenu };

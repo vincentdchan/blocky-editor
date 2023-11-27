@@ -11,7 +11,7 @@ export interface SpannerProps {
   focusedNode?: BlockDataElement;
 }
 
-function SpannerMenu(props: SpannerProps) {
+function DefaultSpannerMenu(props: SpannerProps) {
   const { editorController, focusedNode } = props;
   const [showDropdown, setShowDropdown] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -128,4 +128,4 @@ function SpannerMenu(props: SpannerProps) {
   );
 }
 
-export default SpannerMenu;
+export default DefaultSpannerMenu;
