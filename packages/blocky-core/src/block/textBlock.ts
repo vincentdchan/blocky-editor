@@ -251,7 +251,7 @@ export class TextBlock extends ContentBlock {
     }
 
     if (textType === TextType.Normal) {
-      return { x: 0, y: 2 };
+      return { x: 0, y: -2 };
     }
 
     return { x: 0, y: 0 };

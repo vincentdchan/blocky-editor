@@ -28,4 +28,8 @@
   a {
     margin-left: 16px;
   }
+
+  :global(.theme-switch-wrapper) {
+    transform: translateY(-2px);
+  }
 }
