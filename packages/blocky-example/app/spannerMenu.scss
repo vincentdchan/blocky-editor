@@ -3,11 +3,16 @@
   border-color: rgb(202, 196, 196);
   border-style: solid;
   border-width: 1px;
-  width: 18px;
-  height: 18px;
+  width: 16px;
   border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 3px;
+  padding-bottom: 3px;
 
   &:hover {
+    cursor: grab;
     box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.2);
   }
 
