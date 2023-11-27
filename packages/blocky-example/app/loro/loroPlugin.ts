@@ -4,8 +4,10 @@ import {
   DataBaseElement,
   BlockyTextModel,
   DataElement,
+  BlockyDocument,
+  BlockDataElement,
 } from "blocky-core";
-import { Loro, LoroMap } from "loro-crdt";
+import { Loro, LoroMap, LoroText } from "loro-crdt";
 import { take, takeUntil } from "rxjs";
 
 function isPrimitive(value: any) {
@@ -93,18 +95,91 @@ function syncDocumentToLoro(
   });
 }
 
+// FIXME: import from blocky-common
+export function isUpperCase(char: string): boolean {
+  const codeA = 65;
+  const codeZ = 90;
+  if (char.length === 0) {
+    return false;
+  }
+  const code = char.charCodeAt(0);
+  return code >= codeA && code <= codeZ;
+}
+
+function blockyElementFromLoroMap(loroMap: LoroMap): DataElement {
+  const t = loroMap.get("t") as string;
+  let result: DataElement;
+  if (isUpperCase(t[0])) {
+    let id = loroMap.get("id") as string;
+    if (t === "Title") {
+      id = "title";
+    }
+    result = new BlockDataElement(t, id);
+  } else {
+    result = new DataElement(t);
+  }
+
+  for (const [key, value] of loroMap.entries()) {
+    if (key === "id" || key === "t" || key === "children") {
+      continue;
+    }
+    console.log("key:", key, "value:", value, typeof value);
+    if (value instanceof LoroText) {
+      const text = new BlockyTextModel(value.toDelta() as any);
+      result.__setAttribute(key, text);
+    } else if (value instanceof LoroMap) {
+      result.__setAttribute(key, blockyElementFromLoroMap(value));
+    } else {
+      result.__setAttribute(key, value);
+    }
+  }
+
+  return result;
+}
+
+function documentFromLoroMap(loroMap: LoroMap): BlockyDocument {
+  const title = loroMap.get("title") as LoroMap | undefined;
+  const body = loroMap.get("body") as LoroMap;
+  const doc = new BlockyDocument();
+  if (title) {
+    doc.__setAttribute("title", blockyElementFromLoroMap(title));
+  }
+  doc.__setAttribute("body", blockyElementFromLoroMap(body));
+
+  console.log("doc:", doc);
+
+  return doc;
+}
+
 class LoroPlugin implements IPlugin {
   name = "loro";
-  loro: Loro<Record<string, undefined>> | undefined;
+  loro: Loro<Record<string, undefined>>;
+  needsInit = true;
+
+  constructor(loro?: Loro) {
+    if (loro) {
+      this.needsInit = false;
+    }
+    this.loro = loro ?? new Loro();
+  }
+
+  getInitDocumentByLoro() {
+    const loro = this.loro;
+    const loroMap = loro.getMap("document");
+
+    return documentFromLoroMap(loroMap);
+  }
 
   onInitialized(context: PluginContext) {
-    const loro = new Loro();
+    const loro = this.loro;
     const state = context.editor.state;
-    this.loro = loro;
 
     const documentMap = loro.getMap("document");
-    syncDocumentToLoro(context, state.document, documentMap);
-    loro.commit();
+
+    if (this.needsInit) {
+      syncDocumentToLoro(context, state.document, documentMap);
+      loro.commit();
+    }
 
     state.changesetApplied2$.pipe(takeUntil(context.dispose$)).subscribe(() => {
       loro.commit();
