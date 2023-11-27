@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "./sidebar.module.scss";
 import { IoHomeOutline } from "react-icons/io5";
@@ -12,8 +12,13 @@ interface SidebarItemProps {
 
 function SidebarItem(props: SidebarItemProps) {
   const { icon, children, href } = props;
+  const [active, setActive] = useState(false);
+  useEffect(() => {
+    const path = window.location.pathname;
+    setActive(path === href);
+  }, []);
   return (
-    <Link className={styles.item} href={href}>
+    <Link className={styles.item + (active ? " active" : "")} href={href}>
       {icon ?? <IoDocumentOutline />}
       <div className={styles.content}>{children}</div>
     </Link>

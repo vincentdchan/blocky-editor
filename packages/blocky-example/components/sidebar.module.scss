@@ -8,10 +8,14 @@
   color: var(--primary-text-color);
   text-decoration: none;
   font-family: var(--blocky-example-font);
-  font-size: 14px;
+  font-size: 13px;
 
   &:hover {
     background-color: rgba(0, 0, 0, 0.1);
+  }
+
+  &:global(.active) {
+    background-color: rgba(0, 0, 0, 0.05);
   }
 }
 
