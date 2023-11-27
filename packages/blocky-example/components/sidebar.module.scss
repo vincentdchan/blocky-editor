@@ -11,7 +11,7 @@
   font-size: 13px;
 
   &:hover {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: var(--hover-color);
   }
 
   &:global(.active) {
