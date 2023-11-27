@@ -19,11 +19,7 @@ function isPrimitive(value: any) {
   );
 }
 
-function syncDocumentToLoro(
-  ctx: PluginContext,
-  doc: DataBaseElement,
-  loroMap: LoroMap
-) {
+function syncDocumentToLoro(doc: DataBaseElement, loroMap: LoroMap) {
   const attribs = doc.getAttributes();
 
   loroMap.set("t", doc.t);
@@ -40,15 +36,12 @@ function syncDocumentToLoro(
       }
     } else if (value instanceof DataBaseElement) {
       const childLoroMap = loroMap.setContainer(key, "Map");
-      syncDocumentToLoro(ctx, value, childLoroMap);
+      syncDocumentToLoro(value, childLoroMap);
     } else if (value instanceof BlockyTextModel) {
       const loroText = loroMap.setContainer(key, "Text");
       loroText.applyDelta(value.delta.ops);
 
-      value.changed$.pipe(takeUntil(ctx.dispose$)).subscribe((evt) => {
-        // console.log("content:", loroText.toString());
-        loroText.applyDelta(evt.apply.ops);
-      });
+      bindTextModelToLoroText(value, loroText);
     } else if (typeof value === "object") {
       const childLoroMap = loroMap.setContainer(key, "Map");
       for (const [childKey, childValue] of Object.entries(value)) {
@@ -70,17 +63,31 @@ function syncDocumentToLoro(
   let counter = 0;
   while (ptr) {
     const subDoc = children.insertContainer(counter, "Map");
-    syncDocumentToLoro(ctx, ptr as DataBaseElement, subDoc);
+    syncDocumentToLoro(ptr as DataBaseElement, subDoc);
 
     ptr = ptr.nextSibling;
     counter++;
   }
 
-  doc.changed.pipe(takeUntil(ctx.dispose$)).subscribe((evt) => {
+  bindDataElementToLoroMap(doc, loroMap);
+}
+
+function bindTextModelToLoroText(
+  textModel: BlockyTextModel,
+  loroText: LoroText
+) {
+  textModel.changed$.subscribe((evt) => {
+    loroText.applyDelta(evt.apply.ops);
+  });
+}
+
+function bindDataElementToLoroMap(doc: DataElement, loroMap: LoroMap) {
+  const children = loroMap.get("children") as LoroList;
+  doc.changed.subscribe((evt) => {
     switch (evt.type) {
       case "element-insert-child": {
         const loroChild = children.insertContainer(evt.index, "Map");
-        syncDocumentToLoro(ctx, evt.child as DataBaseElement, loroChild);
+        syncDocumentToLoro(evt.child as DataBaseElement, loroChild);
         break;
       }
 
@@ -132,6 +139,7 @@ function blockyElementFromLoroMap(loroMap: LoroMap): DataElement {
     if (value instanceof LoroText) {
       const text = new BlockyTextModel(new Delta(value.toDelta()));
       result.__setAttribute(key, text);
+      bindTextModelToLoroText(text, value);
     } else if (value instanceof LoroMap) {
       result.__setAttribute(key, blockyElementFromLoroMap(value));
     } else {
@@ -144,10 +152,12 @@ function blockyElementFromLoroMap(loroMap: LoroMap): DataElement {
     for (let i = 0, len = children.length; i < len; i++) {
       const child = children.get(i);
       if (child instanceof LoroMap) {
-        result.__insertChildAt(i, blockyElementFromLoroMap(child));
+        result.appendChild(blockyElementFromLoroMap(child));
       }
     }
   }
+
+  bindDataElementToLoroMap(result, loroMap);
 
   return result;
 }
@@ -155,11 +165,12 @@ function blockyElementFromLoroMap(loroMap: LoroMap): DataElement {
 function documentFromLoroMap(loroMap: LoroMap): BlockyDocument {
   const title = loroMap.get("title") as LoroMap | undefined;
   const body = loroMap.get("body") as LoroMap;
-  const doc = new BlockyDocument();
-  if (title) {
-    doc.__setAttribute("title", blockyElementFromLoroMap(title));
-  }
-  doc.__setAttribute("body", blockyElementFromLoroMap(body));
+  const doc = new BlockyDocument({
+    title: title
+      ? (blockyElementFromLoroMap(title) as BlockDataElement)
+      : undefined,
+    body: blockyElementFromLoroMap(body),
+  });
 
   return doc;
 }
@@ -189,7 +200,7 @@ class LoroPlugin implements IPlugin {
     const documentMap = loro.getMap("document");
 
     if (this.needsInit) {
-      syncDocumentToLoro(context, state.document, documentMap);
+      syncDocumentToLoro(state.document, documentMap);
       loro.commit();
     }
 
@@ -197,12 +208,12 @@ class LoroPlugin implements IPlugin {
       loro.commit();
     });
 
-    const sub = loro.subscribe((evt) => {
-      console.log("loro evt:", evt, "version:", loro.frontiers());
-    });
-    context.dispose$.pipe(take(1)).subscribe(() => {
-      loro.unsubscribe(sub);
-    });
+    // const sub = loro.subscribe((evt) => {
+    //   console.log("loro evt:", evt, "version:", loro.frontiers());
+    // });
+    // context.dispose$.pipe(take(1)).subscribe(() => {
+    //   loro.unsubscribe(sub);
+    // });
   }
 }
 
