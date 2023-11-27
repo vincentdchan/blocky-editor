@@ -1894,6 +1894,10 @@ export class Editor {
     return undefined;
   }
 
+  get fontFamily(): string {
+    return this.themeData?.font ?? blockyDefaultFonts;
+  }
+
   handleBlocksContainerMouseMove(e: MouseEvent) {
     const y = e.clientY;
     const blockSizes = this.#collectBlocksSize();

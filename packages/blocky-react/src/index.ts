@@ -9,6 +9,7 @@ export * from "./blocks";
 export * from "./reactFollowerWidget";
 export * from "./blockActiveDetector";
 export * from "./defaultToolbar";
+export * from "./defaultSpannerMenu";
 export {
   makeReactSpanner,
   type RenderProps as SpannerRenderProps,
