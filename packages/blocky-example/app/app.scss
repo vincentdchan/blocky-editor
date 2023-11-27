@@ -21,7 +21,7 @@
   max-width: 260px;
   border-right-style: solid;
   border-right-width: 1px;
-  border-right-color: grey;
+  border-right-color: var(--border-color);
   flex-shrink: 0;
   padding-top: 1rem;
 
@@ -35,7 +35,6 @@
     margin-top: 28px;
   }
 }
-
 
 .blocky-example-container {
   height: 100%;
@@ -60,12 +59,14 @@ body {
 
 :root {
   --bg-color: white;
+  --border-color: #e0e0e0;
   --primary-text-color: black;
   --danger-color: rgb(201, 56, 56);
 }
 
 [data-theme="dark"] {
   --bg-color: #161625;
+  --border-color: #1d1d2b;
   --primary-text-color: #c3c3bf;
 }
 
