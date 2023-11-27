@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import ReactDOM from "react-dom";
 import { type EditorController, BlockDataElement, TextType } from "blocky-core";
 import Dropdown from "@pkg/components/dropdown";
 import { Menu, MenuItem, Divider } from "@pkg/components/menu";
@@ -12,16 +11,10 @@ export interface SpannerProps {
   focusedNode?: BlockDataElement;
 }
 
-interface Coord {
-  x: number;
-  y: number;
-}
-
 function SpannerMenu(props: SpannerProps) {
   const { editorController, focusedNode } = props;
   const [showDropdown, setShowDropdown] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
-  const [menuCoord, setMenuCoord] = useState<Coord>({ x: 0, y: 0 });
   const bannerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,8 +37,6 @@ function SpannerMenu(props: SpannerProps) {
 
     handleBlocksChanged();
 
-    bannerRef.current!.innerHTML = SpannerIcon;
-
     return () => {
       dispose$.next();
       dispose$.complete();
@@ -53,11 +44,7 @@ function SpannerMenu(props: SpannerProps) {
   }, [editorController]);
 
   const handleClick = useCallback(() => {
-    const rect = bannerRef.current!.getBoundingClientRect();
-    ReactDOM.unstable_batchedUpdates(() => {
-      setShowDropdown(true);
-      setMenuCoord({ x: rect.x, y: rect.y });
-    });
+    setShowDropdown(true);
   }, []);
 
   const handleMaskClicked = useCallback(() => {
@@ -95,17 +82,13 @@ function SpannerMenu(props: SpannerProps) {
   };
 
   const renderMenu = () => {
-    const menuY = menuCoord.y + 36;
     return (
       <Menu
-        style={{
-          position: "fixed",
-          left: `${menuCoord.x}px`,
-          top: `${menuY}px`,
-          ...{
+        style={
+          {
             ["--blocky-font"]: editorController.editor?.fontFamily,
-          },
-        }}
+          } as any
+        }
       >
         <MenuItem onClick={insertText(TextType.Normal)}>Text</MenuItem>
         <MenuItem onClick={insertText(TextType.Heading1)}>Heading1</MenuItem>
@@ -131,10 +114,16 @@ function SpannerMenu(props: SpannerProps) {
   return (
     <Dropdown
       show={showDropdown}
-      overlay={renderMenu()}
+      overlay={renderMenu}
       onMaskClicked={handleMaskClicked}
+      anchorRef={bannerRef}
     >
-      <div ref={bannerRef} css={buttonStyle} onClick={handleClick}></div>
+      <div
+        ref={bannerRef}
+        css={buttonStyle}
+        onClick={handleClick}
+        dangerouslySetInnerHTML={{ __html: SpannerIcon }}
+      ></div>
     </Dropdown>
   );
 }
