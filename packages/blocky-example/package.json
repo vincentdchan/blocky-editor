@@ -19,6 +19,7 @@
     "blocky-core": "workspace:*",
     "blocky-react": "workspace:*",
     "highlight.js": "^11.6.0",
+    "idb": "^7.1.1",
     "is-hotkey": "^0.2.0",
     "lodash-es": "^4.17.21",
     "loro-crdt": "^0.4.3",

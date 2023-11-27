@@ -6,7 +6,7 @@ import {
   DataElement,
 } from "blocky-core";
 import { Loro, LoroMap } from "loro-crdt";
-import { takeUntil } from "rxjs";
+import { take, takeUntil } from "rxjs";
 
 function isPrimitive(value: any) {
   return (
@@ -104,9 +104,18 @@ class LoroPlugin implements IPlugin {
 
     const documentMap = loro.getMap("document");
     syncDocumentToLoro(context, state.document, documentMap);
+    loro.commit();
 
-    console.log("loro:", loro.toJson());
-    console.log("doc:", state.document);
+    state.changesetApplied2$.pipe(takeUntil(context.dispose$)).subscribe(() => {
+      loro.commit();
+    });
+
+    const sub = loro.subscribe((evt) => {
+      console.log("loro evt:", evt, "version:", loro.frontiers());
+    });
+    context.dispose$.pipe(take(1)).subscribe(() => {
+      loro.unsubscribe(sub);
+    });
   }
 }
 

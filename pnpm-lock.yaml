@@ -112,6 +112,9 @@ importers:
       highlight.js:
         specifier: ^11.6.0
         version: 11.6.0
+      idb:
+        specifier: ^7.1.1
+        version: 7.1.1
       is-hotkey:
         specifier: ^0.2.0
         version: 0.2.0
@@ -1957,6 +1960,10 @@ packages:
     dependencies:
       safer-buffer: 2.1.2
     dev: true
+
+  /idb@7.1.1:
+    resolution: {integrity: sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==}
+    dev: false
 
   /ignore@5.2.0:
     resolution: {integrity: sha512-CmxgYGiEPCLhfLnpPp1MoRmifwEIOgjcHXxOBjv7mY96c+eWScsOP9c112ZyLdWHi0FxHjI+4uVhKYp/gcdRmQ==}
