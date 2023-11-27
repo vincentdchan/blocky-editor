@@ -1803,7 +1803,7 @@ export class Editor {
     const cloned = this.darggingNode.clone();
     new Changeset(this.state)
       .removeChild(this.darggingNode.parent!, this.darggingNode)
-      .insertChildrenAfter(dropBlockElement, [cloned])
+      .insertChildrenAfter(dropBlockElement.parent!, [cloned], dropBlockElement)
       .apply();
   }
 

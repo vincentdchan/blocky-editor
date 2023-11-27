@@ -194,6 +194,7 @@ class LoroPlugin implements IPlugin {
   }
 
   onInitialized(context: PluginContext) {
+    context.editor.controller.pluginRegistry.unload("undo");
     const loro = this.loro;
     const state = context.editor.state;
 
