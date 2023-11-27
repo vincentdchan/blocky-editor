@@ -175,7 +175,7 @@ describe("merge", () => {
     });
     const state = new State("User-1", document);
     const change = new Changeset(state);
-    change.deleteChildrenAt(document, 0, 1);
+    change.deleteChildrenAt(document.body, 0, 1);
     change.textEdit(textBlock2, "textContent", () => new Delta().insert("a"));
     const finalizedChangeset = change.finalize();
     expect(finalizedChangeset.operations.length).toBe(2);

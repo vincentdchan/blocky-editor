@@ -36,7 +36,7 @@ export class TitleBlock extends Block {
       changeset.forceUpdate = true;
     }
 
-    this.editor.textInput.next(
+    this.editor.textInput$.next(
       new TextInputEvent(beforeDelta, diff, blockElement)
     );
   }

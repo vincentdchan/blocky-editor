@@ -1,6 +1,14 @@
 "use client";
 
-import React, { createContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  memo,
+} from "react";
+import { CiLight, CiDark } from "react-icons/ci";
+import styles from "./themeSwitch.module.scss";
 
 export interface ThemeContext {
   darkMode: boolean;
@@ -50,23 +58,21 @@ export function ThemeProvider(props: ThemeProviderProps) {
   );
 }
 
-export function ThemeSwitch() {
+const ThemeSwitch = memo(() => {
+  const theme = useContext(Theme);
   return (
-    <Theme.Consumer>
-      {(theme) => (
-        <div className="theme-switch-wrapper">
-          <label className="theme-switch">
-            <input
-              type="checkbox"
-              id="checkbox"
-              checked={theme.darkMode}
-              onChange={() => theme.toggle()}
-            />
-            <div className="slider round"></div>
-          </label>
-          <p>Enable Dark Mode</p>
-        </div>
-      )}
-    </Theme.Consumer>
+    <div
+      className={styles.container + (theme.darkMode ? " dark" : "")}
+      onClick={(e) => {
+        e.preventDefault();
+        theme.toggle();
+      }}
+    >
+      {theme.darkMode ? <CiDark /> : <CiLight />}
+    </div>
   );
-}
+});
+
+ThemeSwitch.displayName = "ThemeSwitch";
+
+export { ThemeSwitch };

@@ -1,7 +1,7 @@
 import { IDisposable } from "blocky-common/es";
 import { Subject } from "rxjs";
 import { elem, removeNode, ContainerWithCoord } from "blocky-common/es/dom";
-import { BlockDataElement, DataBaseNode } from "@pkg/data";
+import { BlockDataElement, DataBaseElement, DataBaseNode } from "@pkg/data";
 import { isString, isObject } from "lodash-es";
 import { Editor } from "@pkg/view/editor";
 
@@ -210,6 +210,13 @@ export class SearchContext implements IDisposable {
   }
 
   #iterateNode(node: DataBaseNode) {
+    if (node instanceof DataBaseElement) {
+      for (const value of Object.values(node.getAttributes())) {
+        if (value instanceof DataBaseElement) {
+          this.#iterateNode(value);
+        }
+      }
+    }
     if (node instanceof BlockDataElement) {
       this.#searchBlockElement(node);
     }

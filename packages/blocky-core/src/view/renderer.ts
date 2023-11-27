@@ -12,6 +12,7 @@ import {
 } from "@pkg/data";
 import type { Editor } from "@pkg/view/editor";
 import { TextBlock } from "@pkg/block/textBlock";
+import { TitleBlock } from "@pkg/block/titleBlock";
 
 function ensureChild<K extends keyof HTMLElementTagNameMap>(
   dom: HTMLElement,
@@ -133,20 +134,24 @@ export class DocRenderer {
     const state = this.editor.state;
     const blockElement = state.getBlockElementById(operation.id);
     if (!blockElement) {
-      // has been deleted?
+      console.warn("blockElement not found", operation.id);
       return;
     }
-    if (blockElement.t !== TextBlock.Name) {
-      return;
-    }
-    const block = state.blocks.get(operation.id);
-    const dom = state.domMap.get(operation.id);
-    if (block && dom) {
-      block.render?.(dom as HTMLElement, {
-        changeset,
-        operation,
-        flags: RenderFlag.Incremental,
-      });
+    if (blockElement.t === TextBlock.Name) {
+      const block = state.blocks.get(operation.id);
+      const dom = state.domMap.get(operation.id);
+      if (block && dom) {
+        block.render?.(dom as HTMLElement, {
+          changeset,
+          operation,
+          flags: RenderFlag.Incremental,
+        });
+      }
+    } else if (blockElement.t === TitleBlock.Name) {
+      const dom = state.domMap.get(operation.id);
+      if (dom) {
+        this.renderTitle(dom as HTMLElement, blockElement);
+      }
     }
   }
 

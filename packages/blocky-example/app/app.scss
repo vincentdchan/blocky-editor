@@ -21,7 +21,7 @@
   max-width: 260px;
   border-right-style: solid;
   border-right-width: 1px;
-  border-right-color: grey;
+  border-right-color: var(--border-color);
   flex-shrink: 0;
   padding-top: 1rem;
 
@@ -35,7 +35,6 @@
     margin-top: 28px;
   }
 }
-
 
 .blocky-example-container {
   height: 100%;
@@ -60,12 +59,16 @@ body {
 
 :root {
   --bg-color: white;
+  --border-color: #e0e0e0;
+  --hover-color: rgba(0, 0, 0, 0.1);
   --primary-text-color: black;
   --danger-color: rgb(201, 56, 56);
 }
 
 [data-theme="dark"] {
   --bg-color: #161625;
+  --border-color: #1d1d2b;
+  --hover-color: rgba(255, 255, 255, 0.1);
   --primary-text-color: #c3c3bf;
 }
 
@@ -101,19 +104,6 @@ body {
     font-size: 11px;
     padding: 4px;
     border-radius: 8px;
-  }
-}
-
-/*Simple css to style it like a toggle switch*/
-.theme-switch-wrapper {
-  display: flex;
-  align-items: center;
-
-  p {
-    margin-left: 10px;
-    font-size: 13px;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    color: var(--primary-text-color);
   }
 }
 

@@ -10,7 +10,8 @@ import type { ElementChangedEvent } from "./events";
 
 export interface DeltaChangedEvent {
   oldDelta: Delta;
-  newDelta: Delta;
+  newDelta?: Delta;
+  apply: Delta;
 }
 
 export interface AttributesObject {
@@ -52,6 +53,7 @@ export class BlockyTextModel {
   #delta = new Delta();
   #cachedString: string | undefined;
   #cachedLength: number | undefined;
+  changed$ = new Subject<DeltaChangedEvent>();
 
   constructor(delta?: Delta) {
     this.#delta = delta ?? new Delta();
@@ -100,6 +102,12 @@ export class BlockyTextModel {
     this.#delta = newDelta;
     this.#cachedString = undefined;
     this.#cachedLength = undefined;
+
+    this.changed$.next({
+      oldDelta,
+      newDelta,
+      apply: v,
+    });
   }
 
   toString(): string {
@@ -207,6 +215,11 @@ export class DataBaseElement implements DataBaseNode {
     }
     const oldValue = this.#attributes[name];
     this.#attributes[name] = value;
+
+    if (value instanceof DataBaseElement) {
+      value.parent = this;
+      this.doc?.reportBlockyNodeInserted(value);
+    }
 
     if (typeof value === "object" && typeof value.t === "string") {
       this.__backMap.set(value, name);
@@ -686,6 +699,7 @@ export class BlockyDocument extends DataElement {
   readonly blockElementRemoved = new Subject<BlockDataElement>();
 
   constructor(props?: Partial<DocumentInitProps>) {
+    super("document", undefined, []);
     let title: BlockDataElement | undefined;
     if (!isUndefined(props?.title)) {
       if (props?.title instanceof BlockDataElement) {
@@ -701,16 +715,13 @@ export class BlockyDocument extends DataElement {
     const body =
       props?.body ??
       new DataElement("body", undefined, props?.bodyChildren ?? []);
-    super("document", undefined, []);
 
     this.__setAttribute("title", title);
     this.__setAttribute("body", body);
 
     if (this.title) {
-      this.__symInsertAfter(this.title);
       this.reportBlockyNodeInserted(this.title);
     }
-    this.__symInsertAfter(this.body);
     this.reportBlockyNodeInserted(this.body);
   }
 
@@ -762,6 +773,11 @@ export function traverseNode(
   fun(node);
 
   if (node instanceof DataElement) {
+    for (const value of Object.values(node.getAttributes())) {
+      if (value instanceof DataBaseElement) {
+        traverseNode(value, fun);
+      }
+    }
     let ptr = node.firstChild;
     while (ptr) {
       traverseNode(ptr, fun);

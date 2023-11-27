@@ -112,12 +112,18 @@ importers:
       highlight.js:
         specifier: ^11.6.0
         version: 11.6.0
+      idb:
+        specifier: ^7.1.1
+        version: 7.1.1
       is-hotkey:
         specifier: ^0.2.0
         version: 0.2.0
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
+      loro-crdt:
+        specifier: ^0.5.0
+        version: 0.5.0
       marked:
         specifier: ^4.0.18
         version: 4.0.18
@@ -1955,6 +1961,10 @@ packages:
       safer-buffer: 2.1.2
     dev: true
 
+  /idb@7.1.1:
+    resolution: {integrity: sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==}
+    dev: false
+
   /ignore@5.2.0:
     resolution: {integrity: sha512-CmxgYGiEPCLhfLnpPp1MoRmifwEIOgjcHXxOBjv7mY96c+eWScsOP9c112ZyLdWHi0FxHjI+4uVhKYp/gcdRmQ==}
     engines: {node: '>= 4'}
@@ -2184,6 +2194,16 @@ packages:
     hasBin: true
     dependencies:
       js-tokens: 4.0.0
+    dev: false
+
+  /loro-crdt@0.5.0:
+    resolution: {integrity: sha512-O7vBYOI1bGQZKlF2UabGVMbIqNtyHKsFUfz3gAy65EzNhFdxFV5BMlm5ViUMd2RAjKHQ8VKuTabV7zeim18cOw==}
+    dependencies:
+      loro-wasm: 0.5.0
+    dev: false
+
+  /loro-wasm@0.5.0:
+    resolution: {integrity: sha512-IvKvlo7cGJo/sR8loy45fugYko3rCGtanphT7dHD9cYJLiOHeKQqTlXYVPmLmfED6ALqfNxpvRWQvLglMW6EtQ==}
     dev: false
 
   /loupe@2.3.4:

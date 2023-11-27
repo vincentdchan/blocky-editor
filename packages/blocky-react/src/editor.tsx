@@ -2,17 +2,36 @@ import React, { useEffect, useState, useRef, RefObject } from "react";
 import { Editor, EditorController, CursorState } from "blocky-core";
 
 export function useBlockyController(
-  generator: () => EditorController,
+  generator: () => EditorController | Promise<EditorController>,
   deps?: React.DependencyList | undefined
 ): EditorController | null {
   const [controller, setController] = useState<EditorController | null>(null);
 
   useEffect(() => {
-    const controller = generator();
-    setController(controller);
+    let closed = false;
+    const controllerGetter = generator();
+    let editorController: EditorController | undefined;
+    if (controllerGetter instanceof Promise) {
+      controllerGetter
+        .then((c) => {
+          if (closed) {
+            c.dispose();
+            return;
+          }
+          editorController = c;
+          setController(editorController);
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    } else {
+      editorController = controllerGetter;
+      setController(editorController);
+    }
 
     return () => {
-      controller.dispose();
+      closed = true;
+      editorController?.dispose();
     };
   }, deps);
 
