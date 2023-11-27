@@ -9,6 +9,9 @@ export const toolbarContainerStyle = css({
   borderRadius: 4,
   overflow: "hidden",
   boxSizing: "border-box",
+  transitionProperty: "opacity, transform",
+  transitionDuration: "200ms",
+  transitionTimingFunction: "ease",
 });
 
 export const toolbarMenuButton = css({

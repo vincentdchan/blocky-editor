@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { css } from "@emotion/react";
 
 export interface MenuProps {
@@ -12,12 +12,25 @@ const menuStyle = css({
   boxShadow: "0px 0px 4px rgba(0, 0, 0, 0.2)",
   borderRadius: "8px",
   overflow: "hidden",
+  transitionProperty: "opacity, transform",
+  transitionDuration: "200ms",
+  transitionTimingFunction: "ease",
 });
 
 export function Menu(props: MenuProps) {
   const { children, style } = props;
+  const [opacity, setOpacity] = useState(0);
+  useEffect(() => {
+    setOpacity(1);
+  }, []);
   return (
-    <div css={menuStyle} style={style}>
+    <div
+      css={menuStyle}
+      style={{
+        opacity,
+        ...style,
+      }}
+    >
       {children}
     </div>
   );
