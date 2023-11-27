@@ -9,7 +9,8 @@ import {
 } from "blocky-core";
 import { Loro, LoroMap, LoroText, LoroList } from "loro-crdt";
 import { Delta } from "blocky-core";
-import { takeUntil } from "rxjs";
+import { takeUntil, filter } from "rxjs";
+import { isHotkey } from "is-hotkey";
 
 function isPrimitive(value: any) {
   return (
@@ -194,7 +195,8 @@ class LoroPlugin implements IPlugin {
   }
 
   onInitialized(context: PluginContext) {
-    context.editor.controller.pluginRegistry.unload("undo");
+    const { editor } = context;
+    editor.controller.pluginRegistry.unload("undo"); // unload the default undo plugin
     const loro = this.loro;
     const state = context.editor.state;
 
@@ -209,12 +211,51 @@ class LoroPlugin implements IPlugin {
       loro.commit();
     });
 
-    // const sub = loro.subscribe((evt) => {
-    //   console.log("loro evt:", evt, "version:", loro.frontiers());
-    // });
-    // context.dispose$.pipe(take(1)).subscribe(() => {
-    //   loro.unsubscribe(sub);
-    // });
+    editor.keyDown$
+      .pipe(
+        takeUntil(context.dispose$),
+        filter((e) => isHotkey("mod+z", e))
+      )
+      .subscribe((e: KeyboardEvent) => {
+        e.preventDefault();
+        try {
+          this.undo(context);
+        } catch (err) {
+          console.error("[Blocky]undo error", err);
+          editor.controller.options?.onError?.(err);
+        }
+      });
+
+    editor.keyDown$
+      .pipe(
+        takeUntil(context.dispose$),
+        filter((e) => isHotkey("mod+shift+z", e))
+      )
+      .subscribe((e: KeyboardEvent) => {
+        e.preventDefault();
+        try {
+          this.redo(context);
+        } catch (err) {
+          console.error("[Blocky]redo error", err);
+          editor.controller.options?.onError?.(err);
+        }
+      });
+
+    const s = loro.subscribe((evt) => {
+      console.log("loro event", evt);
+    });
+
+    context.dispose$.subscribe(() => {
+      loro.unsubscribe(s);
+    });
+  }
+
+  undo(context: PluginContext) {
+    console.log("undo", context);
+  }
+
+  redo(context: PluginContext) {
+    console.log("redo", context);
   }
 }
 
