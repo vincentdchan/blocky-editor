@@ -10,7 +10,8 @@ import type { ElementChangedEvent } from "./events";
 
 export interface DeltaChangedEvent {
   oldDelta: Delta;
-  newDelta: Delta;
+  newDelta?: Delta;
+  apply: Delta;
 }
 
 export interface AttributesObject {
@@ -52,6 +53,7 @@ export class BlockyTextModel {
   #delta = new Delta();
   #cachedString: string | undefined;
   #cachedLength: number | undefined;
+  changed$ = new Subject<DeltaChangedEvent>();
 
   constructor(delta?: Delta) {
     this.#delta = delta ?? new Delta();
@@ -100,6 +102,12 @@ export class BlockyTextModel {
     this.#delta = newDelta;
     this.#cachedString = undefined;
     this.#cachedLength = undefined;
+
+    this.changed$.next({
+      oldDelta,
+      newDelta,
+      apply: v,
+    });
   }
 
   toString(): string {

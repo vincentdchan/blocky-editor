@@ -9,8 +9,10 @@ import {
 import {
   BlockyTextModel,
   DataBaseElement,
+  DataElement,
   EditorController,
   IPlugin,
+  PluginContext,
 } from "blocky-core";
 import ImagePlaceholder from "@pkg/components/imagePlaceholder";
 import { makeCommandPanelPlugin } from "@pkg/app/plugins/commandPanel";
@@ -26,7 +28,11 @@ function isPrimitive(value: any) {
   );
 }
 
-function syncDocumentToLoro(doc: DataBaseElement, loroMap: LoroMap) {
+function syncDocumentToLoro(
+  ctx: PluginContext,
+  doc: DataBaseElement,
+  loroMap: LoroMap
+) {
   const attribs = doc.getAttributes();
 
   loroMap.set("t", doc.t);
@@ -43,10 +49,15 @@ function syncDocumentToLoro(doc: DataBaseElement, loroMap: LoroMap) {
       }
     } else if (value instanceof DataBaseElement) {
       const childLoroMap = loroMap.setContainer(key, "Map");
-      syncDocumentToLoro(value, childLoroMap);
+      syncDocumentToLoro(ctx, value, childLoroMap);
     } else if (value instanceof BlockyTextModel) {
-      const childText = loroMap.setContainer(key, "Text");
-      childText.applyDelta(value.delta.ops);
+      const loroText = loroMap.setContainer(key, "Text");
+      loroText.applyDelta(value.delta.ops);
+
+      value.changed$.pipe(takeUntil(ctx.dispose$)).subscribe((evt) => {
+        // console.log("content:", loroText.toString());
+        loroText.applyDelta(evt.apply.ops);
+      });
     } else if (typeof value === "object") {
       const childLoroMap = loroMap.setContainer(key, "Map");
       for (const [childKey, childValue] of Object.entries(value)) {
@@ -55,7 +66,7 @@ function syncDocumentToLoro(doc: DataBaseElement, loroMap: LoroMap) {
     }
   }
 
-  if (doc.childrenLength == 0) {
+  if (!(doc instanceof DataElement)) {
     return;
   }
   const children = loroMap.setContainer("children", "List");
@@ -63,11 +74,37 @@ function syncDocumentToLoro(doc: DataBaseElement, loroMap: LoroMap) {
   let counter = 0;
   while (ptr) {
     const subDoc = children.insertContainer(counter, "Map");
-    syncDocumentToLoro(ptr as DataBaseElement, subDoc);
+    syncDocumentToLoro(ctx, ptr as DataBaseElement, subDoc);
 
     ptr = ptr.nextSibling;
     counter++;
   }
+
+  doc.changed.pipe(takeUntil(ctx.dispose$)).subscribe((evt) => {
+    switch (evt.type) {
+      case "element-insert-child": {
+        const children = loroMap.setContainer("children", "List");
+        const loroChild = children.insertContainer(evt.index, "Map");
+        syncDocumentToLoro(ctx, evt.child as DataBaseElement, loroChild);
+        break;
+      }
+
+      case "element-remove-child": {
+        const children = loroMap.setContainer("children", "List");
+        children.delete(evt.index, 1);
+        break;
+      }
+
+      case "element-set-attrib": {
+        if (evt.value === undefined) {
+          loroMap.delete(evt.key);
+        } else {
+          loroMap.set(evt.key, evt.value);
+        }
+        break;
+      }
+    }
+  });
 }
 
 function makeLoroPlugin(): IPlugin {
@@ -79,16 +116,10 @@ function makeLoroPlugin(): IPlugin {
       const state = context.editor.state;
 
       const documentMap = loro.getMap("document");
-      syncDocumentToLoro(state.document, documentMap);
+      syncDocumentToLoro(context, state.document, documentMap);
 
       console.log("loro:", loro.toJson());
       console.log("doc:", state.document);
-
-      state.changesetApplied2$
-        .pipe(takeUntil(context.dispose$))
-        .subscribe((changeset) => {
-          console.log("changeset", changeset);
-        });
     },
   };
 }
