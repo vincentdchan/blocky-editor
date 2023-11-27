@@ -7,7 +7,8 @@ import {
   BlockyDocument,
   BlockDataElement,
 } from "blocky-core";
-import { Loro, LoroMap, LoroText } from "loro-crdt";
+import { Loro, LoroMap, LoroText, LoroList } from "loro-crdt";
+import { Delta } from "blocky-core";
 import { take, takeUntil } from "rxjs";
 
 function isPrimitive(value: any) {
@@ -59,6 +60,11 @@ function syncDocumentToLoro(
   if (!(doc instanceof DataElement)) {
     return;
   }
+
+  if (doc instanceof BlockDataElement) {
+    loroMap.set("id", doc.id);
+  }
+
   const children = loroMap.setContainer("children", "List");
   let ptr = doc.firstChild;
   let counter = 0;
@@ -123,14 +129,23 @@ function blockyElementFromLoroMap(loroMap: LoroMap): DataElement {
     if (key === "id" || key === "t" || key === "children") {
       continue;
     }
-    console.log("key:", key, "value:", value, typeof value);
     if (value instanceof LoroText) {
-      const text = new BlockyTextModel(value.toDelta() as any);
+      const text = new BlockyTextModel(new Delta(value.toDelta()));
       result.__setAttribute(key, text);
     } else if (value instanceof LoroMap) {
       result.__setAttribute(key, blockyElementFromLoroMap(value));
     } else {
       result.__setAttribute(key, value);
+    }
+  }
+
+  const children = loroMap.get("children") as LoroList | undefined;
+  if (children) {
+    for (let i = 0, len = children.length; i < len; i++) {
+      const child = children.get(i);
+      if (child instanceof LoroMap) {
+        result.__insertChildAt(i, blockyElementFromLoroMap(child));
+      }
     }
   }
 
@@ -145,8 +160,6 @@ function documentFromLoroMap(loroMap: LoroMap): BlockyDocument {
     doc.__setAttribute("title", blockyElementFromLoroMap(title));
   }
   doc.__setAttribute("body", blockyElementFromLoroMap(body));
-
-  console.log("doc:", doc);
 
   return doc;
 }
@@ -163,8 +176,7 @@ class LoroPlugin implements IPlugin {
     this.loro = loro ?? new Loro();
   }
 
-  getInitDocumentByLoro() {
-    const loro = this.loro;
+  static getInitDocumentByLoro(loro: Loro) {
     const loroMap = loro.getMap("document");
 
     return documentFromLoroMap(loroMap);

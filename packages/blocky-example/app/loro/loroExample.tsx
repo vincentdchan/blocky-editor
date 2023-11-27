@@ -155,7 +155,7 @@ function LoroExample() {
       changeCounter++;
     });
 
-    const initDoc = loroPlugin.getInitDocumentByLoro();
+    const initDoc = loro ? LoroPlugin.getInitDocumentByLoro(loro) : undefined;
     const controller = makeController(
       "user",
       [...makeEditorPlugins(), loroPlugin],
