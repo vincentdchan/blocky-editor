@@ -61,7 +61,6 @@ async function tryReadLoroFromIdb(
   db: IDBPDatabase
 ): Promise<Loro<Record<string, unknown>> | undefined> {
   let snapshot: any;
-  let versions: any;
   {
     const tx = db.transaction("snapshot", "readonly");
 
@@ -78,7 +77,7 @@ async function tryReadLoroFromIdb(
 
   const tx = db.transaction("versions", "readonly");
 
-  versions = await tx.objectStore("versions").index("loroId").getAll();
+  const versions = await tx.objectStore("versions").index("loroId").getAll();
 
   tx.commit();
 

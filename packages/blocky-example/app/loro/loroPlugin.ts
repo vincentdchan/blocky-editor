@@ -9,7 +9,7 @@ import {
 } from "blocky-core";
 import { Loro, LoroMap, LoroText, LoroList } from "loro-crdt";
 import { Delta } from "blocky-core";
-import { take, takeUntil } from "rxjs";
+import { takeUntil } from "rxjs";
 
 function isPrimitive(value: any) {
   return (
