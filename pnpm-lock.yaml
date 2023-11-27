@@ -118,6 +118,9 @@ importers:
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
+      loro-crdt:
+        specifier: ^0.4.3
+        version: 0.4.3
       marked:
         specifier: ^4.0.18
         version: 4.0.18
@@ -2184,6 +2187,16 @@ packages:
     hasBin: true
     dependencies:
       js-tokens: 4.0.0
+    dev: false
+
+  /loro-crdt@0.4.3:
+    resolution: {integrity: sha512-ofUEXrieS2py9t0Ee+7ebgCCRwbiQthP9SuQ/J1AmUsOQl2+2feYqPlTYFKdP1BvAnus1SCNLNng4jRJlv/ydg==}
+    dependencies:
+      loro-wasm: 0.4.3
+    dev: false
+
+  /loro-wasm@0.4.3:
+    resolution: {integrity: sha512-k9Nr2wlRCX59ar4o0CU840vabeB+NOEkkrGG02hWsT2MaLGJ5IeKrAK22DpMrdhDgX1F4L8A6L+cL6vDlpirRA==}
     dev: false
 
   /loupe@2.3.4:

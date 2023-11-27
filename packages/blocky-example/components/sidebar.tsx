@@ -30,6 +30,7 @@ const Sidebar = memo(() => {
       <SidebarItem href="/doc/api">Api</SidebarItem>
       <h2 className={styles.subTitle}>Examples</h2>
       <SidebarItem href="/noTitle">Editor without title</SidebarItem>
+      <SidebarItem href="/loro">Loro CRDT</SidebarItem>
     </div>
   );
 });
