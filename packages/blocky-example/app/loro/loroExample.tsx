@@ -152,7 +152,7 @@ function LoroExample() {
       changeCounter++;
     });
 
-    const initDoc = loro ? LoroPlugin.getInitDocumentByLoro(loro) : undefined;
+    const initDoc = loroPlugin.getInitDocumentByLoro();
     console.log("initDoc", initDoc);
     const controller = makeController(
       "user",
@@ -161,7 +161,6 @@ function LoroExample() {
     );
 
     if (!loro) {
-      console.log("paste");
       controller.pasteHTMLAtCursor(
         `Loro is a high-performance CRDTs library. It's written in Rust and introduced to the browser via WASM, offering incredible performance.
 Blocky can leverage Loro's data syncing capabilities. By using a simple plugin, you can sync the data of the Blocky editor with Loro.

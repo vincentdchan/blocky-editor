@@ -6,6 +6,8 @@ import {
   DataElement,
   BlockyDocument,
   BlockDataElement,
+  EditorState,
+  Changeset,
 } from "blocky-core";
 import { Loro, LoroMap, LoroText, LoroList, Frontiers } from "loro-crdt";
 import { Delta } from "blocky-core";
@@ -21,7 +23,12 @@ function isPrimitive(value: any) {
 }
 
 class LoroBinding {
+  static source = "loro";
+
+  editorState: EditorState | null = null;
+
   constructor(public loro: Loro) {}
+
   syncDocumentToLoro(doc: DataBaseElement, loroMap: LoroMap) {
     const attribs = doc.getAttributes();
 
@@ -43,9 +50,14 @@ class LoroBinding {
       } else if (value instanceof BlockyTextModel) {
         const loroText = loroMap.setContainer(key, "Text");
         loroText.applyDelta(value.delta.ops);
-
-        this.bindTextModelToLoroText(value, loroText);
+        this.bindTextModelToLoroText(
+          doc as BlockDataElement,
+          key,
+          value,
+          loroText
+        );
       } else if (typeof value === "object") {
+        console.log("object", key, value);
         const childLoroMap = loroMap.setContainer(key, "Map");
         for (const [childKey, childValue] of Object.entries(value)) {
           childLoroMap.set(childKey, childValue);
@@ -74,43 +86,68 @@ class LoroBinding {
 
     this.bindDataElementToLoroMap(doc, loroMap);
   }
-  bindTextModelToLoroText(textModel: BlockyTextModel, loroText: LoroText) {
-    textModel.changed$.subscribe((evt) => {
-      loroText.applyDelta(evt.apply.ops);
-    });
+
+  bindTextModelToLoroText(
+    parent: BlockDataElement,
+    key: string,
+    textModel: BlockyTextModel,
+    loroText: LoroText
+  ) {
+    textModel.changed$
+      .pipe(filter((evt) => evt.source !== LoroBinding.source))
+      .subscribe((evt) => {
+        console.log("text model changed", evt);
+        loroText.applyDelta(evt.apply.ops);
+      });
     loroText.subscribe(this.loro, (evt) => {
-      if (evt.local && evt.fromCheckout) {
+      if (!(!evt.local || evt.fromCheckout)) {
         return;
       }
-      if (evt.diff.type === "text") {
+      if (!this.editorState) {
+        return;
+      }
+      const diff = evt.diff;
+      if (diff.type === "text") {
+        const changeset = new Changeset(this.editorState).textEdit(
+          parent,
+          key,
+          () => new Delta((evt.diff as any).diff)
+        );
+        console.log("changeset", changeset);
+        changeset.apply({
+          source: LoroBinding.source,
+        });
       }
     });
   }
+
   bindDataElementToLoroMap(doc: DataElement, loroMap: LoroMap) {
     const children = loroMap.get("children") as LoroList;
-    doc.changed.subscribe((evt) => {
-      switch (evt.type) {
-        case "element-insert-child": {
-          const loroChild = children.insertContainer(evt.index, "Map");
-          this.syncDocumentToLoro(evt.child as DataBaseElement, loroChild);
-          break;
-        }
-
-        case "element-remove-child": {
-          children.delete(evt.index, 1);
-          break;
-        }
-
-        case "element-set-attrib": {
-          if (evt.value === undefined) {
-            loroMap.delete(evt.key);
-          } else {
-            loroMap.set(evt.key, evt.value);
+    doc.changed
+      .pipe(filter((evt) => evt.source !== LoroBinding.source))
+      .subscribe((evt) => {
+        switch (evt.type) {
+          case "element-insert-child": {
+            const loroChild = children.insertContainer(evt.index, "Map");
+            this.syncDocumentToLoro(evt.child as DataBaseElement, loroChild);
+            break;
           }
-          break;
+
+          case "element-remove-child": {
+            children.delete(evt.index, 1);
+            break;
+          }
+
+          case "element-set-attrib": {
+            if (evt.value === undefined) {
+              loroMap.delete(evt.key);
+            } else {
+              loroMap.set(evt.key, evt.value);
+            }
+            break;
+          }
         }
-      }
-    });
+      });
     loroMap.subscribe(this.loro, (evt) => {
       if (evt.local) {
         return;
@@ -118,6 +155,7 @@ class LoroBinding {
       console.log("loro map event", evt);
     });
   }
+
   blockyElementFromLoroMap(loroMap: LoroMap): DataElement {
     const t = loroMap.get("t") as string;
     let result: DataElement;
@@ -138,7 +176,12 @@ class LoroBinding {
       if (value instanceof LoroText) {
         const text = new BlockyTextModel(new Delta(value.toDelta()));
         result.__setAttribute(key, text);
-        this.bindTextModelToLoroText(text, value);
+        this.bindTextModelToLoroText(
+          result as BlockDataElement,
+          key,
+          text,
+          value
+        );
       } else if (value instanceof LoroMap) {
         result.__setAttribute(key, this.blockyElementFromLoroMap(value));
       } else {
@@ -160,6 +203,7 @@ class LoroBinding {
 
     return result;
   }
+
   documentFromLoroMap(loroMap: LoroMap): BlockyDocument {
     const title = loroMap.get("title") as LoroMap | undefined;
     const body = loroMap.get("body") as LoroMap;
@@ -191,22 +235,28 @@ class LoroPlugin implements IPlugin {
   needsInit = true;
   undoStack: Frontiers[] = [];
   redoStack: Frontiers[] = [];
+  binding: LoroBinding;
 
   constructor(loro?: Loro) {
     if (loro) {
       this.needsInit = false;
     }
     this.loro = loro ?? new Loro();
+    this.binding = new LoroBinding(this.loro);
   }
 
-  static getInitDocumentByLoro(loro: Loro) {
-    const loroMap = loro.getMap("document");
+  getInitDocumentByLoro() {
+    if (this.needsInit) {
+      return undefined;
+    }
+    const loroMap = this.loro.getMap("document");
 
-    return new LoroBinding(loro).documentFromLoroMap(loroMap);
+    return this.binding.documentFromLoroMap(loroMap);
   }
 
   onInitialized(context: PluginContext) {
     const { editor } = context;
+    this.binding.editorState = editor.state;
     editor.controller.pluginRegistry.unload("undo"); // unload the default undo plugin
     const loro = this.loro;
     const state = context.editor.state;
@@ -218,9 +268,14 @@ class LoroPlugin implements IPlugin {
       loro.commit();
     }
 
-    state.changesetApplied2$.pipe(takeUntil(context.dispose$)).subscribe(() => {
-      loro.commit();
-    });
+    state.changesetApplied2$
+      .pipe(
+        takeUntil(context.dispose$),
+        filter((evt) => evt.options.source !== LoroBinding.source)
+      )
+      .subscribe(() => {
+        loro.commit();
+      });
 
     editor.keyDown$
       .pipe(
@@ -253,7 +308,10 @@ class LoroPlugin implements IPlugin {
       });
 
     editor.state.beforeChangesetApply
-      .pipe(takeUntil(context.dispose$))
+      .pipe(
+        takeUntil(context.dispose$),
+        filter((evt) => evt.options.source !== LoroBinding.source)
+      )
       .subscribe(() => {
         const frontiers = this.loro.frontiers();
         this.undoStack.push(frontiers);

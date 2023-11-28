@@ -12,6 +12,7 @@ export interface DeltaChangedEvent {
   oldDelta: Delta;
   newDelta?: Delta;
   apply: Delta;
+  source?: string;
 }
 
 export interface AttributesObject {
@@ -96,7 +97,7 @@ export class BlockyTextModel {
    * If you want to modify the state of the document and
    * notify the editor to update, apply a changeset.
    */
-  __applyDelta(v: Delta) {
+  __applyDelta(v: Delta, source?: string) {
     const oldDelta = this.#delta;
     const newDelta = oldDelta.compose(v);
     this.#delta = newDelta;
@@ -107,6 +108,7 @@ export class BlockyTextModel {
       oldDelta,
       newDelta,
       apply: v,
+      source,
     });
   }
 
@@ -209,7 +211,7 @@ export class DataBaseElement implements DataBaseNode {
    * If you want to modify the state of the document and
    * notify the editor to update, apply a changeset.
    */
-  __setAttribute(name: string, value: any) {
+  __setAttribute(name: string, value: any, source?: string) {
     if (bannedAttributesName.has(name)) {
       throw new Error(`'${name}' is preserved`);
     }
@@ -230,6 +232,7 @@ export class DataBaseElement implements DataBaseNode {
       key: name,
       value,
       oldValue,
+      source,
     });
   }
 
@@ -391,7 +394,7 @@ export class DataElement extends DataBaseElement implements DataNode {
     this.childrenLength++;
   }
 
-  #appendChild(node: DataBaseNode) {
+  #appendChild(node: DataBaseNode, source?: string) {
     this.#validateChild(node);
     const insertIndex = this.childrenLength;
 
@@ -404,10 +407,15 @@ export class DataElement extends DataBaseElement implements DataNode {
       parent: this,
       child: node,
       index: insertIndex,
+      source,
     });
   }
 
-  protected __symInsertAfter(node: DataBaseNode, after?: DataBaseNode) {
+  protected __symInsertAfter(
+    node: DataBaseNode,
+    after?: DataBaseNode,
+    source?: string
+  ) {
     if (after && after.parent !== this) {
       throw new TypeError("after node is a child of this node");
     }
@@ -458,6 +466,7 @@ export class DataElement extends DataBaseElement implements DataNode {
       parent: this,
       child: node,
       index: cnt,
+      source,
     });
   }
 
@@ -466,14 +475,14 @@ export class DataElement extends DataBaseElement implements DataNode {
    * If you want to modify the state of the document and
    * notify the editor to update, apply a changeset.
    */
-  __insertChildAt(index: number, node: DataBaseNode) {
+  __insertChildAt(index: number, node: DataBaseNode, source?: string) {
     if (index === this.childrenLength) {
-      this.#appendChild(node);
+      this.#appendChild(node, source);
       return;
     }
 
     if (index === 0) {
-      this.__symInsertAfter(node);
+      this.__symInsertAfter(node, undefined, source);
       return;
     }
 
@@ -484,7 +493,7 @@ export class DataElement extends DataBaseElement implements DataNode {
       ptr = ptr.nextSibling;
     }
 
-    this.__symInsertAfter(node, ptr ?? undefined);
+    this.__symInsertAfter(node, ptr ?? undefined, source);
   }
 
   /**
@@ -492,7 +501,7 @@ export class DataElement extends DataBaseElement implements DataNode {
    * If you want to modify the state of the document and
    * notify the editor to update, apply a changeset.
    */
-  __deleteChildrenAt(index: number, count: number) {
+  __deleteChildrenAt(index: number, count: number, source?: string) {
     let ptr = this.#firstChild;
 
     while (index > 0) {
@@ -502,14 +511,14 @@ export class DataElement extends DataBaseElement implements DataNode {
 
     while (ptr && count > 0) {
       const next = ptr.nextSibling;
-      this.#removeChild(ptr);
+      this.#removeChild(ptr, source);
 
       ptr = next;
       count--;
     }
   }
 
-  #removeChild(node: DataBaseNode) {
+  #removeChild(node: DataBaseNode, source?: string) {
     const { parent } = node;
     if (parent !== this) {
       throw new TypeError("node is not the child of this element");
@@ -549,6 +558,7 @@ export class DataElement extends DataBaseElement implements DataNode {
       parent: this,
       child: node,
       index: ptr,
+      source,
     });
   }
 
