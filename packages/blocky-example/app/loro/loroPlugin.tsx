@@ -8,6 +8,7 @@ import {
   BlockDataElement,
   EditorState,
   Changeset,
+  IBlockDefinition,
 } from "blocky-core";
 import {
   Loro,
@@ -21,6 +22,8 @@ import { Delta } from "blocky-core";
 import { takeUntil, filter } from "rxjs";
 import { isHotkey } from "is-hotkey";
 import { isArray, isNumber } from "lodash-es";
+import { DefaultBlockOutline, makeReactBlock } from "blocky-react";
+import LoroBlock from "./loroBlock";
 
 function isPrimitive(value: any) {
   return (
@@ -280,13 +283,24 @@ class LoroPlugin implements IPlugin {
   undoStack: Frontiers[] = [];
   redoStack: Frontiers[] = [];
   binding: LoroBinding;
+  blocks: IBlockDefinition[];
 
   constructor(loro?: Loro) {
-    if (loro) {
-      this.needsInit = false;
-    }
+    // if (loro) {
+    //   this.needsInit = false;
+    // }
     this.loro = loro ?? new Loro();
     this.binding = new LoroBinding(this.loro);
+    this.blocks = [
+      makeReactBlock({
+        name: "Loro",
+        component: () => (
+          <DefaultBlockOutline>
+            <LoroBlock plugin={this} />
+          </DefaultBlockOutline>
+        ),
+      }),
+    ];
   }
 
   getInitDocumentByLoro() {

@@ -680,6 +680,8 @@ export class EditorController {
       });
       return pasteHandler.call(blockDef, evt);
     }
+
+    return new BlockDataElement(dataType, this.idGenerator.mkBlockId());
   };
 
   /**

@@ -114,43 +114,41 @@ function LoroExample() {
       },
     });
 
-    const loro = await tryReadLoroFromIdb(db);
+    // let changeCounter = 0;
 
-    let changeCounter = 0;
+    const loroPlugin = new LoroPlugin();
+    // let lastVersion: Uint8Array | undefined;
+    // loroPlugin.loro.subscribe(async (evt) => {
+    //   if (changeCounter > 20) {
+    //     const fullData = loroPlugin.loro.exportFrom();
+    //     console.log("fullData");
+    //     await db.add("snapshot", {
+    //       data: fullData,
+    //       createdAt: new Date(),
+    //     });
 
-    const loroPlugin = new LoroPlugin(loro);
-    let lastVersion: Uint8Array | undefined;
-    loroPlugin.loro.subscribe(async (evt) => {
-      if (changeCounter > 20) {
-        const fullData = loroPlugin.loro.exportFrom();
-        console.log("fullData");
-        await db.add("snapshot", {
-          data: fullData,
-          createdAt: new Date(),
-        });
+    //     const tx = db.transaction("versions", "readwrite");
+    //     // delete all versions
 
-        const tx = db.transaction("versions", "readwrite");
-        // delete all versions
+    //     await tx.objectStore("versions").clear();
 
-        await tx.objectStore("versions").clear();
+    //     await tx.done;
 
-        await tx.done;
-
-        lastVersion = undefined;
-        changeCounter = 0;
-        return;
-      }
-      const versions = loroPlugin.loro.version();
-      const data = loroPlugin.loro.exportFrom(lastVersion);
-      await db.add("versions", {
-        loroId: evt.id.toString(),
-        version: versions,
-        data,
-        createdAt: new Date(),
-      });
-      lastVersion = versions;
-      changeCounter++;
-    });
+    //     lastVersion = undefined;
+    //     changeCounter = 0;
+    //     return;
+    //   }
+    //   const versions = loroPlugin.loro.version();
+    //   const data = loroPlugin.loro.exportFrom(lastVersion);
+    //   await db.add("versions", {
+    //     loroId: evt.id.toString(),
+    //     version: versions,
+    //     data,
+    //     createdAt: new Date(),
+    //   });
+    //   lastVersion = versions;
+    //   changeCounter++;
+    // });
 
     const initDoc = loroPlugin.getInitDocumentByLoro();
     console.log("initDoc", initDoc);
@@ -160,12 +158,13 @@ function LoroExample() {
       initDoc
     );
 
-    if (!loro) {
+    if (true) {
       controller.pasteHTMLAtCursor(
         `Loro is a high-performance CRDTs library. It's written in Rust and introduced to the browser via WASM, offering incredible performance.
 Blocky can leverage Loro's data syncing capabilities. By using a simple plugin, you can sync the data of the Blocky editor with Loro.
 You can edit this page, and the data will sync to the browser's storage with Loro’s encoding.
-Once you reload the page, the data from the browser will be rendered again.`
+Once you reload the page, the data from the browser will be rendered again.
+<div data-type="Loro">Loro</div>`
       );
     }
 
