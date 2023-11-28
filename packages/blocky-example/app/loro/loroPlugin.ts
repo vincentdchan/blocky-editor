@@ -9,10 +9,18 @@ import {
   EditorState,
   Changeset,
 } from "blocky-core";
-import { Loro, LoroMap, LoroText, LoroList, Frontiers } from "loro-crdt";
+import {
+  Loro,
+  LoroMap,
+  LoroText,
+  LoroList,
+  Frontiers,
+  ContainerID,
+} from "loro-crdt";
 import { Delta } from "blocky-core";
 import { takeUntil, filter } from "rxjs";
 import { isHotkey } from "is-hotkey";
+import { isArray, isNumber } from "lodash-es";
 
 function isPrimitive(value: any) {
   return (
@@ -157,6 +165,31 @@ class LoroBinding {
       }
       const diff = evt.diff;
       if (diff.type === "list") {
+        const changeset = new Changeset(this.editorState);
+        let index = 0;
+        for (const op of diff.diff) {
+          if (isNumber(op.retain)) {
+            index += op.retain;
+          } else if (isArray(op.insert)) {
+            changeset.insertChildrenAt(
+              doc,
+              index,
+              op.insert.map((v) => {
+                const container = this.loro.getContainerById(
+                  v as any as ContainerID
+                ) as LoroMap;
+                return this.blockyElementFromLoroMap(container);
+              })
+            );
+
+            index += op.insert.length;
+          } else if (isNumber(op.delete)) {
+            changeset.deleteChildrenAt(doc, index, op.delete);
+          }
+        }
+        changeset.apply({
+          source: LoroBinding.source,
+        });
       } else if (diff.type === "map") {
         new Changeset(this.editorState)
           .updateAttributes(doc, diff.updated)
@@ -327,25 +360,7 @@ class LoroPlugin implements IPlugin {
         const frontiers = this.loro.frontiers();
         this.undoStack.push(frontiers);
       });
-
-    // const s = loro.subscribe((evt) => {
-    //   if (evt.fromCheckout) {
-    //     return;
-    //   }
-    //   if (evt.local) {
-    //     this.#debouncedAddUndoStack();
-    //   }
-    // });
-
-    // context.dispose$.subscribe(() => {
-    //   loro.unsubscribe(s);
-    // });
   }
-
-  // #debouncedAddUndoStack = debounce(() => {
-  //   const frontiers = this.loro.frontiers();
-  //   this.undoStack.push(frontiers);
-  // }, 500);
 
   undo() {
     const current = this.loro.frontiers();
