@@ -149,10 +149,21 @@ class LoroBinding {
         }
       });
     loroMap.subscribe(this.loro, (evt) => {
-      if (evt.local) {
+      if (evt.local && !evt.fromCheckout) {
         return;
       }
-      console.log("loro map event", evt);
+      if (!this.editorState) {
+        return;
+      }
+      const diff = evt.diff;
+      if (diff.type === "list") {
+      } else if (diff.type === "map") {
+        new Changeset(this.editorState)
+          .updateAttributes(doc, diff.updated)
+          .apply({
+            source: LoroBinding.source,
+          });
+      }
     });
   }
 
