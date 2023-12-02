@@ -20,6 +20,7 @@ export {
 } from "./view/collaborativeCursors";
 export {
   type IPlugin,
+  type BlockyPasteEvent,
   PluginRegistry,
   PluginContext,
 } from "./registry/pluginRegistry";

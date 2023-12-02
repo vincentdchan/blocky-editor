@@ -2,7 +2,7 @@ import { useRef } from "react";
 import {
   BlockyEditor,
   makeReactToolbar,
-  makeImageBlockPlugin,
+  ImageBlockPlugin,
   useBlockyController,
   DefaultToolbarMenu,
 } from "blocky-react";
@@ -13,7 +13,7 @@ import { makeAtPanelPlugin } from "@pkg/app/plugins/atPanel";
 
 function makeEditorPlugins(): IPlugin[] {
   return [
-    makeImageBlockPlugin({
+    new ImageBlockPlugin({
       placeholder: ({ setSrc }) => <ImagePlaceholder setSrc={setSrc} />,
     }),
     makeCommandPanelPlugin(),

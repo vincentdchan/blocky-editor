@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { type EditorController, BlockDataElement, TextType } from "blocky-core";
 import Dropdown from "@pkg/components/dropdown";
 import { Menu, MenuItem, Divider } from "@pkg/components/menu";
-import { ImageBlockName } from "../";
+import { ImageBlockPlugin } from "../";
 import { Subject, takeUntil } from "rxjs";
 import { SpannerIcon, buttonStyle } from "./style";
 
@@ -68,7 +68,7 @@ function DefaultSpannerMenu(props: SpannerProps) {
       return;
     }
     const newId = editorController.editor!.idGenerator.mkBlockId();
-    const imgElement = new BlockDataElement(ImageBlockName, newId);
+    const imgElement = new BlockDataElement(ImageBlockPlugin.Name, newId);
     editorController.insertBlockAfterId(imgElement, focusedNode.id, {
       autoFocus: true,
     });

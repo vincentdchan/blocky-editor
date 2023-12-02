@@ -7,6 +7,7 @@ import type {
   BlockDataElement,
 } from "blocky-core";
 import { once } from "lodash-es";
+import { DefaultSpannerMenu } from "./defaultSpannerMenu";
 
 export interface RenderProps {
   editorController: EditorController;
@@ -39,4 +40,15 @@ export function makeReactSpanner(renderer: Renderer): SpannerFactory {
       }),
     };
   };
+}
+
+export function makeDefaultReactSpanner() {
+  return makeReactSpanner(({ editorController, focusedNode }) => {
+    return (
+      <DefaultSpannerMenu
+        editorController={editorController}
+        focusedNode={focusedNode}
+      />
+    );
+  });
 }

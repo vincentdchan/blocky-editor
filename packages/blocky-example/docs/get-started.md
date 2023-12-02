@@ -74,7 +74,6 @@ Pass the editor to the component.
 import {
   BlockyEditor,
   makeReactToolbar,
-  makeImageBlockPlugin,
   useBlockyController,
 } from "blocky-react";
 import { EditorController } from "blocky-core";

@@ -2,7 +2,7 @@ import { useRef } from "react";
 import {
   BlockyEditor,
   makeReactToolbar,
-  makeImageBlockPlugin,
+  ImageBlockPlugin,
   useBlockyController,
   DefaultToolbarMenu,
   DefaultSpannerMenu,
@@ -20,7 +20,7 @@ import styles from "./loroExample.module.scss";
 
 function makeEditorPlugins(): IPlugin[] {
   return [
-    makeImageBlockPlugin({
+    new ImageBlockPlugin({
       placeholder: ({ setSrc }) => <ImagePlaceholder setSrc={setSrc} />,
     }),
     makeCommandPanelPlugin(),
