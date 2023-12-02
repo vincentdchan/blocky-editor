@@ -56,12 +56,7 @@ export class ImageBlockPlugin implements IPlugin {
           if (img) {
             const newId = editorController.idGenerator.mkBlockId();
             const src = img.getAttribute("src");
-            let attributes: object | undefined;
-            if (src) {
-              attributes = {
-                src: src,
-              };
-            }
+            const attributes = src ? { src } : undefined;
             const element = new BlockDataElement(
               ImageBlockPlugin.Name,
               newId,
@@ -96,8 +91,7 @@ export class ImageBlockPlugin implements IPlugin {
       .pipe(takeUntil(ctx.dispose$))
       .subscribe((url) => {
         const newId = editorController.idGenerator.mkBlockId();
-        let attributes: object | undefined;
-        attributes = {
+        const attributes = {
           src: url,
         };
         const element = new BlockDataElement(
