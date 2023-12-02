@@ -3,10 +3,12 @@ import {
   type TryParsePastedDOMEvent,
   type IPlugin,
   BlockDataElement,
+  type IBlockDefinition,
+  type BlockyPasteEvent,
+  PluginContext,
 } from "blocky-core";
 import { makeReactBlock, type ReactBlockRenderProps } from "../../";
-
-export const ImageBlockName = "Image";
+import { Observable, takeUntil } from "rxjs";
 
 const defaultMinWidth = 100;
 
@@ -15,13 +17,32 @@ export interface ImageBlockOptions {
   placeholder: ImageBlockPlaceholderRenderer;
 }
 
-export function makeImageBlockPlugin(options: ImageBlockOptions): IPlugin {
-  const { placeholder } = options;
-  return {
-    name: ImageBlockName,
-    blocks: [
+export class ImageBlockPlugin implements IPlugin {
+  static Name = "Image";
+  static LoadImage(
+    blob: Blob
+  ): Observable<string | ArrayBuffer | null | undefined> {
+    return new Observable((subscriber) => {
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        subscriber.next(event.target?.result);
+        subscriber.complete();
+      }; // data url!
+      reader.onerror = function (err) {
+        subscriber.error(err);
+      };
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  name = ImageBlockPlugin.Name;
+  blocks: IBlockDefinition[];
+
+  constructor(public options: ImageBlockOptions) {
+    const { placeholder } = options;
+    this.blocks = [
       makeReactBlock({
-        name: ImageBlockName,
+        name: ImageBlockPlugin.Name,
         component: (props: ReactBlockRenderProps) => (
           <ImageBlock
             minWidth={options.minWidth ?? defaultMinWidth}
@@ -42,7 +63,7 @@ export function makeImageBlockPlugin(options: ImageBlockOptions): IPlugin {
               };
             }
             const element = new BlockDataElement(
-              ImageBlockName,
+              ImageBlockPlugin.Name,
               newId,
               attributes
             );
@@ -50,6 +71,41 @@ export function makeImageBlockPlugin(options: ImageBlockOptions): IPlugin {
           }
         },
       }),
-    ],
-  };
+    ];
+  }
+
+  onPaste(evt: BlockyPasteEvent) {
+    const items = evt.raw.clipboardData?.items;
+    if (!items) {
+      return;
+    }
+    for (const item of items) {
+      if (item.kind === "file" && item.type.startsWith("image/")) {
+        this.readPasteItemAsFile(evt.ctx, item);
+      }
+    }
+  }
+
+  readPasteItemAsFile(ctx: PluginContext, item: DataTransferItem) {
+    const blob = item.getAsFile();
+    if (!blob) {
+      return;
+    }
+    const editorController = ctx.editor.controller;
+    ImageBlockPlugin.LoadImage(blob)
+      .pipe(takeUntil(ctx.dispose$))
+      .subscribe((url) => {
+        const newId = editorController.idGenerator.mkBlockId();
+        let attributes: object | undefined;
+        attributes = {
+          src: url,
+        };
+        const element = new BlockDataElement(
+          ImageBlockPlugin.Name,
+          newId,
+          attributes
+        );
+        editorController.pasteElementsAtCursor([element]);
+      });
+  }
 }

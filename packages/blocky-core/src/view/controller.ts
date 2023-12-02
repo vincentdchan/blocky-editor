@@ -428,7 +428,7 @@ export class EditorController {
   pasteHTMLAtCursor(html: string) {
     try {
       const blocks = this.#htmlConverter.parseFromString(html);
-      this.#pasteElementsAtCursor(blocks);
+      this.pasteElementsAtCursor(blocks);
     } catch (e) {
       console.error(e);
     }
@@ -514,7 +514,7 @@ export class EditorController {
     return null;
   }
 
-  #pasteElementsAtCursor(elements: BlockDataElement[]) {
+  pasteElementsAtCursor(elements: BlockDataElement[]) {
     if (elements.length === 0) {
       return;
     }

@@ -16,6 +16,11 @@ interface HookMethods {
   [index: string]: IPlugin[];
 }
 
+export interface BlockyPasteEvent {
+  ctx: PluginContext;
+  raw: ClipboardEvent;
+}
+
 export interface IPlugin {
   name: string;
 
@@ -40,6 +45,8 @@ export interface IPlugin {
   onInitialized?(context: PluginContext): void;
 
   onDispose?(context: PluginContext): void;
+
+  onPaste?(evt: BlockyPasteEvent): void;
 }
 
 export class PluginContext {
@@ -101,6 +108,13 @@ export class PluginRegistry {
       const context = new PluginContext(editor);
       this.contexts.set(plugin.name, context);
       plugin.onInitialized?.(context);
+    }
+  }
+
+  handlePaste(e: ClipboardEvent) {
+    for (const plugin of this.plugins.values()) {
+      const ctx = this.contexts.get(plugin.name)!;
+      plugin.onPaste?.({ ctx, raw: e });
     }
   }
 }

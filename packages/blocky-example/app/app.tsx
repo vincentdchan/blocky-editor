@@ -4,12 +4,9 @@ import { Component, RefObject, useEffect, useRef, useState } from "react";
 import { EditorController, darkTheme, type IPlugin } from "blocky-core";
 import {
   BlockyEditor,
-  makeReactSpanner,
-  makeReactToolbar,
-  makeImageBlockPlugin,
-  type SpannerRenderProps,
-  DefaultToolbarMenu,
-  DefaultSpannerMenu,
+  ImageBlockPlugin,
+  makeDefaultReactToolbar,
+  makeDefaultReactSpanner,
 } from "blocky-react";
 import SearchBox from "@pkg/components/searchBox";
 import ImagePlaceholder from "@pkg/components/imagePlaceholder";
@@ -24,7 +21,7 @@ import "blocky-core/css/blocky-core.css";
 
 function makeEditorPlugins(): IPlugin[] {
   return [
-    makeImageBlockPlugin({
+    new ImageBlockPlugin({
       placeholder: ({ setSrc }) => <ImagePlaceholder setSrc={setSrc} />,
     }),
     makeCommandPanelPlugin(),
@@ -56,25 +53,18 @@ function makeController(userId: string, title: string): EditorController {
      * Define the plugins to implement customize features.
      */
     plugins: makeEditorPlugins(),
+
     /**
      * Tell the editor how to render the banner.
      * We use a banner written in Preact here.
      */
-    spannerFactory: makeReactSpanner(
-      ({ editorController, focusedNode }: SpannerRenderProps) => (
-        <DefaultSpannerMenu
-          editorController={editorController}
-          focusedNode={focusedNode}
-        />
-      )
-    ),
+    spannerFactory: makeDefaultReactSpanner(),
+
     /**
      * Tell the editor how to render the banner.
      * We use a toolbar written in Preact here.
      */
-    toolbarFactory: makeReactToolbar((editorController: EditorController) => {
-      return <DefaultToolbarMenu editorController={editorController} />;
-    }),
+    toolbarFactory: makeDefaultReactToolbar(),
 
     spellcheck: false,
   });

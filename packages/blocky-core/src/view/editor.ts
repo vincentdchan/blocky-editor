@@ -1672,6 +1672,13 @@ export class Editor {
   };
 
   #handlePaste = (e: ClipboardEvent) => {
+    this.internalHandlePaste(e);
+
+    console.log("handle paste");
+    this.controller.pluginRegistry.handlePaste(e);
+  };
+
+  private internalHandlePaste(e: ClipboardEvent) {
     e.preventDefault(); // take over the paste event
 
     const { clipboardData } = e;
@@ -1696,7 +1703,7 @@ export class Editor {
       this.#insertTextAtCursor(plainText);
       return;
     }
-  };
+  }
 
   #insertTextAtCursor(text: string) {
     let { cursorState } = this.state;
