@@ -1674,7 +1674,6 @@ export class Editor {
   #handlePaste = (e: ClipboardEvent) => {
     this.internalHandlePaste(e);
 
-    console.log("handle paste");
     this.controller.pluginRegistry.handlePaste(e);
   };
 
