@@ -5,6 +5,7 @@ import type {
   EditorController,
   SpannerInstance,
   BlockDataElement,
+  SpannerDelegate,
 } from "blocky-core";
 import { once } from "lodash-es";
 import { DefaultSpannerMenu } from "./defaultSpannerMenu";
@@ -12,6 +13,7 @@ import { DefaultSpannerMenu } from "./defaultSpannerMenu";
 export interface RenderProps {
   editorController: EditorController;
   focusedNode?: BlockDataElement;
+  uiDelegate: SpannerDelegate;
 }
 
 export type Renderer = (props: RenderProps) => React.ReactNode;
@@ -19,12 +21,13 @@ export type Renderer = (props: RenderProps) => React.ReactNode;
 export function makeReactSpanner(renderer: Renderer): SpannerFactory {
   return (
     container: HTMLDivElement,
-    editorController: EditorController
+    editorController: EditorController,
+    uiDelegate: SpannerDelegate
   ): SpannerInstance => {
     let focusedNode: BlockDataElement | undefined;
     let root: Root | null = createRoot(container);
     const renderFn = () => {
-      root?.render(renderer({ editorController, focusedNode }));
+      root?.render(renderer({ editorController, focusedNode, uiDelegate }));
     };
     renderFn();
     return {
@@ -43,11 +46,12 @@ export function makeReactSpanner(renderer: Renderer): SpannerFactory {
 }
 
 export function makeDefaultReactSpanner() {
-  return makeReactSpanner(({ editorController, focusedNode }) => {
+  return makeReactSpanner(({ editorController, focusedNode, uiDelegate }) => {
     return (
       <DefaultSpannerMenu
         editorController={editorController}
         focusedNode={focusedNode}
+        uiDelegate={uiDelegate}
       />
     );
   });

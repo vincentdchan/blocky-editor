@@ -6,6 +6,7 @@ export class UIDelegate extends DivContainer {
   protected shown = false;
   protected disposables: IDisposable[] = [];
   dispose$ = new Subject<void>();
+  alwaysShow = false;
 
   constructor(clsName?: string) {
     super(clsName);
@@ -20,6 +21,9 @@ export class UIDelegate extends DivContainer {
 
   hide() {
     if (!this.shown) {
+      return;
+    }
+    if (this.alwaysShow) {
       return;
     }
     this.container.style.display = "none";

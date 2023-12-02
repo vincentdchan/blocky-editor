@@ -10,6 +10,7 @@ export { makeDefaultIdGenerator, type IdGenerator } from "./helper/idHelper";
 export {
   type SpannerFactory,
   type SpannerInstance,
+  SpannerDelegate,
 } from "./view/spannerDelegate";
 export { type ToolbarFactory, type Toolbar } from "./view/toolbarDelegate";
 export { FollowerWidget } from "./view/followerWidget";

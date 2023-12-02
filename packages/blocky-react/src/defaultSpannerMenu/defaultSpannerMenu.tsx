@@ -1,5 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { type EditorController, BlockDataElement, TextType } from "blocky-core";
+import {
+  type EditorController,
+  BlockDataElement,
+  TextType,
+  SpannerDelegate,
+} from "blocky-core";
 import Dropdown from "@pkg/components/dropdown";
 import { Menu, MenuItem, Divider } from "@pkg/components/menu";
 import { ImageBlockPlugin } from "../";
@@ -9,10 +14,11 @@ import { SpannerIcon, buttonStyle } from "./style";
 export interface SpannerProps {
   editorController: EditorController;
   focusedNode?: BlockDataElement;
+  uiDelegate: SpannerDelegate;
 }
 
 function DefaultSpannerMenu(props: SpannerProps) {
-  const { editorController, focusedNode } = props;
+  const { editorController, focusedNode, uiDelegate } = props;
   const [showDropdown, setShowDropdown] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const bannerRef = useRef<HTMLDivElement>(null);
@@ -45,11 +51,13 @@ function DefaultSpannerMenu(props: SpannerProps) {
 
   const handleClick = useCallback(() => {
     setShowDropdown(true);
-  }, []);
+    uiDelegate.alwaysShow = true;
+  }, [uiDelegate]);
 
   const handleMaskClicked = useCallback(() => {
     setShowDropdown(false);
-  }, []);
+    uiDelegate.alwaysShow = false;
+  }, [uiDelegate]);
 
   const insertText = (textType: TextType) => () => {
     if (!focusedNode) {

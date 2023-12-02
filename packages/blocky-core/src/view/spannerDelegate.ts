@@ -10,7 +10,8 @@ export interface SpannerInstance extends IDisposable {
 
 export type SpannerFactory = (
   dom: HTMLDivElement,
-  editorController: EditorController
+  editorController: EditorController,
+  uiDelegate: SpannerDelegate
 ) => SpannerInstance | undefined;
 
 export class SpannerDelegate extends UIDelegate {
@@ -55,7 +56,7 @@ export class SpannerDelegate extends UIDelegate {
   override mount(parent: HTMLElement): void {
     super.mount(parent);
 
-    this.#instance = this.factory(this.container, this.editorController);
+    this.#instance = this.factory(this.container, this.editorController, this);
     if (this.#instance) {
       this.disposables.push(this.#instance);
     }
