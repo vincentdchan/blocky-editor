@@ -127,29 +127,9 @@ function LoroExample() {
 
     let lastVersion: Uint8Array | undefined;
     loroPlugin.loro.subscribe(async (evt) => {
-      // if (changeCounter > 20) {
-      //   const fullData = loroPlugin.loro.exportFrom();
-      //   console.log("fullData");
-      //   await db.add("snapshot", {
-      //     data: fullData,
-      //     createdAt: new Date(),
-      //   });
-
-      //   const tx = db.transaction("versions", "readwrite");
-      //   // delete all versions
-
-      //   await tx.objectStore("versions").clear();
-
-      //   await tx.done;
-
-      //   lastVersion = undefined;
-      //   changeCounter = 0;
-      //   return;
-      // }
       const versions = loroPlugin.loro.version();
       const data = loroPlugin.loro.exportFrom(lastVersion);
 
-      console.log("data", data);
       bc.postMessage({
         type: "loro",
         id: evt.id,
@@ -164,6 +144,26 @@ function LoroExample() {
       });
       lastVersion = versions;
       changeCounter++;
+
+      if (changeCounter > 20) {
+        const fullData = loroPlugin.loro.exportFrom();
+        console.log("fullData");
+        await db.add("snapshot", {
+          data: fullData,
+          createdAt: new Date(),
+        });
+
+        const tx = db.transaction("versions", "readwrite");
+        // delete all versions
+
+        await tx.objectStore("versions").clear();
+
+        await tx.done;
+
+        lastVersion = undefined;
+        changeCounter = 0;
+        return;
+      }
     });
 
     const initDoc = loroPlugin.getInitDocumentByLoro();

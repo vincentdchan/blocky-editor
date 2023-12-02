@@ -174,16 +174,21 @@ class LoroBinding {
           if (isNumber(op.retain)) {
             index += op.retain;
           } else if (isArray(op.insert)) {
-            changeset.insertChildrenAt(
-              doc,
-              index,
-              op.insert.map((v) => {
-                const container = this.loro.getContainerById(
-                  v as any as ContainerID
-                ) as LoroMap;
-                return this.blockyElementFromLoroMap(container);
-              })
-            );
+            try {
+              changeset.insertChildrenAt(
+                doc,
+                index,
+                op.insert.map((v) => {
+                  const container = this.loro.getContainerById(
+                    v as any as ContainerID
+                  ) as LoroMap;
+                  return this.blockyElementFromLoroMap(container);
+                })
+              );
+            } catch (err) {
+              console.error("insertChildrenAt error", err, op.insert);
+              throw err;
+            }
 
             index += op.insert.length;
           } else if (isNumber(op.delete)) {
