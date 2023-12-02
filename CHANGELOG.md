@@ -1,3 +1,8 @@
+## 3.5.0
+
+- Fix drop issue
+- Add default spanners to `blocky-react`
+
 ## 3.4.1
 
 - Introduce `CursorStateUpdateReason.beforeChangeset`
