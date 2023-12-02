@@ -286,9 +286,9 @@ class LoroPlugin implements IPlugin {
   blocks: IBlockDefinition[];
 
   constructor(loro?: Loro) {
-    // if (loro) {
-    //   this.needsInit = false;
-    // }
+    if (loro) {
+      this.needsInit = false;
+    }
     this.loro = loro ?? new Loro();
     this.binding = new LoroBinding(this.loro);
     this.blocks = [

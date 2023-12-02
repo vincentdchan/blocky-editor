@@ -29,6 +29,13 @@ function LoroBlock(props: LoroBlockProps) {
         >
           Collaborate in new Tab
         </Button>
+        <Button
+          variant="contained"
+          sx={{ textTransform: "none" }}
+          color="error"
+        >
+          Wipe all data and Refresh
+        </Button>
         {/* <Button variant="contained" sx={{ textTransform: "none" }}>
           Save content
         </Button> */}
