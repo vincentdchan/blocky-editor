@@ -10,6 +10,7 @@ import { Menu, MenuItem, Divider } from "@pkg/components/menu";
 import { ImageBlockPlugin } from "../";
 import { Subject, takeUntil } from "rxjs";
 import { SpannerIcon, buttonStyle } from "./style";
+import { useTooltip } from "@pkg/components/tooltip";
 
 export interface SpannerProps {
   editorController: EditorController;
@@ -118,6 +119,11 @@ function DefaultSpannerMenu(props: SpannerProps) {
       </Menu>
     );
   };
+
+  useTooltip({
+    anchorElement: bannerRef,
+    content: "Drag to move, click to open menu",
+  });
 
   return (
     <Dropdown

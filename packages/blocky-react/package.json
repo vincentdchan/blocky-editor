@@ -11,7 +11,7 @@
   "homepage": "https://github.com/vincentdchan/blocky-editor",
   "keywords": [
     "editor",
-    "preact"
+    "react"
   ],
   "author": "Vincent Chan <okcdz@diverse.space>",
   "license": "MIT",
@@ -27,6 +27,7 @@
     "blocky-core": "workspace:^3.6.0"
   },
   "dependencies": {
+    "@emotion/css": "^11.11.2",
     "@emotion/react": "^11.11.1",
     "blocky-common": "workspace:3.6.0",
     "lodash-es": "*",

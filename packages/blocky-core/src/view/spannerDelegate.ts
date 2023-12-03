@@ -23,6 +23,9 @@ export class SpannerDelegate extends UIDelegate {
   }
 
   set focusedNode(v: BlockDataElement | undefined) {
+    if (this.#focusedNode === v) {
+      return;
+    }
     this.#focusedNode = v;
     this.#instance?.onFocusedNodeChanged?.(v);
   }
@@ -62,8 +65,16 @@ export class SpannerDelegate extends UIDelegate {
     }
   }
 
+  #cachedX = 0;
+  #cachedY = 0;
+
   setPosition(x: number, y: number) {
+    if (this.#cachedX === x && this.#cachedY === y) {
+      return;
+    }
     this.container.style.top = y + "px";
     this.container.style.left = x + "px";
+    this.#cachedX = x;
+    this.#cachedY = y;
   }
 }
