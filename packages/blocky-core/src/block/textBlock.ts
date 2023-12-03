@@ -492,8 +492,11 @@ export class TextBlock extends ContentBlock {
     spanStyle.onSpanCreated?.(element);
   }
 
-  #createLeftPadContainer(): HTMLDivElement {
-    const container = elem("div", "blocky-left-pad");
+  #createLeftPadContainer(className?: string): HTMLDivElement {
+    const container = elem(
+      "div",
+      "blocky-left-pad" + (isString(className) ? " " + className : "")
+    );
     container.contentEditable = "false";
     return container;
   }
@@ -530,7 +533,7 @@ export class TextBlock extends ContentBlock {
   }
 
   #createQuoteRenderer(): LeftPadRenderer {
-    const container = this.#createLeftPadContainer();
+    const container = this.#createLeftPadContainer("quote");
 
     const quoteContent = elem("div", "blocky-quote-pad");
     container.appendChild(quoteContent);
