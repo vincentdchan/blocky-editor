@@ -11,6 +11,15 @@ import { ImageBlockPlugin } from "../";
 import { Subject, takeUntil } from "rxjs";
 import { SpannerIcon, buttonStyle } from "./style";
 import { useTooltip } from "@pkg/components/tooltip";
+import {
+  LuType,
+  LuHeading1,
+  LuHeading2,
+  LuHeading3,
+  LuImage,
+  LuCheckCircle2,
+  LuTrash2,
+} from "react-icons/lu";
 
 export interface SpannerProps {
   editorController: EditorController;
@@ -99,16 +108,32 @@ function DefaultSpannerMenu(props: SpannerProps) {
           } as any
         }
       >
-        <MenuItem onClick={insertText(TextType.Normal)}>Text</MenuItem>
-        <MenuItem onClick={insertText(TextType.Heading1)}>Heading1</MenuItem>
-        <MenuItem onClick={insertText(TextType.Heading2)}>Heading2</MenuItem>
-        <MenuItem onClick={insertText(TextType.Heading3)}>Heading3</MenuItem>
-        <MenuItem onClick={insertText(TextType.Checkbox)}>Checkbox</MenuItem>
-        <MenuItem onClick={insertImage}>Image</MenuItem>
+        <MenuItem icon={<LuType />} onClick={insertText(TextType.Normal)}>
+          Text
+        </MenuItem>
+        <MenuItem icon={<LuHeading1 />} onClick={insertText(TextType.Heading1)}>
+          Heading1
+        </MenuItem>
+        <MenuItem icon={<LuHeading2 />} onClick={insertText(TextType.Heading2)}>
+          Heading2
+        </MenuItem>
+        <MenuItem icon={<LuHeading3 />} onClick={insertText(TextType.Heading3)}>
+          Heading3
+        </MenuItem>
+        <MenuItem
+          icon={<LuCheckCircle2 />}
+          onClick={insertText(TextType.Checkbox)}
+        >
+          Checkbox
+        </MenuItem>
+        <MenuItem icon={<LuImage />} onClick={insertImage}>
+          Image
+        </MenuItem>
         {showDelete && (
           <>
             <Divider />
             <MenuItem
+              icon={<LuTrash2 />}
               style={{ color: "var(--danger-color)" }}
               onClick={deleteBlock}
             >

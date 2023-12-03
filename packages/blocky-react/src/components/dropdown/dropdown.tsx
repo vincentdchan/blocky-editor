@@ -16,7 +16,7 @@ interface Coord {
 }
 
 const zero: Coord = { x: 0, y: 0 };
-const margin = 16;
+const margin = 24;
 
 function fixMenuCoord(
   coord: Coord,
