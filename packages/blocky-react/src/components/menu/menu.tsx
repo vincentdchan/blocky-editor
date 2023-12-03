@@ -50,7 +50,7 @@ const menuItemStyle = css({
   width: 240,
   padding: "8px 12px",
   fontSize: 12,
-  color: "rgb(72, 72, 72)",
+  color: "var(--blocky-primary-color)",
   "&:hover": {
     backgroundColor: "rgba(0, 0, 0, 0.1)",
   },
