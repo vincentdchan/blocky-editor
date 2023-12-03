@@ -1,6 +1,8 @@
-import { RefObject, useEffect, useRef, useState } from "react";
+import { RefObject, useContext, useEffect, useRef, useState } from "react";
 import ReactDOM, { createPortal } from "react-dom";
 import Mask from "@pkg/components/mask";
+import { ReactTheme } from "@pkg/reactTheme";
+import { themeDataToCssVariables } from "blocky-core";
 
 export interface DropdownProps {
   show?: boolean;
@@ -16,7 +18,7 @@ interface Coord {
 }
 
 const zero: Coord = { x: 0, y: 0 };
-const margin = 16;
+const margin = 24;
 
 function fixMenuCoord(
   coord: Coord,
@@ -40,6 +42,7 @@ function Dropdown(props: DropdownProps) {
   const [menuCoord, setMenuCoord] = useState<Coord>(zero);
   const [shown, setShown] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const themeData = useContext(ReactTheme);
 
   useEffect(() => {
     if (show) {
@@ -85,6 +88,7 @@ function Dropdown(props: DropdownProps) {
                 position: "fixed",
                 left: `${menuCoord.x}px`,
                 top: `${menuCoord.y}px`,
+                ...themeDataToCssVariables(themeData),
               }}
             >
               {overlay()}

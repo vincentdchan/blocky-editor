@@ -4,19 +4,24 @@ import { type EditorController, CursorState } from "blocky-core";
 import Mask from "@pkg/components/mask";
 import { AnchorToolbar } from "./anchorToolbar";
 import { toolbarMenuButton, toolbarContainerStyle } from "./style";
+import { useTooltip } from "..";
 
-const ToolbarMenuItem = memo(
-  (props: React.HTMLAttributes<HTMLButtonElement>) => {
-    const { className = "", ...restProps } = props;
-    return (
-      <button
-        css={toolbarMenuButton}
-        className={`blocky-toolbar-menu-button ${className}`}
-        {...restProps}
-      />
-    );
-  }
-);
+interface ToolbarMenuItemProps extends React.HTMLAttributes<HTMLButtonElement> {
+  tooltip: string;
+}
+
+const ToolbarMenuItem = memo((props: ToolbarMenuItemProps) => {
+  const { tooltip, ...restProps } = props;
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useTooltip({
+    anchorElement: buttonRef,
+    content: tooltip,
+    direction: "top",
+  });
+
+  return <button css={toolbarMenuButton} ref={buttonRef} {...restProps} />;
+});
 
 export interface DefaultToolbarMenuProps {
   editorController: EditorController;
@@ -86,16 +91,30 @@ function DefaultToolbarMenu(props: DefaultToolbarMenuProps) {
   return (
     <>
       <div ref={containerRef} css={toolbarContainerStyle}>
-        <ToolbarMenuItem className="bold rect" onClick={handleBold}>
+        <ToolbarMenuItem
+          tooltip="Bold"
+          className="bold rect"
+          onClick={handleBold}
+        >
           B
         </ToolbarMenuItem>
-        <ToolbarMenuItem className="italic rect" onClick={handleItalic}>
+        <ToolbarMenuItem
+          tooltip="Italic"
+          className="italic rect"
+          onClick={handleItalic}
+        >
           I
         </ToolbarMenuItem>
-        <ToolbarMenuItem className="underline rect" onClick={handleUnderline}>
+        <ToolbarMenuItem
+          tooltip="Underline"
+          className="underline rect"
+          onClick={handleUnderline}
+        >
           U
         </ToolbarMenuItem>
-        <ToolbarMenuItem onClick={handleLinkClicked}>Link</ToolbarMenuItem>
+        <ToolbarMenuItem tooltip="Link" onClick={handleLinkClicked}>
+          Link
+        </ToolbarMenuItem>
       </div>
       {showAnchorToolbar && (
         <Mask onClick={handleMaskClicked}>

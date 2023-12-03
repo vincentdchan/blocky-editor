@@ -10,6 +10,8 @@ export * from "./reactFollowerWidget";
 export * from "./blockActiveDetector";
 export * from "./defaultToolbar";
 export * from "./defaultSpannerMenu";
+export * from "./components/tooltip";
+export * from "./reactTheme";
 export {
   makeReactSpanner,
   makeDefaultReactSpanner,

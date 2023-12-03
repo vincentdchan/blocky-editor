@@ -9,6 +9,7 @@ import type {
 } from "blocky-core";
 import { once } from "lodash-es";
 import { DefaultSpannerMenu } from "./defaultSpannerMenu";
+import { ThemeWrapper } from "./reactTheme";
 
 export interface RenderProps {
   editorController: EditorController;
@@ -27,7 +28,11 @@ export function makeReactSpanner(renderer: Renderer): SpannerFactory {
     let focusedNode: BlockDataElement | undefined;
     let root: Root | null = createRoot(container);
     const renderFn = () => {
-      root?.render(renderer({ editorController, focusedNode, uiDelegate }));
+      root?.render(
+        <ThemeWrapper editorController={editorController}>
+          {renderer({ editorController, focusedNode, uiDelegate })}
+        </ThemeWrapper>
+      );
     };
     renderFn();
     return {

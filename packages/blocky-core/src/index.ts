@@ -42,6 +42,7 @@ export {
   type ParagraphStyle,
   SearchContext,
   darkTheme,
+  themeDataToCssVariables,
 } from "./model";
 export { TextBlock } from "./block/textBlock";
 export * from "./data";

@@ -14,14 +14,16 @@ import {
   BehaviorSubject,
   timer,
   filter,
+  Observable,
 } from "rxjs";
-import { debounce, isUndefined, isString, isNumber } from "lodash-es";
+import { debounce, isUndefined, isNumber } from "lodash-es";
 import { DocRenderer, RenderFlag, RenderOption } from "@pkg/view/renderer";
 import {
   EditorState,
   NodeTraverser,
   SearchContext,
   blockyDefaultFonts,
+  themeDataToCssVariables,
 } from "@pkg/model";
 import {
   type CursorStateUpdateEvent,
@@ -306,6 +308,10 @@ export class Editor {
       });
   }
 
+  get themeData$(): Observable<ThemeData | undefined> {
+    return this.#themeData.asObservable();
+  }
+
   get themeData(): ThemeData | undefined {
     return this.#themeData.value;
   }
@@ -519,6 +525,14 @@ export class Editor {
     );
   }
 
+  private handleThemeChanged(themeData: ThemeData | undefined) {
+    const cssVariables = themeDataToCssVariables(themeData);
+
+    for (const [key, value] of Object.entries(cssVariables)) {
+      this.#container.style.setProperty(key, value);
+    }
+  }
+
   render(option: RenderOption, done?: AfterFn) {
     try {
       const newDom = this.#renderer.render(option, this.#renderedDom);
@@ -531,28 +545,7 @@ export class Editor {
 
         this.#themeData
           .pipe(takeUntil(this.dispose$))
-          .subscribe((themeData) => {
-            if (isString(themeData?.primary?.color)) {
-              this.#container.style.setProperty(
-                "--blocky-primary-color",
-                themeData!.primary!.color
-              );
-            } else {
-              this.#container.style.setProperty("--blocky-primary-color", null);
-            }
-
-            if (isString(themeData?.font)) {
-              this.#container.style.setProperty(
-                "--blocky-font",
-                themeData!.font!
-              );
-            } else {
-              this.#container.style.setProperty(
-                "--blocky-font",
-                blockyDefaultFonts
-              );
-            }
-          });
+          .subscribe(this.handleThemeChanged.bind(this));
 
         fromEvent<MouseEvent>(this.#container, "mousemove")
           .pipe(

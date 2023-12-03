@@ -37,23 +37,38 @@ export function Menu(props: MenuProps) {
 }
 
 export interface MenuItemProps {
+  icon?: React.ReactNode;
   style?: React.CSSProperties;
   onClick?: () => void;
   children?: any;
 }
 
 const menuItemStyle = css({
-  width: "240px",
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  width: 240,
   padding: "8px 12px",
-  fontSize: "14px",
-  color: "rgb(72, 72, 72)",
+  fontSize: 12,
+  color: "var(--blocky-primary-color)",
   "&:hover": {
     backgroundColor: "rgba(0, 0, 0, 0.1)",
   },
 });
 
+const menuIconStyle = css({
+  marginRight: 8,
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  svg: {
+    width: 16,
+    height: 16,
+  },
+});
+
 export function MenuItem(props: MenuItemProps) {
-  const { style, onClick, children } = props;
+  const { icon, style, onClick, children } = props;
   return (
     <div
       css={menuItemStyle}
@@ -61,6 +76,7 @@ export function MenuItem(props: MenuItemProps) {
       onClick={onClick}
       style={style}
     >
+      <div css={menuIconStyle}>{icon}</div>
       {children}
     </div>
   );
