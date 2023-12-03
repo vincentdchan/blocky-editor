@@ -26,3 +26,17 @@ export const darkTheme: ThemeData = {
     color: "#c3c3bf",
   },
 };
+
+export function themeDataToCssVariables(
+  themeData?: ThemeData
+): Record<string, string> {
+  const result = Object.create(null);
+
+  const primaryColor = themeData?.primary?.color ?? null;
+  result["--blocky-primary-color"] = primaryColor;
+
+  const font = themeData?.font ?? blockyDefaultFonts;
+  result["--blocky-font"] = font;
+
+  return result;
+}

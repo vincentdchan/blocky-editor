@@ -7,6 +7,7 @@ import {
 } from "blocky-core";
 import { once } from "lodash-es";
 import { DefaultToolbarMenu } from "./defaultToolbar";
+import { ThemeWrapper } from "./reactTheme";
 
 export type Renderer = (editorController: EditorController) => React.ReactNode;
 
@@ -19,7 +20,11 @@ export function makeReactToolbar(
     editorController: EditorController
   ): Toolbar => {
     const root = createRoot(container);
-    root.render(renderer(editorController));
+    root.render(
+      <ThemeWrapper editorController={editorController}>
+        {renderer(editorController)}
+      </ThemeWrapper>
+    );
     return {
       dispose: once(() => {
         setTimeout(() => {

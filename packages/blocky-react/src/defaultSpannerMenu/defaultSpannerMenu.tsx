@@ -101,13 +101,7 @@ function DefaultSpannerMenu(props: SpannerProps) {
 
   const renderMenu = () => {
     return (
-      <Menu
-        style={
-          {
-            ["--blocky-font"]: editorController.editor?.fontFamily,
-          } as any
-        }
-      >
+      <Menu>
         <MenuItem icon={<LuType />} onClick={insertText(TextType.Normal)}>
           Text
         </MenuItem>

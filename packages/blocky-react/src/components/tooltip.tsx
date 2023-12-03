@@ -1,11 +1,11 @@
-import { RefObject, useEffect } from "react";
+import { RefObject, useContext, useEffect } from "react";
 import { Subject, fromEvent, switchMap, takeUntil, timer, map } from "rxjs";
 import { css } from "@emotion/css";
-
-export const blockyExampleFont = `Inter, system-ui, -apple-system, BlinkMacSystemFont, Roboto, 'Open Sans', 'Helvetica Neue', sans-serif`;
+import { ThemeData, themeDataToCssVariables } from "blocky-core";
+import { ReactTheme } from "..";
 
 const tooltipStyle = css({
-  fontFamily: blockyExampleFont,
+  fontFamily: "var(--blocky-font)",
   position: "fixed",
   backgroundColor: "rgb(15, 15, 15)",
   color: "rgb(231, 231, 231)",
@@ -100,19 +100,33 @@ export interface UseTooltipOptions {
   delay?: number;
 }
 
-function getContainer() {
+function assignStylesToContainer(
+  container: HTMLElement,
+  themeData?: ThemeData
+): HTMLElement {
+  const cssVars = themeDataToCssVariables(themeData);
+
+  for (const [key, value] of Object.entries(cssVars)) {
+    container.style.setProperty(key, value as string);
+  }
+
+  return container;
+}
+
+function getContainer(themeData?: ThemeData) {
   let container = document.getElementById("blocky-tooltip");
   if (container) {
-    return container;
+    return assignStylesToContainer(container, themeData);
   }
   container = document.createElement("div");
   container.id = "blocky-tooltip";
   document.body.appendChild(container);
-  return container;
+  return assignStylesToContainer(container, themeData);
 }
 
 export function useTooltip(options: UseTooltipOptions) {
   const { content, anchorElement, direction, delay = tooltipTimeout } = options;
+  const themeData = useContext(ReactTheme);
   useEffect(() => {
     let tooltipElement: HTMLElement | undefined;
     let isHover = false;
@@ -171,7 +185,7 @@ export function useTooltip(options: UseTooltipOptions) {
             element.style.left = "-1000px";
 
             tooltipElement = element;
-            getContainer().appendChild(element);
+            getContainer(themeData).appendChild(element);
             return e;
           }),
           switchMap((e) => timer(0).pipe(map(() => e))),
@@ -193,5 +207,5 @@ export function useTooltip(options: UseTooltipOptions) {
       dispose$.complete();
       tooltipElement?.remove();
     };
-  }, [content, anchorElement, direction]);
+  }, [content, anchorElement, direction, themeData]);
 }
