@@ -1,3 +1,8 @@
+## 3.6.0
+
+- Fix spanner disappearing issue
+- Add default spanner methods
+
 ## 3.5.0
 
 - Fix drop issue
