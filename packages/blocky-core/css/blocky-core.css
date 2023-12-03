@@ -123,6 +123,17 @@
   min-width: 26px;
 }
 
+.blocky-left-pad.quote {
+  justify-content: start;
+  padding-bottom: 4px;
+  width: 14px;
+  min-width: 14px;
+}
+
+.blocky-quote-pad {
+  border-left: 3px solid black;
+}
+
 .blocky-bullet-content:before {
   content: "•";
   color: var(--blocky-primary-color);
