@@ -1,5 +1,5 @@
 import { isNumber, isObject, isString } from "lodash-es";
-import { elem, removeNode } from "blocky-common/es/dom";
+import { elem } from "blocky-common/es/dom";
 import { removeLineBreaks, type Position } from "blocky-common/es";
 import {
   type BlockDidMountEvent,
@@ -9,7 +9,6 @@ import {
   type CursorDomResult,
 } from "./basic";
 import { ContentBlock } from "./contentBlock";
-import { EditorState } from "@pkg/model";
 import {
   type AttributesObject,
   BlockyTextModel,
@@ -26,7 +25,8 @@ import { HTMLConverter } from "@pkg/helper/htmlConverter";
 import { EditorController } from "@pkg/view/controller";
 import type { SpanStyle } from "@pkg/registry/spanRegistry";
 import type { Embed } from "@pkg/registry/embedRegistry";
-import { Subject, fromEvent, takeUntil } from "rxjs";
+import { fromEvent, takeUntil } from "rxjs";
+import { LeftPadRenderer, CheckboxRenderer } from "./leftPadRenderer";
 
 const TextContentClass = "blocky-block-text-content";
 
@@ -41,67 +41,6 @@ interface TextPosition {
 
 function textTypeCanIndent(textType: TextType): boolean {
   return textType === TextType.Normal || textType === TextType.Bulleted;
-}
-
-class LeftPadRenderer {
-  readonly dispose$ = new Subject<void>();
-  constructor(readonly container: HTMLDivElement) {}
-  render() {}
-  dispose(): void {
-    this.dispose$.next();
-    removeNode(this.container);
-  }
-}
-
-const checkedColor = "rgb(240, 153, 56)";
-
-class CheckboxRenderer extends LeftPadRenderer {
-  #checkboxContainer: HTMLDivElement;
-  #centerElement: HTMLDivElement;
-  #checked = false;
-  constructor(
-    container: HTMLDivElement,
-    private state: EditorState,
-    private blockElement: BlockDataElement
-  ) {
-    super(container);
-    this.#checkboxContainer = elem("div", "blocky-checkbox");
-    container.append(this.#checkboxContainer);
-
-    this.#centerElement = elem("div", "blocky-checkbox-center");
-    this.#centerElement.style.backgroundColor = checkedColor;
-    this.#checkboxContainer.appendChild(this.#centerElement);
-    this.#centerElement.style.visibility = "hidden";
-    this.#checkboxContainer.style.boxShadow = `0px 0px 0px 1px gray`;
-
-    fromEvent(this.#checkboxContainer, "click")
-      .pipe(takeUntil(this.dispose$))
-      .subscribe(this.#handleClick);
-  }
-
-  #handleClick = () => {
-    const checked = !!this.blockElement.getAttribute("checked");
-    new Changeset(this.state)
-      .updateAttributes(this.blockElement, { checked: !checked })
-      .apply({
-        refreshCursor: true,
-      });
-  };
-
-  override render(): void {
-    const checked = !!this.blockElement.getAttribute("checked");
-    if (checked == this.#checked) {
-      return;
-    }
-    if (checked) {
-      this.#centerElement.style.visibility = "";
-      this.#checkboxContainer.style.boxShadow = `0px 0px 0px 1px ${checkedColor}`;
-    } else {
-      this.#centerElement.style.visibility = "hidden";
-      this.#checkboxContainer.style.boxShadow = `0px 0px 0px 1px gray`;
-    }
-    this.#checked = checked;
-  }
 }
 
 /**
@@ -590,6 +529,15 @@ export class TextBlock extends ContentBlock {
     return new CheckboxRenderer(container, this.editor.state, this.props);
   }
 
+  #createQuoteRenderer(): LeftPadRenderer {
+    const container = this.#createLeftPadContainer();
+
+    const quoteContent = elem("div", "blocky-quote-pad");
+    container.appendChild(quoteContent);
+
+    return new LeftPadRenderer(container);
+  }
+
   // TODO: dispatch through plugin
   #forceRenderContentStyle(
     blockContainer: HTMLElement,
@@ -618,6 +566,15 @@ export class TextBlock extends ContentBlock {
 
       case TextType.Numbered: {
         this.#leftPadRenderer = this.#createNumberRenderer();
+        blockContainer.insertBefore(
+          this.#leftPadRenderer.container,
+          blockContainer.firstChild
+        );
+        return;
+      }
+
+      case TextType.Quote: {
+        this.#leftPadRenderer = this.#createQuoteRenderer();
         blockContainer.insertBefore(
           this.#leftPadRenderer.container,
           blockContainer.firstChild
