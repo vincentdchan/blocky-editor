@@ -26,7 +26,9 @@ function makeEditorPlugins(): IPlugin[] {
     new ImageBlockPlugin({
       placeholder: ({ setSrc }) => <ImagePlaceholder setSrc={setSrc} />,
     }),
-    new SpannerPlugin(makeDefaultReactSpanner()),
+    new SpannerPlugin({
+      factory: makeDefaultReactSpanner(),
+    }),
     makeCommandPanelPlugin(),
     makeAtPanelPlugin(),
   ];

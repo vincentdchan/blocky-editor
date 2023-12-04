@@ -33,7 +33,9 @@ function makeEditorPlugins(): IPlugin[] {
      * Tell the editor how to render the banner.
      * We use a banner written in Preact here.
      */
-    new SpannerPlugin(makeDefaultReactSpanner()),
+    new SpannerPlugin({
+      factory: makeDefaultReactSpanner(),
+    }),
     makeCommandPanelPlugin(),
     makeAtPanelPlugin(),
   ];

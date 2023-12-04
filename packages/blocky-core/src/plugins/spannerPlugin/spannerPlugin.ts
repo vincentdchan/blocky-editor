@@ -2,15 +2,25 @@ import { BlockDataElement, Editor, IPlugin, PluginContext } from "../..";
 import { take, takeUntil, fromEvent } from "rxjs";
 import { SpannerDelegate, SpannerFactory } from "./spannerDelegate";
 
+const defaultWidth = 48;
+
+export interface SpannerPluginOptions {
+  factory: SpannerFactory;
+  width?: number;
+}
+
 export class SpannerPlugin implements IPlugin {
   deletage: SpannerDelegate | undefined;
   name = "spanner";
 
-  constructor(public readonly factory: SpannerFactory) {}
+  constructor(public readonly options: SpannerPluginOptions) {}
 
   onInitialized(context: PluginContext): void {
     const { editor, dispose$ } = context;
-    this.deletage = new SpannerDelegate(editor.controller, this.factory);
+    this.deletage = new SpannerDelegate(
+      editor.controller,
+      this.options.factory
+    );
     this.deletage.mount(editor.container);
 
     editor.placeSpannerAt$
@@ -47,10 +57,14 @@ export class SpannerPlugin implements IPlugin {
     const offset = block.getSpannerOffset();
     x += offset.x;
     y += offset.y;
-    x -= this.deletage.width;
+    x -= this.width;
     this.deletage.focusedNode = node;
     this.deletage.show();
     this.deletage.setPosition(x, y);
+  }
+
+  get width(): number {
+    return this.options.width ?? defaultWidth;
   }
 
   /**

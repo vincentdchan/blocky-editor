@@ -30,10 +30,6 @@ export class SpannerDelegate extends UIDelegate {
     this.#instance?.onFocusedNodeChanged?.(v);
   }
 
-  get width(): number {
-    return 28;
-  }
-
   constructor(
     private editorController: EditorController,
     private factory: SpannerFactory
