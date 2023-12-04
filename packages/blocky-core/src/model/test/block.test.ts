@@ -1,6 +1,6 @@
 import { test, expect } from "vitest";
 import "@pkg/index";
-import { BlockyDocument, BlockDataElement } from "@pkg/data";
+import { BlockyDocument } from "@pkg/data";
 import { bky } from "@pkg/helper/bky";
 
 test("block level 0", () => {

@@ -1,12 +1,7 @@
 import { expect, test } from "vitest";
 import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { bky } from "@pkg/helper/bky";
-import {
-  BlockDataElement,
-  BlockyDocument,
-  BlockyTextModel,
-  JSONNode,
-} from "@pkg/data";
+import { BlockyDocument, JSONNode } from "@pkg/data";
 import Delta from "quill-delta-es";
 import { EditorState } from "../editorState";
 

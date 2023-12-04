@@ -1,6 +1,5 @@
 import { test, expect, describe } from "vitest";
 import {
-  BlockDataElement,
   BlockyDocument,
   DataBaseElement,
   BlockyTextModel,

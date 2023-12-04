@@ -4,9 +4,7 @@ import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { bky } from "@pkg/helper/bky";
 import { EditorState } from "@pkg/model/editorState";
 import {
-  BlockDataElement,
   BlockyDocument,
-  BlockyTextModel,
   Changeset,
   ChangesetRecordOption,
   FinalizedChangeset,
