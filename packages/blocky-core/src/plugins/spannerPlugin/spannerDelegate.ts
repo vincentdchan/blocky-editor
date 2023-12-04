@@ -1,7 +1,7 @@
 import { type IDisposable } from "blocky-common/es";
 import type { EditorController } from "@pkg/view/controller";
 import type { BlockDataElement } from "@pkg/data";
-import { UIDelegate } from "./uiDelegate";
+import { UIDelegate } from "@pkg/view/uiDelegate";
 import { fromEvent, takeUntil } from "rxjs";
 
 export interface SpannerInstance extends IDisposable {

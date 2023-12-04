@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { SpannerDelegate, SpannerInstance } from "./spannerDelegate";
-import { EditorController } from "./controller";
-import { BlockDataElement } from "..";
+import { EditorController } from "../../view/controller";
+import { BlockDataElement } from "../..";
 
 describe("SpannerDelegate", () => {
   it("focusedNode", () => {

@@ -7,10 +7,8 @@ describe("PluginRegistry", () => {
     const plugin: IPlugin = {
       name: "test",
       onInitialized() {},
-      onDispose() {},
     };
     const onInitSpy = vi.spyOn(plugin, "onInitialized");
-    const disposeSpy = vi.spyOn(plugin, "onDispose");
     const pluginRegistry = new PluginRegistry([plugin]);
     const editorController = new EditorController("user");
     const dom = document.createElement("div");
@@ -18,9 +16,7 @@ describe("PluginRegistry", () => {
     pluginRegistry.initAllPlugins(editor);
 
     expect(onInitSpy).toBeCalledTimes(1);
-    expect(disposeSpy).toBeCalledTimes(0);
 
     pluginRegistry.unload("test");
-    expect(disposeSpy).toBeCalledTimes(1);
   });
 });

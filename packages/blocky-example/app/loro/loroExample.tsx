@@ -7,7 +7,12 @@ import {
   DefaultToolbarMenu,
   makeDefaultReactSpanner,
 } from "blocky-react";
-import { BlockyDocument, EditorController, IPlugin } from "blocky-core";
+import {
+  BlockyDocument,
+  EditorController,
+  IPlugin,
+  SpannerPlugin,
+} from "blocky-core";
 import ImagePlaceholder from "@pkg/components/imagePlaceholder";
 import { makeCommandPanelPlugin } from "@pkg/app/plugins/commandPanel";
 import { makeAtPanelPlugin } from "@pkg/app/plugins/atPanel";
@@ -21,6 +26,7 @@ function makeEditorPlugins(): IPlugin[] {
     new ImageBlockPlugin({
       placeholder: ({ setSrc }) => <ImagePlaceholder setSrc={setSrc} />,
     }),
+    new SpannerPlugin(makeDefaultReactSpanner()),
     makeCommandPanelPlugin(),
     makeAtPanelPlugin(),
   ];
@@ -35,7 +41,6 @@ function makeController(
     title: doc ? undefined : "Loro",
     document: doc,
     plugins,
-    spannerFactory: makeDefaultReactSpanner(),
     /**
      * Tell the editor how to render the banner.
      * We use a toolbar written in Preact here.

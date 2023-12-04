@@ -44,8 +44,6 @@ export interface IPlugin {
    */
   onInitialized?(context: PluginContext): void;
 
-  onDispose?(context: PluginContext): void;
-
   onPaste?(evt: BlockyPasteEvent): void;
 }
 
@@ -99,7 +97,6 @@ export class PluginRegistry {
     if (context) {
       context.dispose();
       this.contexts.delete(name);
-      plugin.onDispose?.(context);
     }
   }
 

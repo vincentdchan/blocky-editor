@@ -1,7 +1,12 @@
 "use client";
 
 import { Component, RefObject, useEffect, useRef, useState } from "react";
-import { EditorController, darkTheme, type IPlugin } from "blocky-core";
+import {
+  EditorController,
+  darkTheme,
+  type IPlugin,
+  SpannerPlugin,
+} from "blocky-core";
 import {
   BlockyEditor,
   ImageBlockPlugin,
@@ -24,6 +29,11 @@ function makeEditorPlugins(): IPlugin[] {
     new ImageBlockPlugin({
       placeholder: ({ setSrc }) => <ImagePlaceholder setSrc={setSrc} />,
     }),
+    /**
+     * Tell the editor how to render the banner.
+     * We use a banner written in Preact here.
+     */
+    new SpannerPlugin(makeDefaultReactSpanner()),
     makeCommandPanelPlugin(),
     makeAtPanelPlugin(),
   ];
@@ -53,12 +63,6 @@ function makeController(userId: string, title: string): EditorController {
      * Define the plugins to implement customize features.
      */
     plugins: makeEditorPlugins(),
-
-    /**
-     * Tell the editor how to render the banner.
-     * We use a banner written in Preact here.
-     */
-    spannerFactory: makeDefaultReactSpanner(),
 
     /**
      * Tell the editor how to render the banner.
