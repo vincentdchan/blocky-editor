@@ -8,6 +8,7 @@ const defaultWidth = 48;
 export interface SpannerPluginOptions {
   factory: SpannerFactory;
   width?: number;
+  mountPoint?: HTMLElement;
 }
 
 export class SpannerPlugin implements IPlugin {
@@ -16,13 +17,16 @@ export class SpannerPlugin implements IPlugin {
 
   constructor(readonly options: SpannerPluginOptions) {}
 
+  get container(): HTMLElement | undefined {
+    return this.options.mountPoint ?? this.deletage?.editor.container;
+  }
+
   onInitialized(context: PluginContext): void {
     const { editor, dispose$ } = context;
-    this.deletage = new SpannerDelegate(
-      editor.controller,
-      this.options.factory
-    );
-    this.deletage.mount(editor.container);
+    this.deletage = new SpannerDelegate(editor, this.options.factory);
+
+    const container = this.options.mountPoint ?? editor.container;
+    this.deletage.mount(container);
 
     editor.placeSpannerAt$
       .pipe(takeUntil(dispose$))
@@ -30,7 +34,7 @@ export class SpannerPlugin implements IPlugin {
         this.placeSpannerAt(editor, blockContainer, node);
       });
 
-    fromEvent(editor.container, "mouseleave")
+    fromEvent(container, "mouseleave")
       .pipe(takeUntil(dispose$))
       .subscribe(() => {
         this.deletage?.hide();
@@ -54,7 +58,7 @@ export class SpannerPlugin implements IPlugin {
     if (!block) {
       return;
     }
-    let { x, y } = this.getRelativeOffsetByDom(editor, blockContainer);
+    let { x, y } = this.getRelativeOffsetByDom(blockContainer);
     const offset = block.getSpannerOffset();
     x += offset.x;
     y += offset.y;
@@ -71,11 +75,12 @@ export class SpannerPlugin implements IPlugin {
   /**
    * Get the element's relative position to the container of the editor.
    */
-  protected getRelativeOffsetByDom(
-    editor: Editor,
-    element: HTMLElement
-  ): Position {
-    const containerRect = editor.container.getBoundingClientRect();
+  protected getRelativeOffsetByDom(element: HTMLElement): Position {
+    const container = this.container;
+    if (!container) {
+      return { x: 0, y: 0 };
+    }
+    const containerRect = container.getBoundingClientRect();
     const blockRect = element.getBoundingClientRect();
     return {
       x: blockRect.x - containerRect.x,
