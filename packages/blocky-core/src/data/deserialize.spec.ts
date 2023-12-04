@@ -8,14 +8,16 @@ import {
   BlockyTextModel,
   blockyNodeFromJsonNode,
 } from "./index";
+import { bky } from "../helper/bky";
 
 test("deserialize BlockElement", () => {
-  const blockElement = new BlockDataElement("Text", "Blk-text-1");
+  const blockElement = bky.text();
+  const id = blockElement.id;
   const json = blockElement.toJSON();
   const back = blockyNodeFromJsonNode(json) as BlockDataElement;
   expect(back instanceof BlockDataElement).toBeTruthy();
   expect(back.t).toBe("Text");
-  expect(back.id).toBe("Blk-text-1");
+  expect(back.id).toBe(id);
 });
 
 test("deserialize BlockyTextModel", () => {
@@ -32,7 +34,7 @@ test("deserialize BlockyTextModel", () => {
 });
 
 test("deserialize document", () => {
-  const blockElement = new BlockDataElement("Text", "Blk-text-1");
+  const blockElement = bky.text();
   const document = new BlockyDocument({
     bodyChildren: [blockElement],
   });

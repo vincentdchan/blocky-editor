@@ -7,6 +7,7 @@ export * from "./block/basic";
 export { ContentBlock } from "./block/contentBlock";
 export { CustomBlock } from "./block/customBlock";
 export { makeDefaultIdGenerator, type IdGenerator } from "./helper/idHelper";
+export { bky } from "./helper/bky";
 export { type ToolbarFactory, type Toolbar } from "./view/toolbarDelegate";
 export { FollowerWidget } from "./view/followerWidget";
 export {

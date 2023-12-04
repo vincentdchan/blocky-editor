@@ -1,11 +1,7 @@
 import { expect, test } from "vitest";
 import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
-import {
-  BlockDataElement,
-  BlockyDocument,
-  BlockyTextModel,
-  JSONNode,
-} from "@pkg/data";
+import { bky } from "@pkg/helper/bky";
+import { BlockyDocument, JSONNode } from "@pkg/data";
 import Delta from "quill-delta-es";
 import { EditorState } from "../editorState";
 
@@ -29,13 +25,7 @@ function removeId(node: JSONNode) {
 test("serialize", () => {
   const idGenerator = makeDefaultIdGenerator();
   const doc = new BlockyDocument({
-    bodyChildren: [
-      new BlockDataElement("Text", idGenerator.mkBlockId(), {
-        textContent: new BlockyTextModel(
-          new Delta([{ insert: "Hello world" }])
-        ),
-      }),
-    ],
+    bodyChildren: [bky.text(new Delta([{ insert: "Hello world" }]))],
   });
   const state = new EditorState({
     userId: "User-1",
@@ -68,13 +58,7 @@ test("serialize", () => {
     const idGenerator = makeDefaultIdGenerator();
     const doc = new BlockyDocument({
       title: "",
-      bodyChildren: [
-        new BlockDataElement("Text", idGenerator.mkBlockId(), {
-          textContent: new BlockyTextModel(
-            new Delta([{ insert: "Hello world" }])
-          ),
-        }),
-      ],
+      bodyChildren: [bky.text(new Delta([{ insert: "Hello world" }]))],
     });
     const state = new EditorState({
       userId: "User-1",
