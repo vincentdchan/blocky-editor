@@ -1,8 +1,9 @@
 import { type IDisposable } from "blocky-common/es";
 import type { EditorController } from "@pkg/view/controller";
 import type { BlockDataElement } from "@pkg/data";
-import { UIDelegate } from "./uiDelegate";
+import { UIDelegate } from "@pkg/view/uiDelegate";
 import { fromEvent, takeUntil } from "rxjs";
+import type { Editor } from "@pkg/view/editor";
 
 export interface SpannerInstance extends IDisposable {
   onFocusedNodeChanged?(focusedNode: BlockDataElement | undefined): void;
@@ -30,14 +31,7 @@ export class SpannerDelegate extends UIDelegate {
     this.#instance?.onFocusedNodeChanged?.(v);
   }
 
-  get width(): number {
-    return 28;
-  }
-
-  constructor(
-    private editorController: EditorController,
-    private factory: SpannerFactory
-  ) {
+  constructor(public editor: Editor, private factory: SpannerFactory) {
     super("blocky-editor-spanner-delegate blocky-cm-noselect");
     // draggable
     this.container.setAttribute("draggable", "true");
@@ -49,17 +43,14 @@ export class SpannerDelegate extends UIDelegate {
   }
 
   #handleDragStart() {
-    const editor = this.editorController.editor;
-    if (!editor) {
-      return;
-    }
-    editor.darggingNode = this.focusedNode;
+    this.editor.darggingNode = this.focusedNode;
   }
 
   override mount(parent: HTMLElement): void {
     super.mount(parent);
 
-    this.#instance = this.factory(this.container, this.editorController, this);
+    const editorController = this.editor.controller;
+    this.#instance = this.factory(this.container, editorController, this);
     if (this.#instance) {
       this.disposables.push(this.#instance);
     }

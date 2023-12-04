@@ -4,7 +4,6 @@ import {
   areEqualShallow,
   flattenDisposable,
   type IDisposable,
-  type Position,
 } from "blocky-common/es";
 import {
   Subject,
@@ -48,7 +47,6 @@ import { SpanRegistry } from "@pkg/registry/spanRegistry";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
 import { type IdGenerator, makeDefaultIdGenerator } from "@pkg/helper/idHelper";
 import { textToDeltaWithURL } from "@pkg/helper/urlHelper";
-import { SpannerDelegate, type SpannerFactory } from "./spannerDelegate";
 import { ToolbarDelegate, type ToolbarFactory } from "./toolbarDelegate";
 import { TextBlock } from "@pkg/block/textBlock";
 import { EditorController } from "./controller";
@@ -85,7 +83,6 @@ export interface IEditorOptions {
   registry: EditorRegistry;
   container: HTMLDivElement;
   idGenerator?: IdGenerator;
-  spannerFactory?: SpannerFactory;
   toolbarFactory?: ToolbarFactory;
   padding?: Partial<Padding>;
   collaborativeCursorFactory?: CollaborativeCursorFactory;
@@ -142,7 +139,7 @@ const spannerIgnoreBlockTypes = new Set([TitleBlock.Name]);
  * used by the plugins to do something internally.
  */
 export class Editor {
-  #container: HTMLDivElement;
+  readonly container: HTMLDivElement;
   #renderedDom: HTMLDivElement | undefined;
   #renderer: DocRenderer;
   #lastFocusedId: string | undefined;
@@ -162,7 +159,7 @@ export class Editor {
 
   readonly onEveryBlock: Subject<Block> = new Subject();
 
-  readonly spannerDelegate?: SpannerDelegate;
+  // readonly spannerDelegate?: SpannerDelegate;
   readonly toolbarDelegate: ToolbarDelegate;
   idGenerator: IdGenerator;
 
@@ -221,7 +218,6 @@ export class Editor {
         block: controller.blockRegistry,
       },
       state: controller.state,
-      spannerFactory: controller.options?.spannerFactory,
       toolbarFactory: controller.options?.toolbarFactory,
       padding: controller.options?.padding,
       collaborativeCursorFactory:
@@ -237,14 +233,13 @@ export class Editor {
       state,
       registry,
       idGenerator,
-      spannerFactory: bannerFactory,
       toolbarFactory,
       padding,
       collaborativeCursorFactory,
     } = options;
     this.state = state;
     this.registry = registry;
-    this.#container = container;
+    this.container = container;
     this.idGenerator = idGenerator ?? makeDefaultIdGenerator();
 
     this.padding = {
@@ -255,19 +250,13 @@ export class Editor {
     this.collaborativeCursorManager = new CollaborativeCursorManager(
       collaborativeCursorFactory
     );
-    this.collaborativeCursorManager.mount(this.#container);
-
-    if (bannerFactory) {
-      this.spannerDelegate = new SpannerDelegate(controller, bannerFactory);
-      this.spannerDelegate.mount(this.#container);
-      this.disposables.push(this.spannerDelegate);
-    }
+    this.collaborativeCursorManager.mount(this.container);
 
     this.toolbarDelegate = new ToolbarDelegate({
       controller,
       factory: toolbarFactory,
     });
-    this.toolbarDelegate.mount(this.#container);
+    this.toolbarDelegate.mount(this.container);
     this.disposables.push(this.toolbarDelegate);
 
     document.addEventListener("selectionchange", this.#selectionChangedHandler);
@@ -275,10 +264,6 @@ export class Editor {
     state.cursorStateChanged
       .pipe(takeUntil(this.dispose$))
       .subscribe(this.handleCursorStateChanged);
-
-    fromEvent(container, "mouseleave")
-      .pipe(takeUntil(this.dispose$))
-      .subscribe(this.#hideSpanner);
 
     this.registry.plugin.initAllPlugins(this);
 
@@ -366,7 +351,7 @@ export class Editor {
         }
         const cursor = this.collaborativeCursorManager.getOrInit(id);
 
-        const containerRect = this.#container.getBoundingClientRect();
+        const containerRect = this.container.getBoundingClientRect();
         if (state.isCollapsed) {
           this.#indeedDrawCollabCollapsedCursor(
             id,
@@ -529,7 +514,7 @@ export class Editor {
     const cssVariables = themeDataToCssVariables(themeData);
 
     for (const [key, value] of Object.entries(cssVariables)) {
-      this.#container.style.setProperty(key, value);
+      this.container.style.setProperty(key, value);
     }
   }
 
@@ -537,7 +522,7 @@ export class Editor {
     try {
       const newDom = this.#renderer.render(option, this.#renderedDom);
       if (!this.#renderedDom) {
-        this.#container.appendChild(newDom);
+        this.container.appendChild(newDom);
         newDom.contentEditable = "true";
         if (this.controller.options?.spellcheck === false) {
           newDom.spellcheck = false;
@@ -547,7 +532,7 @@ export class Editor {
           .pipe(takeUntil(this.dispose$))
           .subscribe(this.handleThemeChanged.bind(this));
 
-        fromEvent<MouseEvent>(this.#container, "mousemove")
+        fromEvent<MouseEvent>(this.container, "mousemove")
           .pipe(
             takeUntil(this.dispose$),
             filter((e: MouseEvent) => {
@@ -757,7 +742,7 @@ export class Editor {
     const range = sel.getRangeAt(0);
     const { startContainer, endContainer, startOffset, endOffset } = range;
 
-    if (!isContainNode(startContainer, this.#container)) {
+    if (!isContainNode(startContainer, this.container)) {
       this.state.__setCursorState(null, reason);
       return;
     }
@@ -858,7 +843,7 @@ export class Editor {
       return false;
     }
 
-    const containerRect = this.#container.getBoundingClientRect();
+    const containerRect = this.container.getBoundingClientRect();
     // Do NOT call getBoundingClientRect, we need the first rect
     // not the rect of all ranges.
     const rect = range.getClientRects()[0];
@@ -1004,7 +989,7 @@ export class Editor {
 
   createSearchContext(content: string): SearchContext {
     if (!this.#searchContext) {
-      this.#searchContext = new SearchContext(this.#container, this);
+      this.#searchContext = new SearchContext(this.container, this);
       this.#searchContext.dispose$.pipe(take(1)).subscribe(() => {
         this.#searchContext = undefined;
       });
@@ -1013,26 +998,20 @@ export class Editor {
     return this.#searchContext;
   }
 
+  #placeSpannerAt$ = new Subject<{
+    blockContainer: HTMLElement;
+    node: BlockDataElement;
+  }>();
+
+  get placeSpannerAt$(): Observable<{
+    blockContainer: HTMLElement;
+    node: BlockDataElement;
+  }> {
+    return this.#placeSpannerAt$.asObservable();
+  }
+
   placeSpannerAt(blockContainer: HTMLElement, node: BlockDataElement) {
-    if (!this.spannerDelegate) {
-      return;
-    }
-    const block = this.state.blocks.get(node.id);
-    if (!block) {
-      return;
-    }
-
-    let { x, y } = this.#getRelativeOffsetByDom(blockContainer);
-
-    const offset = block.getSpannerOffset();
-    x += offset.x;
-    y += offset.y;
-
-    x -= this.spannerDelegate.width;
-
-    this.spannerDelegate.focusedNode = node;
-    this.spannerDelegate.show();
-    this.spannerDelegate.setPosition(x, y);
+    this.#placeSpannerAt$.next({ blockContainer, node });
   }
 
   /**
@@ -1052,22 +1031,6 @@ export class Editor {
     // TODO: call destructor
     removeNode(node);
   }
-
-  /**
-   * Get the element's relative position to the container of the editor.
-   */
-  #getRelativeOffsetByDom(element: HTMLElement): Position {
-    const containerRect = this.#container.getBoundingClientRect();
-    const blockRect = element.getBoundingClientRect();
-    return {
-      x: blockRect.x - containerRect.x,
-      y: blockRect.y - containerRect.y,
-    };
-  }
-
-  #hideSpanner = () => {
-    this.spannerDelegate?.hide();
-  };
 
   #handleCompositionStart = () => {
     this.composing = true;
@@ -1248,7 +1211,7 @@ export class Editor {
     }
     const range = selection.getRangeAt(0);
 
-    if (!isContainNode(range.startContainer, this.#container)) {
+    if (!isContainNode(range.startContainer, this.container)) {
       return;
     }
 
@@ -1526,7 +1489,7 @@ export class Editor {
       }
       const range = sel.getRangeAt(0);
       const startContainer = range.startContainer;
-      if (isContainNode(startContainer, this.#container)) {
+      if (isContainNode(startContainer, this.container)) {
         sel.removeAllRanges();
       }
       return;
@@ -1809,7 +1772,7 @@ export class Editor {
   insertFollowerWidget(widget: FollowerWidget) {
     this.#followerWidget?.dispose();
     this.#followerWidget = widget;
-    this.#container.insertBefore(widget.container, this.#container.firstChild);
+    this.container.insertBefore(widget.container, this.container.firstChild);
     widget.startCursorState = this.state.cursorState!;
     widget.dispose$.pipe(take(1)).subscribe(() => {
       this.#followerWidget = undefined;
@@ -1844,7 +1807,7 @@ export class Editor {
       followWidget
     );
 
-    const containerRect = this.#container.getBoundingClientRect();
+    const containerRect = this.container.getBoundingClientRect();
     x -= containerRect.x;
     y -= containerRect.y;
 

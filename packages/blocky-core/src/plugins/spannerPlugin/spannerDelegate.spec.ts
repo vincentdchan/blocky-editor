@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { SpannerDelegate, SpannerInstance } from "./spannerDelegate";
-import { EditorController } from "./controller";
-import { BlockDataElement } from "..";
+import { EditorController } from "../../view/controller";
+import { BlockDataElement, Editor } from "../..";
 
 describe("SpannerDelegate", () => {
   it("focusedNode", () => {
@@ -14,7 +14,8 @@ describe("SpannerDelegate", () => {
 
     const mount = document.createElement("div");
 
-    const delegate = new SpannerDelegate(editorController, () => {
+    const editor = Editor.fromController(mount, editorController);
+    const delegate = new SpannerDelegate(editor, () => {
       return spannerInstance;
     });
     delegate.mount(mount);
