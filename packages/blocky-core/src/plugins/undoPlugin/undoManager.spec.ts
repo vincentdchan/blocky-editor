@@ -1,6 +1,7 @@
 import { test, expect, describe, vi } from "vitest";
 import { FixedSizeStack, HistoryItem, UndoManager } from "./undoManager";
 import { makeDefaultIdGenerator } from "@pkg/helper/idHelper";
+import { bky } from "@pkg/helper/bky";
 import { EditorState } from "@pkg/model/editorState";
 import {
   BlockDataElement,
@@ -57,15 +58,9 @@ describe("UndoManager", () => {
 
   test("delete", () => {
     const idGenerator = makeDefaultIdGenerator();
-    const e1 = new BlockDataElement("Text", idGenerator.mkBlockId(), {
-      textContent: new BlockyTextModel(new Delta().insert("0")),
-    });
-    const e2 = new BlockDataElement("Text", idGenerator.mkBlockId(), {
-      textContent: new BlockyTextModel(new Delta().insert("1")),
-    });
-    const e3 = new BlockDataElement("Text", idGenerator.mkBlockId(), {
-      textContent: new BlockyTextModel(new Delta().insert("2")),
-    });
+    const e1 = bky.text(new Delta().insert("0"));
+    const e2 = bky.text(new Delta().insert("1"));
+    const e3 = bky.text(new Delta().insert("2"));
     const doc = new BlockyDocument({
       bodyChildren: [e1, e2, e3],
     });

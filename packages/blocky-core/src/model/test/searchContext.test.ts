@@ -1,7 +1,7 @@
 import { BlockDataElement, BlockyDocument, BlockyTextModel } from "@pkg/data";
 import Delta from "quill-delta-es";
-import { Editor } from "../../view/editor";
-import { EditorController } from "../../view/controller";
+import { Editor } from "@pkg/view/editor";
+import { EditorController } from "@pkg/view/controller";
 import { expect, test } from "vitest";
 import { SearchContext } from "../searchContext";
 

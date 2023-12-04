@@ -2,10 +2,10 @@ import ImageBlock, { ImageBlockPlaceholderRenderer } from "./imageBlock";
 import {
   type TryParsePastedDOMEvent,
   type IPlugin,
-  BlockDataElement,
   type IBlockDefinition,
   type BlockyPasteEvent,
   PluginContext,
+  bky,
 } from "blocky-core";
 import { makeReactBlock, type ReactBlockRenderProps } from "../../";
 import { Observable, takeUntil } from "rxjs";
@@ -51,17 +51,12 @@ export class ImageBlockPlugin implements IPlugin {
           />
         ),
         tryParsePastedDOM(e: TryParsePastedDOMEvent) {
-          const { node, editorController } = e;
+          const { node } = e;
           const img = node.querySelector("img");
           if (img) {
-            const newId = editorController.idGenerator.mkBlockId();
             const src = img.getAttribute("src");
             const attributes = src ? { src } : undefined;
-            const element = new BlockDataElement(
-              ImageBlockPlugin.Name,
-              newId,
-              attributes
-            );
+            const element = bky.element(ImageBlockPlugin.Name, attributes);
             return element;
           }
         },
@@ -90,15 +85,9 @@ export class ImageBlockPlugin implements IPlugin {
     ImageBlockPlugin.LoadImage(blob)
       .pipe(takeUntil(ctx.dispose$))
       .subscribe((url) => {
-        const newId = editorController.idGenerator.mkBlockId();
-        const attributes = {
+        const element = bky.element(ImageBlockPlugin.Name, {
           src: url,
-        };
-        const element = new BlockDataElement(
-          ImageBlockPlugin.Name,
-          newId,
-          attributes
-        );
+        });
         editorController.pasteElementsAtCursor([element]);
       });
   }

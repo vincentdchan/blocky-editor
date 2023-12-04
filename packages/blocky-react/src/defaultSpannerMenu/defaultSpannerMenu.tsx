@@ -4,6 +4,7 @@ import {
   BlockDataElement,
   TextType,
   SpannerDelegate,
+  bky,
 } from "blocky-core";
 import Dropdown from "@pkg/components/dropdown";
 import { Menu, MenuItem, Divider } from "@pkg/components/menu";
@@ -85,8 +86,7 @@ function DefaultSpannerMenu(props: SpannerProps) {
     if (!focusedNode) {
       return;
     }
-    const newId = editorController.editor!.idGenerator.mkBlockId();
-    const imgElement = new BlockDataElement(ImageBlockPlugin.Name, newId);
+    const imgElement = bky.element(ImageBlockPlugin.Name);
     editorController.insertBlockAfterId(imgElement, focusedNode.id, {
       autoFocus: true,
     });

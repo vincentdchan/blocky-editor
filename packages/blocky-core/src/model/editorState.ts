@@ -11,6 +11,7 @@ import {
   CursorState,
   State,
 } from "@pkg/data";
+import { bky } from "@pkg/helper/bky";
 import Delta from "quill-delta-es";
 import { Block } from "@pkg/block/basic";
 import { BlockRegistry } from "@pkg/registry/blockRegistry";
@@ -93,12 +94,7 @@ export class EditorState extends State {
     if (isUndefined(attributes.textContent)) {
       attributes.textContent = new BlockyTextModel(delta);
     }
-    return new BlockDataElement(
-      TextBlock.Name,
-      this.idGenerator.mkBlockId(),
-      attributes,
-      children
-    );
+    return bky.text(attributes, children);
   }
 
   #handleNewBlockMounted(blockElement: BlockDataElement) {

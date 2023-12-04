@@ -10,6 +10,7 @@ import {
   State,
   type TextEditOperation,
 } from "./index";
+import { bky } from "../helper/bky";
 import Delta from "quill-delta-es";
 
 test("test delete", () => {
@@ -147,7 +148,7 @@ describe("transform operation", () => {
 
 describe("merge", () => {
   test("pushWillMerge", () => {
-    const textBlock = new BlockDataElement("Text", "Blk-text1", {
+    const textBlock = bky.text({
       textContent: new BlockyTextModel(),
     });
     const document = new BlockyDocument({
@@ -164,10 +165,10 @@ describe("merge", () => {
     expect(first.delta.ops).toEqual([{ insert: "ba" }]);
   });
   test("testWillNotMerge", () => {
-    const textBlock1 = new BlockDataElement("Text", "Blk-text1", {
+    const textBlock1 = bky.text({
       textContent: new BlockyTextModel(),
     });
-    const textBlock2 = new BlockDataElement("Text", "Blk-text2", {
+    const textBlock2 = bky.text({
       textContent: new BlockyTextModel(),
     });
     const document = new BlockyDocument({

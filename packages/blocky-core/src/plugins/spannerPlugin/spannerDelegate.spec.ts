@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { SpannerDelegate, SpannerInstance } from "./spannerDelegate";
-import { EditorController } from "../../view/controller";
-import { BlockDataElement, Editor } from "../..";
+import { EditorController } from "@pkg/view/controller";
+import { bky } from "@pkg/helper/bky";
+import { Editor } from "@pkg/index";
 
 describe("SpannerDelegate", () => {
   it("focusedNode", () => {
@@ -20,8 +21,8 @@ describe("SpannerDelegate", () => {
     });
     delegate.mount(mount);
 
-    const focusedNode1 = new BlockDataElement("Text", "id-1");
-    const focusedNode2 = new BlockDataElement("Text", "id-2");
+    const focusedNode1 = bky.text();
+    const focusedNode2 = bky.text();
 
     const focusedNodeChangedSpy = vi.spyOn(
       spannerInstance,
