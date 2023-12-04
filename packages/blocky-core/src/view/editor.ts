@@ -4,7 +4,6 @@ import {
   areEqualShallow,
   flattenDisposable,
   type IDisposable,
-  type Position,
 } from "blocky-common/es";
 import {
   Subject,

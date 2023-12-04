@@ -1,6 +1,7 @@
 import { BlockDataElement, Editor, IPlugin, PluginContext } from "../..";
 import { take, takeUntil, fromEvent } from "rxjs";
 import { SpannerDelegate, SpannerFactory } from "./spannerDelegate";
+import { type Position } from "blocky-common/es";
 
 const defaultWidth = 48;
 
@@ -13,7 +14,7 @@ export class SpannerPlugin implements IPlugin {
   deletage: SpannerDelegate | undefined;
   name = "spanner";
 
-  constructor(public readonly options: SpannerPluginOptions) {}
+  constructor(readonly options: SpannerPluginOptions) {}
 
   onInitialized(context: PluginContext): void {
     const { editor, dispose$ } = context;
@@ -73,7 +74,7 @@ export class SpannerPlugin implements IPlugin {
   protected getRelativeOffsetByDom(
     editor: Editor,
     element: HTMLElement
-  ): { x: number; y: number } {
+  ): Position {
     const containerRect = editor.container.getBoundingClientRect();
     const blockRect = element.getBoundingClientRect();
     return {
