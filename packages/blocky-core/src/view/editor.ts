@@ -1890,6 +1890,9 @@ export class Editor {
       "selectionchange",
       this.#selectionChangedHandler
     );
+
+    this.controller.pluginRegistry.dispose();
+
     flattenDisposable(this.disposables).dispose();
   }
 }

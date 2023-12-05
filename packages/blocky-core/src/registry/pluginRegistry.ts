@@ -45,6 +45,8 @@ export interface IPlugin {
   onInitialized?(context: PluginContext): void;
 
   onPaste?(evt: BlockyPasteEvent): void;
+
+  dispose?(): void;
 }
 
 export class PluginContext {
@@ -98,6 +100,8 @@ export class PluginRegistry {
       context.dispose();
       this.contexts.delete(name);
     }
+
+    plugin.dispose?.();
   }
 
   initAllPlugins(editor: Editor) {
@@ -112,6 +116,13 @@ export class PluginRegistry {
     for (const plugin of this.plugins.values()) {
       const ctx = this.contexts.get(plugin.name)!;
       plugin.onPaste?.({ ctx, raw: e });
+    }
+  }
+
+  dispose() {
+    const keys = Array.from(this.plugins.keys());
+    for (const key of keys) {
+      this.unload(key);
     }
   }
 }
