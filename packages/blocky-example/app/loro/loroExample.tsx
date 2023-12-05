@@ -12,6 +12,7 @@ import {
   EditorController,
   IPlugin,
   SpannerPlugin,
+  bky,
 } from "blocky-core";
 import ImagePlaceholder from "@pkg/components/imagePlaceholder";
 import { makeCommandPanelPlugin } from "@pkg/app/plugins/commandPanel";
@@ -52,6 +53,14 @@ function makeController(
     }),
 
     spellcheck: false,
+    collaborativeCursorFactory: (id: string) => ({
+      get name() {
+        return id;
+      },
+      get color() {
+        return "rgb(235 100 52)";
+      },
+    }),
   });
 }
 
@@ -117,14 +126,10 @@ function LoroExample() {
     let changeCounter = 0;
 
     const tempLoro = await tryReadLoroFromIdb(db);
+    const userId = bky.idGenerator.mkUserId();
 
     const loroPlugin = new LoroPlugin(tempLoro);
     const bc = new BroadcastChannel("test_channel");
-    bc.onmessage = (evt) => {
-      console.log("onmessage", evt);
-      loroPlugin.loro.import(evt.data.data);
-    };
-
     let lastVersion: Uint8Array | undefined;
     loroPlugin.loro.subscribe(async (evt) => {
       const versions = loroPlugin.loro.version();
@@ -133,6 +138,7 @@ function LoroExample() {
       bc.postMessage({
         type: "loro",
         id: evt.id,
+        userId,
         data,
       });
 
@@ -168,10 +174,26 @@ function LoroExample() {
 
     const initDoc = loroPlugin.getInitDocumentByLoro();
     const controller = makeController(
-      "user",
+      userId,
       [...makeEditorPlugins(), loroPlugin],
       initDoc
     );
+
+    controller.cursorChanged.subscribe((cursor) => {
+      bc.postMessage({
+        type: "cursor",
+        userId,
+        data: cursor,
+      });
+    });
+
+    bc.onmessage = (evt) => {
+      if (evt.data.type === "loro") {
+        loroPlugin.loro.import(evt.data.data);
+      } else if (evt.data.type === "cursor") {
+        controller.applyCursorChangedEvent(evt.data.data);
+      }
+    };
 
     if (!initDoc) {
       controller.pasteHTMLAtCursor(

@@ -10,18 +10,11 @@ import {
   Changeset,
   IBlockDefinition,
 } from "blocky-core";
-import {
-  Loro,
-  LoroMap,
-  LoroText,
-  LoroList,
-  Frontiers,
-  ContainerID,
-} from "loro-crdt";
+import { Loro, LoroMap, LoroText, LoroList, Frontiers } from "loro-crdt";
 import { Delta } from "blocky-core";
 import { takeUntil, filter } from "rxjs";
 import { isHotkey } from "is-hotkey";
-import { isArray, isNumber } from "lodash-es";
+import { isArray, isNumber, omit } from "lodash-es";
 import { DefaultBlockOutline, makeReactBlock } from "blocky-react";
 import LoroBlock from "./loroBlock";
 
@@ -110,6 +103,7 @@ class LoroBinding {
         console.log("text model changed", evt);
         loroText.applyDelta(evt.apply.ops);
       });
+    const id = parent.id;
     loroText.subscribe(this.loro, (evt) => {
       if (!(!evt.local || evt.fromCheckout)) {
         return;
@@ -119,8 +113,9 @@ class LoroBinding {
       }
       const diff = evt.diff;
       if (diff.type === "text") {
+        const blockElement = this.editorState.getBlockElementById(id)!;
         const changeset = new Changeset(this.editorState).textEdit(
-          parent,
+          blockElement,
           key,
           () => new Delta((evt.diff as any).diff)
         );
@@ -170,26 +165,35 @@ class LoroBinding {
       if (diff.type === "list") {
         const changeset = new Changeset(this.editorState);
         let index = 0;
+        const insertedIds: string[] = [];
+        const idToLoroMap: Map<string, LoroMap> = new Map();
         for (const op of diff.diff) {
           if (isNumber(op.retain)) {
             index += op.retain;
           } else if (isArray(op.insert)) {
+            const children: DataElement[] = [];
+            for (const val of op.insert) {
+              if (val instanceof LoroMap) {
+                const blockElement =
+                  this.blockyElementFromLoroMapWithoutBinding(
+                    val
+                  ) as BlockDataElement;
+                if (blockElement instanceof BlockDataElement) {
+                  const id = blockElement.id;
+                  insertedIds.push(id);
+                  children.push(blockElement);
+                  idToLoroMap.set(id, val);
+                }
+              }
+            }
             try {
-              changeset.insertChildrenAt(
-                doc,
-                index,
-                op.insert.map((v) => {
-                  const container = this.loro.getContainerById(
-                    v as any as ContainerID
-                  ) as LoroMap;
-                  return this.blockyElementFromLoroMap(container);
-                })
-              );
+              changeset.insertChildrenAt(doc, index, children);
             } catch (err) {
               console.error("insertChildrenAt error", err, op.insert);
               throw err;
             }
 
+            console.log("insert children:", children);
             index += op.insert.length;
           } else if (isNumber(op.delete)) {
             changeset.deleteChildrenAt(doc, index, op.delete);
@@ -198,17 +202,51 @@ class LoroBinding {
         changeset.apply({
           source: LoroBinding.source,
         });
+
+        for (const id of insertedIds) {
+          const block = this.editorState.getBlockElementById(id);
+          if (block) {
+            this.bindDataElementToLoroMap(block, idToLoroMap.get(id)!);
+          }
+        }
       } else if (diff.type === "map") {
-        new Changeset(this.editorState)
-          .updateAttributes(doc, diff.updated)
-          .apply({
-            source: LoroBinding.source,
-          });
+        const updated = omit(diff.updated, ["t", "id", "children"]) as any;
+
+        const id = (doc as BlockDataElement).id;
+
+        const changedTuples: { id: string; key: string; val: LoroText }[] = [];
+        for (const key of Object.keys(updated)) {
+          const value = updated[key];
+          if (value instanceof LoroText) {
+            const textModel = new BlockyTextModel(new Delta(value.toDelta()));
+            updated[key] = textModel;
+            changedTuples.push({
+              id,
+              key,
+              val: value,
+            });
+          }
+        }
+
+        new Changeset(this.editorState).updateAttributes(doc, updated).apply({
+          source: LoroBinding.source,
+        });
+
+        for (const tuple of changedTuples) {
+          const doc = this.editorState.getBlockElementById(tuple.id);
+          if (!doc) {
+            continue;
+          }
+          const textModel = doc.getAttribute(tuple.key) as BlockyTextModel;
+          if (textModel instanceof BlockyTextModel) {
+            this.bindTextModelToLoroText(doc, tuple.key, textModel, tuple.val);
+          }
+        }
       }
     });
   }
 
-  blockyElementFromLoroMap(loroMap: LoroMap): DataElement {
+  blockyElementFromLoroMapWithoutBinding(loroMap: LoroMap): DataElement {
     const t = loroMap.get("t") as string;
     let result: DataElement;
     if (isUpperCase(t[0])) {
@@ -250,6 +288,11 @@ class LoroBinding {
         }
       }
     }
+    return result;
+  }
+
+  blockyElementFromLoroMap(loroMap: LoroMap): DataElement {
+    const result = this.blockyElementFromLoroMapWithoutBinding(loroMap);
 
     this.bindDataElementToLoroMap(result, loroMap);
 
