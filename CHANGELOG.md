@@ -1,3 +1,8 @@
+## 3.7.0
+
+- Refactor spanner as plugin
+- Add `bky` shortcut
+
 ## 3.6.0
 
 - Fix spanner disappearing issue
