@@ -20,9 +20,9 @@ function LoroBlock(props: LoroBlockProps) {
   }, []);
   return (
     <div className={styles.container}>
-      <div className={styles.icon}>
+      <a className={styles.icon} href="https://loro.dev/">
         <img src="/LORO.svg" alt="" />
-      </div>
+      </a>
       <div className={styles.buttons}>
         <Button
           variant="contained"

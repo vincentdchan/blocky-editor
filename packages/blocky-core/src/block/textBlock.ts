@@ -110,6 +110,13 @@ export class TextBlock extends ContentBlock {
             delta.insert(removeLineBreaks(childPtr.textContent), {
               italic: true,
             });
+          } else if (tagName === "A") {
+            const href = childPtr.getAttribute("href");
+            if (isString(href)) {
+              delta.insert(removeLineBreaks(childPtr.textContent), {
+                href,
+              });
+            }
           } else if (converter.isContainerElement(childPtr)) {
             const childElements = converter.parseContainerElement(childPtr);
             childrenContainer.push(...childElements);

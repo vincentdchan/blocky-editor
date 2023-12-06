@@ -242,10 +242,11 @@ function LoroExample() {
     if (!initDoc) {
       console.log("init doc");
       controller.pasteHTMLAtCursor(
-        `Loro is a high-performance CRDTs library. It's written in Rust and introduced to the browser via WASM, offering incredible performance.
-Blocky can leverage Loro's data syncing capabilities. By using a simple plugin, you can sync the data of the Blocky editor with Loro.
-You can edit this page, and the data will sync to the browser's storage with Loro’s encoding.
-Once you reload the page, the data from the browser will be rendered again.
+        `<p><a href="https://loro.dev/">Loro</a> is a high-performance CRDTs library. It's written in Rust and introduced to the browser via WASM, offering incredible performance.
+ Blocky can leverage Loro's data syncing capabilities. By using a simple plugin, you can sync the data of the Blocky editor with Loro.</p>
+<p>You can edit this page, and the data will sync to the browser's storage with Loro’s encoding.
+ Once you reload the page, the data from the browser will be rendered again.</p>
+<p>The most exciting thing is that we can leverage the character of CRDT to implement collaborative editing. Click the blue button below to try collaborative editing between tabs!</p>
 <div data-type="Loro">Loro</div>`
       );
     }
