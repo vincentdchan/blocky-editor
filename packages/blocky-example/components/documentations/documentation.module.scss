@@ -94,6 +94,14 @@
       width: 60%;
     }
   }
+
+  code {
+    font-size: 14px;
+    background-color: #F0F0F0;
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+
   @media only screen and (max-width: 920px) {
     .sidebar {
       display: none;

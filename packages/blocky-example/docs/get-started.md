@@ -33,9 +33,13 @@ You can choose what plugins the editor should load.
 You can define how the editor render the toolbar.
 
 ```tsx
-import { EditorController } from "blocky-core";
-import { makeReactSpanner, makeReactToolbar } from "blocky-react";
-import BannerMenu from "./bannerMenu";
+import { EditorController, SpannerPlugin } from "blocky-core";
+import {
+  makeReactSpanner,
+  makeReactToolbar,
+  makeDefaultReactSpanner,
+  makeDefaultReactToolbar,
+} from "blocky-react";
 import ToolbarMenu from "./toolbarMenu";
 import "blocky-core/css/blocky-core.css";
 
@@ -47,21 +51,21 @@ function makeController(): EditorController {
     /**
      * Define the plugins to implement customize features.
      */
-    plugins: [],
+    plugins: [
+      /**
+       * Tell the editor how to render the spanner.
+       * A spanner is a plugin that will follow the blocks.
+       * We use a banner written in React here.
+       */
+      new SpannerPlugin({
+        factory: makeDefaultReactSpanner(),
+      }),
+    ],
     /**
      * Tell the editor how to render the banner.
-     * We use a banner written in React here.
+     * We use a toolbar written in React here.
      */
-    bannerFactory: makeReactBanner((editorController: EditorController) => (
-      <BannerMenu editorController={editorController} />
-    )),
-    /**
-     * Tell the editor how to render the banner.
-     * We use a toolbar written in Preact here.
-     */
-    toolbarFactory: makeReactToolbar((editorController: EditorController) => {
-      return <ToolbarMenu editorController={editorController} />;
-    }),
+    toolbarFactory: makeDefaultReactToolbar(),
   });
 }
 ```
@@ -105,7 +109,7 @@ editor.render();
 
 ## Data representation
 
-The data model in Blocky Editor is represented as an XML Document:
+The data model in Blocky Editor is represented as an JSON Document:
 
 Example:
 
@@ -132,7 +136,8 @@ your custom block.
 
 ### Define a block with React
 
-Implementing a block in Preact is more easier.
+We can define a block with VanillaJS.
+You can choose React, which is more easier.
 
 ```tsx
 import { type Editor, type IPlugin } from "blocky-core";
@@ -221,6 +226,8 @@ export function makeMyBlockPlugin(): IPlugin {
 
 ### Add the plugin to the controller
 
+When we construct the EditorController, we can pass the plugin to it.
+
 ```tsx
 function makeController(): EditorController {
   return new EditorController({
@@ -232,6 +239,26 @@ function makeController(): EditorController {
   });
 }
 ```
+
+### Insert a block
+
+You can insert a block by using the `Changeset` API.
+
+```tsx
+new Changeset(editorState)
+  .insertChildrenAt(doc, index, [blk.element("BlockName)])
+  .apply()
+```
+
+We also have hight-level API to insert a block.
+
+```tsx
+editorController.insertBlockAfterId(textElement, id, {
+  autoFocus: true,
+});
+```
+
+When the data element is inserted, the editor will render the block.
 
 ## Collaborative editing
 

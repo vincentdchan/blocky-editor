@@ -25,7 +25,7 @@ function makeEditorPlugins(): IPlugin[] {
     }),
     /**
      * Tell the editor how to render the banner.
-     * We use a banner written in Preact here.
+     * We use a banner written in React here.
      */
     new SpannerPlugin({
       factory: makeDefaultReactSpanner(),
@@ -62,7 +62,7 @@ function makeController(userId: string, title: string): EditorController {
 
     /**
      * Tell the editor how to render the banner.
-     * We use a toolbar written in Preact here.
+     * We use a toolbar written in React here.
      */
     toolbarFactory: makeDefaultReactToolbar(),
 
