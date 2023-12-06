@@ -1,6 +1,5 @@
 import { isUpperCase } from "blocky-common/es";
 import { Subject } from "rxjs";
-import { type Padding } from "blocky-common/es/dom";
 import { EditorState, NodeTraverser } from "@pkg/model";
 import {
   AttributesObject,
@@ -89,11 +88,6 @@ export interface IEditorControllerOptions {
   embedRegistry?: EmbedRegistry;
   idGenerator?: IdGenerator;
   toolbarFactory?: ToolbarFactory;
-
-  /**
-   * The inner padding of the editor
-   */
-  padding?: Partial<Padding>;
 
   collaborativeCursorFactory?: CollaborativeCursorFactory;
 

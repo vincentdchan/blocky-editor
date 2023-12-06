@@ -1,4 +1,4 @@
-import { isContainNode, removeNode, type Padding } from "blocky-common/es/dom";
+import { isContainNode, removeNode } from "blocky-common/es/dom";
 import {
   isUpperCase,
   areEqualShallow,
@@ -84,22 +84,12 @@ export interface IEditorOptions {
   container: HTMLDivElement;
   idGenerator?: IdGenerator;
   toolbarFactory?: ToolbarFactory;
-  padding?: Partial<Padding>;
   collaborativeCursorFactory?: CollaborativeCursorFactory;
 }
 
 enum MineType {
   PlainText = "text/plain",
   Html = "text/html",
-}
-
-function makeDefaultPadding(): Padding {
-  return {
-    top: 12,
-    right: 56,
-    bottom: 72,
-    left: 56,
-  };
 }
 
 interface BlockSizeInfo {
@@ -201,8 +191,6 @@ export class Editor {
 
   readonly collaborativeCursorManager: CollaborativeCursorManager;
 
-  readonly padding: Padding;
-
   composing = false;
   private disposables: IDisposable[] = [];
 
@@ -219,7 +207,6 @@ export class Editor {
       },
       state: controller.state,
       toolbarFactory: controller.options?.toolbarFactory,
-      padding: controller.options?.padding,
       collaborativeCursorFactory:
         controller.options?.collaborativeCursorFactory,
     });
@@ -234,18 +221,12 @@ export class Editor {
       registry,
       idGenerator,
       toolbarFactory,
-      padding,
       collaborativeCursorFactory,
     } = options;
     this.state = state;
     this.registry = registry;
     this.container = container;
     this.idGenerator = idGenerator ?? makeDefaultIdGenerator();
-
-    this.padding = {
-      ...makeDefaultPadding(),
-      ...padding,
-    };
 
     this.collaborativeCursorManager = new CollaborativeCursorManager(
       collaborativeCursorFactory

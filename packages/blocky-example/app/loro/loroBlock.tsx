@@ -79,7 +79,7 @@ function LoroBlock(props: LoroBlockProps) {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose}>Canel</Button>
+          <Button onClick={handleClose}>Cancel</Button>
           <Button onClick={handleConfirm} color="error" autoFocus>
             Confirm
           </Button>

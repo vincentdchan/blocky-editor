@@ -5,6 +5,7 @@
 
   :global(.blocky-editor-container) {
     flex: 1;
+    max-width: 100%;
   }
 
   :global(.blocky-documents) {

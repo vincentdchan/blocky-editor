@@ -171,11 +171,6 @@ export class DocRenderer {
         "div",
         `${clsPrefix}-editor-title-container ${this.blockClassName}`,
         (elem: HTMLElement) => {
-          const { padding } = this.editor;
-          const { right, left } = padding;
-          elem.style.paddingLeft = `${left}px`;
-          elem.style.paddingRight = `${right}px`;
-
           if (this.editor.controller?.options?.titleEditable === false) {
             elem.contentEditable = "false";
           }
@@ -187,12 +182,7 @@ export class DocRenderer {
       dom,
       renderCounter++,
       "div",
-      `${clsPrefix}-editor-blocks-container`,
-      (elem: HTMLElement) => {
-        const { padding } = this.editor;
-        const { top, right, bottom, left } = padding;
-        elem.style.padding = `${top}px ${right}px ${bottom}px ${left}px`;
-      }
+      `${clsPrefix}-editor-blocks-container`
     );
 
     this.renderBlocks(

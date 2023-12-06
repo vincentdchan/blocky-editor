@@ -54,6 +54,8 @@
   font-size: 32px;
   font-weight: 700;
   color: var(--blocky-primary-color);
+  padding-left: 56px;
+  padding-right: 56px;
 }
 
 .blocky-editor-title-container:empty::before {
@@ -229,4 +231,25 @@
   background-color: rgb(171, 211, 222);
   left: 0px;
   height: 2px;
+}
+
+.blocky-editor-blocks-container {
+  padding: 12px 56px 72px;
+}
+
+
+@media only screen and (max-width: 600px) {
+
+.blocky-editor-title-container {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--blocky-primary-color);
+  padding-left: 42px;
+  padding-right: 42px;
+}
+  
+.blocky-editor-blocks-container {
+  padding: 12px 42px 72px;
+}
+
 }
