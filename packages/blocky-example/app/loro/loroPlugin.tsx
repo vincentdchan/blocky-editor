@@ -191,7 +191,6 @@ class LoroBinding {
               throw err;
             }
 
-            console.log("insert children:", children);
             index += op.insert.length;
           } else if (isNumber(op.delete)) {
             changeset.deleteChildrenAt(doc, index, op.delete);
@@ -358,7 +357,7 @@ class LoroPlugin implements IPlugin {
     const documentMap = loro.getMap("document");
 
     if (this.needsInit) {
-      new LoroBinding(loro).syncDocumentToLoro(state.document, documentMap);
+      this.binding.syncDocumentToLoro(state.document, documentMap);
       loro.commit();
     }
 

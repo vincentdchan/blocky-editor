@@ -63,16 +63,9 @@ export class IdbDao {
     const tx = this.db.transaction(["snapshot", "versions"], "readwrite");
 
     const snapshotStore = tx.objectStore("snapshot");
+    await snapshotStore.clear();
 
-    let snapshotCursor = await snapshotStore.openCursor();
-    while (snapshotCursor) {
-      if (snapshotCursor.value.userId === userId) {
-        await snapshotCursor.delete();
-      }
-      snapshotCursor = await snapshotCursor.continue();
-    }
-
-    await snapshotStore.add("snapshot", {
+    await snapshotStore.add({
       data: snapshot,
       userId,
       createdAt: new Date(),
@@ -83,28 +76,12 @@ export class IdbDao {
     await tx.done;
   }
 
-  async wipeAllDataByUserId(userId: string) {
+  async wipeAllData() {
     const tx = this.db.transaction(["snapshot", "versions"], "readwrite");
 
-    let snapshotCursor = await tx.objectStore("snapshot").openCursor();
+    await tx.objectStore("snapshot").clear();
 
-    while (snapshotCursor) {
-      if (snapshotCursor.value.userId === userId) {
-        await snapshotCursor.delete();
-      }
-
-      snapshotCursor = await snapshotCursor.continue();
-    }
-
-    let versionsCursor = await tx.objectStore("versions").openCursor();
-
-    while (versionsCursor) {
-      if (versionsCursor.value.userId === userId) {
-        await versionsCursor.delete();
-      }
-
-      versionsCursor = await versionsCursor.continue();
-    }
+    await tx.objectStore("versions").clear();
 
     await tx.done;
   }
