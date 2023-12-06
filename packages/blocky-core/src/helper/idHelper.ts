@@ -1,4 +1,3 @@
-
 const a = "a".charCodeAt(0);
 const z = "z".charCodeAt(0);
 
@@ -75,6 +74,7 @@ export interface IdGenerator {
   isBlockId: (id: string) => boolean;
   mkSpanId: () => string;
   isSpanId: (id: string) => boolean;
+  mkUserId: () => string;
 }
 
 export function makeDefaultIdGenerator(): IdGenerator {
@@ -85,5 +85,6 @@ export function makeDefaultIdGenerator(): IdGenerator {
     isBlockId,
     mkSpanId,
     isSpanId,
-  }
+    mkUserId,
+  };
 }

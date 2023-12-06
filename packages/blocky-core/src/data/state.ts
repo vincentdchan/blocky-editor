@@ -135,23 +135,24 @@ export class State implements ChangesetStateLogger {
       return false;
     }
     this.beforeChangesetApply.next(changeset);
+    const options = changeset.options;
 
     for (const operation of changeset.operations) {
       switch (operation.op) {
         case "insert-nodes": {
-          this.#applyInsertOperation(operation);
+          this.#applyInsertOperation(operation, options);
           break;
         }
         case "update-attributes": {
-          this.#applyUpdateOperation(operation);
+          this.#applyUpdateOperation(operation, options);
           break;
         }
         case "remove-nodes": {
-          this.#applyRemoveOperation(operation);
+          this.#applyRemoveOperation(operation, options);
           break;
         }
         case "text-edit": {
-          this.#applyTextEditOperation(operation);
+          this.#applyTextEditOperation(operation, options);
           break;
         }
       }
@@ -214,7 +215,10 @@ export class State implements ChangesetStateLogger {
     return rebasedChange.finalize(options);
   }
 
-  #applyInsertOperation(insertOperation: InsertNodeOperation) {
+  #applyInsertOperation(
+    insertOperation: InsertNodeOperation,
+    options: ChangesetApplyOptions
+  ) {
     const { location, children } = insertOperation;
     const parentLoc = location.slice(0, location.length - 1);
     let index = location.last;
@@ -223,7 +227,11 @@ export class State implements ChangesetStateLogger {
       // TODO: optimize insert
       for (const child of children) {
         if (parent instanceof DataElement) {
-          parent.__insertChildAt(index++, blockyNodeFromJsonNode(child));
+          parent.__insertChildAt(
+            index++,
+            blockyNodeFromJsonNode(child),
+            options.source
+          );
         }
       }
       return;
@@ -232,23 +240,29 @@ export class State implements ChangesetStateLogger {
     throw new Error(`can not insert node at: ${location.toString()}`);
   }
 
-  #applyUpdateOperation(updateOperation: UpdateNodeOperation) {
+  #applyUpdateOperation(
+    updateOperation: UpdateNodeOperation,
+    options: ChangesetApplyOptions
+  ) {
     const { location, attributes } = updateOperation;
     const node = this.findNodeByLocation(location) as DataBaseElement;
     for (const key in attributes) {
       const value = attributes[key];
-      node.__setAttribute(key, value);
+      node.__setAttribute(key, value, options.source);
     }
   }
 
-  #applyRemoveOperation(removeOperation: RemoveNodeOperation) {
+  #applyRemoveOperation(
+    removeOperation: RemoveNodeOperation,
+    options: ChangesetApplyOptions
+  ) {
     const { location, children } = removeOperation;
     const parentLoc = location.slice(0, location.length - 1);
     const index = location.last;
     if (isNumber(index)) {
       const parent = this.findNodeByLocation(parentLoc) as DataBaseElement;
       if (parent instanceof DataElement) {
-        parent.__deleteChildrenAt(index, children.length);
+        parent.__deleteChildrenAt(index, children.length, options.source);
       }
       return;
     }
@@ -256,7 +270,10 @@ export class State implements ChangesetStateLogger {
     throw new Error(`can not remove node at: ${location.toString()}`);
   }
 
-  #applyTextEditOperation(textEditOperation: TextEditOperation) {
+  #applyTextEditOperation(
+    textEditOperation: TextEditOperation,
+    options: ChangesetApplyOptions
+  ) {
     const { location, delta } = textEditOperation;
     const node = this.findNodeByLocation(location) as DataBaseElement;
     const textNode = node.getAttribute(textEditOperation.key) as
@@ -269,7 +286,7 @@ export class State implements ChangesetStateLogger {
         }>, by location: ${location.toString()}`
       );
     }
-    textNode.__applyDelta(delta);
+    textNode.__applyDelta(delta, options.source);
   }
 
   findNodeByLocation(location: NodeLocation): DataBaseNode {

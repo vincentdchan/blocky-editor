@@ -29,6 +29,7 @@ export interface ChangesetApplyOptions {
   ignoreCursor: boolean;
   record: ChangesetRecordOption;
   refreshCursor: boolean;
+  source?: string;
 }
 
 const defaultApplyOptions: ChangesetApplyOptions = {

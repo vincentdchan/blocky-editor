@@ -410,14 +410,25 @@ export class EditorController {
     if (!blockNode) {
       return;
     }
+    const { nextSibling, prevSibling } = blockNode;
 
     if (!isUpperCase(blockNode.t)) {
       return;
     }
 
-    new Changeset(this.state).removeNode(blockNode).apply({
-      refreshCursor: true,
-    });
+    let nextCusorState: CursorState | null = null;
+    if (nextSibling instanceof BlockDataElement) {
+      nextCusorState = CursorState.collapse(nextSibling.id, 0);
+    } else if (prevSibling instanceof BlockDataElement) {
+      nextCusorState = CursorState.collapse(prevSibling.id, 0);
+    }
+
+    new Changeset(this.state)
+      .removeNode(blockNode)
+      .setCursorState(nextCusorState)
+      .apply({
+        refreshCursor: true,
+      });
   }
 
   /**
@@ -680,6 +691,8 @@ export class EditorController {
       });
       return pasteHandler.call(blockDef, evt);
     }
+
+    return new BlockDataElement(dataType, this.idGenerator.mkBlockId());
   };
 
   /**

@@ -6,20 +6,73 @@ import {
   useBlockyController,
   DefaultToolbarMenu,
   makeDefaultReactSpanner,
+  makeReactBlock,
+  DefaultBlockOutline,
+  type MenuCommand,
 } from "blocky-react";
 import {
   BlockyDocument,
   EditorController,
   IPlugin,
   SpannerPlugin,
+  TextType,
+  bky,
 } from "blocky-core";
 import ImagePlaceholder from "@pkg/components/imagePlaceholder";
 import { makeCommandPanelPlugin } from "@pkg/app/plugins/commandPanel";
 import { makeAtPanelPlugin } from "@pkg/app/plugins/atPanel";
 import LoroPlugin from "./loroPlugin";
-import { openDB, IDBPDatabase } from "idb";
 import { Loro } from "loro-crdt";
+import { IdbDao } from "./idbDao";
+import LoroBlock from "./loroBlock";
 import styles from "./loroExample.module.scss";
+import {
+  LuType,
+  LuHeading1,
+  LuHeading2,
+  LuHeading3,
+  LuImage,
+  LuCheckCircle2,
+  LuBird,
+} from "react-icons/lu";
+
+const loroCommands: MenuCommand[] = [
+  {
+    title: "Text",
+    icon: <LuType />,
+    insertText: TextType.Normal,
+  },
+  {
+    title: "Heading1",
+    icon: <LuHeading1 />,
+    insertText: TextType.Heading1,
+  },
+  {
+    title: "Heading2",
+    icon: <LuHeading2 />,
+    insertText: TextType.Heading2,
+  },
+  {
+    title: "Heading3",
+    icon: <LuHeading3 />,
+    insertText: TextType.Heading3,
+  },
+  {
+    title: "Checkbox",
+    icon: <LuCheckCircle2 />,
+    insertText: TextType.Checkbox,
+  },
+  {
+    title: "Image",
+    icon: <LuImage />,
+    insertBlock: () => bky.element(ImageBlockPlugin.Name),
+  },
+  {
+    title: "Loro",
+    icon: <LuBird />,
+    insertBlock: () => bky.element("Loro"),
+  },
+];
 
 function makeEditorPlugins(): IPlugin[] {
   return [
@@ -27,7 +80,9 @@ function makeEditorPlugins(): IPlugin[] {
       placeholder: ({ setSrc }) => <ImagePlaceholder setSrc={setSrc} />,
     }),
     new SpannerPlugin({
-      factory: makeDefaultReactSpanner(),
+      factory: makeDefaultReactSpanner({
+        commands: loroCommands,
+      }),
     }),
     makeCommandPanelPlugin(),
     makeAtPanelPlugin(),
@@ -52,32 +107,21 @@ function makeController(
     }),
 
     spellcheck: false,
+    collaborativeCursorFactory: (id: string) => ({
+      get name() {
+        return id;
+      },
+      get color() {
+        return "rgb(235 100 52)";
+      },
+    }),
   });
 }
 
 async function tryReadLoroFromIdb(
-  db: IDBPDatabase
+  dao: IdbDao
 ): Promise<Loro<Record<string, unknown>> | undefined> {
-  let snapshot: any;
-  {
-    const tx = db.transaction("snapshot", "readonly");
-
-    // find latest snapshot with creatAt
-    const snapshotCursor = await tx
-      .objectStore("snapshot")
-      .index("createdAt")
-      .openCursor(null, "prev");
-
-    snapshot = snapshotCursor?.value;
-
-    tx.commit();
-  }
-
-  const tx = db.transaction("versions", "readonly");
-
-  const versions = await tx.objectStore("versions").index("loroId").getAll();
-
-  tx.commit();
+  const { snapshot, versions } = await dao.tryReadLoroFromIdb();
 
   if (snapshot || versions.length > 0) {
     const loro = new Loro();
@@ -95,78 +139,114 @@ function LoroExample() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const controller = useBlockyController(async () => {
-    const db = await openDB("blocky-loro", 1, {
-      upgrade(db) {
-        const store = db.createObjectStore("versions", {
-          // The 'id' property of the object will be the key.
-          keyPath: "id",
-          // If it isn't explicitly set, create a value by auto incrementing.
-          autoIncrement: true,
-        });
-        store.createIndex("loroId", "loroId");
-        const snapshotStore = db.createObjectStore("snapshot", {
-          // The 'id' property of the object will be the key.
-          keyPath: "id",
-          // If it isn't explicitly set, create a value by auto incrementing.
-          autoIncrement: true,
-        });
-        snapshotStore.createIndex("createdAt", "createdAt");
-      },
-    });
-
-    const loro = await tryReadLoroFromIdb(db);
+    const dao = await IdbDao.open("blocky-loro");
 
     let changeCounter = 0;
 
-    const loroPlugin = new LoroPlugin(loro);
+    const tempLoro = await tryReadLoroFromIdb(dao);
+    const userId = bky.idGenerator.mkUserId();
+
+    const loroPlugin = new LoroPlugin(tempLoro);
+    const bc = new BroadcastChannel("test_channel");
     let lastVersion: Uint8Array | undefined;
     loroPlugin.loro.subscribe(async (evt) => {
+      if (!evt.local) {
+        return;
+      }
+      const versions = loroPlugin.loro.version();
+      const data = loroPlugin.loro.exportFrom(lastVersion);
+
+      bc.postMessage({
+        type: "loro",
+        id: evt.id,
+        userId,
+        data,
+      });
+
+      await dao.db.add("versions", {
+        loroId: evt.id.toString(),
+        version: versions,
+        data,
+        userId,
+        createdAt: new Date(),
+      });
+      lastVersion = versions;
+      changeCounter++;
+
       if (changeCounter > 20) {
         const fullData = loroPlugin.loro.exportFrom();
-        console.log("fullData");
-        await db.add("snapshot", {
-          data: fullData,
-          createdAt: new Date(),
-        });
 
-        const tx = db.transaction("versions", "readwrite");
-        // delete all versions
-
-        await tx.objectStore("versions").clear();
-
-        await tx.done;
+        await dao.flushFullSnapshot(userId, fullData);
 
         lastVersion = undefined;
         changeCounter = 0;
         return;
       }
-      const versions = loroPlugin.loro.version();
-      const data = loroPlugin.loro.exportFrom(lastVersion);
-      await db.add("versions", {
-        loroId: evt.id.toString(),
-        version: versions,
-        data,
-        createdAt: new Date(),
-      });
-      lastVersion = versions;
-      changeCounter++;
     });
 
-    const initDoc = loro ? LoroPlugin.getInitDocumentByLoro(loro) : undefined;
-    console.log("initDoc", initDoc);
+    const handleWipteData = async () => {
+      try {
+        await dao.wipeAllData();
+        bc.postMessage({
+          type: "refresh",
+        });
+        window.location.reload();
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    const initDoc = loroPlugin.getInitDocumentByLoro();
     const controller = makeController(
-      "user",
-      [...makeEditorPlugins(), loroPlugin],
+      userId,
+      [
+        ...makeEditorPlugins(),
+        loroPlugin,
+        {
+          name: "loro-block",
+          blocks: [
+            makeReactBlock({
+              name: "Loro",
+              component: () => (
+                <DefaultBlockOutline>
+                  <LoroBlock plugin={loroPlugin} onWipe={handleWipteData} />
+                </DefaultBlockOutline>
+              ),
+            }),
+          ],
+        },
+      ],
       initDoc
     );
 
-    if (!loro) {
-      console.log("paste");
+    controller.cursorChanged.subscribe((cursor) => {
+      bc.postMessage({
+        type: "cursor",
+        userId,
+        data: cursor,
+      });
+    });
+
+    bc.onmessage = (evt) => {
+      if (evt.data.type === "loro") {
+        loroPlugin.loro.import(evt.data.data);
+      } else if (evt.data.type === "cursor") {
+        controller.applyCursorChangedEvent(evt.data.data);
+      } else if (evt.data.type === "refresh") {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
+    };
+
+    if (!initDoc) {
+      console.log("init doc");
       controller.pasteHTMLAtCursor(
         `Loro is a high-performance CRDTs library. It's written in Rust and introduced to the browser via WASM, offering incredible performance.
 Blocky can leverage Loro's data syncing capabilities. By using a simple plugin, you can sync the data of the Blocky editor with Loro.
 You can edit this page, and the data will sync to the browser's storage with Loro’s encoding.
-Once you reload the page, the data from the browser will be rendered again.`
+Once you reload the page, the data from the browser will be rendered again.
+<div data-type="Loro">Loro</div>`
       );
     }
 

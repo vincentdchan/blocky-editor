@@ -30,9 +30,13 @@ function fixMenuCoord(
   const { x, y } = coord;
   if (x + menuWidth + margin > winWidth) {
     coord.x = winWidth - menuWidth - margin;
+  } else if (x < margin) {
+    coord.x = margin;
   }
   if (y + menuHeight + margin > winHeight) {
     coord.y = winHeight - menuHeight - margin;
+  } else if (y < margin) {
+    coord.y = margin;
   }
   return coord;
 }

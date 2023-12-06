@@ -5,6 +5,7 @@ export interface ElementSetAttributeEvent {
   key: string;
   value: any;
   oldValue?: any;
+  source?: string;
 }
 
 export interface ElementRemoveChildEvent {
@@ -12,6 +13,7 @@ export interface ElementRemoveChildEvent {
   parent: DataBaseNode;
   child: DataBaseNode;
   index: number;
+  source?: string;
 }
 
 export interface ElementInsertChildEvent {
@@ -19,6 +21,7 @@ export interface ElementInsertChildEvent {
   parent: DataBaseNode;
   child: DataBaseNode;
   index: number;
+  source?: string;
 }
 
 export type ElementChangedEvent =
