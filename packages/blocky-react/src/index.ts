@@ -11,6 +11,7 @@ export * from "./blockActiveDetector";
 export * from "./defaultToolbar";
 export * from "./defaultSpannerMenu";
 export * from "./components/tooltip";
+export * from "./components/menu";
 export * from "./reactTheme";
 export {
   makeReactSpanner,

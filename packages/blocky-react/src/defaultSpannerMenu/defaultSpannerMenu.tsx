@@ -21,12 +21,53 @@ import {
   LuCheckCircle2,
   LuTrash2,
 } from "react-icons/lu";
+import { isUndefined } from "lodash-es";
 
 export interface SpannerProps {
   editorController: EditorController;
   focusedNode?: BlockDataElement;
   uiDelegate: SpannerDelegate;
 }
+
+export interface MenuCommand {
+  title: string;
+  icon: React.ReactNode;
+  insertText?: TextType;
+  insertBlock?: () => BlockDataElement;
+}
+
+const defaultCommands: MenuCommand[] = [
+  {
+    title: "Text",
+    icon: <LuType />,
+    insertText: TextType.Normal,
+  },
+  {
+    title: "Heading1",
+    icon: <LuHeading1 />,
+    insertText: TextType.Heading1,
+  },
+  {
+    title: "Heading2",
+    icon: <LuHeading2 />,
+    insertText: TextType.Heading2,
+  },
+  {
+    title: "Heading3",
+    icon: <LuHeading3 />,
+    insertText: TextType.Heading3,
+  },
+  {
+    title: "Checkbox",
+    icon: <LuCheckCircle2 />,
+    insertText: TextType.Checkbox,
+  },
+  {
+    title: "Image",
+    icon: <LuImage />,
+    insertBlock: () => bky.element(ImageBlockPlugin.Name),
+  },
+];
 
 function DefaultSpannerMenu(props: SpannerProps) {
   const { editorController, focusedNode, uiDelegate } = props;
@@ -70,7 +111,7 @@ function DefaultSpannerMenu(props: SpannerProps) {
     uiDelegate.alwaysShow = false;
   }, [uiDelegate]);
 
-  const insertText = (textType: TextType) => () => {
+  const insertText = (textType: TextType) => {
     if (!focusedNode) {
       return;
     }
@@ -78,16 +119,6 @@ function DefaultSpannerMenu(props: SpannerProps) {
       textType,
     });
     editorController.insertBlockAfterId(textElement, focusedNode.id, {
-      autoFocus: true,
-    });
-  };
-
-  const insertImage = () => {
-    if (!focusedNode) {
-      return;
-    }
-    const imgElement = bky.element(ImageBlockPlugin.Name);
-    editorController.insertBlockAfterId(imgElement, focusedNode.id, {
       autoFocus: true,
     });
   };
@@ -102,27 +133,32 @@ function DefaultSpannerMenu(props: SpannerProps) {
   const renderMenu = () => {
     return (
       <Menu>
-        <MenuItem icon={<LuType />} onClick={insertText(TextType.Normal)}>
-          Text
-        </MenuItem>
-        <MenuItem icon={<LuHeading1 />} onClick={insertText(TextType.Heading1)}>
-          Heading1
-        </MenuItem>
-        <MenuItem icon={<LuHeading2 />} onClick={insertText(TextType.Heading2)}>
-          Heading2
-        </MenuItem>
-        <MenuItem icon={<LuHeading3 />} onClick={insertText(TextType.Heading3)}>
-          Heading3
-        </MenuItem>
-        <MenuItem
-          icon={<LuCheckCircle2 />}
-          onClick={insertText(TextType.Checkbox)}
-        >
-          Checkbox
-        </MenuItem>
-        <MenuItem icon={<LuImage />} onClick={insertImage}>
-          Image
-        </MenuItem>
+        {defaultCommands.map((command) => {
+          return (
+            <MenuItem
+              icon={command.icon}
+              onClick={() => {
+                if (!isUndefined(command.insertText)) {
+                  insertText(command.insertText);
+                } else if (command.insertBlock) {
+                  if (!focusedNode) {
+                    return;
+                  }
+                  const imgElement = command.insertBlock();
+                  editorController.insertBlockAfterId(
+                    imgElement,
+                    focusedNode.id,
+                    {
+                      autoFocus: true,
+                    }
+                  );
+                }
+              }}
+            >
+              {command.title}
+            </MenuItem>
+          );
+        })}
         {showDelete && (
           <>
             <Divider />
