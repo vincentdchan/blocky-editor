@@ -139,9 +139,10 @@ function DefaultSpannerMenu(props: SpannerProps) {
   const renderMenu = () => {
     return (
       <Menu>
-        {commands.map((command) => {
+        {commands.map((command, index) => {
           return (
             <MenuItem
+              key={`${index}`}
               icon={command.icon}
               onClick={() => {
                 if (!isUndefined(command.insertText)) {
