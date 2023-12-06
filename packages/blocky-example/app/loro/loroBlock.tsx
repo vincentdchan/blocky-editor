@@ -1,7 +1,12 @@
-import styles from "./loroBlock.module.scss";
+import { useCallback, useState } from "react";
 import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
 import type LoroPlugin from "./loroPlugin";
-import { useCallback } from "react";
+import styles from "./loroBlock.module.scss";
 
 export interface LoroBlockProps {
   plugin: LoroPlugin;
@@ -14,40 +19,73 @@ const background = `<svg width="300" height="300" viewBox="0 0 361 366" fill="no
 
 function LoroBlock(props: LoroBlockProps) {
   const { onWipe } = props;
+  const [open, setOpen] = useState(false);
   const handleOpenNewTab = useCallback(() => {
     // open the same url in new tab
     window.open(window.location.href, "_blank");
   }, []);
+  const handleClickOpen = useCallback(() => {
+    setOpen(true);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setOpen(false);
+  }, []);
+  const handleConfirm = useCallback(() => {
+    setOpen(false);
+    onWipe?.();
+  }, [onWipe]);
   return (
-    <div className={styles.container}>
-      <a className={styles.icon} href="https://loro.dev/">
-        <img src="/LORO.svg" alt="" />
-      </a>
-      <div className={styles.buttons}>
-        <Button
-          variant="contained"
-          sx={{ textTransform: "none" }}
-          onClick={handleOpenNewTab}
-        >
-          Collaborate in new Tab
-        </Button>
-        <Button
-          variant="contained"
-          sx={{ textTransform: "none" }}
-          color="error"
-          onClick={onWipe}
-        >
-          Wipe all data and Refresh
-        </Button>
-        {/* <Button variant="contained" sx={{ textTransform: "none" }}>
+    <>
+      <div className={styles.container}>
+        <a className={styles.icon} href="https://loro.dev/">
+          <img src="/LORO.svg" alt="" />
+        </a>
+        <div className={styles.buttons}>
+          <Button
+            variant="contained"
+            sx={{ textTransform: "none" }}
+            onClick={handleOpenNewTab}
+          >
+            Collaborate in new Tab
+          </Button>
+          <Button
+            variant="contained"
+            sx={{ textTransform: "none" }}
+            color="error"
+            onClick={handleClickOpen}
+          >
+            Wipe all data and Refresh
+          </Button>
+          {/* <Button variant="contained" sx={{ textTransform: "none" }}>
           Save content
         </Button> */}
+        </div>
+        <div
+          className={styles.blur}
+          dangerouslySetInnerHTML={{ __html: background }}
+        ></div>
       </div>
-      <div
-        className={styles.blur}
-        dangerouslySetInnerHTML={{ __html: background }}
-      ></div>
-    </div>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">{"Wipe all data?"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Are you sure to wipe all data? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Canel</Button>
+          <Button onClick={handleConfirm} color="error" autoFocus>
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }
 
