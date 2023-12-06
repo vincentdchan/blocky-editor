@@ -3,7 +3,7 @@ import { take, takeUntil, fromEvent } from "rxjs";
 import { SpannerDelegate, SpannerFactory } from "./spannerDelegate";
 import { type Position } from "blocky-common/es";
 
-const defaultWidth = 48;
+const defaultWidth = 28;
 
 export interface SpannerPluginOptions {
   factory: SpannerFactory;

@@ -1,6 +1,5 @@
 import { useRef } from "react";
 import {
-  BlockyEditor,
   makeReactToolbar,
   ImageBlockPlugin,
   useBlockyController,
@@ -18,6 +17,7 @@ import {
   TextType,
   bky,
 } from "blocky-core";
+import BlockyEditorWithTheme from "@pkg/components/editorWithTheme";
 import ImagePlaceholder from "@pkg/components/imagePlaceholder";
 import { makeCommandPanelPlugin } from "@pkg/app/plugins/commandPanel";
 import { makeAtPanelPlugin } from "@pkg/app/plugins/atPanel";
@@ -256,7 +256,7 @@ function LoroExample() {
 
   return (
     <div className={styles.editorContainer} ref={containerRef}>
-      <BlockyEditor
+      <BlockyEditorWithTheme
         controller={controller}
         scrollContainer={containerRef}
         autoFocus

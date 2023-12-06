@@ -1,6 +1,5 @@
 import { useRef } from "react";
 import {
-  BlockyEditor,
   makeReactToolbar,
   ImageBlockPlugin,
   useBlockyController,
@@ -10,6 +9,7 @@ import { EditorController, IPlugin } from "blocky-core";
 import ImagePlaceholder from "@pkg/components/imagePlaceholder";
 import { makeCommandPanelPlugin } from "@pkg/app/plugins/commandPanel";
 import { makeAtPanelPlugin } from "@pkg/app/plugins/atPanel";
+import BlockyEditorWithTheme from "@pkg/components/editorWithTheme";
 
 function makeEditorPlugins(): IPlugin[] {
   return [
@@ -48,7 +48,7 @@ function NoTitleEditor() {
 
   return (
     <div ref={containerRef} style={{ width: "100%", display: "flex" }}>
-      <BlockyEditor
+      <BlockyEditorWithTheme
         controller={controller}
         scrollContainer={containerRef}
         autoFocus

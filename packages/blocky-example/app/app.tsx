@@ -1,25 +1,19 @@
 "use client";
 
-import { Component, RefObject, useEffect, useRef, useState } from "react";
+import { Component, useEffect, useRef, useState } from "react";
+import { EditorController, type IPlugin, SpannerPlugin } from "blocky-core";
 import {
-  EditorController,
-  darkTheme,
-  type IPlugin,
-  SpannerPlugin,
-} from "blocky-core";
-import {
-  BlockyEditor,
   ImageBlockPlugin,
   makeDefaultReactToolbar,
   makeDefaultReactSpanner,
 } from "blocky-react";
 import SearchBox from "@pkg/components/searchBox";
 import ImagePlaceholder from "@pkg/components/imagePlaceholder";
+import BlockyEditorWithTheme from "@pkg/components/editorWithTheme";
 import { makeCommandPanelPlugin } from "./plugins/commandPanel";
 import { makeAtPanelPlugin } from "./plugins/atPanel";
 import TianShuiWeiImage from "./tianshuiwei.jpg";
 import Image from "next/image";
-import { blockyExampleFont, Theme } from "./themeSwitch";
 import { isHotkey } from "is-hotkey";
 import { Subject, takeUntil } from "rxjs";
 import "blocky-core/css/blocky-core.css";
@@ -162,38 +156,6 @@ class App extends Component<AppProps> {
   }
 }
 
-interface BlockyEditorWithThemeProps {
-  controller: EditorController;
-  ignoreInitEmpty?: boolean;
-  autoFocus?: boolean;
-  darkMode?: boolean;
-  scrollContainer?: RefObject<HTMLElement>;
-}
-
-function BlockyEditorWithTheme(props: BlockyEditorWithThemeProps) {
-  const { darkMode, controller, scrollContainer } = props;
-  useEffect(() => {
-    if (darkMode) {
-      controller.themeData = {
-        ...darkTheme,
-        font: blockyExampleFont,
-      };
-    } else {
-      controller.themeData = {
-        font: blockyExampleFont,
-      };
-    }
-  }, [darkMode]);
-  return (
-    <BlockyEditor
-      controller={props.controller}
-      autoFocus={props.autoFocus}
-      ignoreInitEmpty={props.ignoreInitEmpty}
-      scrollContainer={scrollContainer}
-    />
-  );
-}
-
 interface BlockyEditorWithSearchBoxAndTitleProps {
   className: string;
   controller: EditorController;
@@ -235,16 +197,11 @@ function BlockyEditorWithSearchBoxAndTitle(
             }}
           />
         </div>
-        <Theme.Consumer>
-          {(options) => (
-            <BlockyEditorWithTheme
-              controller={controller}
-              darkMode={options.darkMode}
-              scrollContainer={scrollContainer}
-              ignoreInitEmpty
-            />
-          )}
-        </Theme.Consumer>
+        <BlockyEditorWithTheme
+          controller={controller}
+          scrollContainer={scrollContainer}
+          ignoreInitEmpty
+        />
       </div>
     </div>
   );
