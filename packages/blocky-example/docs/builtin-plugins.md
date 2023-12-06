@@ -6,6 +6,8 @@ A spanner is the plugin that will follow the blocks. It's used to render the men
 
 You can also drag the spanner to move the blocks.
 
+![](/spanner.gif)
+
 The `blocky-react` package provides a default spanner. You can use it by calling `makeDefaultReactSpanner()`.
 
 ```typescript
