@@ -6,6 +6,8 @@ import {
   useBlockyController,
   DefaultToolbarMenu,
   makeDefaultReactSpanner,
+  makeReactBlock,
+  DefaultBlockOutline,
 } from "blocky-react";
 import {
   BlockyDocument,
@@ -18,8 +20,9 @@ import ImagePlaceholder from "@pkg/components/imagePlaceholder";
 import { makeCommandPanelPlugin } from "@pkg/app/plugins/commandPanel";
 import { makeAtPanelPlugin } from "@pkg/app/plugins/atPanel";
 import LoroPlugin from "./loroPlugin";
-import { openDB, IDBPDatabase } from "idb";
 import { Loro } from "loro-crdt";
+import { IdbDao } from "./idbDao";
+import LoroBlock from "./loroBlock";
 import styles from "./loroExample.module.scss";
 
 function makeEditorPlugins(): IPlugin[] {
@@ -65,28 +68,9 @@ function makeController(
 }
 
 async function tryReadLoroFromIdb(
-  db: IDBPDatabase
+  dao: IdbDao
 ): Promise<Loro<Record<string, unknown>> | undefined> {
-  let snapshot: any;
-  {
-    const tx = db.transaction("snapshot", "readonly");
-
-    // find latest snapshot with creatAt
-    const snapshotCursor = await tx
-      .objectStore("snapshot")
-      .index("createdAt")
-      .openCursor(null, "prev");
-
-    snapshot = snapshotCursor?.value;
-
-    tx.commit();
-  }
-
-  const tx = db.transaction("versions", "readonly");
-
-  const versions = await tx.objectStore("versions").index("loroId").getAll();
-
-  tx.commit();
+  const { snapshot, versions } = await dao.tryReadLoroFromIdb();
 
   if (snapshot || versions.length > 0) {
     const loro = new Loro();
@@ -104,28 +88,11 @@ function LoroExample() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const controller = useBlockyController(async () => {
-    const db = await openDB("blocky-loro", 1, {
-      upgrade(db) {
-        const store = db.createObjectStore("versions", {
-          // The 'id' property of the object will be the key.
-          keyPath: "id",
-          // If it isn't explicitly set, create a value by auto incrementing.
-          autoIncrement: true,
-        });
-        store.createIndex("loroId", "loroId");
-        const snapshotStore = db.createObjectStore("snapshot", {
-          // The 'id' property of the object will be the key.
-          keyPath: "id",
-          // If it isn't explicitly set, create a value by auto incrementing.
-          autoIncrement: true,
-        });
-        snapshotStore.createIndex("createdAt", "createdAt");
-      },
-    });
+    const dao = await IdbDao.open("blocky-loro");
 
     let changeCounter = 0;
 
-    const tempLoro = await tryReadLoroFromIdb(db);
+    const tempLoro = await tryReadLoroFromIdb(dao);
     const userId = bky.idGenerator.mkUserId();
 
     const loroPlugin = new LoroPlugin(tempLoro);
@@ -142,10 +109,11 @@ function LoroExample() {
         data,
       });
 
-      await db.add("versions", {
+      await dao.db.add("versions", {
         loroId: evt.id.toString(),
         version: versions,
         data,
+        userId,
         createdAt: new Date(),
       });
       lastVersion = versions;
@@ -153,18 +121,8 @@ function LoroExample() {
 
       if (changeCounter > 20) {
         const fullData = loroPlugin.loro.exportFrom();
-        console.log("fullData");
-        await db.add("snapshot", {
-          data: fullData,
-          createdAt: new Date(),
-        });
 
-        const tx = db.transaction("versions", "readwrite");
-        // delete all versions
-
-        await tx.objectStore("versions").clear();
-
-        await tx.done;
+        await dao.flushFullSnapshot(userId, fullData);
 
         lastVersion = undefined;
         changeCounter = 0;
@@ -172,10 +130,38 @@ function LoroExample() {
       }
     });
 
+    const handleWipteData = async () => {
+      try {
+        await dao.wipeAllDataByUserId(userId);
+        bc.postMessage({
+          type: "refresh",
+        });
+        window.location.reload();
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
     const initDoc = loroPlugin.getInitDocumentByLoro();
     const controller = makeController(
       userId,
-      [...makeEditorPlugins(), loroPlugin],
+      [
+        ...makeEditorPlugins(),
+        loroPlugin,
+        {
+          name: "loro-block",
+          blocks: [
+            makeReactBlock({
+              name: "Loro",
+              component: () => (
+                <DefaultBlockOutline>
+                  <LoroBlock plugin={loroPlugin} onWipe={handleWipteData} />
+                </DefaultBlockOutline>
+              ),
+            }),
+          ],
+        },
+      ],
       initDoc
     );
 
@@ -192,6 +178,10 @@ function LoroExample() {
         loroPlugin.loro.import(evt.data.data);
       } else if (evt.data.type === "cursor") {
         controller.applyCursorChangedEvent(evt.data.data);
+      } else if (evt.data.type === "refresh") {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       }
     };
 

@@ -5,6 +5,7 @@ import { useCallback } from "react";
 
 export interface LoroBlockProps {
   plugin: LoroPlugin;
+  onWipe?: () => void;
 }
 
 const background = `<svg width="300" height="300" viewBox="0 0 361 366" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -12,6 +13,7 @@ const background = `<svg width="300" height="300" viewBox="0 0 361 366" fill="no
 </svg>`;
 
 function LoroBlock(props: LoroBlockProps) {
+  const { onWipe } = props;
   const handleOpenNewTab = useCallback(() => {
     // open the same url in new tab
     window.open(window.location.href, "_blank");
@@ -33,6 +35,7 @@ function LoroBlock(props: LoroBlockProps) {
           variant="contained"
           sx={{ textTransform: "none" }}
           color="error"
+          onClick={onWipe}
         >
           Wipe all data and Refresh
         </Button>
