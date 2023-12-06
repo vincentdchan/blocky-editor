@@ -8,12 +8,14 @@ import {
   makeDefaultReactSpanner,
   makeReactBlock,
   DefaultBlockOutline,
+  type MenuCommand,
 } from "blocky-react";
 import {
   BlockyDocument,
   EditorController,
   IPlugin,
   SpannerPlugin,
+  TextType,
   bky,
 } from "blocky-core";
 import ImagePlaceholder from "@pkg/components/imagePlaceholder";
@@ -24,6 +26,53 @@ import { Loro } from "loro-crdt";
 import { IdbDao } from "./idbDao";
 import LoroBlock from "./loroBlock";
 import styles from "./loroExample.module.scss";
+import {
+  LuType,
+  LuHeading1,
+  LuHeading2,
+  LuHeading3,
+  LuImage,
+  LuCheckCircle2,
+  LuBird,
+} from "react-icons/lu";
+
+const loroCommands: MenuCommand[] = [
+  {
+    title: "Text",
+    icon: <LuType />,
+    insertText: TextType.Normal,
+  },
+  {
+    title: "Heading1",
+    icon: <LuHeading1 />,
+    insertText: TextType.Heading1,
+  },
+  {
+    title: "Heading2",
+    icon: <LuHeading2 />,
+    insertText: TextType.Heading2,
+  },
+  {
+    title: "Heading3",
+    icon: <LuHeading3 />,
+    insertText: TextType.Heading3,
+  },
+  {
+    title: "Checkbox",
+    icon: <LuCheckCircle2 />,
+    insertText: TextType.Checkbox,
+  },
+  {
+    title: "Image",
+    icon: <LuImage />,
+    insertBlock: () => bky.element(ImageBlockPlugin.Name),
+  },
+  {
+    title: "Loro",
+    icon: <LuBird />,
+    insertBlock: () => bky.element("Loro"),
+  },
+];
 
 function makeEditorPlugins(): IPlugin[] {
   return [
@@ -31,7 +80,9 @@ function makeEditorPlugins(): IPlugin[] {
       placeholder: ({ setSrc }) => <ImagePlaceholder setSrc={setSrc} />,
     }),
     new SpannerPlugin({
-      factory: makeDefaultReactSpanner(),
+      factory: makeDefaultReactSpanner({
+        commands: loroCommands,
+      }),
     }),
     makeCommandPanelPlugin(),
     makeAtPanelPlugin(),

@@ -23,17 +23,18 @@ import {
 } from "react-icons/lu";
 import { isUndefined } from "lodash-es";
 
-export interface SpannerProps {
-  editorController: EditorController;
-  focusedNode?: BlockDataElement;
-  uiDelegate: SpannerDelegate;
-}
-
 export interface MenuCommand {
   title: string;
   icon: React.ReactNode;
   insertText?: TextType;
   insertBlock?: () => BlockDataElement;
+}
+
+export interface SpannerProps {
+  editorController: EditorController;
+  focusedNode?: BlockDataElement;
+  uiDelegate: SpannerDelegate;
+  commands?: MenuCommand[];
 }
 
 const defaultCommands: MenuCommand[] = [
@@ -70,7 +71,12 @@ const defaultCommands: MenuCommand[] = [
 ];
 
 function DefaultSpannerMenu(props: SpannerProps) {
-  const { editorController, focusedNode, uiDelegate } = props;
+  const {
+    editorController,
+    focusedNode,
+    uiDelegate,
+    commands = defaultCommands,
+  } = props;
   const [showDropdown, setShowDropdown] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const bannerRef = useRef<HTMLDivElement>(null);
@@ -133,7 +139,7 @@ function DefaultSpannerMenu(props: SpannerProps) {
   const renderMenu = () => {
     return (
       <Menu>
-        {defaultCommands.map((command) => {
+        {commands.map((command) => {
           return (
             <MenuItem
               icon={command.icon}

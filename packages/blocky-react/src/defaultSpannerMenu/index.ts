@@ -1,3 +1,3 @@
-import DefaultSpannerMenu from "./defaultSpannerMenu";
+import DefaultSpannerMenu, { type MenuCommand } from "./defaultSpannerMenu";
 
-export { DefaultSpannerMenu };
+export { DefaultSpannerMenu, type MenuCommand };

@@ -8,7 +8,7 @@ import type {
   SpannerDelegate,
 } from "blocky-core";
 import { once } from "lodash-es";
-import { DefaultSpannerMenu } from "./defaultSpannerMenu";
+import { DefaultSpannerMenu, MenuCommand } from "./defaultSpannerMenu";
 import { ThemeWrapper } from "./reactTheme";
 
 export interface RenderProps {
@@ -50,13 +50,18 @@ export function makeReactSpanner(renderer: Renderer): SpannerFactory {
   };
 }
 
-export function makeDefaultReactSpanner() {
+export interface DefaultSpannerOptions {
+  commands?: MenuCommand[];
+}
+
+export function makeDefaultReactSpanner(options?: DefaultSpannerOptions) {
   return makeReactSpanner(({ editorController, focusedNode, uiDelegate }) => {
     return (
       <DefaultSpannerMenu
         editorController={editorController}
         focusedNode={focusedNode}
         uiDelegate={uiDelegate}
+        commands={options?.commands}
       />
     );
   });
