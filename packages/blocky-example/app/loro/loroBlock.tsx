@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import React, { useCallback, useState } from "react";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -35,6 +35,14 @@ function LoroBlock(props: LoroBlockProps) {
     setOpen(false);
     onWipe?.();
   }, [onWipe]);
+  const handleCheckoutSrc = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    // open in new tab
+    window.open(
+      "https://github.com/vincentdchan/blocky-editor/blob/master/packages/blocky-example/app/loro/loroExample.tsx",
+      "_blank"
+    );
+  }, []);
   return (
     <>
       <div className={styles.container}>
@@ -48,6 +56,20 @@ function LoroBlock(props: LoroBlockProps) {
             onClick={handleOpenNewTab}
           >
             Collaborate in new Tab
+          </Button>
+          <Button
+            variant="contained"
+            sx={{
+              textTransform: "none",
+              backgroundColor: "black",
+              "&:hover": {
+                backgroundColor: "#fff",
+                color: "#3c52b2",
+              },
+            }}
+            onClick={handleCheckoutSrc}
+          >
+            Checkout the source code
           </Button>
           <Button
             variant="contained"
