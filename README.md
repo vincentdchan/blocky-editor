@@ -1,3 +1,8 @@
+> **[!WARNING]**
+>
+> This project is not maintained anymore.
+> Please checkout the successor project [Quill Next](https://github.com/vincentdchan/quill-next)
+
 # Blocky Editor
 
 Blocky Editor is an editor which supports the concept of blocks. It can help you to build an editor like Notion. It's tiny, fast and extensible. You can extend it with blocks.
